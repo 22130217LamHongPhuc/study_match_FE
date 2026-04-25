@@ -25,3 +25,22 @@ export async function login(
   const data: APIResponseData<AuthResponse> = await response.json();
   return data;
 }
+
+export async function register(
+  email: string,
+  password: string,
+): Promise<APIResponseData<AuthResponse>> {
+  const response = await fetch(`${API_BASE_URL}/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Register failed");
+  }
+  const data: APIResponseData<AuthResponse> = await response.json();
+  return data;
+}

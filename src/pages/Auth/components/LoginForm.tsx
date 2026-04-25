@@ -1,23 +1,33 @@
 import { useState } from "react";
-import { login } from "../../../services/AuthService";
+import { AuthResponse, login } from "../../../services/AuthService";
 import InputField from "./InputField";
 import PasswordField from "./PasswordField";
 import { useNavigate } from "react-router-dom";
+import { APIResponseData } from "../../../config/APIResponse";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     try {
-      const authResponse = await login(email, password);
-      console.log(authResponse);
-      localStorage.setItem("token", authResponse.data.token);
-      localStorage.setItem("refreshToken", authResponse.data.refreshToken);
-      navigate("/");
+      const response: APIResponseData<AuthResponse> = await login(
+        email,
+        password,
+      );
+
+      if (response.success) {
+        console.log(response.data);
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+
+        navigate("/");
+      } else {
+        alert(response.message || "Đăng nhập thất bại. Vui lòng thử lại");
+      }
     } catch (error) {
       console.error("Login error:", error);
     }
@@ -28,6 +38,7 @@ export default function LoginForm() {
       <InputField
         id="email"
         label="Email"
+        value={email}
         placeholder="22130000@st.hcmuaf.edu.vn"
         onChange={(e) => setEmail(e.target.value)}
       />
@@ -35,6 +46,7 @@ export default function LoginForm() {
       <PasswordField
         id="password"
         label="Password"
+        value={password}
         placeholder="••••••••"
         onChange={(e) => setPassword(e.target.value)}
       />

@@ -1,4 +1,16 @@
-export default function PasswordField({ id, label, placeholder, onChange }) {
+export default function PasswordField({
+  id,
+  label,
+  placeholder,
+  onChange,
+  value,
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  value: string;
+}) {
   return (
     <div>
       <div className="mb-2 ml-1 flex items-center justify-between gap-3">
@@ -19,6 +31,7 @@ export default function PasswordField({ id, label, placeholder, onChange }) {
       <input
         id={id}
         name={id}
+        value={value}
         type="password"
         placeholder={placeholder}
         onChange={onChange}
