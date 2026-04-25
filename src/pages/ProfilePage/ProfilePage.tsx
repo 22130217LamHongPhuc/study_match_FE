@@ -1,14 +1,53 @@
 import { Avatar, Button, Tab, Tabs, Typography } from '@mui/material'
 import { Box } from '@mui/system'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import WorkIcon from "@mui/icons-material/Work";
 import Post from './Post';
 import EditIcon from '@mui/icons-material/Edit';
 import EditProfileModal from '../../components/modal/user/EditProfileModal';
+import { loadProfileService, requestFriendService } from '../../services/FriendService';
+import { useParams } from "react-router-dom";
+import { UserProfile } from '../../model/UserModel';
+
 export default function ProfilePage() {
+
+    const [profile, setProfile] = useState<UserProfile | undefined>();
     const [modalEdit, setModalEdit] = useState<boolean>(false)
     console.warn(modalEdit, 'modal edit')
+    const [statusFriend, setStatusFriend] = useState<string>('');
+
+    const { id } = useParams();
+    useEffect(() => {
+
+        const fetchProfile = async () => {
+            const response: UserProfile = await loadProfileService(Number(id));
+            setProfile(response);
+            console.warn(response, "load profile nè");
+            console.warn(profile, 'profile nè')
+        }
+        fetchProfile();
+    }, [id])
+    // useEffect(() => {
+    //     console.warn(profile, "profile sau khi set");
+    // }, [profile]);
+    const requestFriend = async () => {
+        console.warn('request friend')
+        const response = await requestFriendService(Number(id));
+        if (response.code === '201') {
+            setStatusFriend('Đã Gửi lời mời')
+        }
+        else {
+            alert('Gửi lời mời thất bại')
+        }
+        console.warn(response, 'gửi yêu cầu kết bạn nè')
+    }
+
+
+
+    console.warn(id, 'id profile')
+
+
     return (
         <>
             <Box
@@ -28,7 +67,7 @@ export default function ProfilePage() {
                     </Box>
 
                     <Typography fontSize="32px" fontWeight="bold" color='black' mt='50px'>
-                        Cus Maz
+                        {profile?.fullName}
                     </Typography>
 
                     <Box
@@ -40,7 +79,7 @@ export default function ProfilePage() {
                             color: "#6b7280",
                         }}
                     >
-                        đây là bio
+                        {profile?.bio}
                     </Box>
                     <Box
                         sx={{
@@ -54,7 +93,7 @@ export default function ProfilePage() {
                         <Box textAlign="center">
                             <Typography color="#6b7280">Bạn bè</Typography>
                             <Typography fontSize="20px" fontWeight="bold">
-                                10
+                                {profile?.numberFriend}
                             </Typography>
                         </Box>
 
@@ -69,12 +108,12 @@ export default function ProfilePage() {
                         <Box textAlign="center">
                             <Typography color="#6b7280">Bạn chung</Typography>
                             <Typography fontSize="20px" fontWeight="bold">
-                                0
+                                {profile?.mutualFriend}
                             </Typography>
                         </Box>
                     </Box>
                     <Box display='flex' mt='20px'>
-                        <Button
+                        {/* <Button
 
                             sx={{
                                 borderRadius: "20px",
@@ -91,39 +130,96 @@ export default function ProfilePage() {
                         >
                             <EditIcon></EditIcon>
                             Chỉnh sửa thông tin cá nhân
-                        </Button>
-
-                        {/* <Button
-
-                            sx={{
-                                borderRadius: "20px",
-                                py: 1.5,
-                                textTransform: "none",
-                                fontWeight: "bold",
-                                background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
-                                color: "white", width: '50%',
-                                marginRight: '20px'
-                            }}
-                        >
-                            Kết bạn
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            sx={{
-                                borderRadius: "20px",
-                                py: 1.5,
-                                textTransform: "none",
-                                fontWeight: "bold",
-                                width: '50%'
-                            }}
-                        >
-                            Nhắn tin
                         </Button> */}
+                        {!profile?.friend ? (<>{profile?.statusFriend === 'PENDING' ? (<>
+                            <>
+                                <Button
+
+                                    sx={{
+                                        borderRadius: "20px",
+                                        py: 1.5,
+                                        textTransform: "none",
+                                        fontWeight: "bold",
+                                        background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
+                                        color: "white", width: '50%',
+                                        marginRight: '20px'
+                                    }}
+
+                                    onClick={requestFriend}
+                                >
+                                    Đã gửi lời mời
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    sx={{
+                                        borderRadius: "20px",
+                                        py: 1.5,
+                                        textTransform: "none",
+                                        fontWeight: "bold",
+                                        width: '50%'
+                                    }}
+                                >
+                                    Nhắn tin
+                                </Button>
+                            </>
+                        </>) : (<>
+
+                            <>
+                                <Button
+
+                                    sx={{
+                                        borderRadius: "20px",
+                                        py: 1.5,
+                                        textTransform: "none",
+                                        fontWeight: "bold",
+                                        background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
+                                        color: "white", width: '50%',
+                                        marginRight: '20px'
+                                    }}
+
+                                    onClick={requestFriend}
+                                >
+                                    Kết bạn
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    sx={{
+                                        borderRadius: "20px",
+                                        py: 1.5,
+                                        textTransform: "none",
+                                        fontWeight: "bold",
+                                        width: '50%'
+                                    }}
+                                >
+                                    Nhắn tin
+                                </Button>
+                            </>
+
+
+                        </>)}</>) : (<>
+                            <Button
+
+                                sx={{
+                                    borderRadius: "20px",
+                                    py: 1.5,
+                                    textTransform: "none",
+                                    fontWeight: "bold",
+                                    width: '100%',
+                                    background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
+                                    color: "white"
+                                }}
+
+                            >
+                                Nhắn tin
+                            </Button>
+                        </>)}
+
+
 
                     </Box>
 
 
-                </Box>
+                </Box >
                 <Box width='70%' sx={{ px: '20px' }}>
                     <Box sx={{
                         backgroundColor: '#e9f0ff', fontSize: '10px', '& .MuiTab-root': {
