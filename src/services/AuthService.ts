@@ -19,6 +19,16 @@ export async function login(
   return response;
 }
 
+export async function loginWithGoogle(
+  idToken: string,
+): Promise<APIResponseData<AuthResponse>> {
+  const response = await apiFetch<AuthResponse>("/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ idToken }),
+  });
+  return response;
+}
+
 export async function register(
   email: string,
   password: string,
