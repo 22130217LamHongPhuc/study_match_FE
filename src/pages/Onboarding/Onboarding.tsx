@@ -23,7 +23,9 @@ import {
   submitOnboardingForm,
   transformFormDataToPayload,
   createSubjectCodeToIdMap,
+  setIsOnboardingCompleted,
 } from "../../services/OnboardingService";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = "http://localhost:8082/api";
 
@@ -379,6 +381,8 @@ export default function OnboardingFlow() {
     return true;
   };
 
+  const navigate = useNavigate();
+
   const handleNext = (): void => {
     if (step === 3) {
       if (goalSub === 1) return setGoalSub(2);
@@ -387,7 +391,6 @@ export default function OnboardingFlow() {
     }
     if (step === 4) return setStep(5);
     if (step === 7) {
-      // Submit the form
       setSubmissionLoading(true);
       setSubmissionError("");
       setSubmissionResult(null);
@@ -405,11 +408,22 @@ export default function OnboardingFlow() {
           subjectCodeToIdMap,
         );
 
-        submitOnboardingForm(payload).then((result) => {
+        submitOnboardingForm(payload).then(async (result) => {
           setSubmissionLoading(false);
           if (result.success) {
             setSubmissionResult(result.data);
             setSubmitted(true);
+            const response = await setIsOnboardingCompleted(
+              Number(localStorage.getItem("userId")),
+            );
+            if (response.success) {
+              navigate("/");
+            } else {
+              console.error(
+                "Error setting onboarding completed:",
+                response.message || "Unknown error",
+              );
+            }
           } else {
             setSubmissionError(
               result.error || "Lỗi không xác định khi gửi dữ liệu",
@@ -522,130 +536,6 @@ export default function OnboardingFlow() {
 
   const microStep = step <= 2 ? step : step === 3 ? 2 + goalSub : step + 1;
   const progress = Math.round(((microStep - 1) / 7) * 100);
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="bg-white rounded-3xl p-10 max-w-sm w-full mx-4 text-center shadow-sm border border-blue-100">
-          {submissionError ? (
-            <>
-              <div className="text-5xl mb-4"></div>
-              <h2 className="text-2xl font-bold text-red-600 mb-2">
-                Lỗi gửi dữ liệu
-              </h2>
-              <p className="text-sm text-gray-600 leading-relaxed mb-6 bg-red-50 border border-red-200 rounded-2xl p-4">
-                {submissionError}
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setSubmissionError("");
-                    setStep(7);
-                  }}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-colors"
-                >
-                  Quay lại
-                </button>
-                <button
-                  onClick={() => {
-                    setSubmitted(false);
-                    setStep(1);
-                    setGoalSub(1);
-                    setData({
-                      fullName: "",
-                      studentId: "",
-                      gender: "",
-                      ageGroup: "",
-                      region: "",
-                      studyGoal: "",
-                      studyMode: "",
-                      cohortCode: "",
-                      mainModule: "",
-                      enrolledModules: [],
-                      moduleSlots: {},
-                      freeTime: initFreeTime(),
-                      avgScore: 65,
-                      prevAttempts: 0,
-                      studiedCredits: "",
-                    });
-                    setMainTermSelection(null);
-                    setEnrolledTermSelection(null);
-                    setMainTermStudyPlan(null);
-                    setMainTermStudyPlanError("");
-                    setEnrolledTermStudyPlan(null);
-                    setEnrolledTermStudyPlanError("");
-                    setSubmissionError("");
-                  }}
-                  className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
-                >
-                  Bắt đầu lại
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-6xl mb-4">🎉</div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                Hồ sơ hoàn tất!
-              </h2>
-              <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                StudyMatch đang phân tích hồ sơ và tìm kiếm bạn học phù hợp với
-                mục tiêu của bạn.
-              </p>
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 text-left">
-                <p className="text-xs font-semibold text-blue-600 mb-1">
-                  Mục tiêu: {data.studyGoal}
-                </p>
-                <p className="text-xs text-blue-500">
-                  Môn chính: {data.mainModule} • Phương thức: {data.studyMode}
-                </p>
-              </div>
-              <button
-                onClick={() => setSubmitted(false)}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-colors mb-3"
-              >
-                Xem gợi ý bạn học →
-              </button>
-              <button
-                onClick={() => {
-                  setSubmitted(false);
-                  setStep(1);
-                  setGoalSub(1);
-                  setData({
-                    fullName: "",
-                    studentId: "",
-                    gender: "",
-                    ageGroup: "",
-                    region: "",
-                    studyGoal: "",
-                    studyMode: "",
-                    cohortCode: "",
-                    mainModule: "",
-                    enrolledModules: [],
-                    moduleSlots: {},
-                    freeTime: initFreeTime(),
-                    avgScore: 65,
-                    prevAttempts: 0,
-                    studiedCredits: "",
-                  });
-                  setMainTermSelection(null);
-                  setEnrolledTermSelection(null);
-                  setMainTermStudyPlan(null);
-                  setMainTermStudyPlanError("");
-                  setEnrolledTermStudyPlan(null);
-                  setEnrolledTermStudyPlanError("");
-                  setSubmissionResult(null);
-                }}
-                className="w-full py-2.5 text-gray-400 border border-gray-200 rounded-xl text-sm hover:bg-gray-50 transition-colors"
-              >
-                Bắt đầu lại
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   if (submissionLoading) {
     return (

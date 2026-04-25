@@ -5,6 +5,8 @@ import { apiFetch } from "../config/apiClient";
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
+  onboardingCompleted: boolean;
+  userId: number;
 }
 
 const API_BASE_URL = "http://localhost:8085/api/auth";
@@ -40,6 +42,14 @@ export async function register(
   return response;
 }
 
+export async function logout(): Promise<APIResponseData<String>> {
+  const refreshToken = localStorage.getItem("refreshToken");
+  const response = await apiFetch<String>("/auth/logout", {
+    method: "POST",
+    body: JSON.stringify({ refreshToken }),
+  });
+  return response;
+}
 export async function testApi(
   userId: number,
 ): Promise<APIResponseData<string>> {

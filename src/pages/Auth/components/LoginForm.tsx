@@ -26,9 +26,15 @@ export default function LoginForm() {
         console.log(response.data);
         localStorage.setItem("accessToken", response.data.accessToken);
         localStorage.setItem("refreshToken", response.data.refreshToken);
+        localStorage.setItem("userId", response.data.userId.toString());
 
         console.log("Access Token login:", response.data.accessToken);
         console.log("Refresh Token login:", response.data.refreshToken);
+
+        if (!response.data.onboardingCompleted) {
+          navigate("/onboarding");
+          return;
+        }
         navigate("/");
       } else {
         alert(response.message || "Đăng nhập thất bại. Vui lòng thử lại");

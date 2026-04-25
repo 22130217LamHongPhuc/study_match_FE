@@ -1,3 +1,5 @@
+import { apiFetch } from "../config/apiClient";
+import { APIResponseData } from "../config/APIResponse";
 import {
   FormData,
   Cohort,
@@ -161,10 +163,12 @@ export async function submitOnboardingForm(
   payload: OnboardingSubmissionPayload,
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
   try {
+    const userId = localStorage.getItem("userId");
     const response = await fetch(`${API_BASE_URL2}/onboarding/submit`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(userId && { "X-User-Id": userId }),
       },
       body: JSON.stringify(payload),
     });
@@ -206,4 +210,21 @@ export function createSubjectCodeToIdMap(
     });
   });
   return map;
+}
+
+export async function setIsOnboardingCompleted(
+  userId: number,
+): Promise<APIResponseData<string>> {
+  try {
+    const response = await apiFetch<string>(
+      `/auth/complete-onboarding/${userId}`,
+      {
+        method: "POST",
+      },
+    );
+    return response;
+  } catch (error) {
+    console.error("Error setting onboarding completed:", error);
+    throw error;
+  }
 }
