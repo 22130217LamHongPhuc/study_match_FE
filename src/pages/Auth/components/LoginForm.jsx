@@ -1,37 +1,51 @@
+import { useState } from "react";
+import { login } from "../../../services/AuthService";
 import InputField from "./InputField";
 import PasswordField from "./PasswordField";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
-  const handleSubmit = (e) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    try {
+      const authResponse = await login(email, password);
+      console.log(authResponse);
+      localStorage.setItem("token", authResponse.data.token);
+      localStorage.setItem("refreshToken", authResponse.data.refreshToken);
+      navigate("/");
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
   return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
+    <div className="space-y-5">
       <InputField
         id="email"
-        label="Email / MSSV"
-        placeholder="sv123456@university.edu.vn"
+        label="Email"
+        placeholder="22130000@st.hcmuaf.edu.vn"
+        onChange={(e) => setEmail(e.target.value)}
       />
 
-      <PasswordField />
-
-      <label className="flex cursor-pointer items-center">
-        <input
-          type="checkbox"
-          className="h-5 w-5 rounded border-slate-300 text-blue-700 focus:ring-blue-700/20"
-        />
-        <span className="ml-3 text-sm font-medium text-slate-500">
-          Ghi nhớ đăng nhập
-        </span>
-      </label>
+      <PasswordField
+        id="password"
+        label="Password"
+        placeholder="••••••••"
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
       <button
         type="submit"
-        className="w-full rounded-xl bg-blue-700 py-4 text-lg font-bold text-white shadow-lg shadow-blue-700/20 transition duration-200 hover:scale-[1.01] hover:bg-blue-800 active:scale-[0.99]"
+        className="w-full rounded-lg bg-green-600 py-3 text-base font-medium text-white transition hover:bg-green-700"
+        onClick={handleSubmit}
       >
         Đăng nhập
       </button>
-    </form>
+    </div>
   );
 }

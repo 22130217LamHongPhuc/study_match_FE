@@ -12,8 +12,6 @@ export default function LoginPage() {
           <LoginCard />
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
