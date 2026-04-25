@@ -7,8 +7,9 @@ import Post from './Post';
 import EditIcon from '@mui/icons-material/Edit';
 import EditProfileModal from '../../components/modal/user/EditProfileModal';
 import { loadProfileService, requestFriendService } from '../../services/FriendService';
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { UserProfile } from '../../model/UserModel';
+import { ProfileStatus } from '../../enum/Profile';
 
 export default function ProfilePage() {
 
@@ -16,6 +17,7 @@ export default function ProfilePage() {
     const [modalEdit, setModalEdit] = useState<boolean>(false)
     console.warn(modalEdit, 'modal edit')
     const [statusFriend, setStatusFriend] = useState<string>('');
+
 
     const { id } = useParams();
     useEffect(() => {
@@ -46,6 +48,22 @@ export default function ProfilePage() {
 
 
     console.warn(id, 'id profile')
+    const navigate = useNavigate();
+
+
+    const sendMess = () => {
+        console.warn('send mess')
+        navigate('/conversation', { state: { targetUserId: Number(id) } })
+    }
+    if (profile?.statusFriend === ProfileStatus.BLOCKED) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Typography variant="h4" color="error">
+                    Bạn đã bị chặn bởi người dùng này
+                </Typography>
+            </Box>
+        );
+    }
 
 
     return (
@@ -56,7 +74,6 @@ export default function ProfilePage() {
             >
                 <Box sx={{ position: 'relative', height: 'fit-content', width: '30%', padding: '20px', mr: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', ml: '20px' }}>
                     <Box sx={{ backgroundImage: 'linear-gradient(90deg, rgb(225, 193, 169) 0%, rgba(225, 193, 169, 0.314) 100%);', height: '100px' }}>
-
                     </Box>
                     <Box sx={{ borderRadius: '50%', width: 115, height: 115, position: 'absolute', top: '50px', ml: '10px', backgroundColor: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <Avatar
@@ -131,10 +148,9 @@ export default function ProfilePage() {
                             <EditIcon></EditIcon>
                             Chỉnh sửa thông tin cá nhân
                         </Button> */}
-                        {!profile?.friend ? (<>{profile?.statusFriend === 'PENDING' ? (<>
+                        {profile?.friend ? (<>{profile?.statusFriend === ProfileStatus.PENDING ? (<>
                             <>
                                 <Button
-
                                     sx={{
                                         borderRadius: "20px",
                                         py: 1.5,
@@ -144,7 +160,6 @@ export default function ProfilePage() {
                                         color: "white", width: '50%',
                                         marginRight: '20px'
                                     }}
-
                                     onClick={requestFriend}
                                 >
                                     Đã gửi lời mời
@@ -158,6 +173,8 @@ export default function ProfilePage() {
                                         fontWeight: "bold",
                                         width: '50%'
                                     }}
+
+                                    onClick={sendMess}
                                 >
                                     Nhắn tin
                                 </Button>
@@ -190,6 +207,7 @@ export default function ProfilePage() {
                                         fontWeight: "bold",
                                         width: '50%'
                                     }}
+                                    onClick={sendMess}
                                 >
                                     Nhắn tin
                                 </Button>
@@ -208,14 +226,11 @@ export default function ProfilePage() {
                                     background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
                                     color: "white"
                                 }}
-
+                                onClick={sendMess}
                             >
                                 Nhắn tin
                             </Button>
                         </>)}
-
-
-
                     </Box>
 
 

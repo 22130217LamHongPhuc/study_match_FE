@@ -17,12 +17,15 @@ import {
 } from "@mui/material";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import React, { useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 
 import { Client } from "@stomp/stompjs";
 import WebSocketManager from "../../socket/WebSocketManager";
-import { sendText } from "../../services/ChatService";
+import { loadConversation, sendText } from "../../services/ChatService";
 import { South } from "@mui/icons-material";
+import { useLocation } from "react-router-dom";
+import { MessageInterface } from "../../model/Conversation";
+import { APIResponse } from "../../model/APIResponse";
 
 export default function ConversationPage() {
     const users = [
@@ -65,6 +68,24 @@ export default function ConversationPage() {
         console.log("gửi nè")
         sendText("Hello bạn ời", 1, 1)
     }
+    const currentUserId = Number(localStorage.getItem('userId'))
+    const location = useLocation();
+    const targetUserId = location.state?.targetUserId;
+    const [conversation, setConversation] = useState<MessageInterface | undefined>();
+
+    useEffect(() => {
+        const loadMess = async () => {
+            console.log("đây là targetUserId", targetUserId)
+            console.log("đây là currentUserId", currentUserId)
+            const result: APIResponse = await loadConversation(currentUserId, targetUserId);
+            console.log("đây là result", result.data)
+            // setConversation(result);
+        }
+        loadMess();
+    })
+
+    console.log("conversation", conversation)
+
 
     return (
         <Box
@@ -235,7 +256,6 @@ export default function ConversationPage() {
                     </IconButton>
                 </Box>
             </Box>
-
             <Box
                 sx={{
                     width: "25%",
