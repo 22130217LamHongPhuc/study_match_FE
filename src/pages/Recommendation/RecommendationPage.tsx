@@ -10,31 +10,28 @@ import {
 import { FormEvent, useState } from "react";
 import RecommendationCard from "./components/RecommendationCard";
 import { useRecommendations } from "./hooks/useRecommendations";
+import { testApi } from "../../services/AuthService";
 
 export default function RecommendationPage() {
   const { userId, loading, error, message, items, fetchRecommendations } =
     useRecommendations(28);
-  const [userIdInput, setUserIdInput] = useState<string>(String(userId));
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const parsed = Number(userIdInput);
+  const checkApi = async () => {
+    const response = await testApi(28);
 
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return;
+    if (response.success) {
+      alert("API hoạt động tốt! Dữ liệu: " + JSON.stringify(response.data));
+    } else {
+      alert("API trả về lỗi: " + response.message);
     }
-
-    await fetchRecommendations(parsed);
   };
-
   return (
     <Box
       sx={{
         minHeight: "100%",
         py: { xs: 2, md: 4 },
         px: { xs: 1.5, md: 2 },
-        background:
-          "radial-gradient(circle at 85% 0%, #E8F7F7 0%, #F2F9FF 35%, #F8FAFF 100%)",
+        background: "radial-gradient(circle at top right, #E8F7F7, #F8FAFF)",
       }}
     >
       <Box sx={{ width: { xs: "100%", md: "78%", xl: "74%" }, mx: "auto" }}>
@@ -140,6 +137,8 @@ export default function RecommendationPage() {
           </Box>
         </Stack>
       </Box>
+
+      <Button onClick={checkApi}>Fectch API</Button>
     </Box>
   );
 }

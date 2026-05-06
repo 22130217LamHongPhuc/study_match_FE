@@ -7,7 +7,7 @@ import RegisterText from "./RegisterText";
 
 export default function LoginCard() {
   return (
-    <div className="rounded-[28px] bg-white p-8 opacity-95">
+    <div className="rounded-[28px] bg-white p-8">
       <WelcomeSection />
       <LoginForm />
       <Divider />

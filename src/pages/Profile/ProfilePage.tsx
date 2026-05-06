@@ -6,11 +6,10 @@ import ScheduleTable from "./components/ScheduleTable";
 import SubjectsCard from "./components/SubjectsCard";
 import { useProfileData } from "./hooks/useProfileData";
 
-const DEFAULT_USER_ID = 28;
-
 export default function ProfilePage() {
-  const { profileVm, loading, error, usingMockData } =
-    useProfileData(DEFAULT_USER_ID);
+  const userId = Number(localStorage.getItem("userId"));
+
+  const { profileVm, loading, error, usingMockData } = useProfileData(userId);
 
   if (loading) {
     return (
