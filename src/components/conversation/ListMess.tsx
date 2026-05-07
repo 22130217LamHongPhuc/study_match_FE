@@ -14,6 +14,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
 
 
+
     const reactions = ["\u2764\ufe0f", "\ud83d\ude06", "\ud83d\ude2e", "\ud83d\ude22", "\ud83d\ude21", "\ud83d\udc4d"]
     const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim", "Báo cáo"]
 
@@ -64,7 +65,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
             }}
         >
             {conversation.map((mess) => {
-                if (mess.senderId === Number(localStorage.getItem("userId"))) {
+                if (mess.senderId !== Number(localStorage.getItem("userId"))) {
                     return (
                         <Box
                             sx={{

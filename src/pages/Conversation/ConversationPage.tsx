@@ -31,6 +31,8 @@ import ListMess from "../../components/conversation/ListMess";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
 import ReplyMessage from "../../components/conversation/ReplyMessage";
+import { useDispatch } from "react-redux";
+import { updateCurrentConversationID } from "../../redux/ChatReducer";
 export default function ConversationPage() {
 
     const [replymess, setReplyMess] = useState<MessageInterface | null>(null)
@@ -45,9 +47,9 @@ export default function ConversationPage() {
     const targetUserId = location.state?.targetUserId;
     const avatar = location.state?.avatar;
     const fullName = location.state?.fullName;
-    const [conversation, setConversation] = useState<MessageInterface[] | null>(null);
+    const [conversation, setConversation] = useState<MessageInterface[]>([]);
     console.log("conversation", conversation)
-    const [conversationId, setConversationId] = useState<number>()
+    const conversationId = useRef<number | null>(null)
 
     useLayoutEffect(() => {
         let ws = WebSocketManager.getInstance()
@@ -62,11 +64,25 @@ export default function ConversationPage() {
             console.error("Lỗi connect:", err);
         });
     }, [])
+    console.log("đây là conversation sau khi set", conversation)
 
     const sendMessage = () => {
         console.log("gửi nè")
         const senderId = Number(localStorage.getItem('userId'));
-        sendText("Hello bạn ời", senderId, conversationId as number);
+        sendText(messageText, senderId, conversationId.current as number);
+        setConversation((prev) => {
+
+            const newMessage: MessageInterface = {
+                messageId: Date.now(),
+                senderId: Number(localStorage.getItem('userId')),
+                type: 'text',
+                content: messageText,
+                mediaURL: null,
+                fileName: null,
+                createAt: new Date().toISOString()
+            }
+            return [newMessage, ...prev];
+        })
         setMessageText("");
     }
     console.warn("đây là conversationId", conversationId)
@@ -76,6 +92,7 @@ export default function ConversationPage() {
         setMessageText((prev) => prev + emojiObject.emoji);
         // setShowEmojiPicker(false);
     }
+    const dispatch = useDispatch();
 
 
     useLayoutEffect(() => {
@@ -84,12 +101,19 @@ export default function ConversationPage() {
             console.log("đây là currentUserId", currentUserId)
             const result: APIResponse = await loadConversation(currentUserId, targetUserId);
             console.log("đây là result", result.data)
-            setConversationId(result.data.conversationId)
+            conversationId.current = result.data.conversationId;
             setConversation(result.data.listMess);
         }
         loadMess();
+        console.warn("đây là conversationId sau khi loadMess", conversationId.current)
+
     }, [targetUserId, currentUserId])
 
+    useEffect(() => {
+        if (conversationId.current) {
+            dispatch(updateCurrentConversationID({ conversationId: conversationId.current }))
+        }
+    }, [conversationId.current, dispatch])
 
 
 

@@ -5,8 +5,8 @@ export type MessageInterface = {
     senderId: number,
     type: string,
     content: string,
-    mediaURL: string,
-    fileName: string,
+    mediaURL: string | null,
+    fileName: string | null,
     createAt: string;
 }
 
