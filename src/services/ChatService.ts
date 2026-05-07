@@ -11,8 +11,8 @@ export const sendText = (content: string, senderId: number, conversationId: numb
         ws.sendMessage(SOCKET_SEND_MESSAGE, {
             event: SocketEvent.SEND_CHAT,
             data: {
-                conversationId: 1,
-                senderId: 1,
+                conversationId: conversationId,
+                senderId: senderId,
                 type: "text",
                 content: content,
             }
@@ -42,7 +42,7 @@ export const sendFirstMessage = (content: string, to: number) => {
 
 }
 export const loadConversation = async (currentU: number, targetU: number) => {
-    const url = `${BASE_CHAT_SERVICE}/conversation?currentUser=${currentU}&targetUser=${targetU}&page=1`
+    const url = `${BASE_CHAT_SERVICE}/conversation?currentUser=${currentU}&targetUser=${targetU}&page=0`
     const res = await fetch(url, {
         method: 'GET',
         headers: {

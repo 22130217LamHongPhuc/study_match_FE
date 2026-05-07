@@ -30,110 +30,110 @@ export default function ListFriends() {
         },
     ];
     return (
-        <div>
+
+        <Box
+            sx={{
+                width: "25%",
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+                p: "10px",
+                overflow: "hidden",
+                borderLeft: "1px solid rgba(0,0,0,0.08)",
+                bgcolor: "#fff",
+            }}
+        >
             <Box
                 sx={{
-                    width: "25%",
                     display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
-                    p: "10px",
-                    overflow: "hidden",
-                    borderLeft: "1px solid rgba(0,0,0,0.08)",
-                    bgcolor: "#fff",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    mt: "10px",
+                    mb: 2,
+                    flexShrink: 0,
                 }}
             >
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        mt: "10px",
-                        mb: 2,
-                        flexShrink: 0,
-                    }}
-                >
-                    <ArrowForwardIcon sx={{ color: "#8d8fa3" }} />
-                    <Typography sx={{ fontWeight: 700 }}>Bạn bè</Typography>
-                    <Box sx={{ width: 24 }} />
-                </Box>
+                <ArrowForwardIcon sx={{ color: "#8d8fa3" }} />
+                <Typography sx={{ fontWeight: 700 }}>Bạn bè</Typography>
+                <Box sx={{ width: 24 }} />
+            </Box>
 
-                <TextField
-                    fullWidth
-                    placeholder="Tìm kiếm bạn bè"
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                        mb: 2,
-                        flexShrink: 0,
-                        "& .MuiOutlinedInput-root": {
-                            borderRadius: "10px",
-                            bgcolor: "#f4f6fb",
-                        },
-                        "& .MuiOutlinedInput-input": {
-                            padding: "10px",
-                        },
-                    }}
-                />
+            <TextField
+                fullWidth
+                placeholder="Tìm kiếm bạn bè"
+                variant="outlined"
+                size="small"
+                sx={{
+                    mb: 2,
+                    flexShrink: 0,
+                    "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                        bgcolor: "#f4f6fb",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                        padding: "10px",
+                    },
+                }}
+            />
 
-                <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-                    {users.map((user) => (
-                        <Box
-                            key={user.id}
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                py: 1.5,
-                                px: 1,
-                                borderRadius: "14px",
-                                "&:hover": {
-                                    bgcolor: "#f0f2f8",
-                                    cursor: "pointer",
-                                },
-                            }}
-                        >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                <Box sx={{ position: "relative" }}>
-                                    <Avatar src={user.avatar} sx={{ width: 45, height: 45 }} />
-                                    <Box
-                                        sx={{
-                                            position: "absolute",
-                                            right: -2,
-                                            bottom: -2,
-                                            width: 14,
-                                            height: 14,
-                                            borderRadius: "50%",
-                                            bgcolor: "#48d26d",
-                                            border: "2px solid white",
-                                        }}
-                                    />
-                                </Box>
-                                <Box>
-                                    <Typography
-                                        sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44" }}
-                                    >
-                                        {user.name}
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            fontSize: 13,
-                                            color: "#8d8fa3",
-                                            mt: "2px",
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            maxWidth: "160px",
-                                        }}
-                                    >
-                                        {user.lastMessage}
-                                    </Typography>
-                                </Box>
+            <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+                {users.map((user) => (
+                    <Box
+                        key={user.id}
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            py: 1.5,
+                            px: 1,
+                            borderRadius: "14px",
+                            "&:hover": {
+                                bgcolor: "#f0f2f8",
+                                cursor: "pointer",
+                            },
+                        }}
+                    >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Box sx={{ position: "relative" }}>
+                                <Avatar src={user.avatar} sx={{ width: 45, height: 45 }} />
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        right: -2,
+                                        bottom: -2,
+                                        width: 14,
+                                        height: 14,
+                                        borderRadius: "50%",
+                                        bgcolor: "#48d26d",
+                                        border: "2px solid white",
+                                    }}
+                                />
+                            </Box>
+                            <Box>
+                                <Typography
+                                    sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44" }}
+                                >
+                                    {user.name}
+                                </Typography>
+                                <Typography
+                                    sx={{
+                                        fontSize: 13,
+                                        color: "#8d8fa3",
+                                        mt: "2px",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        maxWidth: "160px",
+                                    }}
+                                >
+                                    {user.lastMessage}
+                                </Typography>
                             </Box>
                         </Box>
-                    ))}
-                </Box>
+                    </Box>
+                ))}
             </Box>
-        </div>
+        </Box>
+
     )
 }

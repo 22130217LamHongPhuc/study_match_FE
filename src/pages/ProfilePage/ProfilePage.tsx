@@ -53,7 +53,7 @@ export default function ProfilePage() {
 
     const sendMess = () => {
         console.warn('send mess')
-        navigate('/conversation', { state: { targetUserId: Number(id) } })
+        navigate('/conversation', { state: { targetUserId: Number(id), avatar: profile?.avatarUrl, fullName: profile?.fullName } })
     }
     if (profile?.statusFriend === ProfileStatus.BLOCKED) {
         return (
@@ -82,7 +82,6 @@ export default function ProfilePage() {
                             sx={{ width: '90%', height: '90%' }}
                         />
                     </Box>
-
                     <Typography fontSize="32px" fontWeight="bold" color='black' mt='50px'>
                         {profile?.fullName}
                     </Typography>
