@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { getProfileByUserId } from "../../../services/ProfileService";
-import { mapProfileResponseToVm } from "../mappers/profileMapper";
-import { mockProfileData } from "../mockProfileData";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loadProfileByUserId } from "../../../redux/ProfileReducer";
+import { AppDispatch, RootState } from "../../../redux/store";
 import { ProfileApiResponse, ProfileViewModel } from "../types";
 
 interface UseProfileDataResult {
@@ -13,55 +13,21 @@ interface UseProfileDataResult {
 }
 
 export function useProfileData(userId: number): UseProfileDataResult {
-  const [profileData, setProfileData] = useState<ProfileApiResponse | null>(
-    null,
-  );
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [usingMockData, setUsingMockData] = useState<boolean>(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const profile = useSelector((state: RootState) => state.profile);
 
+  console.log("useProfileData - userId:", userId);
+  console.log("useProfileData - profile state:", profile);
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadProfile() {
-      setLoading(true);
-      setError(null);
-      setUsingMockData(false);
-
-      try {
-        const data = await getProfileByUserId(userId);
-        if (!isMounted) return;
-        setProfileData(data);
-      } catch (err) {
-        // if (!isMounted) return;
-        // const message = err instanceof Error ? err.message : "Khong tai duoc du lieu profile";
-        // setError(message);
-        // setProfileData(mockProfileData);
-        // setUsingMockData(true);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [userId]);
-
-  const profileVm = useMemo(() => {
-    if (!profileData) return null;
-    return mapProfileResponseToVm(profileData);
-  }, [profileData]);
+    if (!Number.isFinite(userId) || userId <= 0) return;
+    dispatch(loadProfileByUserId(userId));
+  }, [dispatch, userId]);
 
   return {
-    profileData,
-    profileVm,
-    loading,
-    error,
-    usingMockData,
+    profileData: profile.profileData,
+    profileVm: profile.profileVm,
+    loading: profile.loading,
+    error: profile.error,
+    usingMockData: false,
   };
 }

@@ -11,6 +11,7 @@ import MatchingCriteriaSection from "./components/MatchingCriteriaSection";
 import GroupSettingsSection from "./components/GroupSettingsSection";
 import GroupPreviewSidebar from "./components/GroupPreviewSidebar";
 import BottomActionBar from "./components/BottomActionBar";
+import store from "../../redux/store";
 
 export default function CreateGroupPage() {
   const [groupName, setGroupName] = useState<string>("");
@@ -24,7 +25,7 @@ export default function CreateGroupPage() {
   const [visibility, setVisibility] = useState<"public" | "private">("public");
 
   const [freeTime, setFreeTime] = useState<FreeTime>(() => initFreeTime());
-
+  console.log(store.getState());
   return (
     <div className="min-h-screen bg-transparent font-sans text-slate-900">
       <main className="mx-auto max-w-6xl px-6 py-8 pb-32">

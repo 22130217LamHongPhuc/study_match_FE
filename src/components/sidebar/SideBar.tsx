@@ -18,14 +18,18 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Trang chu", icon: <HomeIcon />, path: "/" },
-  { label: "Ho so", icon: <BadgeIcon />, path: "/profile" },
-  { label: "Lich hoc", icon: <CalendarMonthIcon />, path: "/schedule" },
-  { label: "Goi y ban hoc", icon: <BarChartIcon />, path: "/recommendation" },
-  { label: "Ban be", icon: <PersonIcon />, path: "/friends" },
-  { label: "Cuoc hoi thoai", icon: <QuestionAnswerIcon /> },
-  { label: "Nhom", icon: <Diversity2Icon /> },
-  { label: "Phan hoi", icon: <FeedbackIcon /> },
+  { label: "Trang chủ", icon: <HomeIcon />, path: "/" },
+  { label: "Hồ sơ", icon: <BadgeIcon />, path: "/profile" },
+  { label: "Lịch học", icon: <CalendarMonthIcon />, path: "/schedule" },
+  { label: "Gợi ý bạn học", icon: <BarChartIcon />, path: "/recommendation" },
+  { label: "Bạn bè", icon: <PersonIcon />, path: "/friends" },
+  {
+    label: "Cuộc hội thoại",
+    icon: <QuestionAnswerIcon />,
+    path: "/conversation",
+  },
+  { label: "Nhóm", icon: <Diversity2Icon />, path: "/groups" },
+  { label: "Phản hồi", icon: <FeedbackIcon />, path: "/feedback" },
 ];
 
 export default function SideBar() {

@@ -13,6 +13,7 @@ import ConversationPage from "../pages/Conversation/ConversationPage";
 import { Navigate } from "react-router-dom";
 import { Login } from "@mui/icons-material";
 import CreateGroupPage from "../pages/CreateGroup/CreateGroupPage";
+import GroupPage from "../pages/Group/GroupPage";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
           { path: "/profile", element: <ProfilePage /> },
           { path: "/conversation", element: <ConversationPage /> },
           { path: "/recommendation", element: <RecommendationPage /> },
+          { path: "/groups", element: <GroupPage /> },
         ],
       },
     ],

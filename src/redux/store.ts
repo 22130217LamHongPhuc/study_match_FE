@@ -1,9 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { userAction } from './UserReducer';
 import userReducer from '../redux/UserReducer'
+import profileReducer from "./ProfileReducer";
 const store = configureStore({
     reducer: {
-        user: userReducer
+        user: userReducer,
+        profile: profileReducer,
     }
 });
 export default store;
