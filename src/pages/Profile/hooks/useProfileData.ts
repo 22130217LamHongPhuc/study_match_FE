@@ -18,6 +18,7 @@ export function useProfileData(userId: number): UseProfileDataResult {
 
   console.log("useProfileData - userId:", userId);
   console.log("useProfileData - profile state:", profile);
+
   useEffect(() => {
     if (!Number.isFinite(userId) || userId <= 0) return;
     dispatch(loadProfileByUserId(userId));

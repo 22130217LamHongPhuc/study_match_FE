@@ -4,6 +4,7 @@ import type {
   FreeTime,
   StudyGoal,
   StudyMode,
+  Subject,
 } from "../Onboarding/components/types";
 import BasicInfoSection from "./components/BasicInfoSection";
 import AcademicInfoSection from "./components/AcademicInfoSection";
@@ -11,12 +12,22 @@ import MatchingCriteriaSection from "./components/MatchingCriteriaSection";
 import GroupSettingsSection from "./components/GroupSettingsSection";
 import GroupPreviewSidebar from "./components/GroupPreviewSidebar";
 import BottomActionBar from "./components/BottomActionBar";
-import store from "../../redux/store";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  createStudyGroup,
+  type CreateStudyGroupRequest,
+  type DayOfWeek,
+  type FreeTimeSlotRequest,
+  type SlotCode,
+} from "../../services/GroupService";
+import { VALID_MODES } from "../Onboarding/components/constants";
 
 export default function CreateGroupPage() {
+  const navigate = useNavigate();
   const [groupName, setGroupName] = useState<string>("");
   const [goalDescription, setGoalDescription] = useState<string>("");
-  const [mainSubject, setMainSubject] = useState<string>("");
+  const [mainSubject, setMainSubject] = useState<Subject | null>(null);
 
   const [studyGoal, setStudyGoal] = useState<StudyGoal | "">("");
   const [studyMode, setStudyMode] = useState<StudyMode | "">("");
@@ -25,7 +36,88 @@ export default function CreateGroupPage() {
   const [visibility, setVisibility] = useState<"public" | "private">("public");
 
   const [freeTime, setFreeTime] = useState<FreeTime>(() => initFreeTime());
-  console.log(store.getState());
+  const profileState = useSelector((state: any) => state.profile);
+  if (profileState.loading) {
+    return <div>Loading...</div>;
+  }
+
+  const handleCreateGroup = async () => {
+    const ownerUserId = Number(localStorage.getItem("userId"));
+    const mainSubjectId = Number(mainSubject?.subjectId);
+
+    if (!groupName.trim()) {
+      alert("Vui lòng nhập tên nhóm");
+      return;
+    }
+    if (!Number.isFinite(ownerUserId) || ownerUserId <= 0) {
+      alert("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+      return;
+    }
+    if (!Number.isFinite(mainSubjectId) || mainSubjectId <= 0) {
+      alert("Vui lòng chọn môn học chính");
+      return;
+    }
+    if (!studyGoal || !studyMode) {
+      alert("Vui lòng chọn Study Goal và Study Mode");
+      return;
+    }
+
+    const allowedModes = VALID_MODES[studyGoal] ?? [];
+    if (!allowedModes.includes(studyMode)) {
+      alert("Study Mode không hợp lệ cho Study Goal đã chọn");
+      return;
+    }
+    if (!Number.isFinite(maxMembers) || maxMembers < 1) {
+      alert("Số lượng thành viên tối đa không hợp lệ");
+      return;
+    }
+
+    const validSlotCodes = new Set(["ca1", "ca2", "ca3", "ca4", "ca5", "ca6"]);
+
+    const freeTimeSlots: FreeTimeSlotRequest[] = Object.entries(
+      freeTime,
+    ).flatMap(([dayKey, slots]) => {
+      const dayNumber = Number(dayKey);
+      if (!Number.isInteger(dayNumber) || dayNumber < 0 || dayNumber > 6) {
+        return [];
+      }
+
+      const dayOfWeek = dayNumber as DayOfWeek;
+
+      return Object.entries(slots as Record<string, boolean>)
+        .filter(([slotCodeKey]) => validSlotCodes.has(slotCodeKey))
+        .filter(([, isAvailable]) => Boolean(isAvailable))
+        .map(([slotCodeKey, isAvailable]) => ({
+          dayOfWeek,
+          slotCode: slotCodeKey as SlotCode,
+          isAvailable: Boolean(isAvailable),
+        }));
+    });
+
+    const payload: CreateStudyGroupRequest = {
+      name: groupName.trim(),
+      description: goalDescription?.trim() || "",
+      ownerUserId,
+      mainSubjectId,
+      subjectName: mainSubject?.subjectName || "",
+      studyGoal,
+      studyMode,
+      maxMembers,
+      visibility,
+      freeTimeSlots,
+    };
+    console.log("CreateGroupPage - payload:", payload);
+
+    const res = await createStudyGroup(payload);
+    if (res.success) {
+      alert("Tạo nhóm thành công");
+      navigate("/groups");
+      return;
+    } else {
+      alert("Tạo nhóm thất bại: " + (res.message || "Lỗi không xác định"));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-transparent font-sans text-slate-900">
       <main className="mx-auto max-w-6xl px-6 py-8 pb-32">
@@ -53,6 +145,10 @@ export default function CreateGroupPage() {
             <AcademicInfoSection
               mainSubject={mainSubject}
               onMainSubjectChange={setMainSubject}
+              curriculumId={
+                profileState?.profileData?.profile.cohort.curriculum
+                  .curriculumId || null
+              }
             />
 
             <MatchingCriteriaSection
@@ -78,7 +174,7 @@ export default function CreateGroupPage() {
             draft={{
               groupName,
               goalDescription,
-              mainSubject,
+              mainSubject: mainSubject?.subjectName || "",
               studyGoal,
               studyMode,
               maxMembers,
@@ -89,7 +185,10 @@ export default function CreateGroupPage() {
         </div>
       </main>
 
-      <BottomActionBar />
+      <BottomActionBar
+        onCancel={() => navigate(-1)}
+        onCreate={handleCreateGroup}
+      />
     </div>
   );
 }
