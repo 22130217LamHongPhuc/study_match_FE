@@ -73,7 +73,18 @@ export default function CreateGroupPage() {
             />
           </div>
 
-          <GroupPreviewSidebar />
+          <GroupPreviewSidebar
+            draft={{
+              groupName,
+              goalDescription,
+              mainSubject,
+              studyGoal,
+              studyMode,
+              maxMembers,
+              visibility,
+              freeTime,
+            }}
+          />
         </div>
       </main>
 
