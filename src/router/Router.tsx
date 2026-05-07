@@ -12,6 +12,7 @@ import OnboardingFlow from "../pages/Onboarding/Onboarding";
 import ConversationPage from "../pages/Conversation/ConversationPage";
 import { Navigate } from "react-router-dom";
 import { Login } from "@mui/icons-material";
+import CreateGroupPage from "../pages/CreateGroup/CreateGroupPage";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
@@ -48,5 +49,10 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+
+  {
+    element: <AuthLayout />,
+    children: [{ path: "/create-group", element: <CreateGroupPage /> }],
   },
 ]);
