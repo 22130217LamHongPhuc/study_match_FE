@@ -50,6 +50,7 @@ export async function logout(): Promise<APIResponseData<String>> {
   });
   return response;
 }
+
 export async function testApi(
   userId: number,
 ): Promise<APIResponseData<string>> {

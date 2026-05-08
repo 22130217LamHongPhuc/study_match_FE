@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function PasswordField({
   id,
   label,
@@ -20,12 +22,12 @@ export default function PasswordField({
         >
           Mật khẩu
         </label>
-        <a
-          href="#"
+        <Link
+          to="/forgot-password"
           className="text-sm font-semibold text-black-700 transition hover:underline"
         >
           Quên mật khẩu?
-        </a>
+        </Link>
       </div>
 
       <input

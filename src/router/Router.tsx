@@ -14,6 +14,10 @@ import { Navigate } from "react-router-dom";
 import { Login } from "@mui/icons-material";
 import CreateGroupPage from "../pages/CreateGroup/CreateGroupPage";
 import GroupPage from "../pages/Group/GroupPage";
+import ForgotPasswordPage from "../pages/Auth/ResetPassword/ForgotPasswordPage";
+import CheckEmailPage from "../pages/Auth/ResetPassword/CheckEmailPage";
+import ResetPasswordPage from "../pages/Auth/ResetPassword/ResetPasswordPage";
+import ResetPasswordSuccessPage from "../pages/Auth/ResetPassword/ResetPasswordSuccessPage";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
@@ -32,6 +36,22 @@ export const router = createBrowserRouter([
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
       { path: "/onboarding", element: <OnboardingFlow /> },
+      {
+        path: "/forgot-password",
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: "/check-email",
+        element: <CheckEmailPage />,
+      },
+      {
+        path: "/reset-password",
+        element: <ResetPasswordPage />,
+      },
+      {
+        path: "/reset-password-success",
+        element: <ResetPasswordSuccessPage />,
+      },
     ],
   },
 

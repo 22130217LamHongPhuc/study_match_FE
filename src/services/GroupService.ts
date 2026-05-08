@@ -32,6 +32,23 @@ export interface CreateStudyGroupRequest {
   freeTimeSlots?: FreeTimeSlotRequest[];
 }
 
+export interface StudyGroupDetailResponse {
+  id: number;
+  name: string;
+  description: string;
+  ownerUserId: number;
+  termId: number;
+  mainSubjectId: number;
+  subjectName: string;
+  studyGoal: string;
+  studyMode: string;
+  maxMembers: number;
+  visibility: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export async function getAllSubjectsByCurriculum(
   curriculumId: number,
 ): Promise<APIResponseData<Subject[]>> {
@@ -53,6 +70,19 @@ export async function createStudyGroup(
     {
       method: "POST",
       body: JSON.stringify(payload),
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export async function getGroupsByUserId(
+  userId: number,
+): Promise<APIResponseData<StudyGroupDetailResponse[]>> {
+  const response = await apiFetch<StudyGroupDetailResponse[]>(
+    `/api/groups/user/${userId}`,
+    {
+      method: "GET",
     },
     API_BASE_URL_GROUP,
   );
