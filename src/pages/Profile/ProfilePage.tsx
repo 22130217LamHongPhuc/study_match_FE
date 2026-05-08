@@ -9,7 +9,7 @@ import { useProfileData } from "./hooks/useProfileData";
 export default function ProfilePage() {
   const userId = Number(localStorage.getItem("userId"));
 
-  const { profileVm, loading, error, usingMockData } = useProfileData(userId);
+  const { profileVm, loading } = useProfileData(userId);
 
   if (loading) {
     return (

@@ -31,6 +31,11 @@ export default function LoginForm() {
         console.log("Access Token login:", response.data.accessToken);
         console.log("Refresh Token login:", response.data.refreshToken);
 
+        if (!response.data.emailVerified) {
+          navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+          return;
+        }
+
         if (!response.data.onboardingCompleted) {
           navigate("/onboarding");
           return;

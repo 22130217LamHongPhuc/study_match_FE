@@ -444,6 +444,17 @@ export default function OnboardingFlow() {
   };
 
   const handleBack = (): void => {
+    if (step === 1 && goalSub === 1) {
+      if (
+        window.confirm(
+          "Bạn có chắc muốn thoát? Dữ liệu đã nhập sẽ không được lưu.",
+        )
+      ) {
+        navigate("/login", { replace: true });
+      }
+
+      return;
+    }
     if (step === 3 && goalSub === 2) return setGoalSub(1);
     if (step === 4) return setStep(3);
     if (step > 1) setStep((s) => s - 1);
@@ -657,14 +668,9 @@ export default function OnboardingFlow() {
           <div className="flex gap-3">
             <button
               onClick={handleBack}
-              disabled={isBackDisabled}
-              className={`px-6 py-3 rounded-xl border text-sm font-medium transition-all ${
-                isBackDisabled
-                  ? "border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50"
-                  : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50 hover:border-gray-300"
-              }`}
+              className={`px-6 py-3 rounded-xl border text-sm font-medium transition-all ${"border-gray-200 text-gray-600 bg-white hover:bg-gray-50 hover:border-gray-300"}`}
             >
-              ← Quay lại
+              {isBackDisabled ? "Thoát" : "← Trở lại"}
             </button>
             <button
               onClick={handleNext}
