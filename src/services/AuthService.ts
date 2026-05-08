@@ -7,6 +7,7 @@ export interface AuthResponse {
   refreshToken: string;
   onboardingCompleted: boolean;
   userId: number;
+  emailVerified: boolean;
 }
 
 const API_BASE_URL = "http://localhost:8085/api/auth";
@@ -47,6 +48,37 @@ export async function logout(): Promise<APIResponseData<String>> {
   const response = await apiFetch<String>("/auth/logout", {
     method: "POST",
     body: JSON.stringify({ refreshToken }),
+  });
+  return response;
+}
+
+export async function forgetPassword(
+  email: string,
+): Promise<APIResponseData<String>> {
+  const response = await apiFetch<String>("/auth/forget-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  return response;
+}
+
+export async function resetEmailVerification(
+  email: string,
+): Promise<APIResponseData<String>> {
+  const response = await apiFetch<String>("/auth/reset-verify-email", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  return response;
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<APIResponseData<String>> {
+  const response = await apiFetch<String>("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, newPassword }),
   });
   return response;
 }

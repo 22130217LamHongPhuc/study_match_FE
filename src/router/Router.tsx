@@ -18,6 +18,7 @@ import ForgotPasswordPage from "../pages/Auth/ResetPassword/ForgotPasswordPage";
 import CheckEmailPage from "../pages/Auth/ResetPassword/CheckEmailPage";
 import ResetPasswordPage from "../pages/Auth/ResetPassword/ResetPasswordPage";
 import ResetPasswordSuccessPage from "../pages/Auth/ResetPassword/ResetPasswordSuccessPage";
+import CheckVerifyEmailPage from "../pages/Auth/ResetPassword/CheckVerifyPage";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
       {
         path: "/reset-password-success",
         element: <ResetPasswordSuccessPage />,
+      },
+      {
+        path: "/verify-email",
+        element: <CheckVerifyEmailPage />,
       },
     ],
   },

@@ -17,22 +17,6 @@ export default function CheckEmailPage() {
           Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại
           mật khẩu. Liên kết có hiệu lực trong 15 phút.
         </p>
-
-        <div className="mt-8 space-y-3">
-          <Link
-            to="/forgot-password"
-            className="block w-full rounded-xl border border-slate-300 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-            Gửi lại email
-          </Link>
-
-          <Link
-            to="/login"
-            className="block w-full rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
-          >
-            Quay lại đăng nhập
-          </Link>
-        </div>
       </div>
     </div>
   );
