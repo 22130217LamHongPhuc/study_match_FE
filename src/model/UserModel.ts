@@ -15,3 +15,14 @@ export interface LoginSuccess {
     username: string,
     avatar: string
 }
+
+
+export interface UserProfile {
+    fullName: string,
+    avatarUrl: string,
+    bio: string,
+    mutualFriend: number,
+    numberFriend: number,
+    statusFriend: string,
+    friend: boolean
+}

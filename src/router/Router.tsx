@@ -3,13 +3,13 @@ import MainLayout from "../pages/MainLayout/MainLayout";
 import HomePage from "../pages/HomePage";
 import FriendsPage from "../pages/FriendsLayout/FriendsPage";
 import SchedulePage from "../pages/SchedulePage/SchedulePage";
-import ProfilePage from "../pages/Profile";
 import RecommendationPage from "../pages/Recommendation";
 import { AuthLayout } from "../pages/MainLayout/AuthLayout";
 import LoginPage from "../pages/Auth/LoginPage";
 import RegisterPage from "../pages/Auth/RegisterPage";
 import OnboardingFlow from "../pages/Onboarding/Onboarding";
 import ConversationPage from "../pages/Conversation/ConversationPage";
+
 import { Navigate } from "react-router-dom";
 import { Login } from "@mui/icons-material";
 import CreateGroupPage from "../pages/CreateGroup/CreateGroupPage";
@@ -20,6 +20,8 @@ import ResetPasswordPage from "../pages/Auth/ResetPassword/ResetPasswordPage";
 import ResetPasswordSuccessPage from "../pages/Auth/ResetPassword/ResetPasswordSuccessPage";
 import CheckVerifyEmailPage from "../pages/Auth/ResetPassword/CheckVerifyPage";
 
+
+export const router = createBrowserRouter([
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
   console.log("ProtectedRoute token:", token);
@@ -63,18 +65,14 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      {
-        element: <MainLayout />,
-        children: [
-          { path: "/", element: <HomePage /> },
-          { path: "/friends", element: <FriendsPage /> },
-          { path: "/schedule", element: <SchedulePage /> },
-          { path: "/profile", element: <ProfilePage /> },
-          { path: "/conversation", element: <ConversationPage /> },
-          { path: "/recommendation", element: <RecommendationPage /> },
-          { path: "/groups", element: <GroupPage /> },
-        ],
-      },
+      { path: "/", element: <HomePage /> },
+      { path: "/friends", element: <HomePage /> },
+      { path: "/schedule", element: <SchedulePage /> },
+      { path: "/profile/:id", element: <ProfilePage /> },
+      { path: "/conversation", element: <ConversationPage /> },
+      { path: "/recommendation", element: <RecommendationPage /> },
+               { path: "/groups", element: <GroupPage /> },
+
     ],
   },
 

@@ -7,7 +7,6 @@ interface UserInterface {
 }
 
 const initialUser: UserInterface = {
-
     username: null,
     email: null,
     token: null,

@@ -7,5 +7,6 @@ export enum SocketEvent {
     RECEIVE_CHAT = 'RECEIVE_CHAT',
     USER_JOINED = 'USER_JOINED',
     USER_LEFT = 'USER_LEFT',
-
+    MESSAGE_ACK = 'MESSAGE_ACK',
+    NEW_MESSAGE = 'NEW_MESSAGE'
 }

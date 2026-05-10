@@ -1,4 +1,3 @@
-
 import CallIcon from "@mui/icons-material/Call";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import MicIcon from "@mui/icons-material/Mic";
@@ -6,6 +5,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import GifBoxIcon from "@mui/icons-material/GifBox";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import SendIcon from "@mui/icons-material/Send";
+import WelcomeConversation from "../../components/conversation/WelcomeConversion";
 import {
     Avatar,
     Box,
@@ -17,60 +17,113 @@ import {
 } from "@mui/material";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import React, { useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Client } from "@stomp/stompjs";
 import WebSocketManager from "../../socket/WebSocketManager";
-import { sendText } from "../../services/ChatService";
+import { loadConversation, sendText } from "../../services/ChatService";
 import { South } from "@mui/icons-material";
-
+import { useLocation } from "react-router-dom";
+import { MessageInterface } from "../../model/Conversation";
+import { APIResponse } from "../../model/APIResponse";
+import ListFriends from "../../components/conversation/ListFriends";
+import ListMess from "../../components/conversation/ListMess";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
+import ReplyMessage from "../../components/conversation/ReplyMessage";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+import { updateCurrentConverId } from "../../redux/ChatReducer";
+import { SocketEvent } from "../../enum/SocketEvent";
 export default function ConversationPage() {
-    const users = [
-        {
-            id: 1,
-            name: "okeeee",
-            avatar: "https://i.pravatar.cc/100?img=1",
-            verified: true,
-            badge: "75",
-            lastMessage: "Hello bro!",
-        },
-        {
-            id: 2,
-            name: "ZE Z",
-            avatar: "https://i.pravatar.cc/100?img=2",
-            verified: false,
-            badge: "100",
-            lastMessage: "",
-        },
-    ];
-
+    const dispatch = useDispatch()
+    const [replymess, setReplyMess] = useState<MessageInterface | null>(null)
+    console.error("đây là replymess", replymess)
     const [messages, setMessages] = useState([]);
+    const [messageText, setMessageText] = useState("");
+    console.log("messageText", messageText)
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const stompClient = useRef<Client | null>(null);
+    const currentUserId = Number(localStorage.getItem('userId'))
+    const location = useLocation();
+    const targetUserId = location.state?.targetUserId;
+    const avatar = location.state?.avatar;
+    const fullName = location.state?.fullName;
+    const [conversation, setConversation] = useState<MessageInterface[]>([]);
+    console.log("conversation", conversation)
+    const conversationId = useRef<number | null>(null)
 
-    useEffect(() => {
-        let ws = WebSocketManager.getInstance()
-        console.log("đây là userId", localStorage.getItem('userId'))
+    // useLayoutEffect(() => {
+    //     let ws = WebSocketManager.getInstance()
+    //     console.log("đây là userId", localStorage.getItem('userId'))
 
-        ws.connect().then(() => {
-            ws.onMessage("/queue/messages/" + localStorage.getItem('userId'), (msg: any) => {
-                console.log('nghe nè', msg)
-
-            })
-        }).catch((err) => {
-            console.error("Lỗi connect:", err);
-        });
-    }, [])
-
+    // }, [])
+    console.log("đây là conversation sau khi set", conversation)
     const sendMessage = () => {
         console.log("gửi nè")
-        sendText("Hello bạn ời", 1, 1)
+        if (messageText.trim().length === 0) return
+        const senderId = Number(localStorage.getItem('userId'));
+        sendText(messageText, senderId, conversationId.current as number);
+
+
+        // setConversation((prev) => {
+        //     const newMessage: MessageInterface = {
+        //         messageId: Date.now(),
+        //         senderId: Number(localStorage.getItem('userId')),
+        //         type: 'text',
+        //         content: messageText,
+        //         mediaURL: null,
+        //         fileName: null,
+        //         createAt: new Date().toISOString()
+        //     }
+        //     return [newMessage, ...prev];
+        // })
+        // setMessageText("");
     }
+    console.warn("đây là conversationId", conversationId)
+
+    const handleEmojiClick = (emojiObject: EmojiClickData) => {
+        console.log(emojiObject);
+        setMessageText((prev) => prev + emojiObject.emoji);
+        // setShowEmojiPicker(false);
+    }
+    useLayoutEffect(() => {
+        const loadMess = async () => {
+            console.log("đây là targetUserId", targetUserId)
+            console.log("đây là currentUserId", currentUserId)
+            const result: APIResponse = await loadConversation(currentUserId, targetUserId);
+            console.log("đây là result", result.data)
+            conversationId.current = result.data.conversationId;
+            dispatch(updateCurrentConverId({ currentConversationId: result.data.conversationId }))
+            console.warn("đây là conversationId sau khi loadMess", conversationId.current)
+            setConversation(result.data.listMess);
+        }
+        loadMess();
+        if (!conversationId.current) return
+    }, [targetUserId, currentUserId])
+
+    const storeNewMess = useSelector((state: RootState) => state.chat.newMess)
+    const storeConverId = useSelector((state: RootState) => state.chat.currentConversationId)
+    const storeEvent = useSelector((state: RootState) => state.chat.newMess?.event)
+    useEffect(() => {
+        if (!storeNewMess || conversationId.current !== storeConverId) return
+        console.log(storeEvent, 'socket event nè')
+        if (storeEvent === SocketEvent.MESSAGE_ACK || storeEvent === SocketEvent.NEW_MESSAGE) {
+            console.log('trong conver page', storeNewMess)
+            setConversation((prev: any[]) => {
+                return [storeNewMess.data?.message, ...prev];
+            })
+            setMessageText("");
+        }
+    }, [storeNewMess, storeEvent])
+
 
     return (
         <Box
             sx={{
                 display: "flex",
                 height: "calc(100vh - 73px)",
+                minHeight: 0,
                 bgcolor: "#f4f6fb",
                 overflow: "hidden",
             }}
@@ -80,6 +133,7 @@ export default function ConversationPage() {
                     width: "75%",
                     display: "flex",
                     flexDirection: "column",
+                    minHeight: 0,
                     bgcolor: "#eef1f8",
                     overflow: "hidden",
                 }}
@@ -104,7 +158,7 @@ export default function ConversationPage() {
                         />
                         <Box>
                             <Typography sx={{ fontWeight: 700, fontSize: 18, color: "#1f1f1f" }}>
-                                Nguyễn Gia Bảo
+                                {fullName}
                             </Typography>
                             <Typography sx={{ fontSize: 14, color: "#7f735e" }}>
                                 Hoạt động 9 phút trước
@@ -120,60 +174,18 @@ export default function ConversationPage() {
                         </IconButton>
                     </Box>
                 </Box>
+                {conversation ? <ListMess conversation={conversation} setReplyMess={setReplyMess} /> : <WelcomeConversation />}
 
-                <Box
-                    sx={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column-reverse",
-                        overflowY: "auto",
-                        width: "100%",
-                        px: 2,
-                        py: 2,
-                        background: "linear-gradient(180deg, #f7e19a, #f6885d)",
-                    }}
-                >
-                    <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-                        <Box
-                            sx={{
-                                bgcolor: "#b30000",
-                                color: "#fff",
-                                px: 2,
-                                py: 1,
-                                borderRadius: "18px 18px 4px 18px",
-                                maxWidth: "70%",
-                            }}
-                        >
-                            hello bạn
-                        </Box>
-                    </Box>
+                {/* thanh reply nè */}
+                {
+                    replymess && (<>   <ReplyMessage fullName={fullName}
+                        mess={replymess ? replymess.content : ""}
+                        setReplyMess={setReplyMess}
+                    />  </>)
+                }
 
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "flex-start",
-                            mb: 1,
-                            alignItems: "flex-end",
-                            gap: 1,
-                        }}
-                    >
-                        <Avatar
-                            src="https://i.pravatar.cc/100?img=12"
-                            sx={{ width: 30, height: 30 }}
-                        />
-                        <Box
-                            sx={{
-                                bgcolor: "#fff",
-                                px: 2,
-                                py: 1,
-                                borderRadius: "18px 18px 18px 4px",
-                                maxWidth: "70%",
-                            }}
-                        >
-                            hell o nè
-                        </Box>
-                    </Box>
-                </Box>
+
+                {/* thanh trả lời nè */}
                 <Box
                     sx={{
                         flexShrink: 0,
@@ -185,6 +197,7 @@ export default function ConversationPage() {
                         py: 1,
                         bgcolor: "#fff",
                         borderTop: "1px solid rgba(0,0,0,0.08)",
+                        zIndex: 1,
                     }}
                 >
                     <IconButton sx={{ color: "#a40000", p: 0.5 }}>
@@ -214,11 +227,33 @@ export default function ConversationPage() {
                     >
                         <InputBase
                             placeholder="Aa"
+                            value={messageText}
+                            onChange={(event) => setMessageText(event.target.value)}
                             sx={{ flex: 1, fontSize: 16, color: "#6b6b6b" }}
                         />
-                        <IconButton sx={{ color: "#a40000", p: 0.5 }}>
-                            <SentimentSatisfiedAltIcon />
-                        </IconButton>
+                        <Box sx={{ position: "relative", flexShrink: 0 }}>
+                            {showEmojiPicker && (
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        right: 0,
+                                        bottom: "calc(100% + 12px)",
+                                        zIndex: 10,
+                                        boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
+                                        borderRadius: 2,
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                                </Box>
+                            )}
+                            <IconButton
+                                onClick={() => setShowEmojiPicker((prev) => !prev)}
+                                sx={{ color: "#a40000", p: 0.5 }}
+                            >
+                                <SentimentSatisfiedAltIcon />
+                            </IconButton>
+                        </Box>
                     </Paper>
 
                     <IconButton
@@ -235,110 +270,8 @@ export default function ConversationPage() {
                     </IconButton>
                 </Box>
             </Box>
+            <ListFriends></ListFriends>
 
-            <Box
-                sx={{
-                    width: "25%",
-                    display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
-                    p: "10px",
-                    overflow: "hidden",
-                    borderLeft: "1px solid rgba(0,0,0,0.08)",
-                    bgcolor: "#fff",
-                }}
-            >
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        mt: "10px",
-                        mb: 2,
-                        flexShrink: 0,
-                    }}
-                >
-                    <ArrowForwardIcon sx={{ color: "#8d8fa3" }} />
-                    <Typography sx={{ fontWeight: 700 }}>Bạn bè</Typography>
-                    <Box sx={{ width: 24 }} />
-                </Box>
-
-                <TextField
-                    fullWidth
-                    placeholder="Tìm kiếm bạn bè"
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                        mb: 2,
-                        flexShrink: 0,
-                        "& .MuiOutlinedInput-root": {
-                            borderRadius: "10px",
-                            bgcolor: "#f4f6fb",
-                        },
-                        "& .MuiOutlinedInput-input": {
-                            padding: "10px",
-                        },
-                    }}
-                />
-
-                <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-                    {users.map((user) => (
-                        <Box
-                            key={user.id}
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                py: 1.5,
-                                px: 1,
-                                borderRadius: "14px",
-                                "&:hover": {
-                                    bgcolor: "#f0f2f8",
-                                    cursor: "pointer",
-                                },
-                            }}
-                        >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                <Box sx={{ position: "relative" }}>
-                                    <Avatar src={user.avatar} sx={{ width: 45, height: 45 }} />
-                                    <Box
-                                        sx={{
-                                            position: "absolute",
-                                            right: -2,
-                                            bottom: -2,
-                                            width: 14,
-                                            height: 14,
-                                            borderRadius: "50%",
-                                            bgcolor: "#48d26d",
-                                            border: "2px solid white",
-                                        }}
-                                    />
-                                </Box>
-                                <Box>
-                                    <Typography
-                                        sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44" }}
-                                    >
-                                        {user.name}
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            fontSize: 13,
-                                            color: "#8d8fa3",
-                                            mt: "2px",
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            maxWidth: "160px",
-                                        }}
-                                    >
-                                        {user.lastMessage}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </Box>
-                    ))}
-                </Box>
-            </Box>
         </Box>
     );
 }
