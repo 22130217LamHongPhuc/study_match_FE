@@ -1,30 +1,42 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { MessageInterface } from "../model/Conversation";
+import { SocketResponse } from '../model/SocketResponse'
 
-
+interface DataState {
+    conversationId: number | null,
+    message: MessageInterface | null,
+}
+interface NewmessInterface {
+    event: string | null,
+    data: DataState | null
+}
 
 interface ChatState {
+
     currentConversationId: number | null,
-    newMessage: MessageInterface | null
+    newMess: NewmessInterface | null
 }
 
 const initialState: ChatState = {
     currentConversationId: null,
-    newMessage: null
+    newMess: null
 }
 
 const chatReducer = createSlice({
     name: 'chat',
     initialState,
     reducers: {
-        updateCurrentConversationID(state, action: PayloadAction<{ conversationId: number }>) {
-            state.currentConversationId = action.payload.conversationId;
+        updateCurrentConverId(state, action: PayloadAction<{ currentConversationId: number }>) {
+            state.currentConversationId = action.payload.currentConversationId
         },
-        updateMessage(state, action: PayloadAction<{ message: MessageInterface }>) {
-            state.newMessage = action.payload.message;
+        updateNewMess(state, action: PayloadAction<SocketResponse>) {
+            state.newMess = {
+                event: action.payload.event,
+                data: action.payload.data
+            }
         }
     }
 })
 
-export const { updateCurrentConversationID, updateMessage } = chatReducer.actions
+export const { updateNewMess, updateCurrentConverId } = chatReducer.actions
 export default chatReducer.reducer

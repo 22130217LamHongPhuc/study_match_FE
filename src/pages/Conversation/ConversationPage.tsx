@@ -31,10 +31,12 @@ import ListMess from "../../components/conversation/ListMess";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
 import ReplyMessage from "../../components/conversation/ReplyMessage";
-import { useDispatch } from "react-redux";
-import { updateCurrentConversationID } from "../../redux/ChatReducer";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+import { updateCurrentConverId } from "../../redux/ChatReducer";
+import { SocketEvent } from "../../enum/SocketEvent";
 export default function ConversationPage() {
-
+    const dispatch = useDispatch()
     const [replymess, setReplyMess] = useState<MessageInterface | null>(null)
     console.error("đây là replymess", replymess)
     const [messages, setMessages] = useState([]);
@@ -51,39 +53,32 @@ export default function ConversationPage() {
     console.log("conversation", conversation)
     const conversationId = useRef<number | null>(null)
 
-    useLayoutEffect(() => {
-        let ws = WebSocketManager.getInstance()
-        console.log("đây là userId", localStorage.getItem('userId'))
+    // useLayoutEffect(() => {
+    //     let ws = WebSocketManager.getInstance()
+    //     console.log("đây là userId", localStorage.getItem('userId'))
 
-        ws.connect().then(() => {
-            ws.onMessage("/queue/messages/" + localStorage.getItem('userId'), (msg: any) => {
-                console.log('nghe nè', msg)
-
-            })
-        }).catch((err) => {
-            console.error("Lỗi connect:", err);
-        });
-    }, [])
+    // }, [])
     console.log("đây là conversation sau khi set", conversation)
-
     const sendMessage = () => {
         console.log("gửi nè")
+        if (messageText.trim().length === 0) return
         const senderId = Number(localStorage.getItem('userId'));
         sendText(messageText, senderId, conversationId.current as number);
-        setConversation((prev) => {
 
-            const newMessage: MessageInterface = {
-                messageId: Date.now(),
-                senderId: Number(localStorage.getItem('userId')),
-                type: 'text',
-                content: messageText,
-                mediaURL: null,
-                fileName: null,
-                createAt: new Date().toISOString()
-            }
-            return [newMessage, ...prev];
-        })
-        setMessageText("");
+
+        // setConversation((prev) => {
+        //     const newMessage: MessageInterface = {
+        //         messageId: Date.now(),
+        //         senderId: Number(localStorage.getItem('userId')),
+        //         type: 'text',
+        //         content: messageText,
+        //         mediaURL: null,
+        //         fileName: null,
+        //         createAt: new Date().toISOString()
+        //     }
+        //     return [newMessage, ...prev];
+        // })
+        // setMessageText("");
     }
     console.warn("đây là conversationId", conversationId)
 
@@ -92,9 +87,6 @@ export default function ConversationPage() {
         setMessageText((prev) => prev + emojiObject.emoji);
         // setShowEmojiPicker(false);
     }
-    const dispatch = useDispatch();
-
-
     useLayoutEffect(() => {
         const loadMess = async () => {
             console.log("đây là targetUserId", targetUserId)
@@ -102,19 +94,28 @@ export default function ConversationPage() {
             const result: APIResponse = await loadConversation(currentUserId, targetUserId);
             console.log("đây là result", result.data)
             conversationId.current = result.data.conversationId;
+            dispatch(updateCurrentConverId({ currentConversationId: result.data.conversationId }))
+            console.warn("đây là conversationId sau khi loadMess", conversationId.current)
             setConversation(result.data.listMess);
         }
         loadMess();
-        console.warn("đây là conversationId sau khi loadMess", conversationId.current)
-
+        if (!conversationId.current) return
     }, [targetUserId, currentUserId])
 
+    const storeNewMess = useSelector((state: RootState) => state.chat.newMess)
+    const storeConverId = useSelector((state: RootState) => state.chat.currentConversationId)
+    const storeEvent = useSelector((state: RootState) => state.chat.newMess?.event)
     useEffect(() => {
-        if (conversationId.current) {
-            dispatch(updateCurrentConversationID({ conversationId: conversationId.current }))
+        if (!storeNewMess || conversationId.current !== storeConverId) return
+        console.log(storeEvent, 'socket event nè')
+        if (storeEvent === SocketEvent.MESSAGE_ACK || storeEvent === SocketEvent.NEW_MESSAGE) {
+            console.log('trong conver page', storeNewMess)
+            setConversation((prev: any[]) => {
+                return [storeNewMess.data?.message, ...prev];
+            })
+            setMessageText("");
         }
-    }, [conversationId.current, dispatch])
-
+    }, [storeNewMess, storeEvent])
 
 
     return (
@@ -182,6 +183,7 @@ export default function ConversationPage() {
                         setReplyMess={setReplyMess}
                     />  </>)
                 }
+
 
                 {/* thanh trả lời nè */}
                 <Box
