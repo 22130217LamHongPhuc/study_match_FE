@@ -1,12 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { userAction } from './UserReducer';
 import userReducer from '../redux/UserReducer'
 import chatReducer from './ChatReducer'
+import profileReducer from "./ProfileReducer";
+
 const store = configureStore({
     reducer: {
         user: userReducer,
-        chat: chatReducer
+        chat: chatReducer,
+              profile: profileReducer
     }
+
 });
 export default store;
 export type RootState = ReturnType<typeof store.getState>;
