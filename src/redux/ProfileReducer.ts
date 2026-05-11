@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { getProfileByUserId } from "../services/ProfileService";
-import { mapProfileResponseToVm } from "../pages/Profile/mappers/profileMapper";
-import { ProfileApiResponse } from "../pages/Profile/types";
+import { mapProfileResponseToVm } from "../pages/MyProfile/mappers/profileMapper";
+import { ProfileApiResponse } from "../pages/MyProfile/types";
 
 interface ProfileState {
   profileData: ProfileApiResponse | null;
