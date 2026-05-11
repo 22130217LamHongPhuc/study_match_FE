@@ -4,3 +4,12 @@ export type ReactionInterface = {
     emoji: string;
     currentUser: number;
 }
+type ReactionDTO = {
+    messageID: number
+    emoji: string
+}
+
+export type ReactionData = {
+    conversationId: number | null,
+    message: ReactionDTO | null
+}

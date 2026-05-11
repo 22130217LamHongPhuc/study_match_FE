@@ -116,6 +116,7 @@ export default function ConversationPage() {
             setMessageText("");
         }
         if (storeEvent === SocketEvent.MESSAGE_RECALL) {
+            console.log('nhảy vào recall trong converation')
             setConversation((prev: any[]) => {
                 return prev.map((item) => {
                     if (item.messageId === storeNewMess.data?.message?.messageId) {
@@ -188,7 +189,7 @@ export default function ConversationPage() {
 
                 {/* thanh reply nè */}
                 {
-                    replymess && (<>   <ReplyMessage fullName={fullName}
+                    replymess && (<>   <ReplyMessage fullName={replymess.senderId == Number(localStorage.getItem('userId')) ? 'chính mình' : fullName}
                         mess={replymess ? replymess.content : ""}
                         setReplyMess={setReplyMess}
                     />  </>)

@@ -10,6 +10,9 @@ import { submitReaction } from '../../services/ReactionService'
 import { recallMess } from '../../services/ChatService'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
+import { SocketEvent } from '../../enum/SocketEvent'
+import { ReactionData } from '../../model/Reaction'
+
 export default function ListMess({ conversation, setReplyMess }: { conversation: MessageInterface[]; setReplyMess: React.Dispatch<React.SetStateAction<MessageInterface | null>> }) {
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
@@ -20,6 +23,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
 
     const reactions = ["\u2764\ufe0f", "\ud83d\ude06", "\ud83d\ude2e", "\ud83d\ude22", "\ud83d\ude21", "\ud83d\udc4d"]
     const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim"]
+    const currenConverID = useSelector((state: RootState) => state.chat.currentConversationId)
 
     useEffect(() => {
         if (activeMoreMessageId === null) {
@@ -33,25 +37,38 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
         document.addEventListener("mousedown", handleClickOutside)
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [activeMoreMessageId])
-    const hanldeClickEmojj = (messageId: number, emojj: string) => {
-        console.log("Clicked emoji:", emojj, "for message ID:", messageId);
 
-        submitReaction(emojj, messageId, Number(localStorage.getItem("userId"))).then((res) => {
-            console.warn(res);
-            if (res?.code === 200) {
-                setActiveReactionMessageId(null);
-                setMessageReactions((prev) => ({
-                    ...prev,
-                    [messageId]: res?.data?.emoji ?? emojj,
-                }));
-                setActiveMoreMessageId(null);
-            }
-        }).catch((err) => {
-            console.error("Lỗi submit reaction:", err);
-        });
-        console.log({ messageId, emojj })
+    const emojjRef = useRef<number>(-10)
+    const hanldeClickEmojj = (messageId: number, emojj: string) => {
+        emojjRef.current = messageId
+        console.log("Clicked emoji:", emojj, "for message ID:", messageId);
+        if (!currenConverID) return
+        submitReaction(emojj, messageId, currenConverID)
+        // setActiveReactionMessageId(null);
+        // setMessageReactions((prev) => ({
+        //     ...prev,
+        //     [messageId]: res?.data?.emoji ?? emojj,
+        // }));
+        // setActiveMoreMessageId(null);
+        // console.log({ messageId, emojj })
 
     }
+    const store = useSelector((state: RootState) => state.chat.newMess)
+    const storeEvent = useSelector((state: RootState) => state.chat.newMess?.event)
+    const storeData = useSelector((state: RootState) => state.chat.newMess?.data) as ReactionData | undefined;
+    useEffect(() => {
+        if (!storeEvent || emojjRef.current <= 0 || !storeData || !storeData.message) return
+        if (storeEvent === SocketEvent.REACTION_ADD) {
+            setActiveReactionMessageId(null);
+            const emoji = storeData.message.emoji;
+            setMessageReactions((prev) => ({
+                ...prev,
+                [emojjRef.current]: emoji,
+            }));
+            setActiveMoreMessageId(null);
+        }
+
+    }, [store])
     const clickMoreButton = (action: string, messageId: number) => {
         console.log('nhan vao more nè', action, messageId)
         if (!currentConversationId) return
@@ -127,19 +144,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                                 {reaction}
                             </Box>
                         ))}
-                        <IconButton
-                            size="small"
-                            sx={{
-                                width: 34,
-                                height: 34,
-                                p: 0,
-                                bgcolor: "#f1f3f4",
-                                color: "#202124",
-                                "&:hover": { bgcolor: "#e8eaed" },
-                            }}
-                        >
-                            <AddIcon sx={{ fontSize: 22 }} />
-                        </IconButton>
+
                     </Box>
                 )}
                 <IconButton
@@ -155,7 +160,10 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                     <SentimentSatisfiedAltIcon sx={{ fontSize: 20 }} />
                 </IconButton>
                 <IconButton size="small" sx={{ color: "#5f6368", p: 0.2 }}
-                    onClick={() => setReplyMess(mess)}
+                    onClick={() => {
+
+                        setReplyMess(mess)
+                    }}
                 >
                     <ReplyIcon sx={{ fontSize: 20 }} />
                 </IconButton>
@@ -193,6 +201,9 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                     >
                         {moreActions.map((action) => {
                             if (menuPlacement === 'right' && action === 'Gỡ') {
+                                return <></>
+                            }
+                            if (!mess.content && action === 'Gỡ' && mess.type === 'text') {
                                 return <></>
                             }
                             return (
