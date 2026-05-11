@@ -54,3 +54,19 @@ export const loadConversation = async (currentU: number, targetU: number) => {
     return data;
 
 }
+
+export function recallMess(conversationId: number, messageId: number) {
+    let ws = WebSocketManager.getInstance()
+    ws.connect().then(() => {
+        ws.sendMessage(SOCKET_SEND_MESSAGE, {
+            event: SocketEvent.MESSAGE_RECALL,
+            data: {
+                conversationID: conversationId,
+                messageID: messageId,
+            }
+        })
+    }).catch((err) => {
+        console.error("Lỗi connect:", err);
+    });
+
+}

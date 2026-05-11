@@ -115,6 +115,16 @@ export default function ConversationPage() {
             })
             setMessageText("");
         }
+        if (storeEvent === SocketEvent.MESSAGE_RECALL) {
+            setConversation((prev: any[]) => {
+                return prev.map((item) => {
+                    if (item.messageId === storeNewMess.data?.message?.messageId) {
+                        return storeNewMess.data?.message;
+                    }
+                    return item;
+                });
+            });
+        }
     }, [storeNewMess, storeEvent])
 
 

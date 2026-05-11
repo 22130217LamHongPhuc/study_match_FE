@@ -7,21 +7,24 @@ import { Avatar, Box, IconButton } from '@mui/material'
 import React, { useEffect, useRef, useState } from 'react'
 import { MessageInterface } from '../../model/Conversation'
 import { submitReaction } from '../../services/ReactionService'
+import { recallMess } from '../../services/ChatService'
+import { useSelector } from 'react-redux'
+import { RootState } from '../../redux/store'
 export default function ListMess({ conversation, setReplyMess }: { conversation: MessageInterface[]; setReplyMess: React.Dispatch<React.SetStateAction<MessageInterface | null>> }) {
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
     const [messageReactions, setMessageReactions] = useState<Record<number, string>>({})
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
     const currentUserId = Number(localStorage.getItem("userId"))
+    const currentConversationId = useSelector((state: RootState) => state.chat.currentConversationId)
 
     const reactions = ["\u2764\ufe0f", "\ud83d\ude06", "\ud83d\ude2e", "\ud83d\ude22", "\ud83d\ude21", "\ud83d\udc4d"]
-    const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim", "Báo cáo"]
+    const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim"]
 
     useEffect(() => {
         if (activeMoreMessageId === null) {
             return
         }
-
         const handleClickOutside = (event: MouseEvent) => {
             if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
                 setActiveMoreMessageId(null)
@@ -47,6 +50,14 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
             console.error("Lỗi submit reaction:", err);
         });
         console.log({ messageId, emojj })
+
+    }
+    const clickMoreButton = (action: string, messageId: number) => {
+        console.log('nhan vao more nè', action, messageId)
+        if (!currentConversationId) return
+        if (action === 'Gỡ') {
+            recallMess(currentConversationId, messageId)
+        }
 
     }
 
@@ -180,37 +191,46 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                             overflow: "hidden",
                         }}
                     >
-                        {moreActions.map((action) => (
-                            <Box
-                                component="button"
-                                key={action}
-                                type="button"
-                                onClick={() => setActiveMoreMessageId(null)}
-                                sx={{
-                                    width: "100%",
-                                    height: 32,
-                                    px: 1.25,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    border: 0,
-                                    bgcolor: "#fff",
-                                    color: "#111",
-                                    cursor: "pointer",
-                                    fontSize: 14,
-                                    fontWeight: 400,
-                                    textAlign: "left",
-                                    "&:hover": {
-                                        bgcolor: "#f1f3f4",
-                                    },
-                                    "&:focus-visible": {
-                                        outline: "2px solid #1a73e8",
-                                        outlineOffset: -2,
-                                    },
-                                }}
-                            >
-                                {action}
-                            </Box>
-                        ))}
+                        {moreActions.map((action) => {
+                            if (menuPlacement === 'right' && action === 'Gỡ') {
+                                return <></>
+                            }
+                            return (
+
+                                <Box
+                                    component="button"
+                                    key={action}
+                                    type="button"
+                                    onClick={() => {
+                                        setActiveMoreMessageId(null)
+                                        clickMoreButton(action, mess.messageId)
+
+                                    }}
+                                    sx={{
+                                        width: "100%",
+                                        height: 32,
+                                        px: 1.25,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        border: 0,
+                                        bgcolor: "#fff",
+                                        color: "#111",
+                                        cursor: "pointer",
+                                        fontSize: 14,
+                                        fontWeight: 400,
+                                        textAlign: "left",
+                                        "&:hover": {
+                                            bgcolor: "#f1f3f4",
+                                        },
+                                        "&:focus-visible": {
+                                            outline: "2px solid #1a73e8",
+                                            outlineOffset: -2,
+                                        },
+                                    }}
+                                >
+                                    {action}
+                                </Box>)
+                        })}
                     </Box>
                 )}
             </Box>
@@ -230,7 +250,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                 background: "linear-gradient(180deg, #f7e19a, #f6885d)",
             }}
         >
-            {conversation.map((mess) => {
+            {conversation.map((mess: MessageInterface) => {
                 if (mess.senderId !== currentUserId) {
                     return (
                         <Box
@@ -261,7 +281,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                                     maxWidth: "70%",
                                 }}
                             >
-                                {mess.content}
+                                {mess.content ? mess.content : 'Tin nhắn đã được thu hồi'}
                                 {messageReactions[mess.messageId] && (
                                     <Box
                                         sx={{
@@ -318,7 +338,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                                     maxWidth: "70%",
                                 }}
                             >
-                                {mess.content}
+                                {mess.content ? mess.content : 'Bạn đã thu hồi tin nhắn'}
                                 {messageReactions[mess.messageId] && (
                                     <Box
                                         sx={{
