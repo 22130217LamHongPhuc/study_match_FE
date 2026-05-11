@@ -25,8 +25,6 @@ export interface CreateStudyGroupRequest {
   ownerUserId: number;
   mainSubjectId: number;
   subjectName?: string;
-  studyGoal?: string;
-  studyMode?: string;
   maxMembers: number;
   visibility?: string;
   freeTimeSlots?: FreeTimeSlotRequest[];
