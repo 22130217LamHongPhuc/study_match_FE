@@ -24,8 +24,8 @@ export interface CreateStudyGroupRequest {
   description?: string;
   ownerUserId: number;
   mainSubjectId: number;
-  subjectName?: string;
-  maxMembers: number;
+  subjectName: string;
+  maxMembers?: number;
   visibility?: string;
   freeTimeSlots?: FreeTimeSlotRequest[];
 }
@@ -60,11 +60,36 @@ export async function getAllSubjectsByCurriculum(
   return response;
 }
 
+export async function getAllSubjects(): Promise<APIResponseData<Subject[]>> {
+  const response = await apiFetch<Subject[]>(
+    `/subjects`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_PROFILE,
+  );
+  return response;
+}
+
 export async function createStudyGroup(
   payload: CreateStudyGroupRequest,
 ): Promise<APIResponseData<unknown>> {
   const response = await apiFetch<unknown>(
     `/api/groups`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export async function createCommunityGroup(
+  payload: CreateStudyGroupRequest,
+): Promise<APIResponseData<unknown>> {
+  const response = await apiFetch<unknown>(
+    `/api/groups/community`,
     {
       method: "POST",
       body: JSON.stringify(payload),
