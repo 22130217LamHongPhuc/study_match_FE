@@ -7,7 +7,7 @@ const store = configureStore({
     reducer: {
         user: userReducer,
         chat: chatReducer,
-              profile: profileReducer
+        profile: profileReducer
     }
 
 });

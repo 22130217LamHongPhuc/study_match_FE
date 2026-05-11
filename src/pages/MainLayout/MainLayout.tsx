@@ -37,7 +37,7 @@ export default function MainLayout() {
     let ws = WebSocketManager.getInstance()
     console.log("đây là userId", localStorage.getItem('userId'))
     ws.connect().then(() => {
-      ws.onMessage("/queue/messages/" + localStorage.getItem('userId'), (msg: any) => {
+      ws.onMessage("/user/queue/chat", (msg: any) => {
         console.log('nghe nè', msg)
         const parsed: SocketResponse = JSON.parse(msg)
         console.log(parsed, 'parsed nè', currentConverIdRef)
@@ -52,6 +52,11 @@ export default function MainLayout() {
         }
 
       })
+      // ws.onMessage("/user/queue/chat", (msg: any) => {
+      //   console.log('nhảy vào /chat nè', msg)
+
+      // })
+
     }).catch((err) => {
       console.error("Lỗi connect:", err);
     });

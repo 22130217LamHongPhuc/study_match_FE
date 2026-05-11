@@ -29,7 +29,7 @@ class WebSocketManager {
             this.client = new Client({
                 brokerURL: SOCKET_URL,
                 connectHeaders: {
-                    userId: String(localStorage.getItem('userId')),
+                    Authorization: `Bearer ${localStorage.getItem('accessToken') as string}`
                 },
                 reconnectDelay: 5000,
                 debug: (str: any) => console.log('[STOMP]', str),

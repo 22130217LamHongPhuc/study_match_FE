@@ -19,9 +19,10 @@ import CheckEmailPage from "../pages/Auth/ResetPassword/CheckEmailPage";
 import ResetPasswordPage from "../pages/Auth/ResetPassword/ResetPasswordPage";
 import ResetPasswordSuccessPage from "../pages/Auth/ResetPassword/ResetPasswordSuccessPage";
 import CheckVerifyEmailPage from "../pages/Auth/ResetPassword/CheckVerifyPage";
+import ProfilePage from "../pages/ProfilePage/ProfilePage";
 
 
-export const router = createBrowserRouter([
+
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
   console.log("ProtectedRoute token:", token);
@@ -65,13 +66,20 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      { path: "/", element: <HomePage /> },
-      { path: "/friends", element: <HomePage /> },
-      { path: "/schedule", element: <SchedulePage /> },
-      { path: "/profile/:id", element: <ProfilePage /> },
-      { path: "/conversation", element: <ConversationPage /> },
-      { path: "/recommendation", element: <RecommendationPage /> },
-               { path: "/groups", element: <GroupPage /> },
+
+      {
+        element: <MainLayout />,
+        children: [
+          { path: "/", element: <HomePage /> },
+          { path: "/friends", element: <HomePage /> },
+          { path: "/schedule", element: <SchedulePage /> },
+          { path: "/profile/:id", element: <ProfilePage /> },
+          { path: "/conversation", element: <ConversationPage /> },
+          { path: "/recommendation", element: <RecommendationPage /> },
+          { path: "/groups", element: <GroupPage /> },
+
+        ],
+      }
 
     ],
   },
