@@ -21,6 +21,8 @@ import ResetPasswordSuccessPage from "../pages/Auth/ResetPassword/ResetPasswordS
 import CheckVerifyEmailPage from "../pages/Auth/ResetPassword/CheckVerifyPage";
 import ProfilePage from "../pages/ProfilePage/ProfilePage";
 import MyProfilePage from "../pages/MyProfile/MyProfilePage";
+import StudyMatchAdminLayout from "../layouts/admin/StudyMatchAdminLayout";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
@@ -84,5 +86,16 @@ export const router = createBrowserRouter([
   {
     element: <AuthLayout />,
     children: [{ path: "/create-group", element: <CreateGroupPage /> }],
+  },
+
+  {
+    path: "/admin",
+    element: <StudyMatchAdminLayout />,
+    children: [
+      {
+        index: true,
+        element: <AdminDashboardPage />,
+      },
+    ],
   },
 ]);
