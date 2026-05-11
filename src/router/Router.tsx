@@ -23,6 +23,7 @@ import ProfilePage from "../pages/ProfilePage/ProfilePage";
 import MyProfilePage from "../pages/MyProfile/MyProfilePage";
 import StudyMatchAdminLayout from "../layouts/admin/StudyMatchAdminLayout";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
+import AdminGroupsPage from "../pages/admin/AdminGroupsPage/AdminGroupsPage";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
@@ -94,7 +95,19 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <Navigate to="dashboard" replace />,
+      },
+      {
+        path: "dashboard",
         element: <AdminDashboardPage />,
+      },
+      {
+        path: "users",
+        element: <div>Quản lý người dùng (chưa triển khai)</div>,
+      },
+      {
+        path: "groups",
+        element: <AdminGroupsPage />,
       },
     ],
   },
