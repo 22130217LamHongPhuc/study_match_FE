@@ -12,8 +12,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
     const [messageReactions, setMessageReactions] = useState<Record<number, string>>({})
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
-
-
+    const currentUserId = Number(localStorage.getItem("userId"))
 
     const reactions = ["\u2764\ufe0f", "\ud83d\ude06", "\ud83d\ude2e", "\ud83d\ude22", "\ud83d\ude21", "\ud83d\udc4d"]
     const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim", "Báo cáo"]
@@ -28,7 +27,6 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                 setActiveMoreMessageId(null)
             }
         }
-
         document.addEventListener("mousedown", handleClickOutside)
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [activeMoreMessageId])
@@ -51,6 +49,174 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
         console.log({ messageId, emojj })
 
     }
+
+    const renderMessageActions = (mess: MessageInterface, menuPlacement: "left" | "right") => {
+        const isActive = activeReactionMessageId === mess.messageId || activeMoreMessageId === mess.messageId
+
+        return (
+            <Box
+                ref={activeMoreMessageId === mess.messageId ? moreMenuRef : undefined}
+                className="message-actions"
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.25,
+                    mb: 0.25,
+                    position: "relative",
+                    opacity: isActive ? 1 : 0,
+                    pointerEvents: isActive ? "auto" : "none",
+                    transition: "opacity 120ms ease",
+                }}
+            >
+                {activeReactionMessageId === mess.messageId && (
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            left: menuPlacement === "right" ? 0 : "auto",
+                            right: menuPlacement === "left" ? 0 : "auto",
+                            bottom: "calc(100% + 8px)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            px: 1,
+                            py: 0.75,
+                            bgcolor: "#fff",
+                            borderRadius: "999px",
+                            boxShadow: "0 3px 12px rgba(0,0,0,0.18)",
+                            zIndex: 5,
+                        }}
+                    >
+                        {reactions.map((reaction) => (
+                            <Box
+                                component="button"
+                                key={reaction}
+                                type="button"
+
+                                sx={{
+                                    width: 34,
+                                    height: 34,
+                                    p: 0,
+                                    border: 0,
+                                    cursor: "pointer",
+                                    bgcolor: "transparent",
+                                    color: "initial",
+                                    opacity: 1,
+                                    fontSize: 27,
+                                    fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
+                                    filter: "saturate(1.35) contrast(1.08)",
+                                    lineHeight: 1,
+                                    "&:hover": {
+                                        bgcolor: "#f1f3f4",
+                                        transform: "scale(1.12)",
+                                    },
+                                    transition: "transform 120ms ease, background-color 120ms ease",
+                                }}
+                                onClick={() => hanldeClickEmojj(mess.messageId, reaction)}
+                            >
+                                {reaction}
+                            </Box>
+                        ))}
+                        <IconButton
+                            size="small"
+                            sx={{
+                                width: 34,
+                                height: 34,
+                                p: 0,
+                                bgcolor: "#f1f3f4",
+                                color: "#202124",
+                                "&:hover": { bgcolor: "#e8eaed" },
+                            }}
+                        >
+                            <AddIcon sx={{ fontSize: 22 }} />
+                        </IconButton>
+                    </Box>
+                )}
+                <IconButton
+                    size="small"
+                    onClick={() =>
+                        setActiveReactionMessageId((prev) =>
+                            prev === mess.messageId ? null : mess.messageId
+                        )
+                    }
+                    onMouseDown={() => setActiveMoreMessageId(null)}
+                    sx={{ color: "#5f6368", p: 0.2 }}
+                >
+                    <SentimentSatisfiedAltIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+                <IconButton size="small" sx={{ color: "#5f6368", p: 0.2 }}
+                    onClick={() => setReplyMess(mess)}
+                >
+                    <ReplyIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+                <IconButton
+                    size="small"
+                    onClick={() => {
+                        setActiveReactionMessageId(null)
+                        setActiveMoreMessageId((prev) =>
+                            prev === mess.messageId ? null : mess.messageId
+                        )
+                    }}
+                    sx={{
+                        color: "#5f6368",
+                        p: 0.2,
+                        border: "2px solid #1a73e8",
+                    }}
+                >
+                    <MoreVertIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+                {activeMoreMessageId === mess.messageId && (
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            left: menuPlacement === "right" ? "calc(100% + 6px)" : "auto",
+                            right: menuPlacement === "left" ? "calc(100% + 6px)" : "auto",
+                            top: 0,
+                            width: 120,
+                            py: 0.25,
+                            bgcolor: "#fff",
+                            borderRadius: "8px",
+                            boxShadow: "0 3px 10px rgba(0,0,0,0.18)",
+                            zIndex: 6,
+                            overflow: "hidden",
+                        }}
+                    >
+                        {moreActions.map((action) => (
+                            <Box
+                                component="button"
+                                key={action}
+                                type="button"
+                                onClick={() => setActiveMoreMessageId(null)}
+                                sx={{
+                                    width: "100%",
+                                    height: 32,
+                                    px: 1.25,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    border: 0,
+                                    bgcolor: "#fff",
+                                    color: "#111",
+                                    cursor: "pointer",
+                                    fontSize: 14,
+                                    fontWeight: 400,
+                                    textAlign: "left",
+                                    "&:hover": {
+                                        bgcolor: "#f1f3f4",
+                                    },
+                                    "&:focus-visible": {
+                                        outline: "2px solid #1a73e8",
+                                        outlineOffset: -2,
+                                    },
+                                }}
+                            >
+                                {action}
+                            </Box>
+                        ))}
+                    </Box>
+                )}
+            </Box>
+        )
+    }
+
     return (
         <Box
             sx={{
@@ -65,7 +231,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
             }}
         >
             {conversation.map((mess) => {
-                if (mess.senderId !== Number(localStorage.getItem("userId"))) {
+                if (mess.senderId !== currentUserId) {
                     return (
                         <Box
                             sx={{
@@ -74,6 +240,11 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                                 mb: 1,
                                 alignItems: "flex-end",
                                 gap: 1,
+                                width: "100%",
+                                "&:hover .message-actions": {
+                                    opacity: 1,
+                                    pointerEvents: "auto",
+                                },
                             }} key={mess.messageId}
                         >
                             <Avatar
@@ -81,7 +252,6 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                                 sx={{ width: 30, height: 30 }}
                             />
                             <Box
-                                ref={activeMoreMessageId === mess.messageId ? moreMenuRef : undefined}
                                 sx={{
                                     position: "relative",
                                     bgcolor: "#fff",
@@ -115,165 +285,28 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                                     </Box>
                                 )}
                             </Box>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.25,
-                                    mb: 0.25,
-                                    position: "relative",
-                                }}
-                            >
-                                {activeReactionMessageId === mess.messageId && (
-                                    <Box
-                                        sx={{
-                                            position: "absolute",
-                                            left: 0,
-                                            bottom: "calc(100% + 8px)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 0.5,
-                                            px: 1,
-                                            py: 0.75,
-                                            bgcolor: "#fff",
-                                            borderRadius: "999px",
-                                            boxShadow: "0 3px 12px rgba(0,0,0,0.18)",
-                                            zIndex: 5,
-                                        }}
-                                    >
-                                        {reactions.map((reaction) => (
-                                            <Box
-                                                component="button"
-                                                key={reaction}
-                                                type="button"
-
-                                                sx={{
-                                                    width: 34,
-                                                    height: 34,
-                                                    p: 0,
-                                                    border: 0,
-                                                    cursor: "pointer",
-                                                    bgcolor: "transparent",
-                                                    color: "initial",
-                                                    opacity: 1,
-                                                    fontSize: 27,
-                                                    fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
-                                                    filter: "saturate(1.35) contrast(1.08)",
-                                                    lineHeight: 1,
-                                                    "&:hover": {
-                                                        bgcolor: "#f1f3f4",
-                                                        transform: "scale(1.12)",
-                                                    },
-                                                    transition: "transform 120ms ease, background-color 120ms ease",
-                                                }}
-                                                onClick={() => hanldeClickEmojj(mess.messageId, reaction)}
-                                            >
-                                                {reaction}
-                                            </Box>
-                                        ))}
-                                        <IconButton
-                                            size="small"
-                                            sx={{
-                                                width: 34,
-                                                height: 34,
-                                                p: 0,
-                                                bgcolor: "#f1f3f4",
-                                                color: "#202124",
-                                                "&:hover": { bgcolor: "#e8eaed" },
-                                            }}
-                                        >
-                                            <AddIcon sx={{ fontSize: 22 }} />
-                                        </IconButton>
-                                    </Box>
-                                )}
-                                <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                        setActiveReactionMessageId((prev) =>
-                                            prev === mess.messageId ? null : mess.messageId
-                                        )
-                                    }
-                                    onMouseDown={() => setActiveMoreMessageId(null)}
-                                    sx={{ color: "#5f6368", p: 0.2 }}
-                                >
-                                    <SentimentSatisfiedAltIcon sx={{ fontSize: 20 }} />
-                                </IconButton>
-                                <IconButton size="small" sx={{ color: "#5f6368", p: 0.2 }}
-                                    onClick={() => setReplyMess(mess)}
-                                >
-                                    <ReplyIcon sx={{ fontSize: 20 }} />
-                                </IconButton>
-                                <IconButton
-                                    size="small"
-                                    onClick={() => {
-                                        setActiveReactionMessageId(null)
-                                        setActiveMoreMessageId((prev) =>
-                                            prev === mess.messageId ? null : mess.messageId
-                                        )
-                                    }}
-                                    sx={{
-                                        color: "#5f6368",
-                                        p: 0.2,
-                                        border: "2px solid #1a73e8",
-                                    }}
-                                >
-                                    <MoreVertIcon sx={{ fontSize: 20 }} />
-                                </IconButton>
-                                {activeMoreMessageId === mess.messageId && (
-                                    <Box
-                                        sx={{
-                                            position: "absolute",
-                                            left: "calc(100% + 6px)",
-                                            top: 0,
-                                            width: 120,
-                                            py: 0.25,
-                                            bgcolor: "#fff",
-                                            borderRadius: "8px",
-                                            boxShadow: "0 3px 10px rgba(0,0,0,0.18)",
-                                            zIndex: 6,
-                                            overflow: "hidden",
-                                        }}
-                                    >
-                                        {moreActions.map((action) => (
-                                            <Box
-                                                component="button"
-                                                key={action}
-                                                type="button"
-                                                onClick={() => setActiveMoreMessageId(null)}
-                                                sx={{
-                                                    width: "100%",
-                                                    height: 32,
-                                                    px: 1.25,
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    border: 0,
-                                                    bgcolor: "#fff",
-                                                    color: "#111",
-                                                    cursor: "pointer",
-                                                    fontSize: 14,
-                                                    fontWeight: 400,
-                                                    textAlign: "left",
-                                                    "&:hover": {
-                                                        bgcolor: "#f1f3f4",
-                                                    },
-                                                    "&:focus-visible": {
-                                                        outline: "2px solid #1a73e8",
-                                                        outlineOffset: -2,
-                                                    },
-                                                }}
-                                            >
-                                                {action}
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                )}
-                            </Box>
+                            {renderMessageActions(mess, "right")}
                         </Box>
                     )
                 }
                 else {
                     return (
-                        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+                        <Box
+                            key={mess.messageId}
+                            sx={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                mb: 1,
+                                alignItems: "flex-end",
+                                gap: 1,
+                                width: "100%",
+                                "&:hover .message-actions": {
+                                    opacity: 1,
+                                    pointerEvents: "auto",
+                                },
+                            }}
+                        >
+                            {renderMessageActions(mess, "left")}
                             <Box
                                 sx={{
                                     position: "relative",
@@ -283,7 +316,7 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                                     py: 1,
                                     borderRadius: "18px 18px 4px 18px",
                                     maxWidth: "70%",
-                                }} key={mess.messageId}
+                                }}
                             >
                                 {mess.content}
                                 {messageReactions[mess.messageId] && (
