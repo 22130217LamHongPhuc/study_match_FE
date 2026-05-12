@@ -6,10 +6,7 @@ export interface GroupRow {
   name: string;
   type: GroupType;
   subjectName: string;
-  termName: string;
-  createdBy: string;
-  ownerName?: string;
-  members: string;
+  memberCount: number;
   status: GroupStatus;
   createdAt: string;
 }

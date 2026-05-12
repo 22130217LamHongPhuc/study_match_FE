@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Eye,
   Filter,
@@ -8,8 +9,31 @@ import {
 } from "lucide-react";
 import type { GroupRow } from "../types";
 import { GroupStatusBadge, GroupTypeBadge } from "./GroupBadges";
+import { Pagination } from "../../../../components/admin/Pagination";
+export function AdminGroupsTable({
+  groups,
+  page,
+  pageSize,
+  totalItems,
+  totalPages,
+  loading,
+  onPageChange,
+}: {
+  groups: GroupRow[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  loading: boolean;
+  onPageChange: (page: number) => void;
+}) {
+  const formattedRows = useMemo(() => {
+    return groups.map((g) => ({
+      ...g,
+      createdAtText: new Date(g.createdAt).toLocaleString("vi-VN"),
+    }));
+  }, [groups]);
 
-export function AdminGroupsTable({ groups }: { groups: GroupRow[] }) {
   return (
     <div className="overflow-hidden rounded border border-gray-200 bg-white">
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
@@ -42,9 +66,6 @@ export function AdminGroupsTable({ groups }: { groups: GroupRow[] }) {
                 Môn học
               </th>
               <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                Người tạo
-              </th>
-              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
                 Thành viên
               </th>
               <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
@@ -60,7 +81,7 @@ export function AdminGroupsTable({ groups }: { groups: GroupRow[] }) {
           </thead>
 
           <tbody>
-            {groups.map((group) => (
+            {formattedRows.map((group) => (
               <tr
                 key={group.id}
                 className="border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50/70"
@@ -85,9 +106,6 @@ export function AdminGroupsTable({ groups }: { groups: GroupRow[] }) {
                       <p className="text-[13px] font-bold text-gray-800">
                         {group.name}
                       </p>
-                      <p className="mt-0.5 text-[11px] font-medium text-gray-400">
-                        {group.termName}
-                      </p>
                     </div>
                   </div>
                 </td>
@@ -103,21 +121,8 @@ export function AdminGroupsTable({ groups }: { groups: GroupRow[] }) {
                 </td>
 
                 <td className="px-4 py-3">
-                  <div>
-                    <p className="text-[12px] font-bold text-gray-700">
-                      {group.createdBy}
-                    </p>
-                    {group.ownerName && (
-                      <p className="mt-0.5 text-[10px] font-medium text-gray-400">
-                        Chủ nhóm: {group.ownerName}
-                      </p>
-                    )}
-                  </div>
-                </td>
-
-                <td className="px-4 py-3">
                   <span className="text-[12px] font-bold text-gray-800">
-                    {group.members}
+                    {group.memberCount}
                   </span>
                 </td>
 
@@ -127,7 +132,7 @@ export function AdminGroupsTable({ groups }: { groups: GroupRow[] }) {
 
                 <td className="px-4 py-3">
                   <span className="text-[12px] font-medium text-gray-500">
-                    {group.createdAt}
+                    {group.createdAtText}
                   </span>
                 </td>
 
@@ -146,9 +151,39 @@ export function AdminGroupsTable({ groups }: { groups: GroupRow[] }) {
                 </td>
               </tr>
             ))}
+
+            {!loading && formattedRows.length === 0 && (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="px-4 py-10 text-center text-[13px] font-medium text-gray-400"
+                >
+                  Không có nhóm học nào.
+                </td>
+              </tr>
+            )}
+
+            {loading && (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="px-4 py-10 text-center text-[13px] font-medium text-gray-400"
+                >
+                  Đang tải dữ liệu...
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={onPageChange}
+      />
     </div>
   );
 }

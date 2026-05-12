@@ -47,6 +47,31 @@ export interface StudyGroupDetailResponse {
   updatedAt: string;
 }
 
+export interface PageResponse<T> {
+  content: T[];
+  empty: boolean;
+  first: boolean;
+  last: boolean;
+  number: number;
+  numberOfElements: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export type AdminGroupType = "COMMUNITY" | "STUDY";
+export type AdminGroupStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED" | "DELETED";
+
+export interface AdminGroupRowResponse {
+  createdAt: string;
+  id: number;
+  memberCount: number;
+  name: string;
+  status: AdminGroupStatus;
+  subjectName: string;
+  type: AdminGroupType;
+}
+
 export async function getAllSubjectsByCurriculum(
   curriculumId: number,
 ): Promise<APIResponseData<Subject[]>> {
@@ -109,5 +134,20 @@ export async function getGroupsByUserId(
     },
     API_BASE_URL_GROUP,
   );
+  return response;
+}
+
+export async function getAdminGroups(
+  page: number,
+  size: number,
+): Promise<APIResponseData<PageResponse<AdminGroupRowResponse>>> {
+  const response = await apiFetch<PageResponse<AdminGroupRowResponse>>(
+    `/api/admin/groups?page=${page}&size=${size}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+
   return response;
 }
