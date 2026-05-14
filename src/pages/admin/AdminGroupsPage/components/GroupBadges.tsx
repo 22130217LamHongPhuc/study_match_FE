@@ -19,14 +19,14 @@ export function GroupTypeBadge({ type }: { type: GroupType }) {
 export function GroupStatusBadge({ status }: { status: GroupStatus }) {
   const styles: Record<GroupStatus, string> = {
     ACTIVE: "bg-emerald-50 text-emerald-700",
-    INACTIVE: "bg-gray-100 text-gray-600",
+    INACTIVE: "bg-orange-50 text-orange-700",
     ARCHIVED: "bg-amber-50 text-amber-700",
     DELETED: "bg-red-50 text-red-700",
   };
 
   const labels: Record<GroupStatus, string> = {
     ACTIVE: "Đang hoạt động",
-    INACTIVE: "Tạm dừng",
+    INACTIVE: "Bị khóa",
     ARCHIVED: "Lưu trữ",
     DELETED: "Đã xóa",
   };

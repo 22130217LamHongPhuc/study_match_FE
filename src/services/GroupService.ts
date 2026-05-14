@@ -223,3 +223,19 @@ export async function getAdminGroupDetail(
 
   return response;
 }
+
+export async function updateAdminGroupStatus(
+  groupId: number,
+  status: AdminGroupStatus,
+): Promise<APIResponseData<AdminGroupDetailResponse>> {
+  const response = await apiFetch<AdminGroupDetailResponse>(
+    `/api/admin/groups/${groupId}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}

@@ -172,6 +172,11 @@ export default function AdminGroupsPage() {
             totalPages={totalPages}
             loading={loadingGroups || isTyping}
             onPageChange={setPage}
+            onStatusUpdated={(groupId, status) => {
+              setGroups((prev) =>
+                prev.map((g) => (g.id === groupId ? { ...g, status } : g)),
+              );
+            }}
           />
         </div>
       </div>
