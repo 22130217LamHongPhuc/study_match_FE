@@ -15,6 +15,11 @@ import {
     Typography,
     TextField,
 } from "@mui/material";
+
+
+
+
+
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import React, { use, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -35,6 +40,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { updateCurrentConverId } from "../../redux/ChatReducer";
 import { SocketEvent } from "../../enum/SocketEvent";
+
+
+enum FileEnum {
+    IMAGE = 'IMAGE',
+    VIDEO = 'VIDEO',
+    FILE = 'FILE'
+}
 export default function ConversationPage() {
     const dispatch = useDispatch()
     const [replymess, setReplyMess] = useState<MessageInterface | null>(null)
@@ -128,6 +140,33 @@ export default function ConversationPage() {
         }
     }, [storeNewMess, storeEvent])
 
+    const fileInputRef = useRef<any>(null)
+    const [preview, setPreview] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<string | null>(null);
+
+    const handleOpenFile = () => {
+        fileInputRef.current.click();
+    }
+    const handleFileChange = (e: any) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        console.log("File đã chọn:", file);
+        console.log("Tên file:", file.name);
+        console.log("Loại file:", file.type);
+
+
+        if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+            alert("Chỉ được chọn ảnh hoặc video");
+            return;
+        }
+        const previewUrl = URL.createObjectURL(file);
+        console.log('previewUrl', previewUrl)
+        setPreview(previewUrl)
+        setSelectedFile(file.type)
+
+    };
+
 
     return (
         <Box
@@ -189,7 +228,7 @@ export default function ConversationPage() {
 
                 {/* thanh reply nè */}
                 {
-                    replymess && (<>   <ReplyMessage fullName={replymess.senderId == Number(localStorage.getItem('userId')) ? 'chính mình' : fullName}
+                    replymess && (<>   <ReplyMessage fullName={replymess.senderId === Number(localStorage.getItem('userId')) ? 'chính mình' : fullName}
                         mess={replymess ? replymess.content : ""}
                         setReplyMess={setReplyMess}
                     />  </>)
@@ -199,90 +238,194 @@ export default function ConversationPage() {
                 {/* thanh trả lời nè */}
                 <Box
                     sx={{
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
                         width: "100%",
-                        gap: 1.5,
-                        px: 2,
-                        py: 1,
                         bgcolor: "#fff",
                         borderTop: "1px solid rgba(0,0,0,0.08)",
-                        zIndex: 1,
                     }}
                 >
-                    <IconButton sx={{ color: "#a40000", p: 0.5 }}>
-                        <MicIcon />
-                    </IconButton>
-                    <IconButton sx={{ color: "#a40000", p: 0.5 }}>
-                        <ImageIcon />
-                    </IconButton>
-                    <IconButton sx={{ color: "#a40000", p: 0.5 }}>
-                        <AddPhotoAlternateIcon />
-                    </IconButton>
-                    <IconButton sx={{ color: "#a40000", p: 0.5 }}>
-                        <GifBoxIcon />
-                    </IconButton>
+                    {/* PREVIEW FILE */}
 
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            borderRadius: "999px",
-                            px: 2,
-                            py: 0.5,
-                            bgcolor: "#f6e3de",
-                        }}
-                    >
-                        <InputBase
-                            placeholder="Aa"
-                            value={messageText}
-                            onChange={(event) => setMessageText(event.target.value)}
-                            sx={{ flex: 1, fontSize: 16, color: "#6b6b6b" }}
-                        />
-                        <Box sx={{ position: "relative", flexShrink: 0 }}>
-                            {showEmojiPicker && (
+                    {
+                        preview && (
+                            <Box
+                                sx={{
+                                    px: 2,
+                                    pt: 1.5,
+                                    pb: 1,
+                                    bgcolor: "#fff",
+                                }}
+                            >
                                 <Box
                                     sx={{
-                                        position: "absolute",
-                                        right: 0,
-                                        bottom: "calc(100% + 12px)",
-                                        zIndex: 10,
-                                        boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
-                                        borderRadius: 2,
+                                        position: "relative",
+                                        width: 60,
+                                        height: 60,
+                                        borderRadius: 3,
                                         overflow: "hidden",
+                                        bgcolor: "#f3f3f3",
+                                        border: "1px solid rgba(0,0,0,0.12)",
+                                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                     }}
                                 >
-                                    <EmojiPicker onEmojiClick={handleEmojiClick} />
-                                </Box>
-                            )}
-                            <IconButton
-                                onClick={() => setShowEmojiPicker((prev) => !prev)}
-                                sx={{ color: "#a40000", p: 0.5 }}
-                            >
-                                <SentimentSatisfiedAltIcon />
-                            </IconButton>
-                        </Box>
-                    </Paper>
+                                    {/* giả lập ảnh preview */}
+                                    {
+                                        (selectedFile === 'image/png') && (<Box
+                                            component="img"
+                                            src={preview || undefined}
+                                            alt="preview"
+                                            sx={{
+                                                width: "100%",
+                                                height: "100%",
+                                                objectFit: "cover",
+                                                display: "block",
+                                            }}
+                                        />)
+                                    }
+                                    {
+                                        selectedFile === 'video/mp4' && (
+                                            <Box
+                                                component="video"
+                                                src={preview || undefined}
+                                                sx={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    objectFit: "cover",
+                                                    display: "block",
+                                                    bgcolor: "#000",
+                                                }}
+                                                controls
+                                                preload="metadata"
+                                            />
+                                        )
+                                    }
 
-                    <IconButton
-                        onClick={sendMessage}
+                                    <Box
+                                        component="img"
+                                        src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=300"
+                                        alt="preview"
+                                        sx={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            display: "block",
+                                        }}
+                                    />
+
+                                    {/* nút xóa preview */}
+                                    <IconButton
+                                        sx={{
+                                            position: "absolute",
+                                            top: 6,
+                                            right: 6,
+                                            width: 26,
+                                            height: 26,
+                                            bgcolor: "rgba(0,0,0,0.55)",
+                                            color: "#fff",
+                                            "&:hover": {
+                                                bgcolor: "rgba(0,0,0,0.75)",
+                                            },
+                                        }}
+                                    >
+                                        <CancelPresentationIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </Box>
+                            </Box>
+                        )
+                    }
+
+
+                    {/* THANH NHẬP TIN NHẮN */}
+                    <Box
                         sx={{
-                            bgcolor: "#a40000",
-                            color: "#fff",
-                            p: 1.2,
-                            "&:hover": { bgcolor: "#8a0000" },
                             flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            width: "100%",
+                            gap: 1.5,
+                            px: 2,
+                            py: 1,
+                            bgcolor: "#fff",
+                            zIndex: 1,
                         }}
                     >
-                        <SendIcon sx={{ fontSize: 22 }} />
-                    </IconButton>
+                        <IconButton sx={{ color: "#a40000", p: 0.5 }}>
+                            <MicIcon />
+                        </IconButton>
+
+                        <IconButton sx={{ color: "#a40000", p: 0.5 }} onClick={(e) => handleOpenFile()}>
+                            <ImageIcon />
+                        </IconButton>
+
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*,video/*"
+                            style={{ display: "none" }}
+                            onChange={(e) => handleFileChange(e)}
+                        />
+
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                borderRadius: "999px",
+                                px: 2,
+                                py: 0.5,
+                                bgcolor: "#f6e3de",
+                            }}
+                        >
+                            <InputBase
+                                placeholder="Aa"
+                                value={messageText}
+                                onChange={(event) => setMessageText(event.target.value)}
+                                sx={{ flex: 1, fontSize: 16, color: "#6b6b6b" }}
+                            />
+
+                            <Box sx={{ position: "relative", flexShrink: 0 }}>
+                                {showEmojiPicker && (
+                                    <Box
+                                        sx={{
+                                            position: "absolute",
+                                            right: 0,
+                                            bottom: "calc(100% + 12px)",
+                                            zIndex: 10,
+                                            boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
+                                            borderRadius: 2,
+                                            overflow: "hidden",
+                                        }}
+                                    >
+                                        <EmojiPicker onEmojiClick={handleEmojiClick} />
+                                    </Box>
+                                )}
+
+                                <IconButton
+                                    onClick={() => setShowEmojiPicker((prev) => !prev)}
+                                    sx={{ color: "#a40000", p: 0.5 }}
+                                >
+                                    <SentimentSatisfiedAltIcon />
+                                </IconButton>
+                            </Box>
+                        </Paper>
+
+                        <IconButton
+                            onClick={sendMessage}
+                            sx={{
+                                bgcolor: "#a40000",
+                                color: "#fff",
+                                p: 1.2,
+                                "&:hover": { bgcolor: "#8a0000" },
+                                flexShrink: 0,
+                            }}
+                        >
+                            <SendIcon sx={{ fontSize: 22 }} />
+                        </IconButton>
+                    </Box>
                 </Box>
             </Box>
             <ListFriends></ListFriends>
 
-        </Box>
+        </Box >
     );
 }
