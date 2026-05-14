@@ -108,14 +108,15 @@ export default function ConversationPage() {
         if (storeEvent === SocketEvent.MESSAGE_ACK || storeEvent === SocketEvent.NEW_MESSAGE) {
             console.log('trong conver page', storeNewMess)
 
-            if (fileLoading) {
-                setFileLoading(false)
-            }
+
 
 
             setConversation((prev: any[]) => {
                 return [storeNewMess.data?.message, ...prev];
             })
+            if (fileLoading) {
+                setFileLoading(false)
+            }
             setMessageText("");
         }
         if (storeEvent === SocketEvent.MESSAGE_RECALL) {

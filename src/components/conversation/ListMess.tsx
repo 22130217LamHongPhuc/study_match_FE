@@ -322,45 +322,167 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
                                     },
                                 }} key={mess.messageId}
                             >
+
                                 <Avatar
                                     src="https://i.pravatar.cc/100?img=12"
                                     sx={{ width: 30, height: 30 }}
                                 />
-                                <Box
-                                    sx={{
-                                        position: "relative",
-                                        bgcolor: "#fff",
-                                        px: 2,
-                                        py: 1,
-                                        borderRadius: "18px 18px 18px 4px",
-                                        maxWidth: "70%",
-                                    }}
-                                >
-                                    {mess.content ? mess.content : 'Tin nhắn đã được thu hồi'}
-                                    {messageReactions[mess.messageId] && (
-                                        <Box
-                                            sx={{
-                                                position: "absolute",
-                                                right: -8,
-                                                bottom: -12,
-                                                width: 22,
-                                                height: 22,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                bgcolor: "#fff",
-                                                border: "1px solid rgba(0,0,0,0.08)",
-                                                borderRadius: "50%",
-                                                boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
-                                                fontSize: 13,
-                                                lineHeight: 1,
-                                            }}
-                                        >
-                                            {messageReactions[mess.messageId]}
-                                        </Box>
-                                    )}
-                                </Box>
-                                {renderMessageActions(mess, "right")}
+                                {
+                                    (mess.type === 'text' && mess.content) ?
+
+                                        (<>
+                                            <Box
+                                                sx={{
+                                                    position: "relative",
+                                                    bgcolor: "#fff",
+                                                    px: 2,
+                                                    py: 1,
+                                                    borderRadius: "18px 18px 18px 4px",
+                                                    maxWidth: "70%",
+                                                }}
+                                            >
+                                                {mess.content ? mess.content : 'Tin nhắn đã được thu hồi'}
+                                                {messageReactions[mess.messageId] && (
+                                                    <Box
+                                                        sx={{
+                                                            position: "absolute",
+                                                            right: -8,
+                                                            bottom: -12,
+                                                            width: 22,
+                                                            height: 22,
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            bgcolor: "#fff",
+                                                            border: "1px solid rgba(0,0,0,0.08)",
+                                                            borderRadius: "50%",
+                                                            boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
+                                                            fontSize: 13,
+                                                            lineHeight: 1,
+                                                        }}
+                                                    >
+                                                        {messageReactions[mess.messageId]}
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                            {renderMessageActions(mess, "right")}
+                                        </>) :
+
+
+                                        (<>
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+
+                                                    mb: 1,
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        width: 240,
+                                                        overflow: "hidden",
+                                                        borderRadius: "18px 18px 4px 18px",
+                                                        bgcolor: "#b30000",
+                                                        color: "#fff",
+                                                    }}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            width: "100%",
+                                                            height: 170,
+                                                            overflow: "hidden",
+                                                            position: "relative",
+                                                            bgcolor: "black",
+                                                        }}
+                                                    >
+                                                        {
+                                                            (mess.type === 'video/mp4') ?
+
+                                                                (<><Box
+                                                                    component="video"
+                                                                    controls
+                                                                    src={mess.mediaURL ? mess.mediaURL : ''}
+
+                                                                    sx={{
+                                                                        width: "100%",
+                                                                        height: "100%",
+                                                                        objectFit: "cover",
+                                                                        display: "block",
+                                                                    }}
+                                                                /></>) :
+
+
+                                                                (<><Box
+                                                                    component="img"
+                                                                    src={mess.mediaURL ? mess.mediaURL : ''}
+                                                                    alt="image message"
+                                                                    sx={{
+                                                                        width: "100%",
+                                                                        height: "100%",
+                                                                        objectFit: "cover",
+                                                                        display: "block",
+                                                                    }}
+                                                                />
+
+                                                                    <Box
+                                                                        component="a"
+                                                                        href={mess.mediaURL ? mess.mediaURL : ''}
+                                                                        target='_blank'
+                                                                        download={mess.fileName}
+                                                                        sx={{
+                                                                            position: "absolute",
+                                                                            top: 8,
+                                                                            right: 8,
+                                                                            width: 34,
+                                                                            height: 34,
+                                                                            borderRadius: "50%",
+                                                                            bgcolor: "#fff",
+                                                                            color: "black",
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent: "center",
+                                                                            textDecoration: "none",
+                                                                            fontSize: 18,
+                                                                            fontWeight: 700,
+                                                                            cursor: "pointer",
+                                                                        }}
+                                                                    >
+                                                                        ↓
+                                                                    </Box>
+                                                                </>)
+                                                        }
+
+
+
+
+                                                    </Box>
+
+                                                    {
+                                                        mess.content && (
+                                                            <>
+                                                                <Box
+                                                                    sx={{
+                                                                        px: 1.5,
+                                                                        py: 1,
+                                                                        fontSize: 14,
+                                                                        lineHeight: 1.4,
+                                                                        wordBreak: "break-word",
+                                                                    }}
+                                                                >
+                                                                    {mess.content}
+                                                                </Box>
+                                                            </>
+                                                        )
+                                                    }
+
+
+                                                </Box>
+                                            </Box>
+
+                                        </>)
+                                }
+
                             </Box>
 
                         </>
@@ -432,8 +554,6 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
                                     </>) :
 
 
-
-
                                     (<> <Box
                                         sx={{
                                             display: "flex",
@@ -460,56 +580,86 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
                                                     bgcolor: "black",
                                                 }}
                                             >
-                                                <Box
-                                                    component="img"
-                                                    src="https://picsum.photos/400/300"
-                                                    alt="image message"
-                                                    sx={{
-                                                        width: "100%",
-                                                        height: "100%",
-                                                        objectFit: "cover",
-                                                        display: "block",
-                                                    }}
-                                                />
+                                                {
+                                                    (mess.type === 'video/mp4') ?
 
-                                                <Box
-                                                    component="a"
-                                                    href="https://picsum.photos/400/300"
-                                                    download="image-demo.jpg"
-                                                    sx={{
-                                                        position: "absolute",
-                                                        top: 8,
-                                                        right: 8,
-                                                        width: 34,
-                                                        height: 34,
-                                                        borderRadius: "50%",
-                                                        bgcolor: "#fff",
-                                                        color: "black",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        textDecoration: "none",
-                                                        fontSize: 18,
-                                                        fontWeight: 700,
-                                                        cursor: "pointer",
-                                                    }}
-                                                >
-                                                    ↓
-                                                </Box>
+                                                        (<><Box
+                                                            component="video"
+                                                            controls
+                                                            src={mess.mediaURL ? mess.mediaURL : ''}
+
+                                                            sx={{
+                                                                width: "100%",
+                                                                height: "100%",
+                                                                objectFit: "cover",
+                                                                display: "block",
+                                                            }}
+                                                        /></>) :
+
+
+                                                        (<><Box
+                                                            component="img"
+                                                            src={mess.mediaURL ? mess.mediaURL : ''}
+                                                            alt="image message"
+                                                            sx={{
+                                                                width: "100%",
+                                                                height: "100%",
+                                                                objectFit: "cover",
+                                                                display: "block",
+                                                            }}
+                                                        />
+
+                                                            <Box
+                                                                component="a"
+                                                                href={mess.mediaURL ? mess.mediaURL : ''}
+                                                                target='_blank'
+                                                                download={mess.fileName}
+                                                                sx={{
+                                                                    position: "absolute",
+                                                                    top: 8,
+                                                                    right: 8,
+                                                                    width: 34,
+                                                                    height: 34,
+                                                                    borderRadius: "50%",
+                                                                    bgcolor: "#fff",
+                                                                    color: "black",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+                                                                    textDecoration: "none",
+                                                                    fontSize: 18,
+                                                                    fontWeight: 700,
+                                                                    cursor: "pointer",
+                                                                }}
+                                                            >
+                                                                ↓
+                                                            </Box>
+                                                        </>)
+                                                }
+
+
+
+
                                             </Box>
 
+                                            {
+                                                mess.content && (
+                                                    <>
+                                                        <Box
+                                                            sx={{
+                                                                px: 1.5,
+                                                                py: 1,
+                                                                fontSize: 14,
+                                                                lineHeight: 1.4,
+                                                                wordBreak: "break-word",
+                                                            }}
+                                                        >
+                                                            {mess.content}
+                                                        </Box>
+                                                    </>
+                                                )
+                                            }
 
-                                            {/* <Box
-                                        sx={{
-                                            px: 1.5,
-                                            py: 1,
-                                            fontSize: 14,
-                                            lineHeight: 1.4,
-                                            wordBreak: "break-word",
-                                        }}
-                                    >
-                                        heee
-                                    </Box> */}
 
                                         </Box>
                                     </Box></>)
@@ -522,7 +672,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
             })}
 
 
-        </Box>
+        </Box >
 
     )
 }
