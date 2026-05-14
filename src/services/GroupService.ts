@@ -71,7 +71,12 @@ export interface AdminGroupRowResponse {
   subjectName: string;
   type: AdminGroupType;
 }
-
+export interface GroupStatsResponse {
+  totalGroup: number;
+  communityGroup: number;
+  publicGroup: number;
+  privateGroup: number;
+}
 export async function getAllSubjectsByCurriculum(
   curriculumId: number,
 ): Promise<APIResponseData<Subject[]>> {
@@ -140,9 +145,28 @@ export async function getGroupsByUserId(
 export async function getAdminGroups(
   page: number,
   size: number,
+  type: AdminGroupType | null,
+  status: AdminGroupStatus | null,
+  keyword: string | null,
 ): Promise<APIResponseData<PageResponse<AdminGroupRowResponse>>> {
   const response = await apiFetch<PageResponse<AdminGroupRowResponse>>(
-    `/api/admin/groups?page=${page}&size=${size}`,
+    `/api/admin/groups?page=${page}&size=${size}${
+      type ? `&type=${type}` : ""
+    }${status ? `&status=${status}` : ""}${keyword ? `&keyword=${keyword}` : ""}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
+export async function getGroupStatsForAdmin(): Promise<
+  APIResponseData<GroupStatsResponse>
+> {
+  const response = await apiFetch<GroupStatsResponse>(
+    `/api/admin/groups/stats`,
     {
       method: "GET",
     },

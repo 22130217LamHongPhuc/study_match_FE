@@ -1,4 +1,5 @@
 import { Plus, Search } from "lucide-react";
+import { FilterGroup } from "../types";
 
 export function GroupsToolbar({ onOpenCreate }: { onOpenCreate: () => void }) {
   return (
@@ -28,7 +29,17 @@ export function GroupsToolbar({ onOpenCreate }: { onOpenCreate: () => void }) {
   );
 }
 
-export function GroupsFilterBar() {
+export function GroupsFilterBar({
+  filters,
+  onFilterChange,
+  selectedFilter,
+  setKeyword,
+}: {
+  filters: FilterGroup[];
+  onFilterChange: (filter: FilterGroup) => void;
+  selectedFilter: FilterGroup;
+  setKeyword: (keyword: string) => void;
+}) {
   return (
     <div className="mt-6 rounded border border-gray-200 bg-white p-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -40,26 +51,22 @@ export function GroupsFilterBar() {
           <input
             className="h-8 w-full rounded border border-gray-300 bg-gray-50 pl-9 pr-3 text-[12px] font-medium outline-none transition-colors focus:border-blue-500 focus:bg-white"
             placeholder="Tìm tên nhóm, môn học, người tạo..."
+            onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {[
-            "Tất cả",
-            "Cộng đồng",
-            "Nhóm học riêng",
-            "Đang hoạt động",
-            "Cần xử lý",
-          ].map((item, index) => (
+          {filters.map((item, index) => (
             <button
-              key={item}
+              key={item.title}
               className={`rounded px-3 py-1.5 text-[12px] font-bold transition-colors ${
-                index === 0
+                selectedFilter.title === item.title
                   ? "bg-blue-400 text-white shadow-sm"
                   : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
               }`}
+              onClick={() => onFilterChange(item)}
             >
-              {item}
+              {item.title}
             </button>
           ))}
         </div>

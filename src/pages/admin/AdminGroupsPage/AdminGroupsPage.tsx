@@ -6,9 +6,13 @@ import { GroupStatCard } from "./components/GroupStatCard";
 import { GroupsFilterBar, GroupsToolbar } from "./components/GroupsToolbar";
 import { RecentActivityCard } from "./components/RecentActivityCard";
 
-import type { GroupRow } from "./types";
+import type { FilterGroup, GroupRow, GroupStats } from "./types";
 import { AlertCircle, BookOpenCheck, Globe2, UsersRound } from "lucide-react";
-import { getAdminGroups } from "../../../services/GroupService";
+import {
+  getAdminGroups,
+  getGroupStatsForAdmin,
+  GroupStatsResponse,
+} from "../../../services/GroupService";
 
 export const groupStats = [
   {
@@ -38,16 +42,83 @@ export const groupStats = [
   },
 ] as const;
 
+const filters: FilterGroup[] = [
+  {
+    title: "Tất cả",
+    type: null,
+    status: null,
+    keyword: null,
+  },
+  {
+    title: "Cộng đồng",
+    type: "COMMUNITY",
+    status: null,
+    keyword: null,
+  },
+  {
+    title: "Nhóm học riêng",
+    type: "STUDY",
+    status: null,
+    keyword: null,
+  },
+  {
+    title: "Đang hoạt động",
+    type: null,
+    status: "ACTIVE",
+    keyword: null,
+  },
+  {
+    title: "Bị khóa",
+    type: null,
+    status: "INACTIVE",
+    keyword: null,
+  },
+];
 export default function AdminGroupsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [groups, setGroups] = useState<GroupRow[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [groupsError, setGroupsError] = useState<string | null>(null);
+  const [groupStats, setGroupStats] = useState<GroupStats[] | null>([]);
 
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
+  const [selectedFilter, setSelectedFilter] = useState<FilterGroup>(filters[0]);
+  const [keyword, setKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);
+
+  const buildQuery = (filter: FilterGroup) => {
+    const params = new URLSearchParams();
+
+    if (filter.type) params.append("type", filter.type);
+    if (filter.status) params.append("status", filter.status);
+    if (filter.keyword) params.append("keyword", filter.keyword);
+
+    params.append("page", (page - 1).toString());
+    params.append("size", pageSize.toString());
+
+    return params.toString();
+  };
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedKeyword(keyword);
+    }, 500);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [keyword]);
+
+  useEffect(() => {
+    if (debouncedKeyword) {
+      const params = new URLSearchParams();
+      params.append("keyword", debouncedKeyword);
+      params.append("page", (page - 1).toString());
+      params.append("size", pageSize.toString());
+    }
+  }, [debouncedKeyword]);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +127,13 @@ export default function AdminGroupsPage() {
       setLoadingGroups(true);
       setGroupsError(null);
 
-      const res = await getAdminGroups(page - 1, pageSize);
+      const res = await getAdminGroups(
+        page - 1,
+        pageSize,
+        selectedFilter.type,
+        selectedFilter.status,
+        selectedFilter.keyword,
+      );
       if (cancelled) return;
 
       if (!res.success) {
@@ -79,19 +156,71 @@ export default function AdminGroupsPage() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, selectedFilter, debouncedKeyword]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const res = await getGroupStatsForAdmin();
+      if (res.success) {
+        const totalGroup = res.data.totalGroup;
+        const communityGroup = res.data.communityGroup;
+        const privateGroup = res.data.privateGroup;
+        const publicGroup = res.data.publicGroup;
+        setGroupStats([
+          {
+            title: "Tổng nhóm",
+            value: totalGroup.toString(),
+            change: "",
+            icon: BookOpenCheck,
+          },
+          {
+            title: "Cộng đồng",
+            value: communityGroup.toString(),
+            change: "do Admin tạo",
+            icon: Globe2,
+          },
+          {
+            title: "Nhóm học riêng",
+            value: privateGroup.toString(),
+            change: "từ sinh viên",
+            icon: UsersRound,
+          },
+          {
+            title: "Nhóm công khai",
+            value: publicGroup.toString(),
+            change: "từ sinh viên",
+            icon: UsersRound,
+          },
+        ]);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const onFilterChange = (filter: FilterGroup) => {
+    console.log("filter change", filter);
+    setSelectedFilter(filter);
+    buildQuery(filter);
+    setPage(1);
+  };
 
   return (
     <main className="overflow-y-auto p-6">
       <GroupsToolbar onOpenCreate={() => setCreateOpen(true)} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {groupStats.map((card) => (
-          <GroupStatCard key={card.title} card={card} />
+        {groupStats?.map((stat) => (
+          <GroupStatCard key={stat.title} card={stat} />
         ))}
       </div>
 
-      <GroupsFilterBar />
+      <GroupsFilterBar
+        filters={filters}
+        onFilterChange={onFilterChange}
+        selectedFilter={selectedFilter}
+        setKeyword={setKeyword}
+      />
 
       <div className="mt-6 grid gap-6">
         <div className="xl:col-span-2">
