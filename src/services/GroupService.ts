@@ -77,6 +77,40 @@ export interface GroupStatsResponse {
   publicGroup: number;
   privateGroup: number;
 }
+
+export type AdminGroupVisibility =
+  | "PUBLIC"
+  | "PRIVATE"
+  | "COMMUNITY"
+  | (string & {});
+
+export interface AdminGroupFreeTimeSlot {
+  id: number;
+  groupId: number;
+  termId: number;
+  dayOfWeek: DayOfWeek;
+  slotCode: SlotCode;
+  isAvailable: boolean;
+}
+
+export interface AdminGroupDetailResponse {
+  id: number;
+  name: string;
+  description?: string | null;
+  groupType: AdminGroupType;
+  createdByUserId?: number | null;
+  ownerUserId?: number | null;
+  termId?: number | null;
+  mainSubjectId?: number | null;
+  subjectName?: string | null;
+  maxMembers?: number | null;
+  visibility?: AdminGroupVisibility | null;
+  status: AdminGroupStatus;
+  memberCount?: number | null;
+  createdAt: string;
+  updatedAt: string;
+  freeTimeSlots?: AdminGroupFreeTimeSlot[] | null;
+}
 export async function getAllSubjectsByCurriculum(
   curriculumId: number,
 ): Promise<APIResponseData<Subject[]>> {
@@ -167,6 +201,20 @@ export async function getGroupStatsForAdmin(): Promise<
 > {
   const response = await apiFetch<GroupStatsResponse>(
     `/api/admin/groups/stats`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
+export async function getAdminGroupDetail(
+  groupId: number,
+): Promise<APIResponseData<AdminGroupDetailResponse>> {
+  const response = await apiFetch<AdminGroupDetailResponse>(
+    `/api/admin/groups/${groupId}`,
     {
       method: "GET",
     },

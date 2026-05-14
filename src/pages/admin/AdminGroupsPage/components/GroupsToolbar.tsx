@@ -34,11 +34,13 @@ export function GroupsFilterBar({
   onFilterChange,
   selectedFilter,
   setKeyword,
+  keyword,
 }: {
   filters: FilterGroup[];
   onFilterChange: (filter: FilterGroup) => void;
   selectedFilter: FilterGroup;
   setKeyword: (keyword: string) => void;
+  keyword: string;
 }) {
   return (
     <div className="mt-6 rounded border border-gray-200 bg-white p-3">
@@ -51,6 +53,7 @@ export function GroupsFilterBar({
           <input
             className="h-8 w-full rounded border border-gray-300 bg-gray-50 pl-9 pr-3 text-[12px] font-medium outline-none transition-colors focus:border-blue-500 focus:bg-white"
             placeholder="Tìm tên nhóm, môn học, người tạo..."
+            value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
           />
         </div>

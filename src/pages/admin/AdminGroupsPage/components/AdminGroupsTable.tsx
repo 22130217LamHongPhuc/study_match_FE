@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Eye,
   Filter,
@@ -10,6 +10,7 @@ import {
 import type { GroupRow } from "../types";
 import { GroupStatusBadge, GroupTypeBadge } from "./GroupBadges";
 import { Pagination } from "../../../../components/admin/Pagination";
+import { AdminGroupDetailSheet } from "./AdminGroupDetailSheet";
 export function AdminGroupsTable({
   groups,
   page,
@@ -33,6 +34,9 @@ export function AdminGroupsTable({
       createdAtText: new Date(g.createdAt).toLocaleString("vi-VN"),
     }));
   }, [groups]);
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
   return (
     <div className="overflow-hidden rounded border border-gray-200 bg-white">
@@ -65,9 +69,7 @@ export function AdminGroupsTable({
               <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
                 Môn học
               </th>
-              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                Thành viên
-              </th>
+
               <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
                 Trạng thái
               </th>
@@ -121,12 +123,6 @@ export function AdminGroupsTable({
                 </td>
 
                 <td className="px-4 py-3">
-                  <span className="text-[12px] font-bold text-gray-800">
-                    {group.memberCount}
-                  </span>
-                </td>
-
-                <td className="px-4 py-3">
                   <GroupStatusBadge status={group.status} />
                 </td>
 
@@ -138,13 +134,27 @@ export function AdminGroupsTable({
 
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1">
-                    <button className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-blue-600">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedGroupId(group.id);
+                        setDetailOpen(true);
+                      }}
+                      className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-blue-600"
+                      aria-label="Xem chi tiết nhóm"
+                    >
                       <Eye size={15} />
                     </button>
-                    <button className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-orange-600">
+                    <button
+                      type="button"
+                      className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-orange-600"
+                    >
                       <Lock size={15} />
                     </button>
-                    <button className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700">
+                    <button
+                      type="button"
+                      className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                    >
                       <MoreHorizontal size={15} />
                     </button>
                   </div>
@@ -183,6 +193,12 @@ export function AdminGroupsTable({
         totalItems={totalItems}
         pageSize={pageSize}
         onPageChange={onPageChange}
+      />
+
+      <AdminGroupDetailSheet
+        open={detailOpen}
+        groupId={selectedGroupId}
+        onClose={() => setDetailOpen(false)}
       />
     </div>
   );
