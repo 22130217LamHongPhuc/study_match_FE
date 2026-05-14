@@ -3,7 +3,7 @@ import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ReplyIcon from '@mui/icons-material/Reply'
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt'
-import { Avatar, Box, IconButton } from '@mui/material'
+import { Avatar, Box, CircularProgress, IconButton } from '@mui/material'
 import React, { useEffect, useRef, useState } from 'react'
 import { MessageInterface } from '../../model/Conversation'
 import { submitReaction } from '../../services/ReactionService'
@@ -13,7 +13,7 @@ import { RootState } from '../../redux/store'
 import { SocketEvent } from '../../enum/SocketEvent'
 import { ReactionData } from '../../model/Reaction'
 
-export default function ListMess({ conversation, setReplyMess }: { conversation: MessageInterface[]; setReplyMess: React.Dispatch<React.SetStateAction<MessageInterface | null>> }) {
+export default function ListMess({ conversation, setReplyMess, fileLoading }: { conversation: MessageInterface[]; setReplyMess: React.Dispatch<React.SetStateAction<MessageInterface | null>>; fileLoading: boolean }) {
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
     const [messageReactions, setMessageReactions] = useState<Record<number, string>>({})
@@ -261,123 +261,268 @@ export default function ListMess({ conversation, setReplyMess }: { conversation:
                 background: "linear-gradient(180deg, #f7e19a, #f6885d)",
             }}
         >
+
+            {/* loading của người gửi */}
+            {fileLoading && (<Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    mb: 1,
+                    alignItems: "flex-end",
+                    width: "100%",
+                }}
+            >
+                <Box
+                    sx={{
+                        width: 200,
+                        height: 150,
+                        borderRadius: "18px 18px 4px 18px",
+                        position: "relative",
+                        overflow: "hidden",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+
+                    }}
+                >
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            inset: 0,
+                            bgcolor: "rgba(0,0,0,0.25)",
+                        }}
+                    />
+
+                    <CircularProgress
+                        size={34}
+                        thickness={4}
+                        sx={{
+                            color: "#fff",
+                            zIndex: 1,
+                        }}
+                    />
+                </Box>
+            </Box>)}
+
             {conversation.map((mess: MessageInterface) => {
                 if (mess.senderId !== currentUserId) {
                     return (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "flex-start",
-                                mb: 1,
-                                alignItems: "flex-end",
-                                gap: 1,
-                                width: "100%",
-                                "&:hover .message-actions": {
-                                    opacity: 1,
-                                    pointerEvents: "auto",
-                                },
-                            }} key={mess.messageId}
-                        >
-                            <Avatar
-                                src="https://i.pravatar.cc/100?img=12"
-                                sx={{ width: 30, height: 30 }}
-                            />
+                        <>
                             <Box
                                 sx={{
-                                    position: "relative",
-                                    bgcolor: "#fff",
-                                    px: 2,
-                                    py: 1,
-                                    borderRadius: "18px 18px 18px 4px",
-                                    maxWidth: "70%",
-                                }}
+                                    display: "flex",
+                                    justifyContent: "flex-start",
+                                    mb: 1,
+                                    alignItems: "flex-end",
+                                    gap: 1,
+                                    width: "100%",
+                                    "&:hover .message-actions": {
+                                        opacity: 1,
+                                        pointerEvents: "auto",
+                                    },
+                                }} key={mess.messageId}
                             >
-                                {mess.content ? mess.content : 'Tin nhắn đã được thu hồi'}
-                                {messageReactions[mess.messageId] && (
-                                    <Box
-                                        sx={{
-                                            position: "absolute",
-                                            right: -8,
-                                            bottom: -12,
-                                            width: 22,
-                                            height: 22,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            bgcolor: "#fff",
-                                            border: "1px solid rgba(0,0,0,0.08)",
-                                            borderRadius: "50%",
-                                            boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
-                                            fontSize: 13,
-                                            lineHeight: 1,
-                                        }}
-                                    >
-                                        {messageReactions[mess.messageId]}
-                                    </Box>
-                                )}
+                                <Avatar
+                                    src="https://i.pravatar.cc/100?img=12"
+                                    sx={{ width: 30, height: 30 }}
+                                />
+                                <Box
+                                    sx={{
+                                        position: "relative",
+                                        bgcolor: "#fff",
+                                        px: 2,
+                                        py: 1,
+                                        borderRadius: "18px 18px 18px 4px",
+                                        maxWidth: "70%",
+                                    }}
+                                >
+                                    {mess.content ? mess.content : 'Tin nhắn đã được thu hồi'}
+                                    {messageReactions[mess.messageId] && (
+                                        <Box
+                                            sx={{
+                                                position: "absolute",
+                                                right: -8,
+                                                bottom: -12,
+                                                width: 22,
+                                                height: 22,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                bgcolor: "#fff",
+                                                border: "1px solid rgba(0,0,0,0.08)",
+                                                borderRadius: "50%",
+                                                boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
+                                                fontSize: 13,
+                                                lineHeight: 1,
+                                            }}
+                                        >
+                                            {messageReactions[mess.messageId]}
+                                        </Box>
+                                    )}
+                                </Box>
+                                {renderMessageActions(mess, "right")}
                             </Box>
-                            {renderMessageActions(mess, "right")}
-                        </Box>
+
+                        </>
                     )
                 }
                 else {
                     return (
-                        <Box
-                            key={mess.messageId}
-                            sx={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                mb: 1,
-                                alignItems: "flex-end",
-                                gap: 1,
-                                width: "100%",
-                                "&:hover .message-actions": {
-                                    opacity: 1,
-                                    pointerEvents: "auto",
-                                },
-                            }}
-                        >
-                            {renderMessageActions(mess, "left")}
-                            <Box
-                                sx={{
-                                    position: "relative",
-                                    bgcolor: "#b30000",
-                                    color: "#fff",
-                                    px: 2,
-                                    py: 1,
-                                    borderRadius: "18px 18px 4px 18px",
-                                    maxWidth: "70%",
-                                }}
-                            >
-                                {mess.content ? mess.content : 'Bạn đã thu hồi tin nhắn'}
-                                {messageReactions[mess.messageId] && (
-                                    <Box
+                        <>
+
+                            {
+                                (mess.type === 'text' && mess.content) ? (
+
+
+                                    <>
+                                        <Box
+                                            key={mess.messageId}
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "flex-end",
+                                                mb: 1,
+                                                alignItems: "flex-end",
+                                                gap: 1,
+                                                width: "100%",
+                                                "&:hover .message-actions": {
+                                                    opacity: 1,
+                                                    pointerEvents: "auto",
+                                                },
+                                            }}
+                                        >
+                                            {renderMessageActions(mess, "left")}
+                                            <Box
+                                                sx={{
+                                                    position: "relative",
+                                                    bgcolor: "#b30000",
+                                                    color: "#fff",
+                                                    px: 2,
+                                                    py: 1,
+                                                    borderRadius: "18px 18px 4px 18px",
+                                                    maxWidth: "70%",
+                                                }}
+                                            >
+                                                {mess.content ? mess.content : 'Bạn đã thu hồi tin nhắn'}
+                                                {messageReactions[mess.messageId] && (
+                                                    <Box
+                                                        sx={{
+                                                            position: "absolute",
+                                                            left: -8,
+                                                            bottom: -12,
+                                                            width: 22,
+                                                            height: 22,
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            bgcolor: "#fff",
+                                                            color: "#202124",
+                                                            border: "1px solid rgba(0,0,0,0.08)",
+                                                            borderRadius: "50%",
+                                                            boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
+                                                            fontSize: 13,
+                                                            lineHeight: 1,
+                                                        }}
+                                                    >
+                                                        {messageReactions[mess.messageId]}
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        </Box>
+
+                                    </>) :
+
+
+
+
+                                    (<> <Box
                                         sx={{
-                                            position: "absolute",
-                                            left: -8,
-                                            bottom: -12,
-                                            width: 22,
-                                            height: 22,
                                             display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            bgcolor: "#fff",
-                                            color: "#202124",
-                                            border: "1px solid rgba(0,0,0,0.08)",
-                                            borderRadius: "50%",
-                                            boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
-                                            fontSize: 13,
-                                            lineHeight: 1,
+                                            justifyContent: "flex-end",
+                                            mb: 1,
+                                            width: "100%",
                                         }}
                                     >
-                                        {messageReactions[mess.messageId]}
-                                    </Box>
-                                )}
-                            </Box>
-                        </Box>
+                                        <Box
+                                            sx={{
+                                                width: 240,
+                                                overflow: "hidden",
+                                                borderRadius: "18px 18px 4px 18px",
+                                                bgcolor: "#b30000",
+                                                color: "#fff",
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: "100%",
+                                                    height: 170,
+                                                    overflow: "hidden",
+                                                    position: "relative",
+                                                    bgcolor: "black",
+                                                }}
+                                            >
+                                                <Box
+                                                    component="img"
+                                                    src="https://picsum.photos/400/300"
+                                                    alt="image message"
+                                                    sx={{
+                                                        width: "100%",
+                                                        height: "100%",
+                                                        objectFit: "cover",
+                                                        display: "block",
+                                                    }}
+                                                />
+
+                                                <Box
+                                                    component="a"
+                                                    href="https://picsum.photos/400/300"
+                                                    download="image-demo.jpg"
+                                                    sx={{
+                                                        position: "absolute",
+                                                        top: 8,
+                                                        right: 8,
+                                                        width: 34,
+                                                        height: 34,
+                                                        borderRadius: "50%",
+                                                        bgcolor: "#fff",
+                                                        color: "black",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        textDecoration: "none",
+                                                        fontSize: 18,
+                                                        fontWeight: 700,
+                                                        cursor: "pointer",
+                                                    }}
+                                                >
+                                                    ↓
+                                                </Box>
+                                            </Box>
+
+
+                                            {/* <Box
+                                        sx={{
+                                            px: 1.5,
+                                            py: 1,
+                                            fontSize: 14,
+                                            lineHeight: 1.4,
+                                            wordBreak: "break-word",
+                                        }}
+                                    >
+                                        heee
+                                    </Box> */}
+
+                                        </Box>
+                                    </Box></>)
+                            }
+
+
+                        </>
                     )
                 }
             })}
+
+
         </Box>
+
     )
 }

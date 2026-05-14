@@ -70,3 +70,24 @@ export function recallMess(conversationId: number, messageId: number) {
     });
 
 }
+
+
+export async function uploadMedia(conversationID: string, file: File, content: string) {
+
+    let url = `${BASE_CHAT_SERVICE}/messages/media`
+    let formData = new FormData();
+    let type = null;
+    formData.append('conversationID', conversationID)
+    formData.append('file', file)
+    formData.append('type', file.type)
+    formData.append('content', content)
+    formData.append('fileName', file.name)
+    let token = localStorage.getItem('accessToken')
+    const response = await fetch(`${BASE_CHAT_SERVICE}/messages/media`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+    });
+}

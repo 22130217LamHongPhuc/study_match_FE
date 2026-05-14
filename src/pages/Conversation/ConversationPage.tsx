@@ -26,7 +26,7 @@ import React, { use, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { Client } from "@stomp/stompjs";
 import WebSocketManager from "../../socket/WebSocketManager";
-import { loadConversation, sendText } from "../../services/ChatService";
+import { loadConversation, sendText, uploadMedia } from "../../services/ChatService";
 import { South } from "@mui/icons-material";
 import { useLocation } from "react-router-dom";
 import { MessageInterface } from "../../model/Conversation";
@@ -48,6 +48,8 @@ enum FileEnum {
     FILE = 'FILE'
 }
 export default function ConversationPage() {
+    const [fileLoading, setFileLoading] = useState<boolean>(false)
+
     const dispatch = useDispatch()
     const [replymess, setReplyMess] = useState<MessageInterface | null>(null)
     console.error("đây là replymess", replymess)
@@ -71,27 +73,10 @@ export default function ConversationPage() {
 
     // }, [])
     console.log("đây là conversation sau khi set", conversation)
-    const sendMessage = () => {
-        console.log("gửi nè")
-        if (messageText.trim().length === 0) return
-        const senderId = Number(localStorage.getItem('userId'));
-        sendText(messageText, senderId, conversationId.current as number);
+    const fileInputRef = useRef<any>(null)
+    const [preview, setPreview] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-
-        // setConversation((prev) => {
-        //     const newMessage: MessageInterface = {
-        //         messageId: Date.now(),
-        //         senderId: Number(localStorage.getItem('userId')),
-        //         type: 'text',
-        //         content: messageText,
-        //         mediaURL: null,
-        //         fileName: null,
-        //         createAt: new Date().toISOString()
-        //     }
-        //     return [newMessage, ...prev];
-        // })
-        // setMessageText("");
-    }
     console.warn("đây là conversationId", conversationId)
 
     const handleEmojiClick = (emojiObject: EmojiClickData) => {
@@ -122,6 +107,12 @@ export default function ConversationPage() {
         console.log(storeEvent, 'socket event nè')
         if (storeEvent === SocketEvent.MESSAGE_ACK || storeEvent === SocketEvent.NEW_MESSAGE) {
             console.log('trong conver page', storeNewMess)
+
+            if (fileLoading) {
+                setFileLoading(false)
+            }
+
+
             setConversation((prev: any[]) => {
                 return [storeNewMess.data?.message, ...prev];
             })
@@ -140,13 +131,11 @@ export default function ConversationPage() {
         }
     }, [storeNewMess, storeEvent])
 
-    const fileInputRef = useRef<any>(null)
-    const [preview, setPreview] = useState<string | null>(null);
-    const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
     const handleOpenFile = () => {
         fileInputRef.current.click();
     }
+    const maxVideoSize = 50 * 1024 * 1024;
     const handleFileChange = (e: any) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -160,12 +149,37 @@ export default function ConversationPage() {
             alert("Chỉ được chọn ảnh hoặc video");
             return;
         }
+        if (file.type.startsWith("video/")) {
+            if (file.size > maxVideoSize) {
+                alert("Video không được vượt quá 50MB");
+                return;
+            }
+        }
         const previewUrl = URL.createObjectURL(file);
         console.log('previewUrl', previewUrl)
         setPreview(previewUrl)
-        setSelectedFile(file.type)
+        setSelectedFile(file)
 
     };
+
+    const sendMessage = () => {
+        console.log("gửi nè")
+        console.log(preview, selectedFile, 'trong send mess')
+        if (messageText.trim().length === 0 && (!preview && !selectedFile)) return
+        const senderId = Number(localStorage.getItem('userId'));
+        if (!preview && !selectedFile) {
+            console.log('nhảy vào text')
+            sendText(messageText, senderId, conversationId.current as number);
+            return
+        }
+        if (!selectedFile) return
+        console.log('nhảy xuống dưới')
+        setPreview(null)
+        setFileLoading(true)
+        setSelectedFile(null)
+        uploadMedia(String(conversationId.current), selectedFile, messageText)
+
+    }
 
 
     return (
@@ -224,7 +238,7 @@ export default function ConversationPage() {
                         </IconButton>
                     </Box>
                 </Box>
-                {conversation ? <ListMess conversation={conversation} setReplyMess={setReplyMess} /> : <WelcomeConversation />}
+                {conversation ? <ListMess fileLoading={fileLoading} conversation={conversation} setReplyMess={setReplyMess} /> : <WelcomeConversation />}
 
                 {/* thanh reply nè */}
                 {
@@ -269,7 +283,7 @@ export default function ConversationPage() {
                                 >
                                     {/* giả lập ảnh preview */}
                                     {
-                                        (selectedFile === 'image/png') && (<Box
+                                        (selectedFile?.type === 'image/png') && (<Box
                                             component="img"
                                             src={preview || undefined}
                                             alt="preview"
@@ -282,7 +296,7 @@ export default function ConversationPage() {
                                         />)
                                     }
                                     {
-                                        selectedFile === 'video/mp4' && (
+                                        selectedFile?.type === 'video/mp4' && (
                                             <Box
                                                 component="video"
                                                 src={preview || undefined}
@@ -292,9 +306,10 @@ export default function ConversationPage() {
                                                     objectFit: "cover",
                                                     display: "block",
                                                     bgcolor: "#000",
+                                                    pointerEvents: "none",
                                                 }}
-                                                controls
                                                 preload="metadata"
+                                                muted
                                             />
                                         )
                                     }
@@ -311,7 +326,7 @@ export default function ConversationPage() {
                                         }}
                                     />
 
-                                    {/* nút xóa preview */}
+
                                     <IconButton
                                         sx={{
                                             position: "absolute",
@@ -325,6 +340,10 @@ export default function ConversationPage() {
                                                 bgcolor: "rgba(0,0,0,0.75)",
                                             },
                                         }}
+                                        onClick={() => {
+                                            setPreview(null)
+                                            setSelectedFile(null)
+                                        }}
                                     >
                                         <CancelPresentationIcon sx={{ fontSize: 18 }} />
                                     </IconButton>
@@ -332,8 +351,6 @@ export default function ConversationPage() {
                             </Box>
                         )
                     }
-
-
                     {/* THANH NHẬP TIN NHẮN */}
                     <Box
                         sx={{
@@ -411,6 +428,7 @@ export default function ConversationPage() {
 
                         <IconButton
                             onClick={sendMessage}
+
                             sx={{
                                 bgcolor: "#a40000",
                                 color: "#fff",
