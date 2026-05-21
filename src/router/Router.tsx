@@ -24,6 +24,7 @@ import MyProfilePage from "../pages/MyProfile/MyProfilePage";
 import StudyMatchAdminLayout from "../layouts/admin/StudyMatchAdminLayout";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
 import AdminGroupsPage from "../pages/admin/AdminGroupsPage/AdminGroupsPage";
+import StudySessionPage from "../pages/StudySession/StudySessionPage";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
@@ -73,7 +74,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/", element: <HomePage /> },
           { path: "/friends", element: <HomePage /> },
-          { path: "/schedule", element: <SchedulePage /> },
+          { path: "/schedule", element: <StudySessionPage /> },
           { path: "/profile/:id", element: <ProfilePage /> },
           { path: "/my-profile", element: <MyProfilePage /> },
           { path: "/conversation", element: <ConversationPage /> },
