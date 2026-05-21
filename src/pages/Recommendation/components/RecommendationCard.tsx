@@ -1,19 +1,4 @@
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  LinearProgress,
-  Stack,
-  Typography,
-  Button,
-} from "@mui/material";
 import { RecommendationCardVm } from "../types";
-
-interface RecommendationCardProps {
-  recommendation: RecommendationCardVm;
-}
 
 interface RecommendationCardProps {
   recommendation: RecommendationCardVm;
@@ -21,30 +6,30 @@ interface RecommendationCardProps {
   onReject?: (id: number) => void;
 }
 
-function getMatchColor(match: number) {
+function getMatchStyle(match: number) {
   if (match >= 70) {
     return {
-      track: "#E7F8EE",
-      bar: "#1F8F48",
-      chipBg: "#E7F8EE",
-      chipText: "#1F8F48",
+      text: "text-green-700",
+      bar: "bg-green-600",
+      bg: "bg-green-50",
+      border: "border-green-200",
     };
   }
 
   if (match >= 50) {
     return {
-      track: "#ECF4FF",
-      bar: "#2E75D8",
-      chipBg: "#ECF4FF",
-      chipText: "#245FB3",
+      text: "text-blue-700",
+      bar: "bg-blue-600",
+      bg: "bg-blue-50",
+      border: "border-blue-200",
     };
   }
 
   return {
-    track: "#FFF3E8",
-    bar: "#C5762A",
-    chipBg: "#FFF3E8",
-    chipText: "#9A5A1D",
+    text: "text-yellow-700",
+    bar: "bg-yellow-600",
+    bg: "bg-yellow-50",
+    border: "border-yellow-200",
   };
 }
 
@@ -53,201 +38,94 @@ export default function RecommendationCard({
   onConnect,
   onReject,
 }: RecommendationCardProps) {
-  const match = Number(recommendation.matchPercentage.toFixed(2));
-  const colors = getMatchColor(match);
+  const match = Number(recommendation.matchPercentage.toFixed(1));
+  const safeMatch = Math.min(100, Math.max(0, match));
+  const style = getMatchStyle(match);
 
   return (
-    <Card
-      sx={{
-        borderRadius: 4,
-        border: "1px solid #DCE8FA",
-        background: "linear-gradient(160deg, #FFFFFF 0%, #F7FBFF 100%)",
-        boxShadow: "0 10px 26px rgba(20, 38, 70, 0.08)",
-        height: "100%",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        "&:hover": {
-          transform: "translateY(-3px)",
-          boxShadow: "0 14px 30px rgba(20, 38, 70, 0.12)",
-        },
-      }}
-    >
-      <CardContent sx={{ p: { xs: 2, sm: 2.75 } }}>
-        <Stack spacing={2.2}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ color: "#60708D", fontWeight: 600, letterSpacing: 0.2 }}
-              >
-                Mức độ phù hợp
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 800, color: colors.chipText }}
-              >
-                {match}%
-              </Typography>
-            </Box>
-            <Chip
-              label={recommendation.studyModeLabel}
-              sx={{
-                bgcolor: colors.chipBg,
-                color: colors.chipText,
-                fontWeight: 700,
-                border: "1px solid rgba(33, 94, 170, 0.16)",
-                maxWidth: 220,
-              }}
-            />
-          </Stack>
+    <article className="flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs text-gray-500">Mức độ phù hợp</p>
 
-          <Box>
-            <LinearProgress
-              variant="determinate"
-              value={Math.min(100, Math.max(0, match))}
-              sx={{
-                height: 8,
-                borderRadius: 999,
-                bgcolor: colors.track,
-                "& .MuiLinearProgress-bar": {
-                  borderRadius: 999,
-                  bgcolor: colors.bar,
-                },
-              }}
-            />
-          </Box>
+          <p className={`mt-1 text-xl font-semibold ${style.text}`}>{match}%</p>
+        </div>
 
-          <Divider sx={{ borderColor: "#E4ECFA" }} />
+        <span
+          className={`max-w-[160px] truncate rounded-md border px-2 py-1 text-xs font-medium ${style.bg} ${style.border} ${style.text}`}
+          title={recommendation.studyModeLabel}
+        >
+          {recommendation.studyModeLabel}
+        </span>
+      </div>
 
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-            <Chip
-              size="small"
-              label={`Khu vực: ${recommendation.region}`}
-              sx={{ bgcolor: "#F1F6FF", color: "#304666", fontWeight: 600 }}
-            />
-            <Chip
-              size="small"
-              label={`Giới tính: ${recommendation.gender}`}
-              sx={{ bgcolor: "#F1F6FF", color: "#304666", fontWeight: 600 }}
-            />
-          </Stack>
+      <div className="mb-4">
+        <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+          <div
+            className={`h-full rounded-full ${style.bar}`}
+            style={{ width: `${safeMatch}%` }}
+          />
+        </div>
+      </div>
 
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, minmax(0, 1fr))",
-              },
-              gap: 1.25,
-            }}
-          >
-            <Metric label="Trình độ" value={recommendation.studyGoal} />
-            <Metric
-              label="Điểm TB"
-              value={recommendation.avgScore.toFixed(2)}
-            />
-            <Metric
-              label="Tín chỉ đã học"
-              value={recommendation.studiedCredits}
-            />
+      <div className="mb-4 flex flex-wrap gap-2">
+        <InfoChip label={`Khu vực: ${recommendation.region}`} />
+        <InfoChip label={`Giới tính: ${recommendation.gender}`} />
+      </div>
 
-            <Metric
-              label="Điểm môn chung"
-              value={`${(recommendation.sharedSubjectScore * 100).toFixed(0)}%`}
-            />
-          </Box>
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        <Metric label="Trình độ" value={recommendation.studyGoal} />
+        <Metric label="Điểm TB" value={recommendation.avgScore.toFixed(2)} />
+        <Metric label="Tín chỉ" value={recommendation.studiedCredits} />
+        <Metric
+          label="Môn chung"
+          value={`${(recommendation.sharedSubjectScore * 100).toFixed(0)}%`}
+        />
+      </div>
 
-          <Box
-            sx={{
-              borderRadius: 2.5,
-              px: 1.5,
-              py: 1.25,
-              bgcolor: "#EEF5FF",
-              border: "1px solid #D5E5FF",
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{ color: "#52627E", fontWeight: 600 }}
-            >
-              Môn học chung trong học kỳ
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{ color: "#204B8A", fontWeight: 800, mt: 0.25 }}
-            >
-              {recommendation.sharedSubjectCount} môn
-            </Typography>
-          </Box>
+      <div className="mb-4 rounded-md border border-gray-200 bg-gray-50 p-3">
+        <p className="text-xs text-gray-500">Môn học chung trong học kỳ</p>
+        <p className="mt-1 text-sm font-semibold text-gray-900">
+          {recommendation.sharedSubjectCount} môn
+        </p>
+      </div>
 
-          <Box sx={{ display: "flex", gap: 1.5, mt: 1 }}>
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={() => onConnect?.(recommendation.userId)}
-              sx={{
-                textTransform: "none",
-                fontWeight: 700,
-                borderRadius: 2,
-                background: "linear-gradient(135deg, #1F8F48 0%, #28A745 100%)",
-                boxShadow: "0 6px 14px rgba(31, 143, 72, 0.25)",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #18773A 0%, #23963E 100%)",
-                },
-              }}
-            >
-              Kết nối
-            </Button>
+      <div className="mt-auto grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => onConnect?.(recommendation.userId)}
+          className="h-9 rounded-md bg-gray-900 px-3 text-sm font-medium text-white hover:bg-gray-800"
+        >
+          Kết nối
+        </button>
 
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={() => onReject?.(recommendation.userId)}
-              sx={{
-                textTransform: "none",
-                fontWeight: 700,
-                borderRadius: 2,
-                borderColor: "#E57373",
-                color: "#D32F2F",
-                "&:hover": {
-                  borderColor: "#C62828",
-                  backgroundColor: "#FFF3F3",
-                },
-              }}
-            >
-              Từ chối
-            </Button>
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
+        <button
+          type="button"
+          onClick={() => onReject?.(recommendation.userId)}
+          className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Từ chối
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function InfoChip({ label }: { label: string }) {
+  return (
+    <span className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-600">
+      {label}
+    </span>
   );
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
-    <Box
-      sx={{
-        p: 1.25,
-        borderRadius: 2,
-        bgcolor: "#F7FAFF",
-        border: "1px solid #E6EEFB",
-      }}
-    >
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 700, color: "#24324F", mt: 0.25 }}
-      >
+    <div className="rounded-md border border-gray-200 bg-gray-50 p-2">
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-medium text-gray-900">
         {value}
-      </Typography>
-    </Box>
+      </p>
+    </div>
   );
 }

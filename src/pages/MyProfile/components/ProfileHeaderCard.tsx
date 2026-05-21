@@ -5,15 +5,22 @@ import {
   Chip,
   Stack,
   Typography,
+  IconButton,
+  Box,
 } from "@mui/material";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import EditIcon from "@mui/icons-material/Edit";
+import { useState } from "react";
 import { ProfileViewModel } from "../types";
+import UpdateProfileDialog from "./UpdateProfileDialog";
 
 interface ProfileHeaderCardProps {
   profile: ProfileViewModel;
 }
 
 export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
+  const [openEdit, setOpenEdit] = useState(false);
+
   return (
     <Card
       sx={{
@@ -53,17 +60,29 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
             </Typography>
           </Stack>
 
-          <Chip
-            label={profile.cohortLabel}
-            sx={{
-              bgcolor: "#E6F0FF",
-              color: "#275D9F",
-              fontWeight: 600,
-              border: "1px solid #CFE0FD",
-            }}
-          />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Chip
+              label={profile.cohortLabel}
+              sx={{
+                bgcolor: "#E6F0FF",
+                color: "#275D9F",
+                fontWeight: 600,
+                border: "1px solid #CFE0FD",
+              }}
+            />
+
+            <IconButton size="small" onClick={() => setOpenEdit(true)}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </Stack>
       </CardContent>
+
+      <UpdateProfileDialog
+        open={openEdit}
+        onClose={() => setOpenEdit(false)}
+        profile={profile}
+      />
     </Card>
   );
 }

@@ -4,7 +4,7 @@ import { APIResponseData } from "../config/APIResponse";
 const API_BASE_URL_PROFILE = "http://localhost:8082/api";
 const API_BASE_URL_GROUP = "http://localhost:8086";
 
-type Subject = {
+export type Subject = {
   subjectId: number;
   subjectCode: string;
   subjectName: string;
@@ -57,6 +57,36 @@ export interface PageResponse<T> {
   size: number;
   totalElements: number;
   totalPages: number;
+}
+
+export type BrowseGroupType = "COMMUNITY" | "STUDY" | (string & {});
+export type BrowseGroupStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "ARCHIVED"
+  | "DELETED"
+  | (string & {});
+
+export type BrowseGroupVisibility =
+  | "PUBLIC"
+  | "PRIVATE"
+  | "COMMUNITY"
+  | (string & {});
+
+export interface BrowseGroupResponse {
+  id: number;
+  name: string;
+  description?: string | null;
+  ownerUserId?: number | null;
+  termId?: number | null;
+  mainSubjectId?: number | null;
+  subjectName?: string | null;
+  maxMembers?: number | null;
+  visibility?: BrowseGroupVisibility | null;
+  status: BrowseGroupStatus;
+  createdAt: string;
+  updatedAt: string;
+  memberCount?: number | null;
 }
 
 export type AdminGroupType = "COMMUNITY" | "STUDY";
@@ -176,6 +206,29 @@ export async function getGroupsByUserId(
   return response;
 }
 
+export async function browseGroups(
+  type?: BrowseGroupType,
+  subject?: number,
+  page: number = 0,
+  limit: number = 10,
+): Promise<APIResponseData<PageResponse<BrowseGroupResponse>>> {
+  const params = new URLSearchParams();
+  if (type) params.set("type", type);
+  if (typeof subject === "number") params.set("subject", String(subject));
+  params.set("page", String(page));
+  params.set("limit", String(limit));
+
+  const response = await apiFetch<PageResponse<BrowseGroupResponse>>(
+    `/api/groups/browse?${params.toString()}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
 export async function getAdminGroups(
   page: number,
   size: number,
@@ -233,6 +286,22 @@ export async function updateAdminGroupStatus(
     {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
+export async function joinMemberIntoGroup(
+  groupId: number,
+  userId: number,
+): Promise<APIResponseData<unknown>> {
+  const response = await apiFetch<unknown>(
+    `/api/groups/${groupId}/members`,
+    {
+      method: "POST",
+      body: JSON.stringify({ userId }),
     },
     API_BASE_URL_GROUP,
   );
