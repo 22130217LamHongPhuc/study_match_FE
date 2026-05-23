@@ -1,4 +1,12 @@
+import { apiFetch } from "../config/apiClient";
+import { APIResponseData } from "../config/APIResponse";
 import { BASE_URL } from "../config/BaseConfig";
+import {
+  AdminUserDbRow,
+  AdminUserRole,
+  AdminUserStatus,
+} from "../pages/admin/AdminUsersPage/types";
+import { PageResponse } from "./GroupService";
 
 type FormLogin = {
   email: string;
@@ -25,8 +33,6 @@ export const loginRequest = async (form: FormLogin) => {
   return data;
 };
 
-export type AdminUserStatus = "ACTIVE" | "INACTIVE" | "DELETED";
-
 type ApiResponse<T> = {
   success: boolean;
   code: string;
@@ -34,38 +40,43 @@ type ApiResponse<T> = {
   data: T;
 };
 
-type UpdateAdminUserStatusResponse = {
-  id: number;
-  status: AdminUserStatus;
-};
+const API_BASE_URL_USER = "http://localhost:8085";
 
-export async function updateAdminUserStatus(
-  userId: number,
-  status: AdminUserStatus,
-) {
-  try {
-    // const res = await http.patch<ApiResponse<UpdateAdminUserStatusResponse>>(
-    //   `/api/admin/users/${userId}/status`,
-    //   { status },
-    // );
+// type UpdateAdminUserStatusResponse = {
+//   id: number;
+//   status: AdminUserStatus;
+// };
+export async function getAdminUsers(
+  page: number,
+  size: number,
+  status?: AdminUserStatus | null,
+  keyword?: string | null,
+  role?: AdminUserRole | null,
+): Promise<APIResponseData<PageResponse<AdminUserDbRow>>> {
+  const params = new URLSearchParams();
 
-    // return {
-    //   success: true,
-    //   data: res.data.data,
-    //   message: res.data.message,
-    // };
+  params.set("page", String(page));
+  params.set("size", String(size));
 
-    return {
-      success: true,
-      data: null,
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      data: null,
-      message:
-        error?.response?.data?.message ||
-        "Không thể cập nhật trạng thái người dùng",
-    };
+  if (status) {
+    params.set("status", status);
   }
+
+  if (keyword?.trim()) {
+    params.set("keyword", keyword.trim());
+  }
+
+  if (role) {
+    params.set("role", role);
+  }
+
+  const response = await apiFetch<PageResponse<AdminUserDbRow>>(
+    `/api/admin/users?${params.toString()}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_USER,
+  );
+
+  return response;
 }

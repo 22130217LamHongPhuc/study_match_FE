@@ -1,26 +1,32 @@
 import { Search } from "lucide-react";
 import type { AdminUserRole, AdminUserStatus } from "../types";
 
-const statusOptions: Array<{ label: string; value: AdminUserStatus }> = [
-  { label: "Tất cả", value: "all" },
-  { label: "Hoạt động", value: "active" },
-  { label: "Không hoạt động", value: "inactive" },
-  { label: "Tạm khóa", value: "suspended" },
+const statusOptions: Array<{
+  label: string;
+  value: AdminUserStatus | null;
+}> = [
+  { label: "Tất cả", value: null },
+  { label: "Hoạt động", value: "ACTIVE" },
+  { label: "Không hoạt động", value: "INACTIVE" },
+  { label: "Đã xóa", value: "DELETED" },
 ];
 
-const roleOptions: Array<{ label: string; value: AdminUserRole }> = [
-  { label: "Tất cả vai trò", value: "all" },
+const roleOptions: Array<{
+  label: string;
+  value: AdminUserRole | null;
+}> = [
+  { label: "Tất cả vai trò", value: null },
   { label: "Sinh viên", value: "student" },
   { label: "Quản trị viên", value: "admin" },
 ];
 
 type UsersToolbarProps = {
   query: string;
-  statusFilter: AdminUserStatus;
-  roleFilter: AdminUserRole;
+  statusFilter: AdminUserStatus | null;
+  roleFilter: AdminUserRole | null;
   onQueryChange: (value: string) => void;
-  onStatusChange: (value: AdminUserStatus) => void;
-  onRoleChange: (value: AdminUserRole) => void;
+  onStatusChange: (value: AdminUserStatus | null) => void;
+  onRoleChange: (value: AdminUserRole | null) => void;
 };
 
 export function UsersToolbar({
@@ -59,14 +65,15 @@ export function UsersToolbar({
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
               className="h-9 w-full rounded-lg border border-sand-300 bg-sand-50 pl-9 pr-3 text-sm text-sand-800 outline-none transition-colors focus:border-accent-600 focus:bg-white"
-              placeholder="Tìm user_id, họ tên, email, vai trò..."
+              placeholder="Tìm user_id, họ tên, email..."
             />
           </div>
 
           <div className="flex flex-wrap gap-2">
             {statusOptions.map((option) => (
               <button
-                key={option.value}
+                key={option.value ?? "all"}
+                type="button"
                 onClick={() => onStatusChange(option.value)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                   statusFilter === option.value
@@ -83,15 +90,20 @@ export function UsersToolbar({
             <span className="text-xs font-medium uppercase tracking-wide text-sand-400">
               Vai trò
             </span>
+
             <select
-              value={roleFilter}
-              onChange={(event) =>
-                onRoleChange(event.target.value as AdminUserRole)
-              }
+              value={roleFilter ?? "all"}
+              onChange={(event) => {
+                const value = event.target.value;
+                onRoleChange(value === "all" ? null : (value as AdminUserRole));
+              }}
               className="h-9 rounded-lg border border-sand-300 bg-sand-50 px-3 text-sm font-medium text-sand-700 outline-none focus:border-accent-600"
             >
               {roleOptions.map((option) => (
-                <option key={option.value} value={option.value}>
+                <option
+                  key={option.value ?? "all"}
+                  value={option.value ?? "all"}
+                >
                   {option.label}
                 </option>
               ))}

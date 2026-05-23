@@ -1,66 +1,104 @@
-import { useMemo, useState } from "react";
-import { adminUsersMockData } from "./mockUsers";
+import { useEffect, useState } from "react";
 import { AdminUsersTable } from "./components/AdminUsersTable";
-import { UsersStatsGrid } from "./components/UsersStatsGrid";
 import { UsersToolbar } from "./components/UsersToolbar";
-import { ADMIN_USER_PAGE_SIZE, DEFAULT_USER_FILTERS } from "./types";
+import {
+  ADMIN_USER_PAGE_SIZE,
+  DEFAULT_USER_FILTERS,
+  type AdminUserDbRow,
+  type AdminUserRole,
+  type AdminUserStatus,
+} from "./types";
+import { getAdminUsers } from "../../../services/UserService";
+
+function useDebounce<T>(value: T, delay = 400) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function AdminUsersPage() {
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState(DEFAULT_USER_FILTERS.status);
-  const [roleFilter, setRoleFilter] = useState(DEFAULT_USER_FILTERS.role);
+  const debouncedQuery = useDebounce(query.trim(), 400);
+
+  const [statusFilter, setStatusFilter] = useState<AdminUserStatus | null>(
+    DEFAULT_USER_FILTERS.status,
+  );
+
+  const [roleFilter, setRoleFilter] = useState<AdminUserRole | null>(
+    DEFAULT_USER_FILTERS.role,
+  );
+
   const [page, setPage] = useState(1);
+  const [users, setUsers] = useState<AdminUserDbRow[]>([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const filteredUsers = useMemo(() => {
-    const search = query.trim().toLowerCase();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    return adminUsersMockData.filter((user) => {
-      const matchedStatus =
-        statusFilter === "all" ? true : user.status === statusFilter;
-      const matchedRole =
-        roleFilter === "all" ? true : user.role === roleFilter;
-      const matchedQuery =
-        search.length === 0
-          ? true
-          : user.email.toLowerCase().includes(search) ||
-            (user.full_name || "").toLowerCase().includes(search) ||
-            String(user.user_id).includes(search) ||
-            user.role.toLowerCase().includes(search);
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQuery, statusFilter, roleFilter]);
 
-      return matchedStatus && matchedRole && matchedQuery;
-    });
-  }, [query, roleFilter, statusFilter]);
+  useEffect(() => {
+    let ignore = false;
 
-  const totalPages = Math.ceil(filteredUsers.length / ADMIN_USER_PAGE_SIZE);
-  const currentPage = Math.min(page, totalPages === 0 ? 1 : totalPages);
-  const start = (currentPage - 1) * ADMIN_USER_PAGE_SIZE;
-  const pagedUsers = filteredUsers.slice(start, start + ADMIN_USER_PAGE_SIZE);
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const statSummary = useMemo(() => {
-    const totalUsers = adminUsersMockData.length;
-    const activeUsers = adminUsersMockData.filter(
-      (user) => user.status === "active",
-    ).length;
-    const verifiedUsers = adminUsersMockData.filter(
-      (user) => user.email_verified,
-    ).length;
-    const onboardedUsers = adminUsersMockData.filter(
-      (user) => user.is_onboarding_completed,
-    ).length;
-    const suspendedUsers = adminUsersMockData.filter(
-      (user) => user.status === "suspended",
-    ).length;
+        const res = await getAdminUsers(
+          page - 1,
+          ADMIN_USER_PAGE_SIZE,
+          statusFilter,
+          debouncedQuery,
+          roleFilter,
+        );
 
-    return {
-      totalUsers,
-      activeUsers,
-      verifiedUsers,
-      onboardedUsers,
-      suspendedUsers,
-      unverifiedUsers: totalUsers - verifiedUsers,
-      onboardingPendingUsers: totalUsers - onboardedUsers,
+        if (!res.success || !res.data) {
+          setUsers([]);
+          setTotalPages(0);
+          setTotalItems(0);
+          setError(res.message || "Không thể tải danh sách người dùng");
+          return;
+        }
+
+        setUsers(res.data.content);
+        setTotalPages(res.data.totalPages);
+        setTotalItems(res.data.totalElements);
+      } catch {
+        setUsers([]);
+        setTotalPages(0);
+        setTotalItems(0);
+        setError("Có lỗi xảy ra khi tải danh sách người dùng");
+      } finally {
+        setLoading(false);
+      }
     };
-  }, []);
+
+    fetchUsers();
+
+    return () => {
+      ignore = true;
+    };
+  }, [page, debouncedQuery, statusFilter, roleFilter]);
+
+  const handleStatusChange = (value: AdminUserStatus | null) => {
+    setStatusFilter(value);
+  };
+
+  const handleRoleChange = (value: AdminUserRole | null) => {
+    setRoleFilter(value);
+  };
 
   return (
     <main className="space-y-6">
@@ -68,29 +106,31 @@ export default function AdminUsersPage() {
         query={query}
         statusFilter={statusFilter}
         roleFilter={roleFilter}
-        onQueryChange={(value) => {
-          setQuery(value);
-          setPage(1);
-        }}
-        onStatusChange={(value) => {
-          setStatusFilter(value);
-          setPage(1);
-        }}
-        onRoleChange={(value) => {
-          setRoleFilter(value);
-          setPage(1);
-        }}
+        onQueryChange={setQuery}
+        onStatusChange={handleStatusChange}
+        onRoleChange={handleRoleChange}
       />
 
-      <UsersStatsGrid summary={statSummary} />
+      {error && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="rounded-lg border border-sand-200 bg-white px-4 py-3 text-sm font-medium text-sand-500">
+          Đang tải danh sách người dùng...
+        </div>
+      )}
 
       <AdminUsersTable
-        users={pagedUsers}
-        page={currentPage}
+        users={users}
+        page={page}
         totalPages={totalPages}
-        totalItems={filteredUsers.length}
+        totalItems={totalItems}
         pageSize={ADMIN_USER_PAGE_SIZE}
         onPageChange={setPage}
+        onStatusUpdated={() => {}}
       />
     </main>
   );

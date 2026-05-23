@@ -25,22 +25,19 @@ export function getRoleLabel(
   return "Tất cả vai trò";
 }
 
-export function getStatusLabel(
-  status: AdminUserStatus | "active" | "inactive" | "suspended",
-): string {
-  if (status === "active") return "Hoạt động";
-  if (status === "inactive") return "Không hoạt động";
-  if (status === "suspended") return "Tạm khóa";
+export function getStatusLabel(status: AdminUserStatus): string {
+  if (status === "ACTIVE") return "Hoạt động";
+  if (status === "INACTIVE") return "Không hoạt động";
+  if (status === "SUSPENDED") return "Tạm khóa";
+  if (status === "DELETED") return "Đã xóa";
   return "Tất cả trạng thái";
 }
 
-export function getStatusClassName(
-  status: "active" | "inactive" | "suspended",
-): string {
-  if (status === "active") {
+export function getStatusClassName(status: AdminUserStatus): string {
+  if (status === "ACTIVE") {
     return "border-sage-100 bg-sage-50 text-sage-700";
   }
-  if (status === "inactive") {
+  if (status === "INACTIVE") {
     return "border-amber-100 bg-amber-50 text-amber-700";
   }
   return "border-rose-100 bg-rose-50 text-rose-700";

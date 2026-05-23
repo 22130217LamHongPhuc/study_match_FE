@@ -7,7 +7,7 @@ import {
   Trash2,
   Unlock,
 } from "lucide-react";
-import type { AdminUserDbRow } from "../types";
+import type { AdminUserDbRow, AdminUserStatus } from "../types";
 import {
   formatDateTime,
   getBooleanBadgeClass,
@@ -16,10 +16,6 @@ import {
   getStatusClassName,
   getStatusLabel,
 } from "../utils";
-import {
-  updateAdminUserStatus,
-  type AdminUserStatus,
-} from "../../../../services/UserService";
 
 type PendingUserStatusChange = {
   kind: "status" | "delete";
@@ -219,31 +215,31 @@ export function AdminUsersTable({
     setConfirmOpen(true);
   };
 
-  const confirmStatusChange = async () => {
-    if (!pendingChange) return;
+  //   const confirmStatusChange = async () => {
+  //     if (!pendingChange) return;
 
-    setConfirmLoading(true);
-    setConfirmError(null);
+  //     setConfirmLoading(true);
+  //     setConfirmError(null);
 
-    const res = await updateAdminUserStatus(
-      pendingChange.userId,
-      pendingChange.toStatus,
-    );
+  //     const res = await updateAdminUserStatus(
+  //       pendingChange.userId,
+  //       pendingChange.toStatus,
+  //     );
 
-    if (!res.success) {
-      setConfirmLoading(false);
-      setConfirmError(
-        res.message || "Không thể cập nhật trạng thái người dùng",
-      );
-      return;
-    }
+  //     if (!res.success) {
+  //       setConfirmLoading(false);
+  //       setConfirmError(
+  //         res.message || "Không thể cập nhật trạng thái người dùng",
+  //       );
+  //       return;
+  //     }
 
-    // onStatusUpdated?.(pendingChange.userId, res.data.status);
+  //     // onStatusUpdated?.(pendingChange.userId, res.data.status);
 
-    setConfirmLoading(false);
-    setConfirmOpen(false);
-    setPendingChange(null);
-  };
+  //     setConfirmLoading(false);
+  //     setConfirmOpen(false);
+  //     setPendingChange(null);
+  //   };
 
   return (
     <section className="overflow-hidden rounded-lg border border-sand-200 bg-white xl:col-span-2">
@@ -263,9 +259,7 @@ export function AdminUsersTable({
               <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Email
               </th>
-              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
-                Onboarding
-              </th>
+
               <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Đăng nhập gần nhất
               </th>
@@ -330,16 +324,6 @@ export function AdminUsersTable({
                       className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium ${getBooleanBadgeClass(user.email_verified)}`}
                     >
                       {user.email_verified ? "Đã xác thực" : "Chưa xác thực"}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium ${getBooleanBadgeClass(user.is_onboarding_completed)}`}
-                    >
-                      {user.is_onboarding_completed
-                        ? "Hoàn tất"
-                        : "Chưa hoàn tất"}
                     </span>
                   </td>
 
@@ -491,7 +475,7 @@ export function AdminUsersTable({
         loading={confirmLoading}
         error={confirmError}
         onCancel={closeConfirm}
-        onConfirm={confirmStatusChange}
+        onConfirm={() => {}}
       />
     </section>
   );
