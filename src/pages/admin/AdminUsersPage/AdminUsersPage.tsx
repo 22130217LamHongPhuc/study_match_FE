@@ -9,6 +9,7 @@ import {
   type AdminUserStatus,
 } from "./types";
 import { getAdminUsers } from "../../../services/UserService";
+import { AdminUserDetailModal } from "./components/AdminUserDetailModal";
 
 function useDebounce<T>(value: T, delay = 400) {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -43,6 +44,10 @@ export default function AdminUsersPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [openUserDetail, setOpenUserDetail] = useState<AdminUserDbRow | null>(
+    null,
+  );
 
   useEffect(() => {
     setPage(1);
@@ -131,6 +136,16 @@ export default function AdminUsersPage() {
         pageSize={ADMIN_USER_PAGE_SIZE}
         onPageChange={setPage}
         onStatusUpdated={() => {}}
+        onViewUser={(userId) => {
+          const user = users.find((item) => item.user_id === userId) ?? null;
+          setOpenUserDetail(user);
+        }}
+      />
+
+      <AdminUserDetailModal
+        open={openUserDetail !== null}
+        user={openUserDetail}
+        onClose={() => setOpenUserDetail(null)}
       />
     </main>
   );
