@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+
+import { updateAdminUserStatus } from "../../../../services/UserService";
 import {
   Eye,
   Lock,
@@ -215,31 +217,31 @@ export function AdminUsersTable({
     setConfirmOpen(true);
   };
 
-  //   const confirmStatusChange = async () => {
-  //     if (!pendingChange) return;
+  const confirmStatusChange = async () => {
+    if (!pendingChange) return;
 
-  //     setConfirmLoading(true);
-  //     setConfirmError(null);
+    setConfirmLoading(true);
+    setConfirmError(null);
 
-  //     const res = await updateAdminUserStatus(
-  //       pendingChange.userId,
-  //       pendingChange.toStatus,
-  //     );
+    const res = await updateAdminUserStatus(
+      pendingChange.userId,
+      pendingChange.toStatus,
+    );
 
-  //     if (!res.success) {
-  //       setConfirmLoading(false);
-  //       setConfirmError(
-  //         res.message || "Không thể cập nhật trạng thái người dùng",
-  //       );
-  //       return;
-  //     }
+    if (!res.success) {
+      setConfirmLoading(false);
+      setConfirmError(
+        res.message || "Không thể cập nhật trạng thái người dùng",
+      );
+      return;
+    }
 
-  //     // onStatusUpdated?.(pendingChange.userId, res.data.status);
+    onStatusUpdated?.(pendingChange.userId, res.data.status);
 
-  //     setConfirmLoading(false);
-  //     setConfirmOpen(false);
-  //     setPendingChange(null);
-  //   };
+    setConfirmLoading(false);
+    setConfirmOpen(false);
+    setPendingChange(null);
+  };
 
   return (
     <section className="overflow-hidden rounded-lg border border-sand-200 bg-white xl:col-span-2">
@@ -475,7 +477,7 @@ export function AdminUsersTable({
         loading={confirmLoading}
         error={confirmError}
         onCancel={closeConfirm}
-        onConfirm={() => {}}
+        onConfirm={confirmStatusChange}
       />
     </section>
   );

@@ -42,10 +42,27 @@ type ApiResponse<T> = {
 
 const API_BASE_URL_USER = "http://localhost:8085";
 
-// type UpdateAdminUserStatusResponse = {
-//   id: number;
-//   status: AdminUserStatus;
-// };
+type UpdateAdminUserStatusResponse = {
+  userId: number;
+  status: AdminUserStatus;
+};
+
+export async function updateAdminUserStatus(
+  userId: number,
+  status: AdminUserStatus,
+): Promise<APIResponseData<UpdateAdminUserStatusResponse>> {
+  const response = await apiFetch<UpdateAdminUserStatusResponse>(
+    `/api/admin/users/${userId}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+    API_BASE_URL_USER,
+  );
+
+  return response;
+}
+
 export async function getAdminUsers(
   page: number,
   size: number,

@@ -49,6 +49,18 @@ export default function AdminUsersPage() {
     null,
   );
 
+  const handleStatusUpdated = (userId: number, status: AdminUserStatus) => {
+    setUsers((prev) =>
+      prev.map((user) =>
+        user.user_id === userId
+          ? {
+              ...user,
+              status,
+            }
+          : user,
+      ),
+    );
+  };
   useEffect(() => {
     setPage(1);
   }, [debouncedQuery, statusFilter, roleFilter]);
@@ -135,7 +147,7 @@ export default function AdminUsersPage() {
         totalItems={totalItems}
         pageSize={ADMIN_USER_PAGE_SIZE}
         onPageChange={setPage}
-        onStatusUpdated={() => {}}
+        onStatusUpdated={handleStatusUpdated}
         onViewUser={(userId) => {
           const user = users.find((item) => item.user_id === userId) ?? null;
           setOpenUserDetail(user);
