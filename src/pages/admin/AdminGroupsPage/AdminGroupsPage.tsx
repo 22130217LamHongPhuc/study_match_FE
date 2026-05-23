@@ -133,7 +133,7 @@ export default function AdminGroupsPage() {
   };
 
   return (
-    <main className="overflow-y-auto p-6">
+    <main className="space-y-6">
       <GroupsToolbar onOpenCreate={() => setCreateOpen(true)} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -150,7 +150,7 @@ export default function AdminGroupsPage() {
         setKeyword={setKeyword}
       />
 
-      <div className="mt-6 grid gap-6">
+      <div className="grid gap-6">
         <div className="xl:col-span-2">
           {groupsError && (
             <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -181,7 +181,7 @@ export default function AdminGroupsPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         <GroupRatioCard />
         <RecentActivityCard />
       </div>

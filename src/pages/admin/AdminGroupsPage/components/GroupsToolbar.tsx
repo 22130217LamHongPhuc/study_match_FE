@@ -5,21 +5,21 @@ export function GroupsToolbar({ onOpenCreate }: { onOpenCreate: () => void }) {
   return (
     <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Quản lý nhóm học</h1>
-        <p className="mt-0.5 text-[13px] text-gray-500">
+        <h1 className="text-lg font-semibold text-sand-900">Quản lý nhóm học</h1>
+        <p className="mt-0.5 text-sm text-sand-500">
           Quản trị nhóm cộng đồng do Admin tạo và theo dõi nhóm học riêng của
           sinh viên.
         </p>
       </div>
 
       <div className="flex gap-2">
-        <button className="rounded border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-bold shadow-sm transition-all hover:bg-gray-50">
+        <button className="rounded-lg border border-sand-300 bg-white px-4 py-2 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50">
           Xuất dữ liệu
         </button>
         <button
           type="button"
           onClick={onOpenCreate}
-          className="flex items-center gap-1.5 rounded bg-gray-900 px-3 py-1.5 text-[12px] font-bold text-white shadow-sm transition-all hover:bg-gray-800"
+          className="flex items-center gap-1.5 rounded-lg bg-sand-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-sand-800"
         >
           <Plus size={14} />
           Tạo cộng đồng
@@ -43,15 +43,15 @@ export function GroupsFilterBar({
   keyword: string;
 }) {
   return (
-    <div className="mt-6 rounded border border-gray-200 bg-white p-3">
+    <div className="mt-6 rounded-lg border border-sand-200 bg-white p-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-md">
           <Search
             size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-sand-400"
           />
           <input
-            className="h-8 w-full rounded border border-gray-300 bg-gray-50 pl-9 pr-3 text-[12px] font-medium outline-none transition-colors focus:border-blue-500 focus:bg-white"
+            className="h-9 w-full rounded-lg border border-sand-300 bg-sand-50 pl-9 pr-3 text-sm font-medium text-sand-800 outline-none transition-colors focus:border-accent-600 focus:bg-white focus:ring-1 focus:ring-accent-600/20"
             placeholder="Tìm tên nhóm, môn học, người tạo..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
@@ -62,10 +62,10 @@ export function GroupsFilterBar({
           {filters.map((item, index) => (
             <button
               key={item.title}
-              className={`rounded px-3 py-1.5 text-[12px] font-bold transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 selectedFilter.title === item.title
-                  ? "bg-blue-400 text-white shadow-sm"
-                  : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                  ? "bg-sand-900 text-white shadow-sm"
+                  : "border border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
               }`}
               onClick={() => onFilterChange(item)}
             >

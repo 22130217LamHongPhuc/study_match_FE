@@ -108,31 +108,31 @@ export function CommunityCreateModal({
         type="button"
         aria-label="Đóng"
         onClick={onClose}
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/30"
       />
 
-      <div className="relative z-10 w-[min(560px,calc(100vw-32px))] rounded border border-gray-200 bg-white p-5 shadow-lg">
+      <div className="relative z-10 w-[min(560px,calc(100vw-32px))] rounded-xl border border-sand-200 bg-white p-6 shadow-lg">
         {loading ? (
           <LoadingSkeleton />
         ) : (
           <>
             <div className="mb-4 flex items-start justify-between">
               <div>
-                <h3 className="text-sm font-bold text-gray-800">
+                <h3 className="text-lg font-semibold text-sand-900">
                   Tạo cộng đồng
                 </h3>
-                <p className="mt-0.5 text-[11px] font-medium text-gray-400">
+                <p className="mt-0.5 text-xs font-medium text-sand-500">
                   Dành cho nhóm mở do Admin quản lý
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-50 text-blue-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded bg-accent-50 text-accent-600">
                   <Globe2 size={16} />
                 </div>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                  className="rounded p-1.5 text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-600"
                 >
                   <X size={16} />
                 </button>
@@ -143,7 +143,7 @@ export function CommunityCreateModal({
               <div>
                 <label
                   htmlFor={nameId}
-                  className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-gray-500"
+                  className="mb-1 block text-sm font-medium text-sand-700"
                 >
                   Tên cộng đồng
                 </label>
@@ -151,7 +151,7 @@ export function CommunityCreateModal({
                   id={nameId}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-8 w-full rounded border border-gray-300 bg-gray-50 px-3 text-[12px] font-medium outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="h-9 w-full rounded-lg border border-sand-300 bg-sand-50 px-3 text-sm font-medium text-sand-800 outline-none transition-colors focus:border-accent-600 focus:bg-white focus:ring-1 focus:ring-accent-600/20"
                   placeholder="VD: Cộng đồng Lập trình Java"
                 />
               </div>
@@ -159,7 +159,7 @@ export function CommunityCreateModal({
               <div>
                 <label
                   htmlFor={subjectId}
-                  className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-gray-500"
+                  className="mb-1 block text-sm font-medium text-sand-700"
                 >
                   Môn học
                 </label>
@@ -172,7 +172,7 @@ export function CommunityCreateModal({
                     );
                     setSelectedSubjectId(Number(e.target.value) || null);
                   }}
-                  className="h-8 w-full rounded border border-gray-300 bg-gray-50 px-3 text-[12px] font-medium outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="h-9 w-full rounded-lg border border-sand-300 bg-sand-50 px-3 text-sm font-medium text-sand-800 outline-none transition-colors focus:border-accent-600 focus:bg-white focus:ring-1 focus:ring-accent-600/20"
                 >
                   <option value="">Chọn môn học</option>
                   {subjects.map((subject) => (
@@ -186,7 +186,7 @@ export function CommunityCreateModal({
               <div>
                 <label
                   htmlFor={descId}
-                  className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-gray-500"
+                  className="mb-1 block text-sm font-medium text-sand-700"
                 >
                   Mô tả ngắn
                 </label>
@@ -195,7 +195,7 @@ export function CommunityCreateModal({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="w-full resize-none rounded border border-gray-300 bg-gray-50 px-3 py-2 text-[12px] font-medium outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="w-full resize-none rounded-lg border border-sand-300 bg-sand-50 px-3 py-2.5 text-sm font-medium text-sand-800 outline-none transition-colors focus:border-accent-600 focus:bg-white focus:ring-1 focus:ring-accent-600/20"
                   placeholder="Không gian trao đổi chung cho sinh viên..."
                 />
               </div>
@@ -204,14 +204,14 @@ export function CommunityCreateModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-8 flex-1 rounded border border-gray-300 bg-white px-3 text-[12px] font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50"
+                  className="h-9 flex-1 rounded-lg border border-sand-300 bg-white px-3 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50"
                 >
                   Hủy
                 </button>
                 <button
                   type="button"
                   onClick={handleCreateCommunity}
-                  className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded bg-gray-900 text-[12px] font-bold text-white shadow-sm transition-all hover:bg-gray-800"
+                  className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-sand-900 text-sm font-medium text-white transition-all hover:bg-sand-800"
                 >
                   <Plus size={14} />
                   Tạo cộng đồng

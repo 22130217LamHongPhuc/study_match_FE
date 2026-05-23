@@ -19,7 +19,6 @@ export interface StudySessionVm {
   groupId?: number | null;
   title: string;
   description?: string;
-  subjectName?: string;
   startTime: string;
   endTime: string;
   studyMode: StudyMode;
@@ -31,4 +30,42 @@ export interface StudySessionVm {
   partnerName?: string;
   groupName?: string;
   membersCount?: number;
+  subjectName?: string;
+}
+
+export type GroupStudySessionMode = "ONLINE" | "OFFLINE" | "HYBRID";
+
+export type StudySessionType = "GROUP" | "USER_PAIR";
+
+export interface CreateStudySessionRequest {
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+  studyMode: GroupStudySessionMode;
+  location?: string;
+  createdByUserId: number;
+  sessionType: StudySessionType;
+  subjectName?: string;
+}
+
+export type GroupStudySessionStatus =
+  | "SCHEDULED"
+  | "ONGOING"
+  | "COMPLETED"
+  | "CANCELLED";
+export interface StudySessionResponse {
+  id: number;
+  groupId: number;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  studyMode: GroupStudySessionMode;
+  location: string;
+  createdByUserId: number;
+  status: GroupStudySessionStatus;
+  createdAt: string;
+  updatedAt: string;
+  subjectName?: string;
 }

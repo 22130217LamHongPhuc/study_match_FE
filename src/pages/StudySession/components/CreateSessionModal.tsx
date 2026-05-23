@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SessionType, StudyMode, StudySessionVm } from "../types";
-import { getGroupsByUserId } from "../../../services/GroupService";
+import {
+  createGroupStudySession,
+  getGroupsByUserId,
+} from "../../../services/GroupService";
 import type { StudyGroupDetailResponse } from "../../../services/GroupService";
+import { toast } from "sonner";
 
 interface CreateSessionModalProps {
   open: boolean;
@@ -112,38 +116,67 @@ export function CreateSessionModal({
     setGroupError("");
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async () => {
+    console.log("Submitting form with values");
 
     if (sessionType === "GROUP" && !selectedGroup) {
       setGroupError("Vui lòng chọn nhóm học");
       return;
     }
 
-    const newSession: StudySessionVm = {
-      id: Date.now(),
-      sessionType,
-      groupId: sessionType === "GROUP" ? (selectedGroup?.id ?? null) : null,
-      title,
-      description,
-      subjectName: subjectName || selectedGroup?.subjectName || "",
-      startTime,
-      endTime,
-      studyMode,
-      location:
-        studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
-      meetingUrl: needSystemRoom ? "" : "",
-      createdByUserId: currentUserId,
-      status: "SCHEDULED",
-      participantStatus: "PENDING",
-      partnerName: sessionType === "USER_PAIR" ? targetName : undefined,
-      groupName: sessionType === "GROUP" ? selectedGroup?.name : undefined,
-      membersCount:
-        sessionType === "GROUP" ? selectedGroup?.maxMembers : undefined,
-    };
+    if (sessionType === "USER_PAIR") {
+      alert("Phần tạo lịch học 1-1 sẽ xử lý sau");
+      return;
+    }
 
-    onCreate(newSession);
-    resetForm();
+    try {
+      const payload = {
+        title,
+        description,
+        startTime,
+        endTime,
+        studyMode,
+        location:
+          studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
+        createdByUserId: currentUserId,
+        sessionType: "GROUP" as const,
+        subjectName: subjectName || selectedGroup?.subjectName || "",
+      };
+
+      const response = await createGroupStudySession(
+        selectedGroup!.id,
+        payload,
+      );
+
+      const createdSession = response.data;
+
+      const newSession: StudySessionVm = {
+        id: createdSession.id,
+        sessionType: "GROUP",
+        groupId: selectedGroup!.id,
+        title: createdSession.title,
+        description: createdSession.description,
+        subjectName: createdSession.subjectName,
+        startTime: createdSession.startTime,
+        endTime: createdSession.endTime,
+        studyMode: createdSession.studyMode,
+        location: createdSession.location,
+        meetingUrl: "",
+        createdByUserId: createdSession.createdByUserId,
+        status: "SCHEDULED",
+        participantStatus: "PENDING",
+        groupName: selectedGroup!.name,
+        membersCount: selectedGroup!.maxMembers,
+      };
+
+      onCreate(newSession);
+      resetForm();
+      onClose();
+      toast.success("Tạo lịch học nhóm thành công");
+    } catch (error) {
+      console.error(error);
+      setGroupError("Tạo lịch học nhóm thất bại");
+    }
   };
 
   return (
@@ -166,7 +199,7 @@ export function CreateSessionModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 p-6">
+        <div className="space-y-5 p-6">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-2">
               <span className="text-sm font-semibold text-slate-700">
@@ -373,16 +406,17 @@ export function CreateSessionModal({
             </button>
 
             <button
-              type="submit"
-              disabled={
-                sessionType === "GROUP" && (loadingGroups || !selectedGroup)
-              }
+              type="button"
+              // disabled={
+              //   sessionType === "GROUP" && (loadingGroups || !selectedGroup)
+              // }
+              onClick={handleSubmit}
               className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               Tạo lịch
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

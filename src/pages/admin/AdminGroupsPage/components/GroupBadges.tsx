@@ -5,10 +5,10 @@ export function GroupTypeBadge({ type }: { type: GroupType }) {
 
   return (
     <span
-      className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
         isCommunity
-          ? "bg-blue-50 text-blue-700"
-          : "bg-violet-50 text-violet-700"
+          ? "bg-accent-50 text-accent-700"
+          : "bg-sand-100 text-sand-700"
       }`}
     >
       {isCommunity ? "Cộng đồng" : "Nhóm riêng"}
@@ -18,10 +18,10 @@ export function GroupTypeBadge({ type }: { type: GroupType }) {
 
 export function GroupStatusBadge({ status }: { status: GroupStatus }) {
   const styles: Record<GroupStatus, string> = {
-    ACTIVE: "bg-emerald-50 text-emerald-700",
-    INACTIVE: "bg-orange-50 text-orange-700",
-    ARCHIVED: "bg-amber-50 text-amber-700",
-    DELETED: "bg-red-50 text-red-700",
+    ACTIVE: "bg-sage-50 text-sage-700",
+    INACTIVE: "bg-amber-50 text-amber-700",
+    ARCHIVED: "bg-sand-200 text-sand-600",
+    DELETED: "bg-rose-50 text-rose-700",
   };
 
   const labels: Record<GroupStatus, string> = {
@@ -33,7 +33,7 @@ export function GroupStatusBadge({ status }: { status: GroupStatus }) {
 
   return (
     <span
-      className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold ${styles[status]}`}
+      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${styles[status]}`}
     >
       {labels[status]}
     </span>

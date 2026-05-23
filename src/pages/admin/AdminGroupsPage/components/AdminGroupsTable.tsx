@@ -78,17 +78,17 @@ function ConfirmStatusChangePopup({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/30"
         aria-label="Đóng"
         onClick={loading ? undefined : onCancel}
       />
 
-      <div className="relative z-10 w-full max-w-md rounded-xl border border-gray-200 bg-white p-4 shadow-lg">
-        <h3 className="text-sm font-bold text-gray-800">{title}</h3>
-        <p className="mt-1 text-[13px] font-medium text-gray-600">{content}</p>
+      <div className="relative z-10 w-full max-w-md rounded-xl border border-sand-200 bg-white p-4 shadow-lg">
+        <h3 className="text-sm font-semibold text-sand-900">{title}</h3>
+        <p className="mt-1 text-sm font-medium text-sand-600">{content}</p>
 
         {error && (
-          <div className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-[12px] font-medium text-red-700">
+          <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
             {error}
           </div>
         )}
@@ -98,7 +98,7 @@ function ConfirmStatusChangePopup({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="h-8 flex-1 rounded border border-gray-300 bg-white px-3 text-[12px] font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-9 flex-1 rounded-lg border border-sand-300 bg-white px-3 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Hủy
           </button>
@@ -106,7 +106,7 @@ function ConfirmStatusChangePopup({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className="h-8 flex-1 rounded bg-gray-900 px-3 text-[12px] font-bold text-white shadow-sm transition-all hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-9 flex-1 rounded-lg bg-rose-600 px-3 text-sm font-medium text-white transition-all hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Đang cập nhật..." : "Xác nhận"}
           </button>
@@ -241,19 +241,19 @@ export function AdminGroupsTable({
   };
 
   return (
-    <div className="overflow-hidden rounded border border-gray-200 bg-white">
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+    <div className="overflow-hidden rounded-lg border border-sand-200 bg-white">
+      <div className="flex items-center justify-between border-b border-sand-200 px-4 py-3">
         <div>
-          <h3 className="text-sm font-bold text-gray-800">
+          <h3 className="text-sm font-medium text-sand-800">
             Danh sách nhóm học
           </h3>
-          <p className="mt-0.5 text-[11px] font-medium text-gray-400">
+          <p className="mt-0.5 text-xs font-medium text-sand-500">
             Theo dõi nhóm cộng đồng và nhóm học riêng của sinh viên
           </p>
         </div>
 
-        <button className="flex items-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50">
-          <Filter size={13} />
+        <button className="flex items-center gap-1.5 rounded-lg border border-sand-300 bg-white px-3 py-1.5 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50">
+          <Filter size={13} className="text-sand-500" />
           Bộ lọc
         </button>
       </div>
@@ -261,24 +261,24 @@ export function AdminGroupsTable({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[980px] border-collapse text-left">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/80">
-              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+            <tr className="border-b border-sand-100 bg-sand-50">
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Tên nhóm
               </th>
-              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Loại
               </th>
-              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Môn học
               </th>
 
-              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Trạng thái
               </th>
-              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Ngày tạo
               </th>
-              <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-sand-500">
                 Hành động
               </th>
             </tr>
@@ -288,15 +288,15 @@ export function AdminGroupsTable({
             {formattedRows.map((group) => (
               <tr
                 key={group.id}
-                className="border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-50/70"
+                className="border-b border-sand-100 transition-colors last:border-0 hover:bg-sand-50/50"
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded ${
                         group.type === "COMMUNITY"
-                          ? "bg-blue-50 text-blue-600"
-                          : "bg-violet-50 text-violet-600"
+                          ? "bg-accent-50 text-accent-600"
+                          : "bg-sand-100 text-sand-600"
                       }`}
                     >
                       {group.type === "COMMUNITY" ? (
@@ -307,7 +307,7 @@ export function AdminGroupsTable({
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-bold text-gray-800">
+                      <p className="text-sm font-medium text-sand-800">
                         {group.name}
                       </p>
                     </div>
@@ -319,7 +319,7 @@ export function AdminGroupsTable({
                 </td>
 
                 <td className="px-4 py-3">
-                  <span className="text-[12px] font-semibold text-gray-700">
+                  <span className="text-xs text-sand-500">
                     {group.subjectName}
                   </span>
                 </td>
@@ -329,7 +329,7 @@ export function AdminGroupsTable({
                 </td>
 
                 <td className="px-4 py-3">
-                  <span className="text-[12px] font-medium text-gray-500">
+                  <span className="text-xs font-medium text-sand-600">
                     {group.createdAtText}
                   </span>
                 </td>
@@ -342,7 +342,7 @@ export function AdminGroupsTable({
                         setSelectedGroupId(group.id);
                         setDetailOpen(true);
                       }}
-                      className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-blue-600"
+                      className="rounded p-1.5 text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-600"
                       aria-label="Xem chi tiết nhóm"
                     >
                       <Eye size={15} />
@@ -360,12 +360,12 @@ export function AdminGroupsTable({
                         (group.status !== "ACTIVE" &&
                           group.status !== "INACTIVE")
                       }
-                      className={`rounded p-1.5 text-gray-400 transition-colors ${
+                      className={`rounded p-1.5 text-sand-400 transition-colors ${
                         group.status === "DELETED" ||
                         (group.status !== "ACTIVE" &&
                           group.status !== "INACTIVE")
                           ? "cursor-not-allowed opacity-50"
-                          : "hover:bg-gray-100 hover:text-orange-600"
+                          : "hover:bg-sand-100 hover:text-sand-600"
                       }`}
                       aria-label={
                         group.status === "ACTIVE" ? "Khóa nhóm" : "Mở khóa nhóm"
@@ -395,10 +395,10 @@ export function AdminGroupsTable({
                         aria-disabled={group.status === "DELETED"}
                         aria-haspopup="menu"
                         aria-expanded={openMenuGroupId === group.id}
-                        className={`rounded p-1.5 text-gray-400 transition-colors ${
+                        className={`rounded p-1.5 text-sand-400 transition-colors ${
                           group.status === "DELETED"
                             ? "cursor-not-allowed opacity-50"
-                            : "hover:bg-gray-100 hover:text-gray-700"
+                            : "hover:bg-sand-100 hover:text-sand-700"
                         }`}
                       >
                         <MoreHorizontal size={15} />
@@ -408,12 +408,12 @@ export function AdminGroupsTable({
                         group.status !== "DELETED" && (
                           <div
                             role="menu"
-                            className="absolute right-0 top-[calc(100%+6px)] z-10 w-44 overflow-hidden rounded border border-gray-200 bg-white shadow"
+                            className="absolute right-0 top-[calc(100%+6px)] z-10 w-44 overflow-hidden rounded-lg border border-sand-200 bg-white shadow-lg"
                           >
                             <button
                               type="button"
                               role="menuitem"
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-semibold text-gray-700 hover:bg-gray-50"
+                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-sand-700 hover:bg-sand-50"
                               onClick={() => {
                                 setOpenMenuGroupId(null);
                                 if (onEditGroup) {
@@ -425,19 +425,19 @@ export function AdminGroupsTable({
                                 setDetailOpen(true);
                               }}
                             >
-                              <Pencil size={14} className="text-gray-500" />
+                              <Pencil size={14} className="text-sand-500" />
                               Chỉnh sửa
                             </button>
                             <button
                               type="button"
                               role="menuitem"
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-semibold text-red-600 hover:bg-red-50"
+                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
                               onClick={() => {
                                 setOpenMenuGroupId(null);
                                 startDeleteGroup(group);
                               }}
                             >
-                              <Trash2 size={14} className="text-red-600" />
+                              <Trash2 size={14} className="text-rose-600" />
                               Xóa nhóm
                             </button>
                           </div>
@@ -452,7 +452,7 @@ export function AdminGroupsTable({
               <tr>
                 <td
                   colSpan={7}
-                  className="px-4 py-10 text-center text-[13px] font-medium text-gray-400"
+                  className="px-4 py-10 text-center text-sm font-medium text-sand-500"
                 >
                   Không có nhóm học nào.
                 </td>
@@ -463,7 +463,7 @@ export function AdminGroupsTable({
               <tr>
                 <td
                   colSpan={7}
-                  className="px-4 py-10 text-center text-[13px] font-medium text-gray-400"
+                  className="px-4 py-10 text-center text-sm font-medium text-sand-500"
                 >
                   Đang tải dữ liệu...
                 </td>

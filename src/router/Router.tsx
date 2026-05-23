@@ -24,6 +24,7 @@ import MyProfilePage from "../pages/MyProfile/MyProfilePage";
 import StudyMatchAdminLayout from "../layouts/admin/StudyMatchAdminLayout";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
 import AdminGroupsPage from "../pages/admin/AdminGroupsPage/AdminGroupsPage";
+import AdminUsersPage from "../pages/admin/AdminUsersPage/AdminUsersPage";
 import StudySessionPage from "../pages/StudySession/StudySessionPage";
 
 const ProtectedRoute = () => {
@@ -104,7 +105,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "users",
-        element: <div>Quản lý người dùng (chưa triển khai)</div>,
+        element: <AdminUsersPage />,
       },
       {
         path: "groups",
