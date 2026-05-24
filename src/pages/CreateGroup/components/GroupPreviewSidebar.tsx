@@ -1,11 +1,7 @@
 import { AutoAwesomeMosaicOutlined } from "@mui/icons-material";
 import { useMemo, useState } from "react";
 import { DAYS } from "../../Onboarding/components/constants";
-import type {
-  FreeTime,
-  StudyGoal,
-  StudyMode,
-} from "../../Onboarding/components/types";
+import type { FreeTime } from "../../Onboarding/components/types";
 import type { MemberSuggestion } from "../types/createGroup";
 
 const members: MemberSuggestion[] = [
@@ -32,26 +28,10 @@ const members: MemberSuggestion[] = [
   },
 ];
 
-const GOAL_LABEL: Record<StudyGoal, string> = {
-  Survivor: "Cần cải thiện",
-  "Passive Learner": "Học thiếu chủ động",
-  "Standard Learner": "Học ổn định",
-  "High Achiever": "Học nổi bật",
-};
-
-const MODE_LABEL: Record<StudyMode, string> = {
-  mutual_support: "Người tương đồng",
-  peer_support: "Người nhỉnh hơn",
-  challenge: "Người thử thách",
-  support: "Người cần hỗ trợ",
-};
-
 interface CreateGroupDraft {
   groupName: string;
   goalDescription: string;
   mainSubject: string;
-  studyGoal: StudyGoal | "";
-  studyMode: StudyMode | "";
   maxMembers: number;
   visibility: "public" | "private";
   freeTime: FreeTime;
@@ -115,18 +95,6 @@ export default function GroupPreviewSidebar({
               <Badge>{draft.mainSubject}</Badge>
             ) : (
               <Badge tone="muted">Chưa chọn môn</Badge>
-            )}
-
-            {draft.studyGoal ? (
-              <Badge>{GOAL_LABEL[draft.studyGoal]}</Badge>
-            ) : (
-              <Badge tone="muted">Chưa chọn trình độ</Badge>
-            )}
-
-            {draft.studyMode ? (
-              <Badge>{MODE_LABEL[draft.studyMode]}</Badge>
-            ) : (
-              <Badge tone="muted">Chưa chọn kiểu ghép</Badge>
             )}
 
             {totalSelectedSlots > 0 ? (
