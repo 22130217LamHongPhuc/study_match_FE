@@ -27,7 +27,7 @@ function mapToViewModel(item: RecommendationApiItem): RecommendationCardVm {
   };
 }
 
-export function useRecommendations(initialUserId = 28) {
+export function useRecommendations(initialUserId: number) {
   console.log("Profile data in RecommendationPage:", initialUserId);
 
   const [userId, setUserId] = useState<number>(initialUserId);

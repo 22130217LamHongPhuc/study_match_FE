@@ -3,7 +3,9 @@ import { RecommendationCardVm } from "../types";
 interface RecommendationCardProps {
   recommendation: RecommendationCardVm;
   onConnect?: (id: number) => void;
+  onAccept?: (requestId: number) => void;
   isConnecting?: boolean;
+  isAccepting?: boolean;
   currentUserId?: number;
 }
 
@@ -37,7 +39,9 @@ function getMatchStyle(match: number) {
 export default function RecommendationCard({
   recommendation,
   onConnect,
+  onAccept,
   isConnecting = false,
+  isAccepting = false,
   currentUserId,
 }: RecommendationCardProps) {
   const match = Number(recommendation.matchPercentage.toFixed(1));
@@ -90,11 +94,13 @@ export default function RecommendationCard({
   })();
 
   const canSendFriendRequest = !friendRequest || isRejected;
+  const canAcceptFriendRequest = isPending && isReceivedByCurrentUser;
   const connectButtonLabel = (() => {
     if (isConnecting) return "Đang gửi...";
+    if (isAccepting) return "Đang chấp nhận...";
     if (isApproved) return "Đã kết bạn";
     if (isPending && isSentByCurrentUser) return "Đang chờ";
-    if (isPending && isReceivedByCurrentUser) return "Chờ phản hồi";
+    if (isPending && isReceivedByCurrentUser) return "Chấp nhận";
     if (isBlocked) return "Đã bị chặn";
     if (isRejected) return "Gửi lại lời mời";
     return "Kết bạn";
@@ -165,8 +171,19 @@ export default function RecommendationCard({
       <div className="mt-auto grid grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={() => onConnect?.(recommendation.userId)}
-          disabled={isConnecting || !canSendFriendRequest}
+          onClick={() => {
+            if (canAcceptFriendRequest && friendRequest?.id) {
+              onAccept?.(friendRequest.id);
+              return;
+            }
+
+            onConnect?.(recommendation.userId);
+          }}
+          disabled={
+            isConnecting ||
+            isAccepting ||
+            (!canSendFriendRequest && !canAcceptFriendRequest)
+          }
           className="h-9 rounded-md bg-gray-900 px-3 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {connectButtonLabel}
@@ -181,9 +198,11 @@ export default function RecommendationCard({
             ? "Đã chặn"
             : isApproved
               ? "Bạn bè"
-              : isPending
-                ? "Đang chờ"
-                : "Chi tiết"}
+              : isPending && isSentByCurrentUser
+                ? "Đã gửi"
+                : isPending && isReceivedByCurrentUser
+                  ? "Chờ bạn"
+                  : "Chi tiết"}
         </button>
       </div>
     </article>

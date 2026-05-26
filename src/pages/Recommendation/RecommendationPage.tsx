@@ -13,7 +13,10 @@ import {
   joinMemberIntoGroup,
   Subject,
 } from "../../services/GroupService";
-import { requestFriendService } from "../../services/FriendService";
+import {
+  requestFriendService,
+  updateFriendRequestStatusService,
+} from "../../services/FriendService";
 
 type CommunityGroupStatus = "ACTIVE" | "INACTIVE";
 type CommunityGroupType = "COMMUNITY" | "PRIVATE";
@@ -49,7 +52,7 @@ export default function RecommendationPage() {
   const profileVm = useSelector((state: RootState) => state.profile.profileVm);
 
   const { userId, loading, error, items, fetchRecommendations } =
-    useRecommendations(profileVm?.userId || 28);
+    useRecommendations(profileVm?.userId!);
 
   const suggestedSubjectId = profileVm?.mainSubjectId ?? 0;
   const suggestedSubjectName = profileVm?.mainSubjectName ?? "-";
@@ -80,6 +83,9 @@ export default function RecommendationPage() {
 
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
   const [connectingUserId, setConnectingUserId] = useState<number | null>(null);
+  const [acceptingRequestId, setAcceptingRequestId] = useState<number | null>(
+    null,
+  );
 
   const handleJoinGroup = useCallback(
     async (groupId: number) => {
@@ -137,6 +143,7 @@ export default function RecommendationPage() {
 
         if (responseCode >= 200 && responseCode < 300) {
           toast.success("Đã gửi lời mời kết bạn.");
+          await fetchRecommendations(userId);
           return;
         }
 
@@ -149,7 +156,38 @@ export default function RecommendationPage() {
         setConnectingUserId((prev) => (prev === targetUserId ? null : prev));
       }
     },
-    [connectingUserId, profileVm?.userId],
+    [connectingUserId, fetchRecommendations, profileVm?.userId, userId],
+  );
+
+  const handleAcceptFriendRequest = useCallback(
+    async (requestId: number) => {
+      if (acceptingRequestId === requestId) return;
+
+      setAcceptingRequestId(requestId);
+
+      try {
+        const response = await updateFriendRequestStatusService(
+          requestId,
+          "APPROVED",
+        );
+        const responseCode = Number(response.code);
+
+        if (responseCode >= 200 && responseCode < 300) {
+          toast.success("Đã chấp nhận lời mời kết bạn.");
+          await fetchRecommendations(userId);
+          return;
+        }
+
+        toast.error(response.message || "Chấp nhận lời mời thất bại.");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        toast.error(message);
+      } finally {
+        setAcceptingRequestId((prev) => (prev === requestId ? null : prev));
+      }
+    },
+    [acceptingRequestId, fetchRecommendations, userId],
   );
 
   const otherSubjects = useMemo(() => {
@@ -326,7 +364,9 @@ export default function RecommendationPage() {
                   key={item.userId}
                   recommendation={item}
                   onConnect={handleConnect}
+                  onAccept={handleAcceptFriendRequest}
                   isConnecting={connectingUserId === item.userId}
+                  isAccepting={acceptingRequestId === item.friendRequest?.id}
                   currentUserId={
                     profileVm?.userId ?? Number(localStorage.getItem("userId"))
                   }

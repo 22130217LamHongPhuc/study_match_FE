@@ -7,6 +7,9 @@ export type FriendRequestResponse<T = unknown> = {
   timestamp?: string;
 };
 
+export type UpdateFriendRequestStatusResponse<T = unknown> =
+  FriendRequestResponse<T>;
+
 export const requestFriendService = async (
   targetUserId: number,
 ): Promise<FriendRequestResponse> => {
@@ -35,6 +38,33 @@ export const requestFriendService = async (
   console.log("Friend request response:", { status: res.status, data });
   if (data) {
     return data as FriendRequestResponse;
+  }
+
+  return {
+    code: res.status,
+    message: res.statusText,
+    data: null,
+    timestamp: new Date().toISOString(),
+  };
+};
+
+export const updateFriendRequestStatusService = async (
+  requestId: number,
+  status: "APPROVED" | "REJECTED" | "BLOCKED",
+): Promise<UpdateFriendRequestStatusResponse> => {
+  const url = `${BASE_URL}/social/friend-requests/${requestId}/status`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (data) {
+    return data as UpdateFriendRequestStatusResponse;
   }
 
   return {
