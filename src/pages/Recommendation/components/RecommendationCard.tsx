@@ -3,7 +3,8 @@ import { RecommendationCardVm } from "../types";
 interface RecommendationCardProps {
   recommendation: RecommendationCardVm;
   onConnect?: (id: number) => void;
-  onReject?: (id: number) => void;
+  isConnecting?: boolean;
+  currentUserId?: number;
 }
 
 function getMatchStyle(match: number) {
@@ -36,11 +37,68 @@ function getMatchStyle(match: number) {
 export default function RecommendationCard({
   recommendation,
   onConnect,
-  onReject,
+  isConnecting = false,
+  currentUserId,
 }: RecommendationCardProps) {
   const match = Number(recommendation.matchPercentage.toFixed(1));
   const safeMatch = Math.min(100, Math.max(0, match));
   const style = getMatchStyle(match);
+  const friendRequest = recommendation.friendRequest;
+
+  const status = friendRequest?.status;
+  const isApproved = status === "APPROVED";
+  const isPending = status === "PENDING";
+  const isRejected = status === "REJECTED";
+  const isBlocked = status === "BLOCKED";
+  const isSentByCurrentUser =
+    friendRequest?.senderId !== undefined &&
+    currentUserId !== undefined &&
+    friendRequest.senderId === currentUserId;
+  const isReceivedByCurrentUser =
+    friendRequest?.receiverId !== undefined &&
+    currentUserId !== undefined &&
+    friendRequest.receiverId === currentUserId;
+
+  const statusText = (() => {
+    if (isApproved) return "Đã kết bạn";
+    if (isBlocked) return "Đã chặn";
+    if (isPending && isSentByCurrentUser) return "Đã gửi lời mời";
+    if (isPending && isReceivedByCurrentUser) return "Có lời mời đến";
+    if (isPending) return "Đang chờ";
+    if (isRejected) return "Đã bị từ chối";
+    return "Chưa kết nối";
+  })();
+
+  const statusStyle = (() => {
+    if (isApproved) {
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    }
+
+    if (isPending) {
+      return "border-amber-200 bg-amber-50 text-amber-700";
+    }
+
+    if (isRejected) {
+      return "border-rose-200 bg-rose-50 text-rose-700";
+    }
+
+    if (isBlocked) {
+      return "border-slate-300 bg-slate-100 text-slate-700";
+    }
+
+    return "border-gray-200 bg-gray-50 text-gray-600";
+  })();
+
+  const canSendFriendRequest = !friendRequest || isRejected;
+  const connectButtonLabel = (() => {
+    if (isConnecting) return "Đang gửi...";
+    if (isApproved) return "Đã kết bạn";
+    if (isPending && isSentByCurrentUser) return "Đang chờ";
+    if (isPending && isReceivedByCurrentUser) return "Chờ phản hồi";
+    if (isBlocked) return "Đã bị chặn";
+    if (isRejected) return "Gửi lại lời mời";
+    return "Kết bạn";
+  })();
 
   return (
     <article className="flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4">
@@ -57,6 +115,20 @@ export default function RecommendationCard({
         >
           {recommendation.studyModeLabel}
         </span>
+      </div>
+
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <span
+          className={`rounded-full border px-2.5 py-1 text-xs font-medium ${statusStyle}`}
+        >
+          {statusText}
+        </span>
+
+        {friendRequest?.id ? (
+          <span className="text-xs text-gray-400">
+            Mã lời mời #{friendRequest.id}
+          </span>
+        ) : null}
       </div>
 
       <div className="mb-4">
@@ -94,17 +166,24 @@ export default function RecommendationCard({
         <button
           type="button"
           onClick={() => onConnect?.(recommendation.userId)}
-          className="h-9 rounded-md bg-gray-900 px-3 text-sm font-medium text-white hover:bg-gray-800"
+          disabled={isConnecting || !canSendFriendRequest}
+          className="h-9 rounded-md bg-gray-900 px-3 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Kết nối
+          {connectButtonLabel}
         </button>
 
         <button
           type="button"
-          onClick={() => onReject?.(recommendation.userId)}
-          className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          disabled
+          className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-500 opacity-70"
         >
-          Từ chối
+          {isBlocked
+            ? "Đã chặn"
+            : isApproved
+              ? "Bạn bè"
+              : isPending
+                ? "Đang chờ"
+                : "Chi tiết"}
         </button>
       </div>
     </article>

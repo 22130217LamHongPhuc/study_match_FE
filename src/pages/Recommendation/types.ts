@@ -20,6 +20,27 @@ export interface RecommendationApiItem {
   shared_subject_ids: string[];
   final_score: number;
   match_percentage: number;
+  friend_request?: RecommendationFriendRequestApiItem | null;
+}
+
+export interface RecommendationFriendRequestApiItem {
+  id: number;
+  senderId: number;
+  receiverId: number;
+  status: FriendRequestStatus;
+}
+
+export type FriendRequestStatus =
+  | "APPROVED"
+  | "PENDING"
+  | "REJECTED"
+  | "BLOCKED";
+
+export interface FriendRequestVm {
+  id: number;
+  senderId: number;
+  receiverId: number;
+  status: FriendRequestStatus;
 }
 
 export interface RecommendUsersApiResponse {
@@ -40,5 +61,5 @@ export interface RecommendationCardVm {
   sharedSubjectScore: number;
   sharedSubjectCount: number;
   matchPercentage: number;
+  friendRequest?: FriendRequestVm | null;
 }
-

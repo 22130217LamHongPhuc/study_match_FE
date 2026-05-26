@@ -16,6 +16,14 @@ function mapToViewModel(item: RecommendationApiItem): RecommendationCardVm {
     sharedSubjectScore: item.shared_subject_score,
     sharedSubjectCount: item.n_shared_subjects,
     matchPercentage: item.match_percentage,
+    friendRequest: item.friend_request
+      ? {
+          id: item.friend_request.id,
+          senderId: item.friend_request.senderId,
+          receiverId: item.friend_request.receiverId,
+          status: item.friend_request.status,
+        }
+      : null,
   };
 }
 

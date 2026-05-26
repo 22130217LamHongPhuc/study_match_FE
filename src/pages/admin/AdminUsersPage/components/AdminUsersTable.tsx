@@ -213,6 +213,7 @@ export function AdminUsersTable({
       fromStatus,
       toStatus: "DELETED",
     });
+
     setConfirmError(null);
     setConfirmOpen(true);
   };

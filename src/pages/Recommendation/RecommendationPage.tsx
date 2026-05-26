@@ -13,6 +13,7 @@ import {
   joinMemberIntoGroup,
   Subject,
 } from "../../services/GroupService";
+import { requestFriendService } from "../../services/FriendService";
 
 type CommunityGroupStatus = "ACTIVE" | "INACTIVE";
 type CommunityGroupType = "COMMUNITY" | "PRIVATE";
@@ -78,6 +79,7 @@ export default function RecommendationPage() {
   >(null);
 
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
+  const [connectingUserId, setConnectingUserId] = useState<number | null>(null);
 
   const handleJoinGroup = useCallback(
     async (groupId: number) => {
@@ -91,7 +93,6 @@ export default function RecommendationPage() {
 
       setJoiningGroupId(groupId);
       try {
-        
         const response = await joinMemberIntoGroup(groupId, currentUserId);
 
         if (!response.success) {
@@ -109,6 +110,46 @@ export default function RecommendationPage() {
       }
     },
     [joiningGroupId, profileVm?.userId],
+  );
+
+  const handleConnect = useCallback(
+    async (targetUserId: number) => {
+      const currentUserId =
+        profileVm?.userId ?? Number(localStorage.getItem("userId"));
+
+      if (!currentUserId) {
+        toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+        return;
+      }
+
+      if (currentUserId === targetUserId) {
+        toast.error("Bạn không thể gửi lời mời cho chính mình.");
+        return;
+      }
+
+      if (connectingUserId === targetUserId) return;
+
+      setConnectingUserId(targetUserId);
+
+      try {
+        const response = await requestFriendService(targetUserId);
+        const responseCode = Number(response.code);
+
+        if (responseCode >= 200 && responseCode < 300) {
+          toast.success("Đã gửi lời mời kết bạn.");
+          return;
+        }
+
+        toast.error(response.message || "Gửi lời mời kết bạn thất bại.");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        toast.error(message);
+      } finally {
+        setConnectingUserId((prev) => (prev === targetUserId ? null : prev));
+      }
+    },
+    [connectingUserId, profileVm?.userId],
   );
 
   const otherSubjects = useMemo(() => {
@@ -284,8 +325,11 @@ export default function RecommendationPage() {
                 <RecommendationCard
                   key={item.userId}
                   recommendation={item}
-                  onConnect={() => {}}
-                  onReject={() => {}}
+                  onConnect={handleConnect}
+                  isConnecting={connectingUserId === item.userId}
+                  currentUserId={
+                    profileVm?.userId ?? Number(localStorage.getItem("userId"))
+                  }
                 />
               ))}
             </div>
