@@ -32,6 +32,7 @@ export interface CreateStudyGroupRequest {
   maxMembers?: number;
   visibility?: string;
   freeTimeSlots?: FreeTimeSlotRequest[];
+  invitedUserIds?: number[];
 }
 
 export interface StudyGroupDetailResponse {

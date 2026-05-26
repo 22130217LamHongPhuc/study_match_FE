@@ -10,6 +10,14 @@ export type FriendRequestResponse<T = unknown> = {
 export type UpdateFriendRequestStatusResponse<T = unknown> =
   FriendRequestResponse<T>;
 
+export type FriendListItem = {
+  user_id: number;
+  full_name: string;
+  avatar_url: string | null;
+};
+
+export type FriendsListResponse = FriendRequestResponse<FriendListItem[]>;
+
 export const requestFriendService = async (
   targetUserId: number,
 ): Promise<FriendRequestResponse> => {
@@ -90,4 +98,35 @@ export const loadProfileService = async (targetUserId: number) => {
   const data = await res.json();
   console.log(data);
   return data;
+};
+
+export const getFriendsListService = async (
+  userId?: number,
+): Promise<FriendsListResponse> => {
+  const resolvedUserId = userId ?? Number(localStorage.getItem("userId"));
+
+  if (!Number.isFinite(resolvedUserId)) {
+    throw new Error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+  }
+
+  const url = `${BASE_URL}/social/friends/${resolvedUserId}/list`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (data) {
+    return data as FriendsListResponse;
+  }
+
+  return {
+    code: res.status,
+    message: res.statusText,
+    data: [],
+    timestamp: new Date().toISOString(),
+  };
 };

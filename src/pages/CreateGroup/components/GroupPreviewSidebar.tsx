@@ -39,11 +39,13 @@ interface CreateGroupDraft {
 
 export default function GroupPreviewSidebar({
   draft,
+  invitedUserIds,
+  onInvitedUserIdsChange,
 }: {
   draft: CreateGroupDraft;
+  invitedUserIds: number[];
+  onInvitedUserIdsChange: React.Dispatch<React.SetStateAction<number[]>>;
 }) {
-  const [invitedIds, setInvitedIds] = useState<number[]>([]);
-
   const totalSelectedSlots = useMemo(() => {
     return DAYS.reduce(
       (acc, d) =>
@@ -53,8 +55,8 @@ export default function GroupPreviewSidebar({
   }, [draft.freeTime]);
 
   const invitedMembers = useMemo(
-    () => members.filter((m) => invitedIds.includes(m.id)),
-    [invitedIds],
+    () => members.filter((m) => invitedUserIds.includes(m.id)),
+    [invitedUserIds],
   );
 
   const visibilityLabel =
@@ -139,9 +141,9 @@ export default function GroupPreviewSidebar({
               <MemberCard
                 key={member.id}
                 member={member}
-                invited={invitedIds.includes(member.id)}
+                invited={invitedUserIds.includes(member.id)}
                 onInvite={() =>
-                  setInvitedIds((prev) =>
+                  onInvitedUserIdsChange((prev) =>
                     prev.includes(member.id) ? prev : [...prev, member.id],
                   )
                 }

@@ -21,6 +21,7 @@ export default function CreateGroupPage() {
   const [groupName, setGroupName] = useState<string>("");
   const [goalDescription, setGoalDescription] = useState<string>("");
   const [mainSubject, setMainSubject] = useState<Subject | null>(null);
+  const [invitedUserIds, setInvitedUserIds] = useState<number[]>([]);
 
   const [maxMembers, setMaxMembers] = useState<number>(5);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
@@ -84,6 +85,7 @@ export default function CreateGroupPage() {
       maxMembers,
       visibility,
       freeTimeSlots,
+      invitedUserIds: invitedUserIds.length > 0 ? invitedUserIds : undefined,
     };
     console.log("CreateGroupPage - payload:", payload);
 
@@ -151,6 +153,8 @@ export default function CreateGroupPage() {
               visibility,
               freeTime,
             }}
+            invitedUserIds={invitedUserIds}
+            onInvitedUserIdsChange={setInvitedUserIds}
           />
         </div>
       </main>
