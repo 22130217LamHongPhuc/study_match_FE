@@ -2,9 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import type { SessionType, StudyMode, StudySessionVm } from "../types";
 import {
   createGroupStudySession,
+  createPairStudySession,
   getGroupsByUserId,
 } from "../../../services/GroupService";
 import type { StudyGroupDetailResponse } from "../../../services/GroupService";
+import {
+  getFriendsListService,
+  type FriendListItem,
+} from "../../../services/FriendService";
 import { toast } from "sonner";
 
 interface CreateSessionModalProps {
@@ -23,16 +28,22 @@ export function CreateSessionModal({
 
   const [title, setTitle] = useState("");
   const [subjectName, setSubjectName] = useState("");
+  const [subjectId, setSubjectId] = useState<number | null>(null);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [targetName, setTargetName] = useState("");
+  const [selectedFriendId, setSelectedFriendId] = useState<number | "">("");
   const [location, setLocation] = useState("");
+  const [meetingUrl, setMeetingUrl] = useState("");
   const [description, setDescription] = useState("");
 
   const [groups, setGroups] = useState<StudyGroupDetailResponse[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<number | "">("");
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [groupError, setGroupError] = useState("");
+  const [friends, setFriends] = useState<FriendListItem[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(false);
+  const [friendError, setFriendError] = useState("");
 
   const currentUserId = Number(localStorage.getItem("userId") ?? "1");
 
@@ -40,6 +51,14 @@ export function CreateSessionModal({
     if (!selectedGroupId) return null;
     return groups.find((group) => group.id === Number(selectedGroupId)) ?? null;
   }, [groups, selectedGroupId]);
+
+  const selectedFriend = useMemo(() => {
+    if (!selectedFriendId) return null;
+    return (
+      friends.find((friend) => friend.user_id === Number(selectedFriendId)) ??
+      null
+    );
+  }, [friends, selectedFriendId]);
 
   const needSystemRoom = studyMode === "ONLINE" || studyMode === "HYBRID";
 
@@ -50,6 +69,9 @@ export function CreateSessionModal({
       setGroups([]);
       setSelectedGroupId("");
       setGroupError("");
+      setSelectedFriendId("");
+      setFriends([]);
+      setFriendError("");
       return;
     }
 
@@ -92,6 +114,52 @@ export function CreateSessionModal({
   }, [open, sessionType, currentUserId]);
 
   useEffect(() => {
+    if (!open || sessionType !== "USER_PAIR") {
+      setFriends([]);
+      setSelectedFriendId("");
+      setFriendError("");
+      setLoadingFriends(false);
+      return;
+    }
+
+    let mounted = true;
+
+    async function loadFriends() {
+      try {
+        setLoadingFriends(true);
+        setFriendError("");
+
+        const response = await getFriendsListService(currentUserId);
+        const data = response.data ?? [];
+
+        if (!mounted) return;
+
+        setFriends(data);
+
+        if (data.length > 0) {
+          setSelectedFriendId(data[0].user_id);
+          setTargetName(data[0].full_name);
+        }
+      } catch {
+        if (!mounted) return;
+        setFriends([]);
+        setSelectedFriendId("");
+        setFriendError("Không thể tải danh sách bạn bè");
+      } finally {
+        if (mounted) {
+          setLoadingFriends(false);
+        }
+      }
+    }
+
+    loadFriends();
+
+    return () => {
+      mounted = false;
+    };
+  }, [open, sessionType, currentUserId]);
+
+  useEffect(() => {
     if (sessionType !== "GROUP") return;
     if (!selectedGroup) return;
 
@@ -104,16 +172,21 @@ export function CreateSessionModal({
   const resetForm = () => {
     setTitle("");
     setSubjectName("");
+    setSubjectId(null);
     setStartTime("");
     setEndTime("");
     setTargetName("");
+    setSelectedFriendId("");
     setLocation("");
+    setMeetingUrl("");
     setDescription("");
     setSessionType("USER_PAIR");
     setStudyMode("ONLINE");
     setGroups([]);
     setSelectedGroupId("");
     setGroupError("");
+    setFriends([]);
+    setFriendError("");
   };
 
   const handleSubmit = async () => {
@@ -124,12 +197,61 @@ export function CreateSessionModal({
       return;
     }
 
-    if (sessionType === "USER_PAIR") {
-      alert("Phần tạo lịch học 1-1 sẽ xử lý sau");
+    if (sessionType === "USER_PAIR" && !selectedFriend) {
+      setFriendError("Vui lòng chọn bạn học");
       return;
     }
 
     try {
+      if (sessionType === "USER_PAIR") {
+        const friend = selectedFriend;
+
+        const payload = {
+          title,
+          description,
+          startTime,
+          endTime,
+          studyMode,
+          location:
+            studyMode === "OFFLINE" || studyMode === "HYBRID"
+              ? location
+              : "",
+          meetingUrl: meetingUrl || "",
+          createdByUserId: currentUserId,
+          sessionType: "USER_PAIR" as const,
+          subjectName: null,
+          subjectId: null,
+          partnerUserId: friend!.user_id,
+        };
+
+        const response = await createPairStudySession(payload);
+        const createdSession = response.data;
+
+        const newSession: StudySessionVm = {
+          id: createdSession.id,
+          sessionType: "USER_PAIR",
+          groupId: null,
+          title: createdSession.title,
+          description: createdSession.description ?? "",
+          subjectName: createdSession.subjectName ?? undefined,
+          startTime: createdSession.startTime,
+          endTime: createdSession.endTime,
+          studyMode: createdSession.studyMode,
+          location: createdSession.location ?? undefined,
+          meetingUrl: createdSession.meetingUrl ?? undefined,
+          createdByUserId: createdSession.createdByUserId,
+          status: "SCHEDULED",
+          participantStatus: createdSession.participantStatus,
+          partnerName: createdSession.partnerName ?? friend!.full_name,
+        };
+
+        onCreate(newSession);
+        resetForm();
+        onClose();
+        toast.success("Tạo lịch học 1-1 thành công");
+        return;
+      }
+
       const payload = {
         title,
         description,
@@ -141,6 +263,7 @@ export function CreateSessionModal({
         createdByUserId: currentUserId,
         sessionType: "GROUP" as const,
         subjectName: subjectName || selectedGroup?.subjectName || "",
+        subjectId,
       };
 
       const response = await createGroupStudySession(
@@ -155,16 +278,16 @@ export function CreateSessionModal({
         sessionType: "GROUP",
         groupId: selectedGroup!.id,
         title: createdSession.title,
-        description: createdSession.description,
-        subjectName: createdSession.subjectName,
+        description: createdSession.description ?? "",
+        subjectName: createdSession.subjectName ?? undefined,
         startTime: createdSession.startTime,
         endTime: createdSession.endTime,
         studyMode: createdSession.studyMode,
-        location: createdSession.location,
-        meetingUrl: "",
+        location: createdSession.location ?? undefined,
+        meetingUrl: createdSession.meetingUrl ?? undefined,
         createdByUserId: createdSession.createdByUserId,
         status: "SCHEDULED",
-        participantStatus: "PENDING",
+        participantStatus: createdSession.participantStatus,
         groupName: selectedGroup!.name,
         membersCount: selectedGroup!.maxMembers,
       };
@@ -213,6 +336,7 @@ export function CreateSessionModal({
                   setSessionType(value);
                   setTargetName("");
                   setSelectedGroupId("");
+                  setSelectedFriendId("");
                 }}
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
               >
@@ -303,12 +427,38 @@ export function CreateSessionModal({
                   Bạn học
                 </span>
 
-                <input
-                  value={targetName}
-                  onChange={(event) => setTargetName(event.target.value)}
-                  placeholder="Phần chọn bạn học sẽ xử lý sau"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
-                />
+                <select
+                  value={selectedFriendId}
+                  onChange={(event) => {
+                    const value = event.target.value
+                      ? Number(event.target.value)
+                      : "";
+                    const friend = friends.find((item) => item.user_id === value);
+
+                    setSelectedFriendId(value);
+                    setTargetName(friend?.full_name ?? "");
+                  }}
+                  required
+                  disabled={loadingFriends}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-400"
+                >
+                  {loadingFriends && <option value="">Đang tải bạn bè...</option>}
+                  {!loadingFriends && friends.length === 0 && (
+                    <option value="">Bạn chưa có bạn bè nào</option>
+                  )}
+                  {!loadingFriends &&
+                    friends.map((friend) => (
+                      <option key={friend.user_id} value={friend.user_id}>
+                        {friend.full_name}
+                      </option>
+                    ))}
+                </select>
+
+                {friendError && (
+                  <p className="text-xs font-medium text-red-500">
+                    {friendError}
+                  </p>
+                )}
               </label>
             )}
           </div>
@@ -368,6 +518,21 @@ export function CreateSessionModal({
                 onChange={(event) => setLocation(event.target.value)}
                 required={studyMode === "OFFLINE" || studyMode === "HYBRID"}
                 placeholder="Ví dụ: Thư viện tầng 2, phòng B203"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+              />
+            </label>
+          )}
+
+          {sessionType === "USER_PAIR" && (
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-slate-700">
+                Link học online
+              </span>
+
+              <input
+                value={meetingUrl}
+                onChange={(event) => setMeetingUrl(event.target.value)}
+                placeholder="https://meet.google.com/..."
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
               />
             </label>

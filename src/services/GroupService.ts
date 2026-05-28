@@ -7,6 +7,7 @@ import {
 
 const API_BASE_URL_PROFILE = "http://localhost:8082/api";
 const API_BASE_URL_GROUP = "http://localhost:8086";
+const API_BASE_URL = "http://localhost:8080";
 
 export type Subject = {
   subjectId: number;
@@ -319,12 +320,27 @@ export async function createGroupStudySession(
   payload: CreateStudySessionRequest,
 ): Promise<APIResponseData<StudySessionResponse>> {
   const response = await apiFetch<StudySessionResponse>(
-    `/api/groups/${groupId}/sessions`,
+    `/api/study-sessions/group/${groupId}`,
     {
       method: "POST",
       body: JSON.stringify(payload),
     },
-    API_BASE_URL_GROUP,
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export async function createPairStudySession(
+  payload: CreateStudySessionRequest,
+): Promise<APIResponseData<StudySessionResponse>> {
+  const response = await apiFetch<StudySessionResponse>(
+    `/api/study-sessions/pair`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    API_BASE_URL,
   );
 
   return response;

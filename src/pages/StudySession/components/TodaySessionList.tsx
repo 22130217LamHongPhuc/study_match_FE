@@ -41,7 +41,6 @@ export function TodaySessionList({
       <div className="flex flex-col gap-3">
         {sessions.length === 0 && (
           <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-            <div className="text-3xl">📚</div>
             <p className="mt-2 text-sm font-semibold text-slate-700">
               Hôm nay chưa có lịch học
             </p>
