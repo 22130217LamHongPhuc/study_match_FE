@@ -50,6 +50,7 @@ export interface CreateStudySessionRequest {
   subjectName?: string | null;
   subjectId?: number | null;
   partnerUserId?: number | null;
+  partnerUserName?: string | null;
 }
 
 export type GroupStudySessionStatus =
@@ -72,6 +73,7 @@ export interface StudySessionResponse {
   status: GroupStudySessionStatus;
   participantStatus: ParticipantStatus;
   partnerName: string | null;
+  partnerUserName?: string | null;
   groupName: string | null;
   membersCount: number | null;
   subjectName: string | null;

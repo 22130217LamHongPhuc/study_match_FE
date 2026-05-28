@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HeaderCard } from "./components/HeaderCard";
 import { QuickStats } from "./components/QuickStats";
 import { FilterTabs } from "./components/FilterTabs";
@@ -8,102 +8,121 @@ import { AllSessionList } from "./components/AllSessionList";
 import { CreateSessionModal } from "./components/CreateSessionModal";
 import { SessionDetailModal } from "./components/SessionDetailModal";
 import type { ScheduleFilter, StudySessionVm } from "./types";
+import { getUserStudySessions } from "../../services/StudySessionService";
+import {
+  getFriendsListService,
+  type FriendListItem,
+} from "../../services/FriendService";
+import type { StudySessionResponse } from "./types";
 
-const mockSessions: StudySessionVm[] = [
-  {
-    id: 1,
-    sessionType: "USER_PAIR",
-    groupId: null,
-    title: "Ôn Java OOP",
-    description:
-      "Ôn lại kế thừa, interface, abstract class và bài tập thực hành.",
-    subjectName: "Lập trình Java",
-    startTime: "2026-05-21T19:00:00",
-    endTime: "2026-05-21T20:30:00",
-    studyMode: "ONLINE",
-    meetingUrl: "https://meet.google.com/demo-java-oop",
-    createdByUserId: 1,
-    status: "SCHEDULED",
-    participantStatus: "ACCEPTED",
-    partnerName: "Minh Anh",
-  },
-  {
-    id: 10,
-    sessionType: "USER_PAIR",
-    groupId: null,
-    title: "Ôn Java OOP",
-    description:
-      "Ôn lại kế thừa, interface, abstract class và bài tập thực hành.",
-    subjectName: "Lập trình Java",
-    startTime: "2026-05-21T15:00:00",
-    endTime: "2026-05-21T27:30:00",
-    studyMode: "ONLINE",
-    meetingUrl: "https://meet.google.com/demo-java-oop",
-    createdByUserId: 1,
-    status: "SCHEDULED",
-    participantStatus: "ACCEPTED",
-    partnerName: "Minh Anh",
-  },
-  {
-    id: 2,
-    sessionType: "GROUP",
-    groupId: 12,
-    title: "Luyện SQL JOIN",
-    description: "Làm bài tập join, group by và subquery.",
-    subjectName: "Cơ sở dữ liệu",
-    startTime: "2026-05-22T08:00:00",
-    endTime: "2026-05-22T09:30:00",
-    studyMode: "OFFLINE",
-    location: "Thư viện tầng 2",
-    createdByUserId: 3,
-    status: "SCHEDULED",
-    participantStatus: "ACCEPTED",
-    groupName: "Nhóm CSDL K18",
-    membersCount: 5,
-  },
-  {
-    id: 3,
-    sessionType: "USER_PAIR",
-    groupId: null,
-    title: "Review React Router",
-    description: "Ôn route, layout, protected route và nested route.",
-    subjectName: "Frontend",
-    startTime: "2026-05-23T14:00:00",
-    endTime: "2026-05-23T15:00:00",
-    studyMode: "ONLINE",
-    meetingUrl: "https://meet.google.com/demo-react",
-    createdByUserId: 2,
-    status: "SCHEDULED",
-    participantStatus: "PENDING",
-    partnerName: "Tuấn Kiệt",
-  },
-  {
-    id: 4,
-    sessionType: "GROUP",
-    groupId: 15,
-    title: "Chuẩn bị thuyết trình nhóm",
-    description: "Phân chia nội dung và luyện nói trước buổi báo cáo.",
-    subjectName: "Kỹ năng mềm",
-    startTime: "2026-05-24T18:30:00",
-    endTime: "2026-05-24T20:00:00",
-    studyMode: "HYBRID",
-    location: "Phòng tự học B203",
-    meetingUrl: "https://meet.google.com/demo-group",
-    createdByUserId: 5,
-    status: "SCHEDULED",
-    participantStatus: "PENDING",
-    groupName: "Team Presentation",
-    membersCount: 4,
-  },
-];
+function resolvePartnerName(
+  session: StudySessionResponse,
+  friendsById: Map<number, FriendListItem>,
+) {
+  const partnerName = session.partnerUserName ?? session.partnerName;
+
+  if (!partnerName) return undefined;
+
+  if (session.partnerUserName) {
+    return session.partnerUserName;
+  }
+
+  const match = partnerName.match(/^User\s*#(\d+)$/i);
+  if (!match) return partnerName;
+
+  const friendId = Number(match[1]);
+  const friend = friendsById.get(friendId);
+
+  return friend?.full_name || partnerName;
+}
+
+function mapSessionToVm(
+  session: StudySessionResponse,
+  friendsById: Map<number, FriendListItem>,
+): StudySessionVm {
+  return {
+    id: session.id,
+    sessionType: session.sessionType,
+    groupId: session.groupId,
+    title: session.title,
+    description: session.description ?? undefined,
+    startTime: session.startTime,
+    endTime: session.endTime,
+    studyMode: session.studyMode,
+    location: session.location ?? undefined,
+    meetingUrl: session.meetingUrl ?? undefined,
+    createdByUserId: session.createdByUserId,
+    status: session.status,
+    participantStatus: session.participantStatus,
+    partnerName: resolvePartnerName(session, friendsById),
+    groupName: session.groupName ?? undefined,
+    membersCount: session.membersCount ?? undefined,
+    subjectName: session.subjectName ?? undefined,
+  };
+}
 
 export default function StudySessionPage() {
-  const [sessions, setSessions] = useState<StudySessionVm[]>(mockSessions);
+  const [sessions, setSessions] = useState<StudySessionVm[]>([]);
   const [filter, setFilter] = useState<ScheduleFilter>("ALL");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<StudySessionVm | null>(
     null,
   );
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [sessionError, setSessionError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSessions() {
+      const userId = Number(localStorage.getItem("userId"));
+
+      if (!Number.isFinite(userId) || userId <= 0) {
+        if (mounted) {
+          setSessions([]);
+          setSessionError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+          setLoadingSessions(false);
+        }
+        return;
+      }
+
+      try {
+        setLoadingSessions(true);
+        setSessionError("");
+
+        const [sessionResponse, friendsResponse] = await Promise.all([
+          getUserStudySessions(userId),
+          getFriendsListService(userId),
+        ]);
+
+        const content = sessionResponse.data?.content ?? [];
+        const friends = friendsResponse.data ?? [];
+        const friendsById = new Map<number, FriendListItem>(
+          friends.map((friend) => [friend.user_id, friend]),
+        );
+
+        if (!mounted) return;
+
+        setSessions(
+          content.map((session) => mapSessionToVm(session, friendsById)),
+        );
+      } catch {
+        if (!mounted) return;
+        setSessions([]);
+        setSessionError("Không thể tải lịch học của bạn");
+      } finally {
+        if (mounted) {
+          setLoadingSessions(false);
+        }
+      }
+    }
+
+    loadSessions();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredSessions = useMemo(() => {
     if (filter === "ALL") {
@@ -131,7 +150,7 @@ export default function StudySessionPage() {
   }, [sessions]);
 
   const weekSessions = useMemo(() => {
-    return filteredSessions.sort(
+    return [...filteredSessions].sort(
       (a, b) =>
         new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
     );
@@ -142,10 +161,26 @@ export default function StudySessionPage() {
     setIsCreateOpen(false);
   };
 
+  if (loadingSessions) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-5">
+        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-4 text-sm font-medium text-slate-600 shadow-sm">
+          Đang tải lịch học...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <HeaderCard onCreateClick={() => setIsCreateOpen(true)} />
+
+        {sessionError && (
+          <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 shadow-sm">
+            {sessionError}
+          </div>
+        )}
 
         <QuickStats sessions={sessions} />
 

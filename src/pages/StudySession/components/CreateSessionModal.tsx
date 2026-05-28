@@ -3,8 +3,8 @@ import type { SessionType, StudyMode, StudySessionVm } from "../types";
 import {
   createGroupStudySession,
   createPairStudySession,
-  getGroupsByUserId,
-} from "../../../services/GroupService";
+} from "../../../services/StudySessionService";
+import { getGroupsByUserId } from "../../../services/GroupService";
 import type { StudyGroupDetailResponse } from "../../../services/GroupService";
 import {
   getFriendsListService,
@@ -213,15 +213,14 @@ export function CreateSessionModal({
           endTime,
           studyMode,
           location:
-            studyMode === "OFFLINE" || studyMode === "HYBRID"
-              ? location
-              : "",
+            studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
           meetingUrl: meetingUrl || "",
           createdByUserId: currentUserId,
           sessionType: "USER_PAIR" as const,
           subjectName: null,
           subjectId: null,
           partnerUserId: friend!.user_id,
+          partnerUserName: friend!.full_name,
         };
 
         const response = await createPairStudySession(payload);
@@ -242,7 +241,10 @@ export function CreateSessionModal({
           createdByUserId: createdSession.createdByUserId,
           status: "SCHEDULED",
           participantStatus: createdSession.participantStatus,
-          partnerName: createdSession.partnerName ?? friend!.full_name,
+          partnerName:
+            createdSession.partnerUserName ??
+            createdSession.partnerName ??
+            friend!.full_name,
         };
 
         onCreate(newSession);
@@ -433,7 +435,9 @@ export function CreateSessionModal({
                     const value = event.target.value
                       ? Number(event.target.value)
                       : "";
-                    const friend = friends.find((item) => item.user_id === value);
+                    const friend = friends.find(
+                      (item) => item.user_id === value,
+                    );
 
                     setSelectedFriendId(value);
                     setTargetName(friend?.full_name ?? "");
@@ -442,7 +446,9 @@ export function CreateSessionModal({
                   disabled={loadingFriends}
                   className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-400"
                 >
-                  {loadingFriends && <option value="">Đang tải bạn bè...</option>}
+                  {loadingFriends && (
+                    <option value="">Đang tải bạn bè...</option>
+                  )}
                   {!loadingFriends && friends.length === 0 && (
                     <option value="">Bạn chưa có bạn bè nào</option>
                   )}

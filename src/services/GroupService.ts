@@ -1,13 +1,8 @@
 import { apiFetch } from "../config/apiClient";
 import { APIResponseData } from "../config/APIResponse";
-import {
-  CreateStudySessionRequest,
-  StudySessionResponse,
-} from "../pages/StudySession/types";
 
 const API_BASE_URL_PROFILE = "http://localhost:8082/api";
 const API_BASE_URL_GROUP = "http://localhost:8086";
-const API_BASE_URL = "http://localhost:8080";
 
 export type Subject = {
   subjectId: number;
@@ -310,37 +305,6 @@ export async function joinMemberIntoGroup(
       body: JSON.stringify({ userId }),
     },
     API_BASE_URL_GROUP,
-  );
-
-  return response;
-}
-
-export async function createGroupStudySession(
-  groupId: number,
-  payload: CreateStudySessionRequest,
-): Promise<APIResponseData<StudySessionResponse>> {
-  const response = await apiFetch<StudySessionResponse>(
-    `/api/study-sessions/group/${groupId}`,
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-    API_BASE_URL,
-  );
-
-  return response;
-}
-
-export async function createPairStudySession(
-  payload: CreateStudySessionRequest,
-): Promise<APIResponseData<StudySessionResponse>> {
-  const response = await apiFetch<StudySessionResponse>(
-    `/api/study-sessions/pair`,
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-    API_BASE_URL,
   );
 
   return response;
