@@ -4,6 +4,7 @@ import {
   CreateStudySessionRequest,
   StudySessionResponse,
 } from "../pages/StudySession/types";
+import type { SessionConfirmationStatsResponse } from "../pages/StudySession/types";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -89,6 +90,21 @@ export async function respondToStudySession(
     {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export async function getConfirmationStats(
+  sessionId: number,
+  userId: number,
+): Promise<APIResponseData<SessionConfirmationStatsResponse>> {
+  const response = await apiFetch<SessionConfirmationStatsResponse>(
+    `/api/study-sessions/${sessionId}/confirmation-stats?userId=${userId}`,
+    {
+      method: "GET",
     },
     API_BASE_URL,
   );

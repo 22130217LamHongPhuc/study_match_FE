@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
-import type { StudySessionVm, StudySessionResponse } from "../types";
+import type {
+  SessionConfirmationStatsResponse,
+  StudySessionVm,
+  StudySessionResponse,
+} from "../types";
 import {
   getStudySessionById,
+  getConfirmationStats,
   respondToStudySession,
 } from "../../../services/StudySessionService";
 
@@ -64,13 +69,57 @@ function mapResponseToVm(
   };
 }
 
+function getParticipantName(participant: {
+  userName?: string | null;
+  fullName?: string | null;
+  partnerUserName?: string | null;
+}) {
+  return (
+    participant.fullName ||
+    participant.userName ||
+    participant.partnerUserName ||
+    "Bạn học"
+  );
+}
+
+function formatRespondedAt(value?: string | null) {
+  if (!value) return "";
+
+  return new Date(value).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getStatusBadgeClass(status?: string | null) {
+  if (status === "ACCEPTED" || status === "JOINED") {
+    return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (status === "PENDING") {
+    return "bg-amber-50 text-amber-700";
+  }
+
+  if (status === "DECLINED") {
+    return "bg-rose-50 text-rose-700";
+  }
+
+  return "bg-slate-100 text-slate-600";
+}
+
 export function SessionDetailModal({
   session,
   onClose,
   onSessionUpdated,
 }: SessionDetailModalProps) {
   const [detail, setDetail] = useState<StudySessionResponse | null>(null);
+  const [confirmationStats, setConfirmationStats] =
+    useState<SessionConfirmationStatsResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
   const [error, setError] = useState("");
   const [responding, setResponding] = useState<"ACCEPTED" | "DECLINED" | null>(
     null,
@@ -124,6 +173,57 @@ export function SessionDetailModal({
     };
   }, [session?.id]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadStats() {
+      if (!session) {
+        setConfirmationStats(null);
+        setLoadingStats(false);
+        return;
+      }
+
+      const userId = Number(localStorage.getItem("userId"));
+
+      if (!Number.isFinite(userId) || userId <= 0) {
+        setConfirmationStats(null);
+        return;
+      }
+
+      const canViewStats =
+        session.sessionType === "USER_PAIR" ||
+        session.createdByUserId === userId;
+
+      if (!canViewStats) {
+        setConfirmationStats(null);
+        return;
+      }
+
+      try {
+        setLoadingStats(true);
+
+        const response = await getConfirmationStats(session.id, userId);
+
+        if (!mounted) return;
+
+        setConfirmationStats(response.data);
+      } catch {
+        if (!mounted) return;
+        setConfirmationStats(null);
+      } finally {
+        if (mounted) {
+          setLoadingStats(false);
+        }
+      }
+    }
+
+    loadStats();
+
+    return () => {
+      mounted = false;
+    };
+  }, [session?.id, session?.sessionType, session?.createdByUserId]);
+
   const currentSession = detail
     ? {
         ...session,
@@ -167,6 +267,17 @@ export function SessionDetailModal({
         setDetail(response.data);
         const updatedSession = mapResponseToVm(response.data, session);
         onSessionUpdated?.(updatedSession);
+      }
+
+      if (session) {
+        const statsUserId = Number(localStorage.getItem("userId"));
+        if (Number.isFinite(statsUserId) && statsUserId > 0) {
+          const statsResponse = await getConfirmationStats(
+            session.id,
+            statsUserId,
+          );
+          setConfirmationStats(statsResponse.data);
+        }
       }
     } catch {
       setError("Không thể gửi phản hồi cho lịch học");
@@ -315,6 +426,89 @@ export function SessionDetailModal({
             </div>
           )}
 
+          {confirmationStats && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-500">
+                    Thống kê xác nhận
+                  </div>
+                  <div className="mt-1 text-sm text-slate-500">
+                    {confirmationStats.sessionType === "USER_PAIR"
+                      ? "Buổi học 1-1"
+                      : "Thống kê dành cho chủ nhóm"}
+                  </div>
+                </div>
+                {loadingStats && (
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                    Đang tải...
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatCard
+                  label="Tổng người tham gia"
+                  value={confirmationStats.totalParticipants}
+                />
+                <StatCard
+                  label="Đã xác nhận"
+                  value={confirmationStats.acceptedCount}
+                  tone="emerald"
+                />
+                <StatCard
+                  label="Chờ phản hồi"
+                  value={confirmationStats.pendingCount}
+                  tone="amber"
+                />
+                <StatCard
+                  label="Từ chối"
+                  value={confirmationStats.declinedCount}
+                  tone="rose"
+                />
+              </div>
+
+              <div className="mt-4 space-y-2">
+                {confirmationStats.otherParticipants.length === 0 ? (
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                    Chưa có dữ liệu xác nhận
+                  </div>
+                ) : (
+                  confirmationStats.otherParticipants.map(
+                    (participant, index) => (
+                      <div
+                        key={`${participant.userId ?? participant.fullName ?? index}`}
+                        className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
+                      >
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">
+                            {getParticipantName(participant)}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {participant.role === "PARTICIPANT"
+                              ? "Thành viên"
+                              : "Người tạo lịch"}
+                          </div>
+                          {participant.respondedAt && (
+                            <div className="mt-1 text-xs text-slate-400">
+                              Phản hồi:{" "}
+                              {formatRespondedAt(participant.respondedAt)}
+                            </div>
+                          )}
+                        </div>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(participant.status)}`}
+                        >
+                          {getParticipantStatusLabel(participant.status || "")}
+                        </span>
+                      </div>
+                    ),
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
           {(currentSession?.participantStatus || session.participantStatus) ===
             "PENDING" && (
             <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row">
@@ -340,6 +534,32 @@ export function SessionDetailModal({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  tone = "slate",
+}: {
+  label: string;
+  value: number;
+  tone?: "slate" | "emerald" | "amber" | "rose";
+}) {
+  const toneClass =
+    tone === "emerald"
+      ? "bg-emerald-50 text-emerald-700"
+      : tone === "amber"
+        ? "bg-amber-50 text-amber-700"
+        : tone === "rose"
+          ? "bg-rose-50 text-rose-700"
+          : "bg-slate-100 text-slate-700";
+
+  return (
+    <div className={`rounded-2xl px-3 py-3 ${toneClass}`}>
+      <div className="text-xs font-semibold">{label}</div>
+      <div className="mt-1 text-lg font-bold">{value}</div>
     </div>
   );
 }

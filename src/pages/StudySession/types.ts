@@ -80,3 +80,25 @@ export interface StudySessionResponse {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface SessionParticipantConfirmationResponse {
+  userId?: number | null;
+  userName?: string | null;
+  fullName?: string | null;
+  partnerUserName?: string | null;
+  role?: string | null;
+  status?: ParticipantStatus | null;
+  respondedAt?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface SessionConfirmationStatsResponse {
+  sessionId: number;
+  sessionType: StudySessionType;
+  currentUserId: number;
+  totalParticipants: number;
+  acceptedCount: number;
+  pendingCount: number;
+  declinedCount: number;
+  otherParticipants: SessionParticipantConfirmationResponse[];
+}
