@@ -63,3 +63,18 @@ export async function createPairStudySession(
 
   return response;
 }
+
+export async function getStudySessionById(
+  sessionId: number,
+  userId: number,
+): Promise<APIResponseData<StudySessionResponse>> {
+  const response = await apiFetch<StudySessionResponse>(
+    `/api/study-sessions/${sessionId}?userId=${userId}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
