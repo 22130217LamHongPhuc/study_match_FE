@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import type { StudySessionVm, StudySessionResponse } from "../types";
-import { getStudySessionById } from "../../../services/StudySessionService";
+import {
+  getStudySessionById,
+  respondToStudySession,
+} from "../../../services/StudySessionService";
 
 interface SessionDetailModalProps {
   session: StudySessionVm | null;
   onClose: () => void;
+  onSessionUpdated?: (session: StudySessionVm) => void;
 }
 
 function formatDateTime(value: string) {
@@ -33,13 +37,44 @@ function getModeLabel(mode: string) {
   return "Kết hợp";
 }
 
+function mapResponseToVm(
+  response: StudySessionResponse,
+  fallback: StudySessionVm,
+): StudySessionVm {
+  return {
+    ...fallback,
+    id: response.id,
+    sessionType: response.sessionType,
+    groupId: response.groupId,
+    title: response.title,
+    description: response.description ?? undefined,
+    startTime: response.startTime,
+    endTime: response.endTime,
+    studyMode: response.studyMode,
+    location: response.location ?? undefined,
+    meetingUrl: response.meetingUrl ?? undefined,
+    createdByUserId: response.createdByUserId,
+    status: response.status,
+    participantStatus: response.participantStatus,
+    partnerName:
+      response.partnerUserName ?? response.partnerName ?? fallback.partnerName,
+    groupName: response.groupName ?? undefined,
+    membersCount: response.membersCount ?? undefined,
+    subjectName: response.subjectName ?? undefined,
+  };
+}
+
 export function SessionDetailModal({
   session,
   onClose,
+  onSessionUpdated,
 }: SessionDetailModalProps) {
   const [detail, setDetail] = useState<StudySessionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [responding, setResponding] = useState<"ACCEPTED" | "DECLINED" | null>(
+    null,
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -52,6 +87,9 @@ export function SessionDetailModal({
         return;
       }
 
+      setDetail(null);
+      setError("");
+
       const userId = Number(localStorage.getItem("userId"));
 
       if (!Number.isFinite(userId) || userId <= 0) {
@@ -62,7 +100,6 @@ export function SessionDetailModal({
 
       try {
         setLoading(true);
-        setError("");
 
         const response = await getStudySessionById(session.id, userId);
 
@@ -85,7 +122,7 @@ export function SessionDetailModal({
     return () => {
       mounted = false;
     };
-  }, [session]);
+  }, [session?.id]);
 
   const currentSession = detail
     ? {
@@ -109,6 +146,34 @@ export function SessionDetailModal({
         subjectName: detail.subjectName ?? undefined,
       }
     : session;
+
+  const handleRespond = async (status: "ACCEPTED" | "DECLINED") => {
+    if (!session) return;
+
+    const userId = Number(localStorage.getItem("userId"));
+
+    if (!Number.isFinite(userId) || userId <= 0) {
+      setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    try {
+      setResponding(status);
+      setError("");
+
+      const response = await respondToStudySession(session.id, userId, status);
+
+      if (response.data) {
+        setDetail(response.data);
+        const updatedSession = mapResponseToVm(response.data, session);
+        onSessionUpdated?.(updatedSession);
+      }
+    } catch {
+      setError("Không thể gửi phản hồi cho lịch học");
+    } finally {
+      setResponding(null);
+    }
+  };
 
   if (!session) return null;
 
@@ -148,12 +213,6 @@ export function SessionDetailModal({
         </div>
 
         <div className="space-y-4 p-6">
-          {loading && (
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-600">
-              Đang tải chi tiết lịch học...
-            </div>
-          )}
-
           {error && (
             <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
               {error}
@@ -261,15 +320,21 @@ export function SessionDetailModal({
             <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row">
               <button
                 type="button"
+                onClick={() => handleRespond("ACCEPTED")}
+                disabled={responding !== null}
                 className="flex-1 rounded-2xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
               >
-                Xác nhận tham gia
+                {responding === "ACCEPTED"
+                  ? "Đang xử lý..."
+                  : "Xác nhận tham gia"}
               </button>
               <button
                 type="button"
+                onClick={() => handleRespond("DECLINED")}
+                disabled={responding !== null}
                 className="flex-1 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
               >
-                Từ chối
+                {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
               </button>
             </div>
           )}

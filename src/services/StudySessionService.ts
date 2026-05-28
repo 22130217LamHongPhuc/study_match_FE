@@ -78,3 +78,20 @@ export async function getStudySessionById(
 
   return response;
 }
+
+export async function respondToStudySession(
+  sessionId: number,
+  userId: number,
+  status: "PENDING" | "ACCEPTED" | "DECLINED" | "JOINED" | "ABSENT",
+): Promise<APIResponseData<StudySessionResponse>> {
+  const response = await apiFetch<StudySessionResponse>(
+    `/api/study-sessions/${sessionId}/participants/${userId}/respond`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}

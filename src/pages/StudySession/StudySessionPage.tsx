@@ -212,6 +212,14 @@ export default function StudySessionPage() {
       <SessionDetailModal
         session={selectedSession}
         onClose={() => setSelectedSession(null)}
+        onSessionUpdated={(updatedSession) => {
+          setSessions((prev) =>
+            prev.map((session) =>
+              session.id === updatedSession.id ? updatedSession : session,
+            ),
+          );
+          setSelectedSession(updatedSession);
+        }}
       />
     </div>
   );
