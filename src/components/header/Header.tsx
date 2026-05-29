@@ -26,7 +26,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import { logout } from "../../services/AuthService";
 import { useNavigate } from "react-router-dom";
-
+import WebSocketManager from "../../socket/WebSocketManager";
 export default function Header() {
   const [modalSignIn, setModalSignIn] = useState<boolean>(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -35,6 +35,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     const response = await logout();
+    WebSocketManager.getInstance().disconnect();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");

@@ -19,6 +19,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.126",
+    "@zegocloud/zego-uikit-prebuilt": "^2.17.3",
     "emoji-mart": "^5.6.0",
     "emoji-picker-react": "^4.18.0",
     "firebase": "^12.12.1",
