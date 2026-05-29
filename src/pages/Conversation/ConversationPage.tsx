@@ -26,7 +26,7 @@ import React, { use, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { Client } from "@stomp/stompjs";
 import WebSocketManager from "../../socket/WebSocketManager";
-import { loadConversation, sendText, uploadMedia } from "../../services/ChatService";
+import { loadConversation, replyText, sendSeen, sendText, uploadMedia } from "../../services/ChatService";
 import { South } from "@mui/icons-material";
 import { useLocation } from "react-router-dom";
 import { MessageInterface } from "../../model/Conversation";
@@ -38,8 +38,12 @@ import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
 import ReplyMessage from "../../components/conversation/ReplyMessage";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { updateCurrentConverId } from "../../redux/ChatReducer";
+import { clearUnread, increaseUnread, updateCurrentConverId } from "../../redux/ChatReducer";
 import { SocketEvent } from "../../enum/SocketEvent";
+import { MessageStatusData, SocketData } from "../../model/SocketResponse";
+import { VideoCallInfo } from "../../model/VideoCall";
+import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
+import VideoCallModal from "../../components/conversation/VideoCallModal";
 
 
 enum FileEnum {
@@ -47,25 +51,75 @@ enum FileEnum {
     VIDEO = 'VIDEO',
     FILE = 'FILE'
 }
+
+const MESSAGE_PAGE_SIZE = 25
+const MESSAGE_LOADING_MIN_MS = 250
+
+const waitForMinLoading = async (startedAt: number) => {
+    const remainingTime = MESSAGE_LOADING_MIN_MS - (Date.now() - startedAt)
+    if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime))
+    }
+}
+
 export default function ConversationPage() {
     const [fileLoading, setFileLoading] = useState<boolean>(false)
 
     const dispatch = useDispatch()
     const [replymess, setReplyMess] = useState<MessageInterface | null>(null)
     console.error("đây là replymess", replymess)
-    const [messages, setMessages] = useState([]);
     const [messageText, setMessageText] = useState("");
     console.log("messageText", messageText)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const stompClient = useRef<Client | null>(null);
     const currentUserId = Number(localStorage.getItem('userId'))
+    const currentUser = useSelector((state: RootState) => state.user)
     const location = useLocation();
     const targetUserId = location.state?.targetUserId;
     const avatar = location.state?.avatar;
     const fullName = location.state?.fullName;
     const [conversation, setConversation] = useState<MessageInterface[]>([]);
+    const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
+    const [hasMoreMessages, setHasMoreMessages] = useState(true);
+    const [waitingVideoCall, setWaitingVideoCall] = useState<VideoCallInfo | null>(null);
+    const [rejectedVideoCall, setRejectedVideoCall] = useState(false);
+    const [cancelCallLoading, setCancelCallLoading] = useState(false);
+    const [videoCallLoading, setVideoCallLoading] = useState(false);
+    const [visibleMessageStatus, setVisibleMessageStatus] = useState<{
+        messageId: number
+        status: MessageInterface["status"]
+    } | null>(null);
     console.log("conversation", conversation)
     const conversationId = useRef<number | null>(null)
+    const pendingTempMessageIds = useRef<number[]>([])
+    const nextTempMessageId = useRef(-1)
+    const lastSeenMessageIdRef = useRef<number | null>(null)
+    const nextMessagePageRef = useRef(1)
+    const loadingOlderMessagesRef = useRef(false)
+    const hasMoreMessagesRef = useRef(true)
+
+    const markLatestIncomingSeen = (messages: MessageInterface[], targetConversationId: number | null) => {
+        if (!targetConversationId || document.visibilityState !== "visible") return
+
+        const incomingMessageIds = messages
+            .filter((message) => message.senderId !== currentUserId)
+            .filter((message) => message.messageId > 0)
+            .map((message) => message.messageId)
+
+        if (incomingMessageIds.length === 0) return
+
+        const latestIncomingMessageId = Math.max(...incomingMessageIds)
+        if (lastSeenMessageIdRef.current !== null && latestIncomingMessageId <= lastSeenMessageIdRef.current) return
+
+        sendSeen(targetConversationId, [latestIncomingMessageId])
+            .then(() => {
+                lastSeenMessageIdRef.current = latestIncomingMessageId
+                dispatch(clearUnread({ conversationId: targetConversationId }))
+            })
+            .catch(() => {
+                lastSeenMessageIdRef.current = null
+            })
+    }
 
     // useLayoutEffect(() => {
     //     let ws = WebSocketManager.getInstance()
@@ -88,31 +142,188 @@ export default function ConversationPage() {
         const loadMess = async () => {
             console.log("đây là targetUserId", targetUserId)
             console.log("đây là currentUserId", currentUserId)
-            const result: APIResponse = await loadConversation(currentUserId, targetUserId);
+            if (!targetUserId) return
+
+            nextMessagePageRef.current = 1
+            hasMoreMessagesRef.current = true
+            loadingOlderMessagesRef.current = false
+            setHasMoreMessages(true)
+            setLoadingOlderMessages(false)
+            setConversation([])
+
+            try {
+            const result: APIResponse = await loadConversation(currentUserId, targetUserId, 0);
             console.log("đây là result", result.data)
             conversationId.current = result.data.conversationId;
             dispatch(updateCurrentConverId({ currentConversationId: result.data.conversationId }))
             console.warn("đây là conversationId sau khi loadMess", conversationId.current)
-            setConversation(result.data.listMess);
+            const loadedMessages = result.data.listMess as MessageInterface[]
+            setConversation(loadedMessages);
+            const hasNextPage = loadedMessages.length === MESSAGE_PAGE_SIZE
+            hasMoreMessagesRef.current = hasNextPage
+            setHasMoreMessages(hasNextPage)
+            const latestOutgoingWithStatus = loadedMessages.find((message) =>
+                message.senderId === currentUserId && !!message.status && message.messageId > 0
+            )
+            setVisibleMessageStatus(latestOutgoingWithStatus?.status ? {
+                messageId: latestOutgoingWithStatus.messageId,
+                status: latestOutgoingWithStatus.status,
+            } : null)
+            markLatestIncomingSeen(loadedMessages, result.data.conversationId)
+            } catch (error) {
+                console.error("[MessagePagination][FE][load-first-error]", error)
+            }
         }
         loadMess();
         if (!conversationId.current) return
-    }, [targetUserId, currentUserId])
+    }, [targetUserId, currentUserId, dispatch])
+
+    const loadOlderMessages = async () => {
+        if (!targetUserId || loadingOlderMessagesRef.current || !hasMoreMessagesRef.current) {
+            return
+        }
+
+        const pageToLoad = nextMessagePageRef.current
+        const loadingStartedAt = Date.now()
+        loadingOlderMessagesRef.current = true
+        setLoadingOlderMessages(true)
+        console.log("[MessagePagination][FE][load-old]", {
+            currentUserId,
+            targetUserId,
+            page: pageToLoad,
+        })
+
+        try {
+            const result: APIResponse = await loadConversation(currentUserId, targetUserId, pageToLoad)
+            const olderMessages = (result.data?.listMess || []) as MessageInterface[]
+            console.log("[MessagePagination][FE][load-old-success]", {
+                page: pageToLoad,
+                count: olderMessages.length,
+            })
+
+            setConversation((prev) => {
+                const existedMessageIds = new Set(prev.map((message) => message.messageId))
+                const uniqueOlderMessages = olderMessages.filter((message) => !existedMessageIds.has(message.messageId))
+                return [...prev, ...uniqueOlderMessages]
+            })
+
+            nextMessagePageRef.current = pageToLoad + 1
+            const hasNextPage = olderMessages.length === MESSAGE_PAGE_SIZE
+            hasMoreMessagesRef.current = hasNextPage
+            setHasMoreMessages(hasNextPage)
+        } catch (error) {
+            console.error("[MessagePagination][FE][load-old-error]", error)
+        } finally {
+            await waitForMinLoading(loadingStartedAt)
+            loadingOlderMessagesRef.current = false
+            setLoadingOlderMessages(false)
+        }
+    }
 
     const storeNewMess = useSelector((state: RootState) => state.chat.newMess)
-    const storeConverId = useSelector((state: RootState) => state.chat.currentConversationId)
     const storeEvent = useSelector((state: RootState) => state.chat.newMess?.event)
+    const isSocketData = (data: unknown): data is SocketData => {
+        return !!data && typeof data === "object" && "message" in data
+    }
+    const isMessageStatusData = (data: unknown): data is MessageStatusData => {
+        return !!data && typeof data === "object" && "messageIds" in data
+    }
+    const shouldApplyStatus = (
+        currentStatus: MessageInterface["status"],
+        nextStatus: MessageInterface["status"]
+    ) => {
+        const order = {
+            SENDING: 0,
+            SENT: 1,
+            DELIVERED: 2,
+            SEEN: 3,
+        }
+        if (!nextStatus) return false
+        if (!currentStatus) return true
+        return order[nextStatus] > order[currentStatus]
+    }
+    const setVisibleStatusIfNewer = (
+        messageId: number,
+        status: MessageInterface["status"]
+    ) => {
+        if (!status) return
+        setVisibleMessageStatus((prev) => {
+            if (!prev) {
+                return { messageId, status }
+            }
+
+            if (prev.messageId !== messageId) {
+                return messageId > prev.messageId ? { messageId, status } : prev
+            }
+
+            return shouldApplyStatus(prev.status, status) ? { messageId, status } : prev
+        })
+    }
+    const updateOutgoingMessageStatus = (messageIds: number[], status: MessageInterface["status"]) => {
+        if (!status) return
+        setConversation((prev) => {
+            const pendingIds = [...pendingTempMessageIds.current]
+            const tempIdToRealId = new Map<number, number>()
+            const statusMessageIds = new Set<number>()
+            const latestStatusMessageId = messageIds.length > 0 ? Math.max(...messageIds) : null
+
+            if (status === "SENT" || status === "DELIVERED" || status === "SEEN") {
+                messageIds.forEach((messageId) => {
+                    const alreadyExists = prev.some((message) => message.messageId === messageId)
+                    if (!alreadyExists && pendingIds.length > 0) {
+                        const tempMessageId = pendingIds.shift() as number
+                        tempIdToRealId.set(tempMessageId, messageId)
+                        statusMessageIds.add(messageId)
+                    }
+                })
+            }
+
+            const next = prev.map((message) => {
+                const isOutgoing = message.senderId === currentUserId
+                const isExplicitStatusMessage = messageIds.includes(message.messageId)
+                const isSeenBeforeLatest =
+                    status === "SEEN" &&
+                    latestStatusMessageId !== null &&
+                    message.messageId > 0 &&
+                    message.messageId <= latestStatusMessageId
+
+                if (isOutgoing && (isExplicitStatusMessage || isSeenBeforeLatest)) {
+                    statusMessageIds.add(message.messageId)
+                    return shouldApplyStatus(message.status, status) ? { ...message, status } : message
+                }
+
+                const realMessageId = tempIdToRealId.get(message.messageId)
+                if (realMessageId) {
+                    return { ...message, messageId: realMessageId, status }
+                }
+
+                return message
+            })
+            pendingTempMessageIds.current = pendingIds
+            const visibleStatusMessageId = statusMessageIds.size > 0
+                ? Math.max(...Array.from(statusMessageIds))
+                : null
+            if (visibleStatusMessageId !== null) {
+                setVisibleStatusIfNewer(visibleStatusMessageId, status)
+            }
+            return next
+        })
+    }
     useEffect(() => {
-        if (!storeNewMess || conversationId.current !== storeConverId) return
+        if (!storeNewMess?.data || conversationId.current !== storeNewMess.data.conversationId) return
         console.log(storeEvent, 'socket event nè')
-        if (storeEvent === SocketEvent.MESSAGE_ACK || storeEvent === SocketEvent.NEW_MESSAGE) {
+        if (storeEvent === SocketEvent.MESSAGE_ACK && isSocketData(storeNewMess.data)) {
             console.log('trong conver page', storeNewMess)
+            const message = storeNewMess.data.message
 
 
 
 
-            setConversation((prev: any[]) => {
-                return [storeNewMess.data?.message, ...prev];
+            setConversation((prev: MessageInterface[]) => {
+                if (prev.some((item) => item.messageId === message.messageId)) {
+                    return prev
+                }
+                return [message, ...prev];
             })
             if (fileLoading) {
                 setFileLoading(false)
@@ -123,15 +334,68 @@ export default function ConversationPage() {
             console.log('nhảy vào recall trong converation')
             setConversation((prev: any[]) => {
                 return prev.map((item) => {
-                    if (item.messageId === storeNewMess.data?.message?.messageId) {
-                        return storeNewMess.data?.message;
+                    if (item.messageId === (storeNewMess.data as any)?.message?.messageId) {
+                        return (storeNewMess.data as any)?.message;
                     }
                     return item;
                 });
             });
         }
-    }, [storeNewMess, storeEvent])
+    }, [storeNewMess, storeEvent, fileLoading])
 
+    useEffect(() => {
+        if (!storeNewMess?.data || conversationId.current !== storeNewMess.data.conversationId) return
+
+        if (storeEvent === SocketEvent.NEW_MESSAGE && isSocketData(storeNewMess.data)) {
+            const incomingMessage = storeNewMess.data.message
+
+            setConversation((prev: MessageInterface[]) => {
+                if (prev.some((item) => item.messageId === incomingMessage.messageId)) {
+                    return prev
+                }
+                return [incomingMessage, ...prev]
+            })
+
+            if (incomingMessage.senderId !== currentUserId) {
+                if (document.visibilityState === "visible") {
+                    markLatestIncomingSeen(
+                        [...conversation, incomingMessage],
+                        storeNewMess.data.conversationId
+                    )
+                } else {
+                    dispatch(increaseUnread({ conversationId: storeNewMess.data.conversationId }))
+                }
+            }
+        }
+
+        if (
+            (
+                storeEvent === SocketEvent.MESSAGE_SENT ||
+                storeEvent === SocketEvent.MESSAGE_DELIVERED ||
+                storeEvent === SocketEvent.MESSAGE_SEEN
+            ) &&
+            isMessageStatusData(storeNewMess.data)
+        ) {
+            updateOutgoingMessageStatus(storeNewMess.data.messageIds, storeNewMess.data.status)
+            if (fileLoading) {
+                setFileLoading(false)
+            }
+            if (storeEvent === SocketEvent.MESSAGE_SEEN) {
+                dispatch(clearUnread({ conversationId: storeNewMess.data.conversationId }))
+            }
+        }
+
+        if (storeEvent === SocketEvent.VIDEO_CALL_ENDED) {
+            setWaitingVideoCall(null)
+        }
+
+        if (storeEvent === SocketEvent.VIDEO_CALL_ACCEPTED || storeEvent === SocketEvent.VIDEO_CALL_REJECTED) {
+            setWaitingVideoCall(null)
+            if (storeEvent === SocketEvent.VIDEO_CALL_REJECTED) {
+                setRejectedVideoCall(true)
+            }
+        }
+    }, [storeNewMess, storeEvent, currentUserId, dispatch, fileLoading])
 
     const handleOpenFile = () => {
         fileInputRef.current.click();
@@ -162,24 +426,148 @@ export default function ConversationPage() {
         setSelectedFile(file)
 
     };
+    console.log('reply mess trong conver page', replymess)
+
+    useEffect(() => {
+        const markCurrentConversationSeen = () => {
+            markLatestIncomingSeen(conversation, conversationId.current)
+        }
+
+        markCurrentConversationSeen()
+        document.addEventListener("visibilitychange", markCurrentConversationSeen)
+        return () => document.removeEventListener("visibilitychange", markCurrentConversationSeen)
+    }, [conversation, currentUserId, dispatch])
 
     const sendMessage = () => {
         console.log("gửi nè")
         console.log(preview, selectedFile, 'trong send mess')
         if (messageText.trim().length === 0 && (!preview && !selectedFile)) return
-        const senderId = Number(localStorage.getItem('userId'));
-        if (!preview && !selectedFile) {
+        if (!preview && !selectedFile && !replymess) {
             console.log('nhảy vào text')
-            sendText(messageText, senderId, conversationId.current as number);
+            const tempMessageId = nextTempMessageId.current--
+            const content = messageText
+            pendingTempMessageIds.current.push(tempMessageId)
+            setVisibleStatusIfNewer(tempMessageId, "SENDING")
+            setConversation((prev) => [{
+                messageId: tempMessageId,
+                senderId: currentUserId,
+                type: "text",
+                content,
+                mediaURL: null,
+                fileName: null,
+                createdAt: new Date().toISOString(),
+                status: "SENDING",
+            }, ...prev])
+            setMessageText("");
+            sendText(content, conversationId.current as number);
             return
         }
+
+        if (replymess && (!preview && !selectedFile)) {
+            console.log('nhảy vào reply')
+            const tempMessageId = nextTempMessageId.current--
+            const content = messageText
+            setVisibleStatusIfNewer(tempMessageId, "SENDING")
+            setConversation((prev) => [{
+                messageId: tempMessageId,
+                senderId: currentUserId,
+                type: "text",
+                content,
+                mediaURL: null,
+                fileName: null,
+                createdAt: new Date().toISOString(),
+                status: "SENDING",
+            }, ...prev])
+            setMessageText("");
+            setReplyMess(null);
+            replyText(content, replymess.messageId, 'text')
+            return
+            // replyText(messageText, replymess.messageId)
+        }
+
         if (!selectedFile) return
         console.log('nhảy xuống dưới')
+        const tempMessageId = nextTempMessageId.current--
+        pendingTempMessageIds.current.push(tempMessageId)
+        setVisibleStatusIfNewer(tempMessageId, "SENDING")
+        setConversation((prev) => [{
+            messageId: tempMessageId,
+            senderId: currentUserId,
+            type: selectedFile.type,
+            content: messageText,
+            mediaURL: preview,
+            fileName: selectedFile.name,
+            createdAt: new Date().toISOString(),
+            status: "SENDING",
+        }, ...prev])
         setPreview(null)
         setFileLoading(true)
         setSelectedFile(null)
+        setMessageText("");
         uploadMedia(String(conversationId.current), selectedFile, messageText)
 
+    }
+
+    const handleStartCall = async (callType: "AUDIO" | "VIDEO" = "AUDIO") => {
+        console.log("[VideoCall][FE][ConversationPage][click]", {
+            conversationId: conversationId.current,
+            currentUserId,
+            targetUserId,
+            videoCallLoading,
+            callType,
+        })
+        if (!conversationId.current || videoCallLoading) {
+            console.warn("[VideoCall][FE][ConversationPage][skip-start]", {
+                reason: !conversationId.current ? "missing conversationId" : "loading",
+            })
+            return
+        }
+
+        setVideoCallLoading(true)
+        try {
+            const call = await startVideoCall(
+                conversationId.current,
+                currentUser.username || `User ${currentUserId}`,
+                currentUser.avatar,
+                callType
+            )
+            setRejectedVideoCall(false)
+            console.log("[VideoCall][FE][ConversationPage][start-success]", {
+                sessionId: call.sessionId,
+                roomId: call.roomId,
+                appId: call.appId,
+                userId: call.userId,
+                targetUserId: call.targetUserId,
+                hasToken: !!call.token,
+                callType: call.callType,
+            })
+            setWaitingVideoCall(call)
+            localStorage.setItem(`videoCallPeer:${call.sessionId}`, JSON.stringify({
+                userId: targetUserId,
+                fullName: fullName || "Người dùng",
+                avatar: avatar || null,
+            }))
+        } catch (error) {
+            console.error("Cannot start video call", error)
+            alert(error instanceof Error ? error.message : "Không thể bắt đầu cuộc gọi video")
+        } finally {
+            setVideoCallLoading(false)
+        }
+    }
+
+    const handleCancelWaitingCall = async () => {
+        if (!waitingVideoCall || cancelCallLoading) return
+
+        setCancelCallLoading(true)
+        try {
+            await rejectVideoCall(waitingVideoCall.sessionId)
+            setWaitingVideoCall(null)
+        } catch (error) {
+            console.error("Cannot cancel video call", error)
+            alert(error instanceof Error ? error.message : "Không thể hủy cuộc gọi video")
+        } finally {
+            setCancelCallLoading(false)
+        }
     }
 
 
@@ -231,15 +619,15 @@ export default function ConversationPage() {
                         </Box>
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <IconButton sx={{ color: "rgb(55, 145, 250)" }}>
+                        <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("AUDIO")} sx={{ color: "rgb(55, 145, 250)" }}>
                             <CallIcon />
                         </IconButton>
-                        <IconButton sx={{ color: "rgb(55, 145, 250)" }}>
+                        <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("VIDEO")} sx={{ color: "rgb(55, 145, 250)" }}>
                             <VideocamIcon />
                         </IconButton>
                     </Box>
                 </Box>
-                {conversation ? <ListMess fileLoading={fileLoading} conversation={conversation} setReplyMess={setReplyMess} /> : <WelcomeConversation />}
+                {conversation ? <ListMess fileLoading={fileLoading} conversation={conversation} setReplyMess={setReplyMess} visibleMessageStatus={visibleMessageStatus} onCallAgain={handleStartCall} onLoadOlderMessages={loadOlderMessages} loadingOlderMessages={loadingOlderMessages} hasMoreMessages={hasMoreMessages} /> : <WelcomeConversation />}
 
                 {/* thanh reply nè */}
                 {
@@ -258,7 +646,7 @@ export default function ConversationPage() {
                         borderTop: "1px solid rgba(0,0,0,0.08)",
                     }}
                 >
-                    {/* PREVIEW FILE */}
+
 
                     {
                         preview && (
@@ -444,6 +832,23 @@ export default function ConversationPage() {
                 </Box>
             </Box>
             <ListFriends></ListFriends>
+            <VideoCallModal
+                open={!!waitingVideoCall}
+                mode="outgoing"
+                name={fullName || "Người dùng"}
+                avatar={avatar || null}
+                callType={waitingVideoCall?.callType}
+                loading={cancelCallLoading}
+                onReject={handleCancelWaitingCall}
+            />
+            <VideoCallModal
+                open={rejectedVideoCall}
+                mode="rejected"
+                name={fullName || "Người dùng"}
+                avatar={avatar || null}
+                callType="AUDIO"
+                onReject={() => setRejectedVideoCall(false)}
+            />
 
         </Box >
     );

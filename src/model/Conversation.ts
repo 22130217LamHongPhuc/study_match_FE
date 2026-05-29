@@ -8,7 +8,9 @@ export type MessageInterface = {
     content: string,
     mediaURL: string | null,
     fileName: string | null,
-    createAt: string;
+    createAt?: string;
+    createdAt?: string;
+    status?: 'SENDING' | 'SENT' | 'DELIVERED' | 'SEEN';
 }
 
 

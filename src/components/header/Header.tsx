@@ -20,6 +20,7 @@ import { Image } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search";
 import { logout } from "../../services/AuthService";
 import { useNavigate } from "react-router-dom";
+import WebSocketManager from "../../socket/WebSocketManager";
 export default function Header() {
   const [modalSignIn, setModalSignIn] = useState<boolean>(false);
   const user = useSelector((state: RootState) => state.user);
@@ -27,6 +28,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     const response = await logout();
+    WebSocketManager.getInstance().disconnect();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");

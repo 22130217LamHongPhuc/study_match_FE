@@ -1,10 +1,13 @@
 
 import AddIcon from '@mui/icons-material/Add'
+import CallIcon from '@mui/icons-material/Call'
+import PhoneMissedIcon from '@mui/icons-material/PhoneMissed'
+import VideocamIcon from '@mui/icons-material/Videocam'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ReplyIcon from '@mui/icons-material/Reply'
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt'
 import { Avatar, Box, CircularProgress, IconButton } from '@mui/material'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MessageInterface } from '../../model/Conversation'
 import { submitReaction } from '../../services/ReactionService'
 import { recallMess } from '../../services/ChatService'
@@ -13,17 +16,64 @@ import { RootState } from '../../redux/store'
 import { SocketEvent } from '../../enum/SocketEvent'
 import { ReactionData } from '../../model/Reaction'
 
-export default function ListMess({ conversation, setReplyMess, fileLoading }: { conversation: MessageInterface[]; setReplyMess: React.Dispatch<React.SetStateAction<MessageInterface | null>>; fileLoading: boolean }) {
+type VisibleMessageStatus = {
+    messageId: number
+    status: MessageInterface["status"]
+}
+
+type ListMessProps = {
+    conversation: MessageInterface[]
+    setReplyMess: React.Dispatch<React.SetStateAction<MessageInterface | null>>
+    fileLoading: boolean
+    visibleMessageStatus: VisibleMessageStatus | null
+    onCallAgain?: (callType: "AUDIO" | "VIDEO") => void
+    onLoadOlderMessages?: () => void
+    loadingOlderMessages?: boolean
+    hasMoreMessages?: boolean
+}
+
+export default function ListMess({ conversation, setReplyMess, fileLoading, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false }: ListMessProps) {
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
     const [messageReactions, setMessageReactions] = useState<Record<number, string>>({})
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
     const currentUserId = Number(localStorage.getItem("userId"))
     const currentConversationId = useSelector((state: RootState) => state.chat.currentConversationId)
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+    const previousMessageCountRef = useRef(conversation.length)
+    const pendingScrollRestoreRef = useRef<{
+        scrollHeight: number
+        scrollTop: number
+    } | null>(null)
+    const oldestThresholdReachedRef = useRef(false)
 
     const reactions = ["\u2764\ufe0f", "\ud83d\ude06", "\ud83d\ude2e", "\ud83d\ude22", "\ud83d\ude21", "\ud83d\udc4d"]
     const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim"]
     const currenConverID = useSelector((state: RootState) => state.chat.currentConversationId)
+    const latestOutgoingMessageId = conversation.find((message) => message.senderId === currentUserId)?.messageId ?? null
+
+    useLayoutEffect(() => {
+        const previousMessageCount = previousMessageCountRef.current
+        previousMessageCountRef.current = conversation.length
+
+        const pendingScrollRestore = pendingScrollRestoreRef.current
+        const element = scrollContainerRef.current
+        if (!pendingScrollRestore || !element || conversation.length <= previousMessageCount) {
+            return
+        }
+
+        const heightDelta = element.scrollHeight - pendingScrollRestore.scrollHeight
+        const nextScrollTop = pendingScrollRestore.scrollTop < 0
+            ? pendingScrollRestore.scrollTop
+            : pendingScrollRestore.scrollTop + heightDelta
+        element.scrollTop = nextScrollTop
+        window.requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+                scrollContainerRef.current.scrollTop = nextScrollTop
+            }
+            pendingScrollRestoreRef.current = null
+        })
+    }, [conversation.length])
 
     useEffect(() => {
         if (activeMoreMessageId === null) {
@@ -76,6 +126,44 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
             recallMess(currentConversationId, messageId)
         }
 
+    }
+
+    const renderOutgoingStatus = (mess: MessageInterface) => {
+        if (!visibleMessageStatus) return null
+        const visibleStatusMessageExists = conversation.some(
+            (message) => message.messageId === visibleMessageStatus.messageId
+        )
+        const shouldShowStatus =
+            mess.messageId === visibleMessageStatus.messageId ||
+            (mess.messageId === latestOutgoingMessageId && !visibleStatusMessageExists)
+        if (!shouldShowStatus) return null
+        if (!visibleMessageStatus.status) return null
+
+        const statusText = {
+            SENDING: "Đang gửi",
+            SENT: "Đã gửi",
+            DELIVERED: "Đã nhận",
+            SEEN: "Đã xem",
+        }[visibleMessageStatus.status]
+
+        return (
+            <Box
+                sx={{
+                    mt: 0.35,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    width: "100%",
+                    minHeight: 16,
+                    color: "#3f444a",
+                    fontSize: 12,
+                    lineHeight: 1.2,
+                    fontWeight: 600,
+                }}
+            >
+                <Box component="span">{statusText}</Box>
+            </Box>
+        )
     }
 
     const renderMessageActions = (mess: MessageInterface, menuPlacement: "left" | "right") => {
@@ -248,8 +336,150 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
         )
     }
 
+    const isCallMessage = (mess: MessageInterface) => mess.type === "CALL_AUDIO" || mess.type === "CALL_VIDEO"
+
+    const renderCallHistory = (mess: MessageInterface) => {
+        let detail: { status?: string; durationSeconds?: number; callType?: "AUDIO" | "VIDEO" } = {}
+        try {
+            detail = mess.content ? JSON.parse(mess.content) : {}
+        } catch {
+            detail = {}
+        }
+
+        const callType: "AUDIO" | "VIDEO" = mess.type === "CALL_AUDIO" ? "AUDIO" : "VIDEO"
+        const isMissed = detail.status === "MISSED"
+        const isMine = mess.senderId === currentUserId
+        const duration = Math.max(0, Number(detail.durationSeconds || 0))
+        const timeText = mess.createdAt
+            ? new Date(mess.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+            : ""
+        const durationText = duration < 60
+            ? `${duration} giây`
+            : `${Math.ceil(duration / 60)} phút`
+        const title = isMissed
+            ? `Đã nhỡ cuộc gọi ${callType === "AUDIO" ? "thoại" : "video"}`
+            : `Cuộc gọi ${callType === "AUDIO" ? "thoại" : "video"}`
+        const subtitle = isMissed ? timeText : durationText
+        const Icon = isMissed ? PhoneMissedIcon : callType === "AUDIO" ? CallIcon : VideocamIcon
+
+        return (
+            <Box
+                key={mess.messageId}
+                sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: isMine ? "flex-end" : "flex-start",
+                    mb: 1,
+                    pl: isMine ? 0 : 4.75,
+                }}
+            >
+                <Box
+                    sx={{
+                        width: 250,
+                        maxWidth: "min(250px, 78vw)",
+                        borderRadius: "18px",
+                        bgcolor: "#fff",
+                        px: 2,
+                        py: 1.35,
+                        boxShadow: "0 1px 2px rgba(15,23,42,0.05)",
+                    }}
+                >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.15 }}>
+                        <Box
+                            sx={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: "50%",
+                                bgcolor: isMissed ? "#f43f5e" : "#eeeeee",
+                                color: isMissed ? "#fff" : "#111",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                            }}
+                        >
+                            <Icon sx={{ fontSize: 23 }} />
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                            <Box
+                                sx={{
+                                    fontSize: 18,
+                                    fontWeight: 700,
+                                    color: "#050505",
+                                    lineHeight: 1.12,
+                                    wordBreak: "break-word",
+                                    textTransform: "none",
+                                }}
+                            >
+                                {title}
+                            </Box>
+                            <Box sx={{ fontSize: 14, color: "#64748b", mt: 0.2 }}>
+                                {subtitle}
+                            </Box>
+                        </Box>
+                    </Box>
+                    <Box
+                        component="button"
+                        type="button"
+                        onClick={() => onCallAgain?.(callType)}
+                        sx={{
+                            mt: 1.15,
+                            width: "100%",
+                            height: 44,
+                            border: 0,
+                            borderRadius: "8px",
+                            bgcolor: "#f1f1f1",
+                            color: "#000",
+                            fontSize: 17,
+                            fontWeight: 700,
+                            textTransform: "none",
+                            cursor: "pointer",
+                            "&:hover": {
+                                bgcolor: "#e7e7e7",
+                            },
+                        }}
+                    >
+                        Gọi lại
+                    </Box>
+                </Box>
+            </Box>
+        )
+    }
+
+    const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+        if (!hasMoreMessages || loadingOlderMessages) return
+
+        const element = event.currentTarget
+        const maxScrollDistance = element.scrollHeight - element.clientHeight
+        if (maxScrollDistance <= 0) return
+
+        const distanceToOldest = element.scrollTop < 0
+            ? maxScrollDistance + element.scrollTop
+            : maxScrollDistance - element.scrollTop
+
+        if (distanceToOldest > 96) {
+            oldestThresholdReachedRef.current = false
+            return
+        }
+
+        if (oldestThresholdReachedRef.current) {
+            return
+        }
+
+        if (distanceToOldest <= 32) {
+            oldestThresholdReachedRef.current = true
+            pendingScrollRestoreRef.current = {
+                scrollHeight: element.scrollHeight,
+                scrollTop: element.scrollTop,
+            }
+            onLoadOlderMessages?.()
+        }
+    }
+
     return (
         <Box
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
             sx={{
                 flex: 1,
                 display: "flex",
@@ -258,11 +488,53 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
                 width: "100%",
                 px: 2,
                 py: 2,
+                position: "relative",
+                overflowAnchor: "none",
                 background: "linear-gradient(180deg, #f7e19a, #f6885d)",
             }}
         >
 
             {/* loading của người gửi */}
+            {loadingOlderMessages && (
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 10,
+                        left: 16,
+                        right: 16,
+                        zIndex: 50,
+                        px: 1.25,
+                        py: 0.85,
+                        borderRadius: "999px",
+                        bgcolor: "rgba(255,255,255,0.92)",
+                        boxShadow: "0 6px 18px rgba(15,23,42,0.14)",
+                        pointerEvents: "none",
+                    }}
+                >
+                    <CircularProgress
+                        sx={{
+                            height: 4,
+                            borderRadius: 999,
+                            bgcolor: "rgba(255,255,255,0.45)",
+                            "& .MuiLinearProgress-bar": {
+                                bgcolor: "#b30000",
+                            },
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            mt: 0.45,
+                            color: "#5b1111",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            textAlign: "center",
+                        }}
+                    >
+                        Đang tải tin nhắn cũ...
+                    </Box>
+                </Box>
+            )}
+
             {fileLoading && (<Box
                 sx={{
                     display: "flex",
@@ -304,7 +576,82 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
                 </Box>
             </Box>)}
 
+            {false && (<>
+            {/* mess reply */}
+
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    mb: 1,
+                    width: "100%",
+                }}
+            >
+                <Box
+                    sx={{
+                        maxWidth: "70%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            mb: 0.35,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-end",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                fontSize: 13,
+                                color: "#5f6368",
+                                mb: 0.35,
+                            }}
+                        >
+                            {"↩ Bạn đã trả lời Nguyen"}
+                        </Box>
+
+                        <Box
+                            sx={{
+                                px: 1.5,
+                                py: 0.75,
+                                borderRadius: "16px",
+                                bgcolor: "#f1f1f1",
+                                color: "#5f6368",
+                                fontSize: 14,
+                                lineHeight: 1.35,
+                                wordBreak: "break-word",
+                            }}
+                        >
+                            {"Phòng 5 e"}
+                        </Box>
+                    </Box>
+
+                    <Box
+                        sx={{
+                            bgcolor: "rgb(179, 0, 0)",
+                            color: "#fff",
+                            px: 2,
+                            py: 1,
+                            borderRadius: "18px 18px 4px 18px",
+                            fontSize: 15,
+                            lineHeight: 1.4,
+                            wordBreak: "break-word",
+                        }}
+                    >
+                        {"helo"}
+                    </Box>
+                </Box>
+            </Box>
+
+            </>)}
+
             {conversation.map((mess: MessageInterface) => {
+                if (isCallMessage(mess)) {
+                    return renderCallHistory(mess)
+                }
                 if (mess.senderId !== currentUserId) {
                     return (
                         <>
@@ -495,14 +842,22 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
                             {
                                 (mess.type === 'text' && mess.content) ? (
 
+                                    // mess reply 
 
-                                    <>
+                                    <Box
+                                        key={mess.messageId}
+                                        sx={{
+                                            width: "100%",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "flex-end",
+                                            mb: 1,
+                                        }}
+                                    >
                                         <Box
-                                            key={mess.messageId}
                                             sx={{
                                                 display: "flex",
                                                 justifyContent: "flex-end",
-                                                mb: 1,
                                                 alignItems: "flex-end",
                                                 gap: 1,
                                                 width: "100%",
@@ -550,15 +905,25 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
                                                 )}
                                             </Box>
                                         </Box>
+                                        {renderOutgoingStatus(mess)}
 
-                                    </>) :
+                                    </Box>) :
 
 
-                                    (<> <Box
+                                    (<Box
+                                        key={mess.messageId}
+                                        sx={{
+                                            width: "100%",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "flex-end",
+                                            mb: 1,
+                                        }}
+                                    >
+                                        <Box
                                         sx={{
                                             display: "flex",
                                             justifyContent: "flex-end",
-                                            mb: 1,
                                             width: "100%",
                                         }}
                                     >
@@ -662,7 +1027,9 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
 
 
                                         </Box>
-                                    </Box></>)
+                                    </Box>
+                                        {renderOutgoingStatus(mess)}
+                                    </Box>)
                             }
 
 
@@ -671,6 +1038,20 @@ export default function ListMess({ conversation, setReplyMess, fileLoading }: { 
                 }
             })}
 
+            {false && loadingOlderMessages && (
+                <Box
+                    sx={{
+                        width: "100%",
+                        minHeight: 56,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                    }}
+                >
+                    <CircularProgress aria-label="Loading…" size={28} thickness={4} />
+                </Box>
+            )}
 
         </Box >
 

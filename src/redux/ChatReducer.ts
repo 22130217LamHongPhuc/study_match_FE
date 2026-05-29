@@ -1,25 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
-import { MessageInterface } from "../model/Conversation";
 import { SocketResponse } from '../model/SocketResponse'
-
-interface DataState {
-    conversationId: number | null,
-    message: MessageInterface | null,
-}
-interface NewmessInterface {
-    event: string | null,
-    data: DataState | null
-}
 
 interface ChatState {
 
     currentConversationId: number | null,
-    newMess: NewmessInterface | null
+    newMess: SocketResponse | null,
+    unreadByConversation: Record<number, number>
 }
 
 const initialState: ChatState = {
     currentConversationId: null,
-    newMess: null
+    newMess: null,
+    unreadByConversation: {}
 }
 
 const chatReducer = createSlice({
@@ -34,9 +26,16 @@ const chatReducer = createSlice({
                 event: action.payload.event,
                 data: action.payload.data
             }
+        },
+        increaseUnread(state, action: PayloadAction<{ conversationId: number }>) {
+            const conversationId = action.payload.conversationId
+            state.unreadByConversation[conversationId] = (state.unreadByConversation[conversationId] || 0) + 1
+        },
+        clearUnread(state, action: PayloadAction<{ conversationId: number }>) {
+            state.unreadByConversation[action.payload.conversationId] = 0
         }
     }
 })
 
-export const { updateNewMess, updateCurrentConverId } = chatReducer.actions
+export const { updateNewMess, updateCurrentConverId, increaseUnread, clearUnread } = chatReducer.actions
 export default chatReducer.reducer

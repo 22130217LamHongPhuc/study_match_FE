@@ -6,6 +6,7 @@ class WebSocketManager {
     private static instance: WebSocketManager;
     private client: Client | null = null;
     private connected = false;
+    private connectingPromise: Promise<void> | null = null;
     private subscriptions: Map<string, StompSubscription> = new Map();
 
     private constructor() { }
@@ -19,13 +20,15 @@ class WebSocketManager {
 
 
     public connect(): Promise<void> {
+        if (this.connected && this.client?.connected) {
+            return Promise.resolve();
+        }
 
-        return new Promise((resolve, reject) => {
-            if (this.client?.active || this.connected) {
-                resolve();
-                return;
-            }
+        if (this.connectingPromise) {
+            return this.connectingPromise;
+        }
 
+        this.connectingPromise = new Promise((resolve, reject) => {
             this.client = new Client({
                 brokerURL: SOCKET_URL,
                 connectHeaders: {
@@ -36,12 +39,14 @@ class WebSocketManager {
 
                 onConnect: () => {
                     this.connected = true;
+                    this.connectingPromise = null;
                     console.log('STOMP connected');
                     resolve();
                 },
 
                 onDisconnect: () => {
                     this.connected = false;
+                    this.connectingPromise = null;
                     console.log('STOMP disconnected');
                 },
 
@@ -51,12 +56,16 @@ class WebSocketManager {
 
                 onWebSocketError: (error: any) => {
                     console.error('WebSocket error:', error);
+                    this.connected = false;
+                    this.connectingPromise = null;
                     reject(error);
                 },
             });
 
             this.client.activate();
         });
+
+        return this.connectingPromise;
     }
 
     public onMessage(destination: string, cb: (msg: string) => void) {
@@ -70,7 +79,7 @@ class WebSocketManager {
     }
 
     public sendMessage(destination: string, body: any = '') {
-        if (!this.client || !this.connected) {
+        if (!this.client || !this.connected || !this.client.connected) {
             throw new Error('WebSocket chưa kết nối');
         }
 
@@ -90,6 +99,7 @@ class WebSocketManager {
         }
 
         this.connected = false;
+        this.connectingPromise = null;
     }
 }
 

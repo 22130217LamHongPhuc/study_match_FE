@@ -6,6 +6,7 @@ import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
 
 
 export default function ReplyMessage({ fullName, mess, setReplyMess }: { fullName: string; mess: string; setReplyMess: React.Dispatch<React.SetStateAction<any>> }) {
+    console.log(mess, 'mess trong reply mess')
     return (
         <Box
             sx={{
@@ -48,6 +49,7 @@ export default function ReplyMessage({ fullName, mess, setReplyMess }: { fullNam
                         textOverflow: "ellipsis",
                         maxWidth: "calc(100vw - 80px)",
                     }}
+
                 >
                     {mess}
                 </Typography>
