@@ -6,7 +6,7 @@ import ScheduleTable from "./components/ScheduleTable";
 import SubjectsCard from "./components/SubjectsCard";
 import { useProfileData } from "./hooks/useProfileData";
 
-export default function ProfilePage() {
+export default function MyProfilePage() {
   const userId = Number(localStorage.getItem("userId"));
 
   const { profileVm, loading } = useProfileData(userId);

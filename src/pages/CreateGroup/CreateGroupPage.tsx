@@ -1,14 +1,8 @@
 import { useState } from "react";
 import { initFreeTime } from "../Onboarding/components/constants";
-import type {
-  FreeTime,
-  StudyGoal,
-  StudyMode,
-  Subject,
-} from "../Onboarding/components/types";
+import type { FreeTime, Subject } from "../Onboarding/components/types";
 import BasicInfoSection from "./components/BasicInfoSection";
 import AcademicInfoSection from "./components/AcademicInfoSection";
-import MatchingCriteriaSection from "./components/MatchingCriteriaSection";
 import GroupSettingsSection from "./components/GroupSettingsSection";
 import GroupPreviewSidebar from "./components/GroupPreviewSidebar";
 import BottomActionBar from "./components/BottomActionBar";
@@ -21,16 +15,13 @@ import {
   type FreeTimeSlotRequest,
   type SlotCode,
 } from "../../services/GroupService";
-import { VALID_MODES } from "../Onboarding/components/constants";
-
+import { toast } from "sonner";
 export default function CreateGroupPage() {
   const navigate = useNavigate();
   const [groupName, setGroupName] = useState<string>("");
   const [goalDescription, setGoalDescription] = useState<string>("");
   const [mainSubject, setMainSubject] = useState<Subject | null>(null);
-
-  const [studyGoal, setStudyGoal] = useState<StudyGoal | "">("");
-  const [studyMode, setStudyMode] = useState<StudyMode | "">("");
+  const [invitedUserIds, setInvitedUserIds] = useState<number[]>([]);
 
   const [maxMembers, setMaxMembers] = useState<number>(5);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
@@ -46,29 +37,20 @@ export default function CreateGroupPage() {
     const mainSubjectId = Number(mainSubject?.subjectId);
 
     if (!groupName.trim()) {
-      alert("Vui lòng nhập tên nhóm");
+      console.log("Validation failed: groupName is empty");
+      toast.error("Vui lòng nhập tên nhóm");
       return;
     }
     if (!Number.isFinite(ownerUserId) || ownerUserId <= 0) {
-      alert("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+      toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
       return;
     }
     if (!Number.isFinite(mainSubjectId) || mainSubjectId <= 0) {
-      alert("Vui lòng chọn môn học chính");
-      return;
-    }
-    if (!studyGoal || !studyMode) {
-      alert("Vui lòng chọn Study Goal và Study Mode");
-      return;
-    }
-
-    const allowedModes = VALID_MODES[studyGoal] ?? [];
-    if (!allowedModes.includes(studyMode)) {
-      alert("Study Mode không hợp lệ cho Study Goal đã chọn");
+      toast.error("Vui lòng chọn môn học chính");
       return;
     }
     if (!Number.isFinite(maxMembers) || maxMembers < 1) {
-      alert("Số lượng thành viên tối đa không hợp lệ");
+      toast.error("Số lượng thành viên tối đa không hợp lệ");
       return;
     }
 
@@ -100,21 +82,22 @@ export default function CreateGroupPage() {
       ownerUserId,
       mainSubjectId,
       subjectName: mainSubject?.subjectName || "",
-      studyGoal,
-      studyMode,
       maxMembers,
       visibility,
       freeTimeSlots,
+      invitedUserIds: invitedUserIds.length > 0 ? invitedUserIds : undefined,
     };
     console.log("CreateGroupPage - payload:", payload);
 
     const res = await createStudyGroup(payload);
     if (res.success) {
-      alert("Tạo nhóm thành công");
+      toast.success("Tạo nhóm thành công!");
       navigate("/groups");
       return;
     } else {
-      alert("Tạo nhóm thất bại: " + (res.message || "Lỗi không xác định"));
+      toast.error(
+        "Tạo nhóm thất bại: " + (res.message || "Lỗi không xác định"),
+      );
     }
   };
 
@@ -151,15 +134,6 @@ export default function CreateGroupPage() {
               }
             />
 
-            <MatchingCriteriaSection
-              goal={studyGoal}
-              mode={studyMode}
-              onChange={(next) => {
-                setStudyGoal(next.goal);
-                setStudyMode(next.mode);
-              }}
-            />
-
             <GroupSettingsSection
               maxMembers={maxMembers}
               onMaxMembersChange={setMaxMembers}
@@ -175,12 +149,12 @@ export default function CreateGroupPage() {
               groupName,
               goalDescription,
               mainSubject: mainSubject?.subjectName || "",
-              studyGoal,
-              studyMode,
               maxMembers,
               visibility,
               freeTime,
             }}
+            invitedUserIds={invitedUserIds}
+            onInvitedUserIdsChange={setInvitedUserIds}
           />
         </div>
       </main>

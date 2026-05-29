@@ -1,11 +1,11 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { getProfileByUserId } from "../services/ProfileService";
-import { mapProfileResponseToVm } from "../pages/Profile/mappers/profileMapper";
-import { ProfileApiResponse } from "../pages/Profile/types";
+import { mapProfileResponseToVm } from "../pages/MyProfile/mappers/profileMapper";
+import { ProfileApiResponse, ProfileViewModel } from "../pages/MyProfile/types";
 
 interface ProfileState {
   profileData: ProfileApiResponse | null;
-  profileVm: any;
+  profileVm: ProfileViewModel | null;
   loading: boolean;
   error: string | null;
 }
@@ -44,6 +44,18 @@ const profileSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+
+    // Allow updating profile view model locally (UI-only update or after save)
+    updateProfileVm: (
+      state,
+      action: PayloadAction<Partial<ProfileViewModel>>,
+    ) => {
+      if (!state.profileVm) return;
+      state.profileVm = {
+        ...state.profileVm,
+        ...action.payload,
+      } as ProfileViewModel;
+    },
   },
 
   extraReducers: (builder) => {
@@ -67,6 +79,6 @@ const profileSlice = createSlice({
   },
 });
 
-export const { clearProfile } = profileSlice.actions;
+export const { clearProfile, updateProfileVm } = profileSlice.actions;
 
 export default profileSlice.reducer;
