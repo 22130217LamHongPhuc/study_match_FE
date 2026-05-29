@@ -1,9 +1,5 @@
 import { apiFetch } from "../config/apiClient";
 import { APIResponseData } from "../config/APIResponse";
-import {
-  CreateStudySessionRequest,
-  StudySessionResponse,
-} from "../pages/StudySession/types";
 
 const API_BASE_URL_PROFILE = "http://localhost:8082/api";
 const API_BASE_URL_GROUP = "http://localhost:8086";
@@ -32,6 +28,7 @@ export interface CreateStudyGroupRequest {
   maxMembers?: number;
   visibility?: string;
   freeTimeSlots?: FreeTimeSlotRequest[];
+  invitedUserIds?: number[];
 }
 
 export interface StudyGroupDetailResponse {
@@ -306,22 +303,6 @@ export async function joinMemberIntoGroup(
     {
       method: "POST",
       body: JSON.stringify({ userId }),
-    },
-    API_BASE_URL_GROUP,
-  );
-
-  return response;
-}
-
-export async function createGroupStudySession(
-  groupId: number,
-  payload: CreateStudySessionRequest,
-): Promise<APIResponseData<StudySessionResponse>> {
-  const response = await apiFetch<StudySessionResponse>(
-    `/api/groups/${groupId}/sessions`,
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
     },
     API_BASE_URL_GROUP,
   );

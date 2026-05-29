@@ -24,29 +24,29 @@ export function QuickStats({ sessions }: QuickStatsProps) {
       label: "Lịch hôm nay",
       value: todayCount,
       helper: "Buổi học cần tham gia",
-      bg: "bg-blue-50",
-      text: "text-blue-700",
+      bg: "bg-orange-50",
+      text: "text-orange-600",
     },
     {
       label: "Tuần này",
       value: sessions.length,
       helper: "Tổng lịch trong tuần",
-      bg: "bg-emerald-50",
-      text: "text-emerald-700",
+      bg: "bg-green-50",
+      text: "text-green-600",
     },
     {
       label: "Chờ xác nhận",
       value: pendingCount,
       helper: "Lời mời cần phản hồi",
       bg: "bg-amber-50",
-      text: "text-amber-700",
+      text: "text-amber-600",
     },
     {
       label: "Lịch nhóm",
       value: groupCount,
       helper: "Buổi học theo nhóm",
-      bg: "bg-violet-50",
-      text: "text-violet-700",
+      bg: "bg-rose-50",
+      text: "text-rose-600",
     },
   ];
 
@@ -55,15 +55,15 @@ export function QuickStats({ sessions }: QuickStatsProps) {
       {stats.map((item) => (
         <div
           key={item.label}
-          className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+          className="rounded-xl border border-gray-200 bg-white p-5"
         >
           <div
-            className={`mb-4 inline-flex rounded-2xl px-3 py-2 text-sm font-semibold ${item.bg} ${item.text}`}
+            className={`mb-4 inline-flex rounded-lg px-3 py-1.5 text-sm font-semibold ${item.bg} ${item.text}`}
           >
             {item.label}
           </div>
-          <div className="text-3xl font-bold text-slate-900">{item.value}</div>
-          <p className="mt-1 text-sm text-slate-500">{item.helper}</p>
+          <div className="text-3xl font-bold text-gray-800">{item.value}</div>
+          <p className="mt-1 text-sm text-gray-500">{item.helper}</p>
         </div>
       ))}
     </section>

@@ -44,9 +44,13 @@ export interface CreateStudySessionRequest {
   endTime: string;
   studyMode: GroupStudySessionMode;
   location?: string;
+  meetingUrl?: string;
   createdByUserId: number;
   sessionType: StudySessionType;
-  subjectName?: string;
+  subjectName?: string | null;
+  subjectId?: number | null;
+  partnerUserId?: number | null;
+  partnerUserName?: string | null;
 }
 
 export type GroupStudySessionStatus =
@@ -56,16 +60,45 @@ export type GroupStudySessionStatus =
   | "CANCELLED";
 export interface StudySessionResponse {
   id: number;
-  groupId: number;
+  sessionType: StudySessionType;
+  groupId: number | null;
   title: string;
-  description: string;
+  description: string | null;
   startTime: string;
   endTime: string;
   studyMode: GroupStudySessionMode;
-  location: string;
+  location: string | null;
+  meetingUrl: string | null;
   createdByUserId: number;
   status: GroupStudySessionStatus;
+  participantStatus: ParticipantStatus;
+  partnerName: string | null;
+  partnerUserName?: string | null;
+  groupName: string | null;
+  membersCount: number | null;
+  subjectName: string | null;
   createdAt: string;
   updatedAt: string;
-  subjectName?: string;
+}
+
+export interface SessionParticipantConfirmationResponse {
+  userId?: number | null;
+  userName?: string | null;
+  fullName?: string | null;
+  partnerUserName?: string | null;
+  role?: string | null;
+  status?: ParticipantStatus | null;
+  respondedAt?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface SessionConfirmationStatsResponse {
+  sessionId: number;
+  sessionType: StudySessionType;
+  currentUserId: number;
+  totalParticipants: number;
+  acceptedCount: number;
+  pendingCount: number;
+  declinedCount: number;
+  otherParticipants: SessionParticipantConfirmationResponse[];
 }

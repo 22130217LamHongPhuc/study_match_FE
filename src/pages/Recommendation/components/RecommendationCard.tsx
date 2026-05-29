@@ -1,131 +1,191 @@
+import { UserPlus, Check, Clock, Ban, Send } from "lucide-react";
 import { RecommendationCardVm } from "../types";
 
 interface RecommendationCardProps {
   recommendation: RecommendationCardVm;
   onConnect?: (id: number) => void;
-  onReject?: (id: number) => void;
+  onAccept?: (requestId: number) => void;
+  isConnecting?: boolean;
+  isAccepting?: boolean;
+  currentUserId?: number;
 }
 
-function getMatchStyle(match: number) {
-  if (match >= 70) {
-    return {
-      text: "text-green-700",
-      bar: "bg-green-600",
-      bg: "bg-green-50",
-      border: "border-green-200",
-    };
-  }
+const AVATAR_COLORS = [
+  "bg-orange-400",
+  "bg-rose-400",
+  "bg-amber-500",
+  "bg-lime-500",
+  "bg-pink-400",
+  "bg-red-400",
+  "bg-yellow-500",
+  "bg-emerald-500",
+];
 
-  if (match >= 50) {
-    return {
-      text: "text-blue-700",
-      bar: "bg-blue-600",
-      bg: "bg-blue-50",
-      border: "border-blue-200",
-    };
-  }
+function getAvatarColor(userId: number) {
+  return AVATAR_COLORS[userId % AVATAR_COLORS.length];
+}
 
-  return {
-    text: "text-yellow-700",
-    bar: "bg-yellow-600",
-    bg: "bg-yellow-50",
-    border: "border-yellow-200",
-  };
+function getInitials(name: string | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0][0]?.toUpperCase() ?? "?";
+}
+
+function getMatchColor(match: number) {
+  if (match >= 70) return { text: "text-emerald-600", bg: "bg-emerald-500", track: "bg-emerald-100" };
+  if (match >= 50) return { text: "text-orange-600", bg: "bg-orange-500", track: "bg-orange-100" };
+  return { text: "text-amber-600", bg: "bg-amber-500", track: "bg-amber-100" };
 }
 
 export default function RecommendationCard({
   recommendation,
   onConnect,
-  onReject,
+  onAccept,
+  isConnecting = false,
+  isAccepting = false,
+  currentUserId,
 }: RecommendationCardProps) {
   const match = Number(recommendation.matchPercentage.toFixed(1));
   const safeMatch = Math.min(100, Math.max(0, match));
-  const style = getMatchStyle(match);
+  const color = getMatchColor(match);
+  const friendRequest = recommendation.friendRequest;
+  const initials = getInitials(recommendation.fullName);
+  const avatarBg = getAvatarColor(recommendation.userId);
+
+  const status = friendRequest?.status;
+  const isApproved = status === "APPROVED";
+  const isPending = status === "PENDING";
+  const isRejected = status === "REJECTED";
+  const isBlocked = status === "BLOCKED";
+  const isSentByCurrentUser =
+    friendRequest?.senderId !== undefined &&
+    currentUserId !== undefined &&
+    friendRequest.senderId === currentUserId;
+  const isReceivedByCurrentUser =
+    friendRequest?.receiverId !== undefined &&
+    currentUserId !== undefined &&
+    friendRequest.receiverId === currentUserId;
+
+  const canSendFriendRequest = !friendRequest || isRejected;
+  const canAcceptFriendRequest = isPending && isReceivedByCurrentUser;
+
+  const actionButton = (() => {
+    if (isApproved) {
+      return {
+        label: "Đã kết bạn",
+        icon: <Check size={15} />,
+        disabled: true,
+        className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
+      };
+    }
+    if (isBlocked) {
+      return {
+        label: "Đã chặn",
+        icon: <Ban size={15} />,
+        disabled: true,
+        className: "bg-gray-100 text-gray-400 border border-gray-200",
+      };
+    }
+    if (isPending && isSentByCurrentUser) {
+      return {
+        label: "Đã gửi",
+        icon: <Clock size={15} />,
+        disabled: true,
+        className: "bg-amber-50 text-amber-600 border border-amber-200",
+      };
+    }
+    if (isPending && isReceivedByCurrentUser) {
+      return {
+        label: isAccepting ? "Đang xử lý..." : "Chấp nhận",
+        icon: <Check size={15} />,
+        disabled: isAccepting,
+        className: "bg-emerald-500 text-white hover:bg-emerald-600 transition-colors",
+      };
+    }
+    return {
+      label: isConnecting ? "Đang gửi..." : isRejected ? "Gửi lại" : "Kết bạn",
+      icon: isConnecting ? <Send size={15} className="animate-pulse" /> : <UserPlus size={15} />,
+      disabled: isConnecting || (!canSendFriendRequest && !canAcceptFriendRequest),
+      className: "bg-orange-500 text-white hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+    };
+  })();
 
   return (
-    <article className="flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs text-gray-500">Mức độ phù hợp</p>
-
-          <p className={`mt-1 text-xl font-semibold ${style.text}`}>{match}%</p>
+    <article className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 transition-shadow duration-200 hover:shadow-md">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${avatarBg} text-white font-bold text-sm`}>
+          {initials}
         </div>
-
-        <span
-          className={`max-w-[160px] truncate rounded-md border px-2 py-1 text-xs font-medium ${style.bg} ${style.border} ${style.text}`}
-          title={recommendation.studyModeLabel}
-        >
-          {recommendation.studyModeLabel}
-        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-gray-800 truncate">
+            {recommendation.fullName ?? "Không xác định"}
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5 truncate">
+            {recommendation.studyModeLabel}
+          </p>
+        </div>
       </div>
 
       <div className="mb-4">
-        <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-medium text-gray-500">Phù hợp</span>
+          <span className={`text-sm font-bold ${color.text}`}>{match}%</span>
+        </div>
+        <div className={`h-2 overflow-hidden rounded-full ${color.track}`}>
           <div
-            className={`h-full rounded-full ${style.bar}`}
+            className={`h-full rounded-full ${color.bg} transition-all duration-500`}
             style={{ width: `${safeMatch}%` }}
           />
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2">
-        <InfoChip label={`Khu vực: ${recommendation.region}`} />
-        <InfoChip label={`Giới tính: ${recommendation.gender}`} />
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="rounded-lg bg-orange-50 px-2 py-2 text-center">
+          <p className="text-[10px] font-medium text-orange-400">Điểm TB</p>
+          <p className="text-sm font-bold text-gray-700 mt-0.5">
+            {recommendation.avgScore.toFixed(1)}
+          </p>
+        </div>
+        <div className="rounded-lg bg-green-50 px-2 py-2 text-center">
+          <p className="text-[10px] font-medium text-green-500">Môn chung</p>
+          <p className="text-sm font-bold text-gray-700 mt-0.5">
+            {recommendation.sharedSubjectCount}
+          </p>
+        </div>
+        <div className="rounded-lg bg-amber-50 px-2 py-2 text-center">
+          <p className="text-[10px] font-medium text-amber-500">Tín chỉ</p>
+          <p className="text-sm font-bold text-gray-700 mt-0.5">
+            {recommendation.studiedCredits}
+          </p>
+        </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-2">
-        <Metric label="Trình độ" value={recommendation.studyGoal} />
-        <Metric label="Điểm TB" value={recommendation.avgScore.toFixed(2)} />
-        <Metric label="Tín chỉ" value={recommendation.studiedCredits} />
-        <Metric
-          label="Môn chung"
-          value={`${(recommendation.sharedSubjectScore * 100).toFixed(0)}%`}
-        />
+      <div className="mb-4">
+        <span className="inline-block rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+          {recommendation.studyGoal}
+        </span>
       </div>
 
-      <div className="mb-4 rounded-md border border-gray-200 bg-gray-50 p-3">
-        <p className="text-xs text-gray-500">Môn học chung trong học kỳ</p>
-        <p className="mt-1 text-sm font-semibold text-gray-900">
-          {recommendation.sharedSubjectCount} môn
-        </p>
-      </div>
-
-      <div className="mt-auto grid grid-cols-2 gap-2">
+      <div className="mt-auto">
         <button
           type="button"
-          onClick={() => onConnect?.(recommendation.userId)}
-          className="h-9 rounded-md bg-gray-900 px-3 text-sm font-medium text-white hover:bg-gray-800"
+          onClick={() => {
+            if (canAcceptFriendRequest && friendRequest?.id) {
+              onAccept?.(friendRequest.id);
+              return;
+            }
+            onConnect?.(recommendation.userId);
+          }}
+          disabled={actionButton.disabled}
+          className={`flex w-full items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold ${actionButton.className}`}
         >
-          Kết nối
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onReject?.(recommendation.userId)}
-          className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          Từ chối
+          {actionButton.icon}
+          {actionButton.label}
         </button>
       </div>
     </article>
-  );
-}
-
-function InfoChip({ label }: { label: string }) {
-  return (
-    <span className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-600">
-      {label}
-    </span>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="rounded-md border border-gray-200 bg-gray-50 p-2">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="mt-0.5 truncate text-sm font-medium text-gray-900">
-        {value}
-      </p>
-    </div>
   );
 }

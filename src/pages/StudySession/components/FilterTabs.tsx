@@ -14,7 +14,7 @@ const filters: Array<{ label: string; value: ScheduleFilter }> = [
 
 export function FilterTabs({ activeFilter, onChange }: FilterTabsProps) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+    <section className="rounded-xl border border-gray-200 bg-white p-3">
       <div className="flex flex-wrap gap-2">
         {filters.map((filter) => {
           const active = activeFilter === filter.value;
@@ -24,10 +24,10 @@ export function FilterTabs({ activeFilter, onChange }: FilterTabsProps) {
               key={filter.value}
               type="button"
               onClick={() => onChange(filter.value)}
-              className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
                 active
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-orange-500 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-600"
               }`}
             >
               {filter.label}
