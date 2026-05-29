@@ -5,6 +5,7 @@ export interface RecommendUserRequest {
 export interface RecommendationApiItem {
   user_id: number;
   term_id: number;
+  full_name: string;
   main_subject_id: number;
   study_goal: string;
   study_mode: string;
@@ -51,6 +52,7 @@ export interface RecommendUsersApiResponse {
 
 export interface RecommendationCardVm {
   userId: number;
+  fullName: string | undefined;
   studyGoal: string;
   studyModeLabel: string;
   avgScore: number;

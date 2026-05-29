@@ -163,21 +163,24 @@ export default function StudySessionPage() {
 
   if (loadingSessions) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-5">
-        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-4 text-sm font-medium text-slate-600 shadow-sm">
-          Đang tải lịch học...
+      <div className="flex min-h-screen items-center justify-center bg-orange-50/30 px-4 py-5">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-5">
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+          <span className="text-sm font-medium text-gray-600">
+            Đang tải lịch học...
+          </span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-5 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-orange-50/30 px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <HeaderCard onCreateClick={() => setIsCreateOpen(true)} />
 
         {sessionError && (
-          <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 shadow-sm">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {sessionError}
           </div>
         )}

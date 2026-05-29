@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BookOpenCheck } from "lucide-react";
+import { BookOpen, RefreshCw, GraduationCap, Users, Search } from "lucide-react";
 import RecommendationCard from "./components/RecommendationCard";
 import CommunityGroupCard from "./components/CommunityGroupCard";
 import { useRecommendations } from "./hooks/useRecommendations";
@@ -51,8 +51,10 @@ function mapBrowseGroupToCommunityGroup(
 export default function RecommendationPage() {
   const profileVm = useSelector((state: RootState) => state.profile.profileVm);
 
-  const { userId, loading, error, items, fetchRecommendations } =
-    useRecommendations(profileVm?.userId!);
+  const userId = Number(localStorage.getItem("userId") ?? 0);
+
+  const { loading, error, items, fetchRecommendations } =
+    useRecommendations(userId);
 
   const suggestedSubjectId = profileVm?.mainSubjectId ?? 0;
   const suggestedSubjectName = profileVm?.mainSubjectName ?? "-";
@@ -294,22 +296,30 @@ export default function RecommendationPage() {
   }, [fetchCommunityGroupsForSubject, selectedOtherSubjectId]);
 
   return (
-    <main className="min-h-full bg-gray-50 px-4 py-5 sm:px-6 lg:px-8">
+    <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-5">
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
-          <h1 className="text-xl font-semibold text-gray-900">Gợi ý học tập</h1>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Danh sách bạn học và nhóm cộng đồng phù hợp với hồ sơ học tập của
-            bạn.
-          </p>
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500 text-white">
+              <GraduationCap size={22} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-gray-800">
+                Gợi ý học tập
+              </h1>
+              <p className="text-sm text-gray-500">
+                Tìm bạn học và nhóm phù hợp với bạn
+              </p>
+            </div>
+          </div>
         </section>
 
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-red-700">
+                <p className="text-sm font-semibold text-red-700">
                   Không thể tải danh sách bạn học
                 </p>
                 <p className="mt-1 text-sm text-red-600">{error}</p>
@@ -318,7 +328,7 @@ export default function RecommendationPage() {
               <button
                 type="button"
                 onClick={() => fetchRecommendations(userId)}
-                className="h-9 rounded-md border border-red-300 bg-white px-3 text-sm font-medium text-red-700 hover:bg-red-100"
+                className="h-9 rounded-lg border border-red-200 bg-white px-4 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
               >
                 Thử lại
               </button>
@@ -326,34 +336,39 @@ export default function RecommendationPage() {
           </div>
         )}
 
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
-          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">
-                Bạn học phù hợp
-              </h2>
-
-              <p className="text-sm text-gray-500">
-                Tìm thấy {items.length} bạn học phù hợp.
-              </p>
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100">
+                <Users size={16} className="text-orange-500" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-800">
+                  Bạn học phù hợp
+                </h2>
+                <p className="text-xs text-gray-500">
+                  {items.length} bạn học được gợi ý
+                </p>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={() => fetchRecommendations(userId)}
               disabled={loading}
-              className="mt-2 h-9 rounded-md bg-gray-900 px-4 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-0"
+              className="inline-flex items-center gap-2 h-9 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2 sm:mt-0"
             >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
               {loading ? "Đang tải..." : "Tải lại"}
             </button>
           </div>
 
           {loading ? (
-            <LoadingState label="Đang tải danh sách bạn học..." />
+            <LoadingState label="Đang tìm bạn học phù hợp..." />
           ) : items.length === 0 ? (
             <EmptyState
               title="Chưa có bạn học phù hợp"
-              description="Hiện tại hệ thống chưa tìm thấy bạn học phù hợp với hồ sơ của bạn."
+              description="Hệ thống chưa tìm thấy bạn học phù hợp với bạn."
               actionLabel="Tải lại"
               onAction={() => fetchRecommendations(userId)}
             />
@@ -376,24 +391,28 @@ export default function RecommendationPage() {
           )}
         </section>
 
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
-          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">
-                Nhóm cộng đồng phù hợp
-              </h2>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Nhóm được đề xuất theo môn học hiện tại của bạn:{" "}
-                <span className="font-medium text-gray-800">
-                  {suggestedSubjectName}
-                </span>
-              </p>
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100">
+                <Users size={16} className="text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-800">
+                  Nhóm cộng đồng
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Theo môn{" "}
+                  <span className="font-semibold text-orange-500">
+                    {suggestedSubjectName}
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
 
           {recommendedGroupsLoading ? (
-            <LoadingState label="Đang tải danh sách nhóm cộng đồng..." />
+            <LoadingState label="Đang tải nhóm cộng đồng..." />
           ) : recommendedGroupsError ? (
             <EmptyState
               title="Không thể tải nhóm cộng đồng"
@@ -401,8 +420,8 @@ export default function RecommendationPage() {
             />
           ) : recommendedGroups.length === 0 ? (
             <EmptyState
-              title="Chưa có nhóm cộng đồng phù hợp"
-              description="Hiện tại chưa có nhóm cộng đồng phù hợp với môn học hiện tại của bạn."
+              title="Chưa có nhóm phù hợp"
+              description="Chưa có nhóm cộng đồng nào phù hợp với môn học của bạn."
             />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -417,16 +436,20 @@ export default function RecommendationPage() {
             </div>
           )}
 
-          <div className="mt-6 border-t border-gray-200 pt-5">
-            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">
-                  Muốn tham gia nhóm cộng đồng khác?
-                </h3>
-
-                <p className="text-sm text-gray-500">
-                  Bạn có thể chọn môn học khác để xem nhóm cộng đồng tương ứng.
-                </p>
+          <div className="mt-5 border-t border-gray-100 pt-5">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
+                  <Search size={15} className="text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-700">
+                    Khám phá thêm
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Chọn môn học khác để xem nhóm
+                  </p>
+                </div>
               </div>
 
               <select
@@ -437,13 +460,12 @@ export default function RecommendationPage() {
                     setSelectedOtherSubjectId("");
                     return;
                   }
-
                   const parsed = Number(value);
                   setSelectedOtherSubjectId(
                     Number.isFinite(parsed) ? parsed : "",
                   );
                 }}
-                className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-gray-500"
+                className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-600 outline-none focus:border-orange-300 focus:ring-1 focus:ring-orange-100 transition-all"
               >
                 <option value="">Chọn môn học</option>
                 {otherSubjects.map((subject) => (
@@ -465,7 +487,7 @@ export default function RecommendationPage() {
 
             {selectedOtherSubjectId !== "" && selectedOtherGroupsLoading && (
               <div className="mt-4">
-                <LoadingState label="Đang tải danh sách nhóm cộng đồng..." />
+                <LoadingState label="Đang tải nhóm cộng đồng..." />
               </div>
             )}
 
@@ -486,7 +508,7 @@ export default function RecommendationPage() {
               selectedOtherGroups.length === 0 && (
                 <EmptyState
                   title="Chưa có nhóm cộng đồng"
-                  description="Hiện tại chưa có nhóm cộng đồng nào thuộc môn học này."
+                  description="Hiện tại chưa có nhóm nào thuộc môn học này."
                 />
               )}
 
@@ -510,9 +532,9 @@ export default function RecommendationPage() {
 
 function LoadingState({ label }: { label: string }) {
   return (
-    <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50">
+    <div className="flex min-h-[180px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50">
       <div className="flex flex-col items-center gap-3">
-        <div className="h-7 w-7 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
         <p className="text-sm text-gray-500">{label}</p>
       </div>
     </div>
@@ -531,15 +553,15 @@ function EmptyState({
   onAction?: () => void;
 }) {
   return (
-    <div className="flex min-h-[200px] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 text-center">
+    <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 text-center">
       <div>
-        <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500">
-          <BookOpenCheck size={22} />
+        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
+          <BookOpen size={20} className="text-orange-400" />
         </div>
 
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
 
-        <p className="mt-1 max-w-md text-sm leading-6 text-gray-500">
+        <p className="mt-1 max-w-sm text-sm text-gray-500">
           {description}
         </p>
 
@@ -547,7 +569,7 @@ function EmptyState({
           <button
             type="button"
             onClick={onAction}
-            className="mt-4 h-9 rounded-md bg-gray-900 px-4 text-sm font-medium text-white hover:bg-gray-800"
+            className="mt-3 h-9 rounded-lg bg-orange-500 px-5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
           >
             {actionLabel}
           </button>

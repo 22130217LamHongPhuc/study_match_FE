@@ -33,7 +33,7 @@ function getStatusStyle(status: string) {
   if (status === "ACCEPTED")
     return "bg-emerald-50 text-emerald-700 border-emerald-100";
   if (status === "DECLINED") return "bg-rose-50 text-rose-700 border-rose-100";
-  return "bg-slate-50 text-slate-600 border-slate-100";
+  return "bg-gray-50 text-gray-600 border-gray-100";
 }
 
 function getStatusLabel(status: string) {
@@ -49,21 +49,21 @@ export function AllSessionList({
   onSelectSession,
 }: AllSessionListProps) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-xl border border-gray-200 bg-white p-5">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Tất cả buổi học</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-lg font-bold text-gray-800">Tất cả buổi học</h2>
+          <p className="text-sm text-gray-500">
             Danh sách lịch học 1-1 và nhóm
           </p>
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+        <span className="rounded-lg bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600">
           {sessions.length} buổi
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200">
-        <div className="hidden grid-cols-[1.1fr_1.5fr_1fr_1fr_1fr] bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500 md:grid">
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+        <div className="hidden grid-cols-[1.1fr_1.5fr_1fr_1fr_1fr] bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-500 md:grid">
           <div>Thời gian</div>
           <div>Nội dung</div>
           <div>Loại</div>
@@ -71,9 +71,9 @@ export function AllSessionList({
           <div>Trạng thái</div>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-gray-100">
           {sessions.length === 0 && (
-            <div className="p-6 text-center text-sm text-slate-500">
+            <div className="p-6 text-center text-sm text-gray-500">
               Không có lịch học phù hợp với bộ lọc hiện tại.
             </div>
           )}
@@ -83,39 +83,39 @@ export function AllSessionList({
               key={session.id}
               type="button"
               onClick={() => onSelectSession(session)}
-              className="grid w-full grid-cols-1 gap-3 px-4 py-4 text-left transition hover:bg-slate-50 md:grid-cols-[1.1fr_1.5fr_1fr_1fr_1fr] md:items-center"
+              className="grid w-full grid-cols-1 gap-3 px-4 py-4 text-left transition hover:bg-orange-50/40 md:grid-cols-[1.1fr_1.5fr_1fr_1fr_1fr] md:items-center"
             >
               <div>
-                <div className="text-sm font-bold text-slate-900">
+                <div className="text-sm font-bold text-gray-800">
                   {formatDate(session.startTime)}
                 </div>
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-gray-500">
                   {formatTimeRange(session.startTime, session.endTime)}
                 </div>
               </div>
 
               <div>
-                <div className="font-semibold text-slate-900">
+                <div className="font-semibold text-gray-800">
                   {session.title}
                 </div>
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-gray-500">
                   {session.subjectName || "Chưa cập nhật môn học"}
                 </div>
               </div>
 
               <div>
                 <span
-                  className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                  className={`inline-flex rounded-md px-3 py-1 text-xs font-bold ${
                     session.sessionType === "GROUP"
-                      ? "bg-violet-50 text-violet-700"
-                      : "bg-emerald-50 text-emerald-700"
+                      ? "bg-rose-50 text-rose-600"
+                      : "bg-emerald-50 text-emerald-600"
                   }`}
                 >
                   {session.sessionType === "GROUP" ? "Nhóm" : "1-1"}
                 </span>
               </div>
 
-              <div className="text-sm font-medium text-slate-600">
+              <div className="text-sm font-medium text-gray-600">
                 {session.studyMode === "ONLINE" && "Online"}
                 {session.studyMode === "OFFLINE" && "Trực tiếp"}
                 {session.studyMode === "HYBRID" && "Kết hợp"}
@@ -123,7 +123,7 @@ export function AllSessionList({
 
               <div>
                 <span
-                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${getStatusStyle(session.participantStatus)}`}
+                  className={`inline-flex rounded-md border px-3 py-1 text-xs font-bold ${getStatusStyle(session.participantStatus)}`}
                 >
                   {getStatusLabel(session.participantStatus)}
                 </span>

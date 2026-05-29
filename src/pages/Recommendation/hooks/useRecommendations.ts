@@ -6,6 +6,7 @@ import { RecommendationApiItem, RecommendationCardVm } from "../types";
 function mapToViewModel(item: RecommendationApiItem): RecommendationCardVm {
   return {
     userId: item.user_id,
+    fullName: item.full_name ?? "Không xác định",
     studyGoal: item.study_goal,
     studyModeLabel: STUDY_MODE_LABELS[item.study_mode] ?? item.study_mode,
     avgScore: item.avg_score,
@@ -18,11 +19,11 @@ function mapToViewModel(item: RecommendationApiItem): RecommendationCardVm {
     matchPercentage: item.match_percentage,
     friendRequest: item.friend_request
       ? {
-          id: item.friend_request.id,
-          senderId: item.friend_request.senderId,
-          receiverId: item.friend_request.receiverId,
-          status: item.friend_request.status,
-        }
+        id: item.friend_request.id,
+        senderId: item.friend_request.senderId,
+        receiverId: item.friend_request.receiverId,
+        status: item.friend_request.status,
+      }
       : null,
   };
 }
@@ -72,7 +73,6 @@ export function useRecommendations(initialUserId: number) {
   }, [fetchRecommendations, initialUserId]);
 
   return {
-    userId,
     loading,
     error,
     message,

@@ -75,12 +75,12 @@ export default function MainLayout() {
 
   return (
     <div>
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", minHeight: "100vh", background: "#fafaf8" }}>
         <Box sx={{ flexShrink: 0 }}>
           <SideBar />
         </Box>
 
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Header />
           <Box>
             <ToastContainer />

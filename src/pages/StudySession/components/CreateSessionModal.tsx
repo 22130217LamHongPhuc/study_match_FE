@@ -32,7 +32,7 @@ export function CreateSessionModal({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [targetName, setTargetName] = useState("");
-  const [selectedFriendId, setSelectedFriendId] = useState<number | "">("");
+  const [selectedFriendId, setSelectedFriendId] = useState<number | "">("") ;
   const [location, setLocation] = useState("");
   const [meetingUrl, setMeetingUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -190,8 +190,6 @@ export function CreateSessionModal({
   };
 
   const handleSubmit = async () => {
-    console.log("Submitting form with values");
-
     if (sessionType === "GROUP" && !selectedGroup) {
       setGroupError("Vui lòng chọn nhóm học");
       return;
@@ -304,13 +302,16 @@ export function CreateSessionModal({
     }
   };
 
+  const inputClass =
+    "w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 transition-all";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
+      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Tạo lịch học</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="text-lg font-bold text-gray-800">Tạo lịch học</h2>
+            <p className="text-sm text-gray-500">
               Tạo lịch 1-1 hoặc lịch học nhóm
             </p>
           </div>
@@ -318,7 +319,7 @@ export function CreateSessionModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-bold text-slate-600 hover:bg-slate-200"
+            className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors"
           >
             Đóng
           </button>
@@ -327,7 +328,7 @@ export function CreateSessionModal({
         <div className="space-y-5 p-6">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-sm font-semibold text-gray-700">
                 Loại lịch
               </span>
 
@@ -340,7 +341,7 @@ export function CreateSessionModal({
                   setSelectedGroupId("");
                   setSelectedFriendId("");
                 }}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                className={inputClass}
               >
                 <option value="USER_PAIR">Học 1-1</option>
                 <option value="GROUP">Học nhóm</option>
@@ -348,7 +349,7 @@ export function CreateSessionModal({
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-sm font-semibold text-gray-700">
                 Hình thức học
               </span>
 
@@ -357,7 +358,7 @@ export function CreateSessionModal({
                 onChange={(event) =>
                   setStudyMode(event.target.value as StudyMode)
                 }
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                className={inputClass}
               >
                 <option value="ONLINE">Online</option>
                 <option value="OFFLINE">Trực tiếp</option>
@@ -367,7 +368,7 @@ export function CreateSessionModal({
           </div>
 
           <label className="space-y-2">
-            <span className="text-sm font-semibold text-slate-700">
+            <span className="text-sm font-semibold text-gray-700">
               Tiêu đề buổi học
             </span>
 
@@ -376,14 +377,14 @@ export function CreateSessionModal({
               onChange={(event) => setTitle(event.target.value)}
               required
               placeholder="Ví dụ: Ôn Java OOP"
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+              className={inputClass}
             />
           </label>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {sessionType === "GROUP" ? (
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="text-sm font-semibold text-gray-700">
                   Nhóm học
                 </span>
 
@@ -403,7 +404,7 @@ export function CreateSessionModal({
                   }}
                   required
                   disabled={loadingGroups}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-400"
+                  className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-400`}
                 >
                   {loadingGroups && <option value="">Đang tải nhóm...</option>}
                   {!loadingGroups && groups.length === 0 && (
@@ -425,7 +426,7 @@ export function CreateSessionModal({
               </label>
             ) : (
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="text-sm font-semibold text-gray-700">
                   Bạn học
                 </span>
 
@@ -444,7 +445,7 @@ export function CreateSessionModal({
                   }}
                   required
                   disabled={loadingFriends}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-400"
+                  className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-400`}
                 >
                   {loadingFriends && (
                     <option value="">Đang tải bạn bè...</option>
@@ -470,11 +471,11 @@ export function CreateSessionModal({
           </div>
 
           {sessionType === "GROUP" && selectedGroup && (
-            <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
-              <p className="text-sm font-bold text-blue-700">
+            <div className="rounded-xl border border-orange-100 bg-orange-50 px-4 py-3">
+              <p className="text-sm font-bold text-orange-700">
                 {selectedGroup.name}
               </p>
-              <div className="mt-2 grid grid-cols-1 gap-2 text-xs text-blue-700 sm:grid-cols-2">
+              <div className="mt-2 grid grid-cols-1 gap-2 text-xs text-orange-700 sm:grid-cols-2">
                 <p>Môn học: {selectedGroup.subjectName || "Chưa cập nhật"}</p>
                 <p>Số thành viên tối đa: {selectedGroup.maxMembers}</p>
                 <p>Hình thức nhóm: {selectedGroup.studyMode}</p>
@@ -485,7 +486,7 @@ export function CreateSessionModal({
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-sm font-semibold text-gray-700">
                 Bắt đầu
               </span>
 
@@ -494,12 +495,12 @@ export function CreateSessionModal({
                 value={startTime}
                 onChange={(event) => setStartTime(event.target.value)}
                 required
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                className={inputClass}
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-sm font-semibold text-gray-700">
                 Kết thúc
               </span>
 
@@ -508,14 +509,14 @@ export function CreateSessionModal({
                 value={endTime}
                 onChange={(event) => setEndTime(event.target.value)}
                 required
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                className={inputClass}
               />
             </label>
           </div>
 
           {(studyMode === "OFFLINE" || studyMode === "HYBRID") && (
             <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-sm font-semibold text-gray-700">
                 Địa điểm học trực tiếp
               </span>
 
@@ -524,14 +525,14 @@ export function CreateSessionModal({
                 onChange={(event) => setLocation(event.target.value)}
                 required={studyMode === "OFFLINE" || studyMode === "HYBRID"}
                 placeholder="Ví dụ: Thư viện tầng 2, phòng B203"
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                className={inputClass}
               />
             </label>
           )}
 
           {sessionType === "USER_PAIR" && (
             <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-sm font-semibold text-gray-700">
                 Link học online
               </span>
 
@@ -539,50 +540,47 @@ export function CreateSessionModal({
                 value={meetingUrl}
                 onChange={(event) => setMeetingUrl(event.target.value)}
                 placeholder="https://meet.google.com/..."
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                className={inputClass}
               />
             </label>
           )}
 
           {needSystemRoom && (
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-              <p className="text-sm font-bold text-emerald-700">
+            <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3">
+              <p className="text-sm font-bold text-green-700">
                 Phòng học online sẽ được tạo tự động
               </p>
-              <p className="mt-1 text-xs leading-5 text-emerald-700">
+              <p className="mt-1 text-xs leading-5 text-green-700">
                 Sau khi lịch học được tạo, hệ thống sẽ tạo phòng học online.
               </p>
             </div>
           )}
 
           <label className="space-y-2">
-            <span className="text-sm font-semibold text-slate-700">Mô tả</span>
+            <span className="text-sm font-semibold text-gray-700">Mô tả</span>
 
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={4}
               placeholder="Ghi chú nội dung cần học"
-              className="w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+              className={`${inputClass} resize-none`}
             />
           </label>
 
-          <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+              className="rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
             >
               Hủy
             </button>
 
             <button
               type="button"
-              // disabled={
-              //   sessionType === "GROUP" && (loadingGroups || !selectedGroup)
-              // }
               onClick={handleSubmit}
-              className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 transition-colors"
             >
               Tạo lịch
             </button>

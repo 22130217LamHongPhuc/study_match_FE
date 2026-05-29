@@ -107,7 +107,7 @@ function getStatusBadgeClass(status?: string | null) {
     return "bg-rose-50 text-rose-700";
   }
 
-  return "bg-slate-100 text-slate-600";
+  return "bg-gray-100 text-gray-600";
 }
 
 export function SessionDetailModal({
@@ -289,25 +289,25 @@ export function SessionDetailModal({
   if (!session) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6">
-      <div className="w-full h-[90vh] max-w-xl rounded-3xl bg-white shadow-xl overflow-y-auto">
-        <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
+      <div className="w-full h-[90vh] max-w-xl rounded-xl bg-white shadow-xl overflow-y-auto">
+        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
           <div>
             <div
-              className={`mb-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+              className={`mb-2 inline-flex rounded-md px-3 py-1 text-xs font-bold ${
                 session.sessionType === "GROUP"
-                  ? "bg-violet-50 text-violet-700"
-                  : "bg-emerald-50 text-emerald-700"
+                  ? "bg-rose-50 text-rose-600"
+                  : "bg-emerald-50 text-emerald-600"
               }`}
             >
               {session.sessionType === "GROUP"
                 ? "Lịch học nhóm"
                 : "Lịch học 1-1"}
             </div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-gray-800">
               {currentSession?.title || session.title}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-gray-500">
               {currentSession?.subjectName ||
                 session.subjectName ||
                 "Chưa cập nhật môn học"}
@@ -317,7 +317,7 @@ export function SessionDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-bold text-slate-600 hover:bg-slate-200"
+            className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors"
           >
             Đóng
           </button>
@@ -325,39 +325,39 @@ export function SessionDetailModal({
 
         <div className="space-y-4 p-6">
           {error && (
-            <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
               {error}
             </div>
           )}
 
-          <div className="rounded-3xl bg-slate-50 p-4">
-            <div className="text-sm font-semibold text-slate-500">
+          <div className="rounded-xl bg-gray-50 p-4">
+            <div className="text-sm font-semibold text-gray-500">
               Thời gian
             </div>
-            <div className="mt-1 font-bold text-slate-900">
+            <div className="mt-1 font-bold text-gray-800">
               {formatDateTime(currentSession?.startTime || session.startTime)}
             </div>
-            <div className="mt-1 text-sm text-slate-500">
+            <div className="mt-1 text-sm text-gray-500">
               Kết thúc:{" "}
               {formatDateTime(currentSession?.endTime || session.endTime)}
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-3xl bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-500">
+            <div className="rounded-xl bg-gray-50 p-4">
+              <div className="text-sm font-semibold text-gray-500">
                 Hình thức
               </div>
-              <div className="mt-1 font-bold text-slate-900">
+              <div className="mt-1 font-bold text-gray-800">
                 {getModeLabel(currentSession?.studyMode || session.studyMode)}
               </div>
             </div>
 
-            <div className="rounded-3xl bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-500">
+            <div className="rounded-xl bg-gray-50 p-4">
+              <div className="text-sm font-semibold text-gray-500">
                 Trạng thái tham gia
               </div>
-              <div className="mt-1 font-bold text-slate-900">
+              <div className="mt-1 font-bold text-gray-800">
                 {getParticipantStatusLabel(
                   currentSession?.participantStatus ||
                     session.participantStatus,
@@ -366,14 +366,14 @@ export function SessionDetailModal({
             </div>
           </div>
 
-          <div className="rounded-3xl bg-slate-50 p-4">
-            <div className="text-sm font-semibold text-slate-500">
+          <div className="rounded-xl bg-gray-50 p-4">
+            <div className="text-sm font-semibold text-gray-500">
               {currentSession?.sessionType === "GROUP" ||
               session.sessionType === "GROUP"
                 ? "Nhóm học"
                 : "Bạn học"}
             </div>
-            <div className="mt-1 font-bold text-slate-900">
+            <div className="mt-1 font-bold text-gray-800">
               {(currentSession?.sessionType || session.sessionType) === "GROUP"
                 ? currentSession?.groupName || session.groupName || "Nhóm học"
                 : currentSession?.partnerName ||
@@ -382,7 +382,7 @@ export function SessionDetailModal({
             </div>
             {(currentSession?.sessionType || session.sessionType) ===
               "GROUP" && (
-              <div className="mt-1 text-sm text-slate-500">
+              <div className="mt-1 text-sm text-gray-500">
                 {currentSession?.membersCount || session.membersCount || 0}{" "}
                 thành viên
               </div>
@@ -393,12 +393,12 @@ export function SessionDetailModal({
             currentSession?.meetingUrl ||
             session.location ||
             session.meetingUrl) && (
-            <div className="rounded-3xl bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-500">
+            <div className="rounded-xl bg-gray-50 p-4">
+              <div className="text-sm font-semibold text-gray-500">
                 Địa điểm / Link học
               </div>
               {(currentSession?.location || session.location) && (
-                <div className="mt-1 font-medium text-slate-900">
+                <div className="mt-1 font-medium text-gray-800">
                   {currentSession?.location || session.location}
                 </div>
               )}
@@ -407,7 +407,7 @@ export function SessionDetailModal({
                   href={currentSession?.meetingUrl || session.meetingUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-2 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700"
+                  className="mt-2 inline-flex text-sm font-semibold text-orange-600 hover:text-orange-700"
                 >
                   Mở phòng học online
                 </a>
@@ -416,31 +416,31 @@ export function SessionDetailModal({
           )}
 
           {(currentSession?.description || session.description) && (
-            <div className="rounded-3xl bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-500">
+            <div className="rounded-xl bg-gray-50 p-4">
+              <div className="text-sm font-semibold text-gray-500">
                 Nội dung học
               </div>
-              <p className="mt-1 text-sm leading-6 text-slate-700">
+              <p className="mt-1 text-sm leading-6 text-gray-700">
                 {currentSession?.description || session.description}
               </p>
             </div>
           )}
 
           {confirmationStats && (
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-slate-500">
+                  <div className="text-sm font-semibold text-gray-500">
                     Thống kê xác nhận
                   </div>
-                  <div className="mt-1 text-sm text-slate-500">
+                  <div className="mt-1 text-sm text-gray-500">
                     {confirmationStats.sessionType === "USER_PAIR"
                       ? "Buổi học 1-1"
                       : "Thống kê dành cho chủ nhóm"}
                   </div>
                 </div>
                 {loadingStats && (
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                  <span className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
                     Đang tải...
                   </span>
                 )}
@@ -470,7 +470,7 @@ export function SessionDetailModal({
 
               <div className="mt-4 space-y-2">
                 {confirmationStats.otherParticipants.length === 0 ? (
-                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                  <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-500">
                     Chưa có dữ liệu xác nhận
                   </div>
                 ) : (
@@ -478,26 +478,26 @@ export function SessionDetailModal({
                     (participant, index) => (
                       <div
                         key={`${participant.userId ?? participant.fullName ?? index}`}
-                        className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
+                        className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3"
                       >
                         <div>
-                          <div className="text-sm font-semibold text-slate-900">
+                          <div className="text-sm font-semibold text-gray-800">
                             {getParticipantName(participant)}
                           </div>
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs text-gray-500">
                             {participant.role === "PARTICIPANT"
                               ? "Thành viên"
                               : "Người tạo lịch"}
                           </div>
                           {participant.respondedAt && (
-                            <div className="mt-1 text-xs text-slate-400">
+                            <div className="mt-1 text-xs text-gray-400">
                               Phản hồi:{" "}
                               {formatRespondedAt(participant.respondedAt)}
                             </div>
                           )}
                         </div>
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(participant.status)}`}
+                          className={`rounded-md px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(participant.status)}`}
                         >
                           {getParticipantStatusLabel(participant.status || "")}
                         </span>
@@ -511,12 +511,12 @@ export function SessionDetailModal({
 
           {(currentSession?.participantStatus || session.participantStatus) ===
             "PENDING" && (
-            <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row">
+            <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row">
               <button
                 type="button"
                 onClick={() => handleRespond("ACCEPTED")}
                 disabled={responding !== null}
-                className="flex-1 rounded-2xl bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-700"
+                className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
               >
                 {responding === "ACCEPTED"
                   ? "Đang xử lý..."
@@ -526,7 +526,7 @@ export function SessionDetailModal({
                 type="button"
                 onClick={() => handleRespond("DECLINED")}
                 disabled={responding !== null}
-                className="flex-1 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                className="flex-1 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
               </button>
@@ -541,11 +541,11 @@ export function SessionDetailModal({
 function StatCard({
   label,
   value,
-  tone = "slate",
+  tone = "gray",
 }: {
   label: string;
   value: number;
-  tone?: "slate" | "emerald" | "amber" | "rose";
+  tone?: "gray" | "emerald" | "amber" | "rose";
 }) {
   const toneClass =
     tone === "emerald"
@@ -554,10 +554,10 @@ function StatCard({
         ? "bg-amber-50 text-amber-700"
         : tone === "rose"
           ? "bg-rose-50 text-rose-700"
-          : "bg-slate-100 text-slate-700";
+          : "bg-gray-100 text-gray-700";
 
   return (
-    <div className={`rounded-2xl px-3 py-3 ${toneClass}`}>
+    <div className={`rounded-xl px-3 py-3 ${toneClass}`}>
       <div className="text-xs font-semibold">{label}</div>
       <div className="mt-1 text-lg font-bold">{value}</div>
     </div>
