@@ -1,6 +1,5 @@
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { SOCKET_URL } from '../config/BaseConfig';
-import store from '../redux/store';
 
 class WebSocketManager {
     private static instance: WebSocketManager;
@@ -8,6 +7,8 @@ class WebSocketManager {
     private connected = false;
     private connectingPromise: Promise<void> | null = null;
     private subscriptions: Map<string, StompSubscription> = new Map();
+    private messageHandlers: Map<string, (msg: string) => void> = new Map();
+    private connectListeners: Set<() => void> = new Set();
 
     private constructor() { }
 
@@ -40,6 +41,17 @@ class WebSocketManager {
                 onConnect: () => {
                     this.connected = true;
                     this.connectingPromise = null;
+                    this.subscriptions.clear();
+                    this.messageHandlers.forEach((_, destination) => {
+                        this.subscribe(destination);
+                    });
+                    this.connectListeners.forEach((listener) => {
+                        try {
+                            listener();
+                        } catch (error) {
+                            console.error('onConnect listener failed:', error);
+                        }
+                    });
                     console.log('STOMP connected');
                     resolve();
                 },
@@ -47,11 +59,15 @@ class WebSocketManager {
                 onDisconnect: () => {
                     this.connected = false;
                     this.connectingPromise = null;
+                    this.subscriptions.clear();
                     console.log('STOMP disconnected');
                 },
 
                 onStompError: (frame: any) => {
                     console.error('STOMP error:', frame);
+                    this.connected = false;
+                    this.connectingPromise = null;
+                    reject(new Error(frame?.headers?.message || 'STOMP error'));
                 },
 
                 onWebSocketError: (error: any) => {
@@ -59,6 +75,12 @@ class WebSocketManager {
                     this.connected = false;
                     this.connectingPromise = null;
                     reject(error);
+                },
+
+                onWebSocketClose: () => {
+                    this.connected = false;
+                    this.connectingPromise = null;
+                    this.subscriptions.clear();
                 },
             });
 
@@ -69,11 +91,26 @@ class WebSocketManager {
     }
 
     public onMessage(destination: string, cb: (msg: string) => void) {
-        if (!this.client || !this.connected) return;
+        this.messageHandlers.set(destination, cb);
+        this.subscribe(destination);
+    }
+
+    public onConnected(cb: () => void) {
+        this.connectListeners.add(cb);
+        if (this.connected && this.client?.connected) {
+            cb();
+        }
+        return () => {
+            this.connectListeners.delete(cb);
+        };
+    }
+
+    private subscribe(destination: string) {
+        if (!this.client || !this.connected || !this.client.connected) return;
         if (this.subscriptions.has(destination)) return;
 
         const subscription = this.client.subscribe(destination, (message: IMessage) => {
-            cb(message.body);
+            this.messageHandlers.get(destination)?.(message.body);
         });
         this.subscriptions.set(destination, subscription);
     }
@@ -92,6 +129,7 @@ class WebSocketManager {
     public disconnect() {
         this.subscriptions.forEach((sub) => sub.unsubscribe());
         this.subscriptions.clear();
+        this.messageHandlers.clear();
 
         if (this.client) {
             this.client.deactivate();

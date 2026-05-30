@@ -35,6 +35,12 @@ export default function MainLayout() {
 
   useLayoutEffect(() => {
     let ws = WebSocketManager.getInstance()
+    const unsubscribeOnConnected = ws.onConnected(() => {
+      ws.sendMessage("/chat/send", {
+        event: SocketEvent.CLIENT_READY,
+        data: {}
+      })
+    })
 
     ws.connect().then(() => {
       ws.onMessage("/user/queue/chat", (msg: any) => {
@@ -109,9 +115,18 @@ export default function MainLayout() {
           })
         }
       })
+      ws.onMessage("/topic/presence", (msg: any) => {
+        const parsed: SocketResponse = JSON.parse(msg)
+        if (parsed.event === SocketEvent.USER_PRESENCE) {
+          dispatch(updateNewMess(parsed))
+        }
+      })
     }).catch((err) => {
       console.error("Loi connect:", err);
     });
+    return () => {
+      unsubscribeOnConnected()
+    }
   }, [dispatch])
 
   const isVideoCallInvite = (data: unknown): data is VideoCallInviteData => {
