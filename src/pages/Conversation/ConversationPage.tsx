@@ -252,6 +252,17 @@ export default function ConversationPage() {
                 return { messageId, status }
             }
 
+            // Temporary ids are negative and represent the newest optimistic message.
+            // Always prioritize them over older persisted ids for status display.
+            if (messageId < 0) {
+                return { messageId, status }
+            }
+
+            // If previous status is from an optimistic id, move to persisted id as soon as it appears.
+            if (prev.messageId < 0 && messageId > 0) {
+                return { messageId, status }
+            }
+
             if (prev.messageId !== messageId) {
                 return messageId > prev.messageId ? { messageId, status } : prev
             }
@@ -294,7 +305,8 @@ export default function ConversationPage() {
 
                 const realMessageId = tempIdToRealId.get(message.messageId)
                 if (realMessageId) {
-                    return { ...message, messageId: realMessageId, status }
+                    const nextStatus = shouldApplyStatus(message.status, status) ? status : message.status
+                    return { ...message, messageId: realMessageId, status: nextStatus }
                 }
 
                 return message
@@ -309,6 +321,20 @@ export default function ConversationPage() {
             return next
         })
     }
+
+    useEffect(() => {
+        const latestOutgoingWithStatus = conversation.find(
+            (message) => message.senderId === currentUserId && !!message.status
+        )
+        if (!latestOutgoingWithStatus?.status) {
+            setVisibleMessageStatus(null)
+            return
+        }
+        setVisibleStatusIfNewer(
+            latestOutgoingWithStatus.messageId,
+            latestOutgoingWithStatus.status
+        )
+    }, [conversation, currentUserId])
     useEffect(() => {
         if (!storeNewMess?.data || conversationId.current !== storeNewMess.data.conversationId) return
         console.log(storeEvent, 'socket event nè')
