@@ -32,7 +32,7 @@ export function CreateSessionModal({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [targetName, setTargetName] = useState("");
-  const [selectedFriendId, setSelectedFriendId] = useState<number | "">("") ;
+  const [selectedFriendId, setSelectedFriendId] = useState<number | "">("");
   const [location, setLocation] = useState("");
   const [meetingUrl, setMeetingUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -61,6 +61,24 @@ export function CreateSessionModal({
   }, [friends, selectedFriendId]);
 
   const needSystemRoom = studyMode === "ONLINE" || studyMode === "HYBRID";
+
+  const toConvertTime = (value: string) => {
+    if (!value) return value;
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    const offsetMinutes = -date.getTimezoneOffset();
+    const sign = offsetMinutes >= 0 ? "+" : "-";
+    const absoluteOffset = Math.abs(offsetMinutes);
+    const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(
+      2,
+      "0",
+    );
+    const offsetRemainder = String(absoluteOffset % 60).padStart(2, "0");
+
+    return `${value}:00${sign}${offsetHours}:${offsetRemainder}`;
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -207,8 +225,8 @@ export function CreateSessionModal({
         const payload = {
           title,
           description,
-          startTime,
-          endTime,
+          startTime: toConvertTime(startTime),
+          endTime: toConvertTime(endTime),
           studyMode,
           location:
             studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
@@ -255,8 +273,8 @@ export function CreateSessionModal({
       const payload = {
         title,
         description,
-        startTime,
-        endTime,
+        startTime: toConvertTime(startTime),
+        endTime: toConvertTime(endTime),
         studyMode,
         location:
           studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
