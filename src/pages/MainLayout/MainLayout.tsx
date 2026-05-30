@@ -1,10 +1,10 @@
 import { Box } from "@mui/system";
-import React, { useLayoutEffect, useRef, useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Navigate, Outlet, replace, useNavigate } from "react-router-dom";
 import SideBar from "../../components/sidebar/SideBar";
 import Header from "../../components/header/Header";
 import WebSocketManager from "../../socket/WebSocketManager";
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, toast } from "react-toastify";
 import ToastCustom from "../../components/toastComponent/ToastCustom";
 import { useDispatch, useSelector } from "react-redux";
 import { increaseUnread, updateNewMess } from "../../redux/ChatReducer";
@@ -20,7 +20,9 @@ import { VideoCallInfo, VideoCallInviteData, VideoCallPeerInfo } from "../../mod
 
 export default function MainLayout() {
   const dispatch = useDispatch();
-  const currentConverId = useSelector((state: RootState) => state.chat.currentConversationId)
+  const currentConverId = useSelector(
+    (state: RootState) => state.chat.currentConversationId,
+  );
   const currentConverIdRef = useRef<number | null>(null);
   const [activeVideoCall, setActiveVideoCall] = useState<VideoCallInfo | null>(null);
   const [incomingVideoCall, setIncomingVideoCall] = useState<VideoCallInviteData | null>(null);
@@ -174,12 +176,12 @@ export default function MainLayout() {
 
   return (
     <div>
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", minHeight: "100vh", background: "#fafaf8" }}>
         <Box sx={{ flexShrink: 0 }}>
           <SideBar />
         </Box>
 
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Header />
           <Box>
             <ToastContainer />

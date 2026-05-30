@@ -23,7 +23,9 @@ function formatDateTime(value: string): string {
   });
 }
 
-function buildScheduleMap(data: ProfileApiResponse): Map<string, ScheduleClassVm[]> {
+function buildScheduleMap(
+  data: ProfileApiResponse,
+): Map<string, ScheduleClassVm[]> {
   const map = new Map<string, ScheduleClassVm[]>();
 
   data.scheduleSlots.forEach((slot) => {
@@ -36,7 +38,8 @@ function buildScheduleMap(data: ProfileApiResponse): Map<string, ScheduleClassVm
       scheduleType: slot.scheduleType,
     });
     currentItems.sort((a, b) => {
-      if (a.scheduleType === b.scheduleType) return a.subjectCode.localeCompare(b.subjectCode);
+      if (a.scheduleType === b.scheduleType)
+        return a.subjectCode.localeCompare(b.subjectCode);
       return a.scheduleType === "MAIN_SUBJECT" ? -1 : 1;
     });
     map.set(key, currentItems);
@@ -94,10 +97,13 @@ function toFreeTimeGroups(data: ProfileApiResponse): FreeTimeGroupVm[] {
   }).filter((item) => item.slots.length > 0);
 }
 
-export function mapProfileResponseToVm(data: ProfileApiResponse): ProfileViewModel {
+export function mapProfileResponseToVm(
+  data: ProfileApiResponse,
+): ProfileViewModel {
   const termProfile = data.termProfiles[0];
 
   return {
+    userId: data.profile.userId,
     fullName: data.profile.fullName,
     studentCode: data.profile.studentCode,
     gender: data.profile.gender,
@@ -112,7 +118,11 @@ export function mapProfileResponseToVm(data: ProfileApiResponse): ProfileViewMod
     avgScore: termProfile?.avgScore || 0,
     studiedCredits: termProfile?.studiedCredits || 0,
     studyGoal: termProfile?.studyGoal || "-",
-    studyModeLabel: STUDY_MODE_LABELS[termProfile?.studyMode || ""] || termProfile?.studyMode || "-",
+    mainSubjectId: termProfile?.mainSubjectId || 0,
+    studyModeLabel:
+      STUDY_MODE_LABELS[termProfile?.studyMode || ""] ||
+      termProfile?.studyMode ||
+      "-",
     mainSubjectName: termProfile?.mainSubjectName || "-",
     enrolledSubjects: data.enrollments.map((item) => item.subject),
     freeTimeGroups: toFreeTimeGroups(data),
@@ -120,4 +130,3 @@ export function mapProfileResponseToVm(data: ProfileApiResponse): ProfileViewMod
     dayHeaders: PROFILE_DAYS,
   };
 }
-

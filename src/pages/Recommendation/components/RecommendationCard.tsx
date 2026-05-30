@@ -1,253 +1,191 @@
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  LinearProgress,
-  Stack,
-  Typography,
-  Button,
-} from "@mui/material";
+import { UserPlus, Check, Clock, Ban, Send } from "lucide-react";
 import { RecommendationCardVm } from "../types";
 
 interface RecommendationCardProps {
   recommendation: RecommendationCardVm;
+  onConnect?: (id: number) => void;
+  onAccept?: (requestId: number) => void;
+  isConnecting?: boolean;
+  isAccepting?: boolean;
+  currentUserId?: number;
 }
 
-interface RecommendationCardProps {
-  recommendation: RecommendationCardVm;
-  onConnect?: (id: number) => void;
-  onReject?: (id: number) => void;
+const AVATAR_COLORS = [
+  "bg-orange-400",
+  "bg-rose-400",
+  "bg-amber-500",
+  "bg-lime-500",
+  "bg-pink-400",
+  "bg-red-400",
+  "bg-yellow-500",
+  "bg-emerald-500",
+];
+
+function getAvatarColor(userId: number) {
+  return AVATAR_COLORS[userId % AVATAR_COLORS.length];
+}
+
+function getInitials(name: string | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0][0]?.toUpperCase() ?? "?";
 }
 
 function getMatchColor(match: number) {
-  if (match >= 70) {
-    return {
-      track: "#E7F8EE",
-      bar: "#1F8F48",
-      chipBg: "#E7F8EE",
-      chipText: "#1F8F48",
-    };
-  }
-
-  if (match >= 50) {
-    return {
-      track: "#ECF4FF",
-      bar: "#2E75D8",
-      chipBg: "#ECF4FF",
-      chipText: "#245FB3",
-    };
-  }
-
-  return {
-    track: "#FFF3E8",
-    bar: "#C5762A",
-    chipBg: "#FFF3E8",
-    chipText: "#9A5A1D",
-  };
+  if (match >= 70) return { text: "text-emerald-600", bg: "bg-emerald-500", track: "bg-emerald-100" };
+  if (match >= 50) return { text: "text-orange-600", bg: "bg-orange-500", track: "bg-orange-100" };
+  return { text: "text-amber-600", bg: "bg-amber-500", track: "bg-amber-100" };
 }
 
 export default function RecommendationCard({
   recommendation,
   onConnect,
-  onReject,
+  onAccept,
+  isConnecting = false,
+  isAccepting = false,
+  currentUserId,
 }: RecommendationCardProps) {
-  const match = Number(recommendation.matchPercentage.toFixed(2));
-  const colors = getMatchColor(match);
+  const match = Number(recommendation.matchPercentage.toFixed(1));
+  const safeMatch = Math.min(100, Math.max(0, match));
+  const color = getMatchColor(match);
+  const friendRequest = recommendation.friendRequest;
+  const initials = getInitials(recommendation.fullName);
+  const avatarBg = getAvatarColor(recommendation.userId);
+
+  const status = friendRequest?.status;
+  const isApproved = status === "APPROVED";
+  const isPending = status === "PENDING";
+  const isRejected = status === "REJECTED";
+  const isBlocked = status === "BLOCKED";
+  const isSentByCurrentUser =
+    friendRequest?.senderId !== undefined &&
+    currentUserId !== undefined &&
+    friendRequest.senderId === currentUserId;
+  const isReceivedByCurrentUser =
+    friendRequest?.receiverId !== undefined &&
+    currentUserId !== undefined &&
+    friendRequest.receiverId === currentUserId;
+
+  const canSendFriendRequest = !friendRequest || isRejected;
+  const canAcceptFriendRequest = isPending && isReceivedByCurrentUser;
+
+  const actionButton = (() => {
+    if (isApproved) {
+      return {
+        label: "Đã kết bạn",
+        icon: <Check size={15} />,
+        disabled: true,
+        className: "bg-emerald-50 text-emerald-600 border border-emerald-200",
+      };
+    }
+    if (isBlocked) {
+      return {
+        label: "Đã chặn",
+        icon: <Ban size={15} />,
+        disabled: true,
+        className: "bg-gray-100 text-gray-400 border border-gray-200",
+      };
+    }
+    if (isPending && isSentByCurrentUser) {
+      return {
+        label: "Đã gửi",
+        icon: <Clock size={15} />,
+        disabled: true,
+        className: "bg-amber-50 text-amber-600 border border-amber-200",
+      };
+    }
+    if (isPending && isReceivedByCurrentUser) {
+      return {
+        label: isAccepting ? "Đang xử lý..." : "Chấp nhận",
+        icon: <Check size={15} />,
+        disabled: isAccepting,
+        className: "bg-emerald-500 text-white hover:bg-emerald-600 transition-colors",
+      };
+    }
+    return {
+      label: isConnecting ? "Đang gửi..." : isRejected ? "Gửi lại" : "Kết bạn",
+      icon: isConnecting ? <Send size={15} className="animate-pulse" /> : <UserPlus size={15} />,
+      disabled: isConnecting || (!canSendFriendRequest && !canAcceptFriendRequest),
+      className: "bg-orange-500 text-white hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+    };
+  })();
 
   return (
-    <Card
-      sx={{
-        borderRadius: 4,
-        border: "1px solid #DCE8FA",
-        background: "linear-gradient(160deg, #FFFFFF 0%, #F7FBFF 100%)",
-        boxShadow: "0 10px 26px rgba(20, 38, 70, 0.08)",
-        height: "100%",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        "&:hover": {
-          transform: "translateY(-3px)",
-          boxShadow: "0 14px 30px rgba(20, 38, 70, 0.12)",
-        },
-      }}
-    >
-      <CardContent sx={{ p: { xs: 2, sm: 2.75 } }}>
-        <Stack spacing={2.2}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ color: "#60708D", fontWeight: 600, letterSpacing: 0.2 }}
-              >
-                Mức độ phù hợp
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 800, color: colors.chipText }}
-              >
-                {match}%
-              </Typography>
-            </Box>
-            <Chip
-              label={recommendation.studyModeLabel}
-              sx={{
-                bgcolor: colors.chipBg,
-                color: colors.chipText,
-                fontWeight: 700,
-                border: "1px solid rgba(33, 94, 170, 0.16)",
-                maxWidth: 220,
-              }}
-            />
-          </Stack>
+    <article className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 transition-shadow duration-200 hover:shadow-md">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${avatarBg} text-white font-bold text-sm`}>
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-gray-800 truncate">
+            {recommendation.fullName ?? "Không xác định"}
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5 truncate">
+            {recommendation.studyModeLabel}
+          </p>
+        </div>
+      </div>
 
-          <Box>
-            <LinearProgress
-              variant="determinate"
-              value={Math.min(100, Math.max(0, match))}
-              sx={{
-                height: 8,
-                borderRadius: 999,
-                bgcolor: colors.track,
-                "& .MuiLinearProgress-bar": {
-                  borderRadius: 999,
-                  bgcolor: colors.bar,
-                },
-              }}
-            />
-          </Box>
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-medium text-gray-500">Phù hợp</span>
+          <span className={`text-sm font-bold ${color.text}`}>{match}%</span>
+        </div>
+        <div className={`h-2 overflow-hidden rounded-full ${color.track}`}>
+          <div
+            className={`h-full rounded-full ${color.bg} transition-all duration-500`}
+            style={{ width: `${safeMatch}%` }}
+          />
+        </div>
+      </div>
 
-          <Divider sx={{ borderColor: "#E4ECFA" }} />
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="rounded-lg bg-orange-50 px-2 py-2 text-center">
+          <p className="text-[10px] font-medium text-orange-400">Điểm TB</p>
+          <p className="text-sm font-bold text-gray-700 mt-0.5">
+            {recommendation.avgScore.toFixed(1)}
+          </p>
+        </div>
+        <div className="rounded-lg bg-green-50 px-2 py-2 text-center">
+          <p className="text-[10px] font-medium text-green-500">Môn chung</p>
+          <p className="text-sm font-bold text-gray-700 mt-0.5">
+            {recommendation.sharedSubjectCount}
+          </p>
+        </div>
+        <div className="rounded-lg bg-amber-50 px-2 py-2 text-center">
+          <p className="text-[10px] font-medium text-amber-500">Tín chỉ</p>
+          <p className="text-sm font-bold text-gray-700 mt-0.5">
+            {recommendation.studiedCredits}
+          </p>
+        </div>
+      </div>
 
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-            <Chip
-              size="small"
-              label={`Khu vực: ${recommendation.region}`}
-              sx={{ bgcolor: "#F1F6FF", color: "#304666", fontWeight: 600 }}
-            />
-            <Chip
-              size="small"
-              label={`Giới tính: ${recommendation.gender}`}
-              sx={{ bgcolor: "#F1F6FF", color: "#304666", fontWeight: 600 }}
-            />
-          </Stack>
+      <div className="mb-4">
+        <span className="inline-block rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+          {recommendation.studyGoal}
+        </span>
+      </div>
 
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, minmax(0, 1fr))",
-              },
-              gap: 1.25,
-            }}
-          >
-            <Metric label="Trình độ" value={recommendation.studyGoal} />
-            <Metric
-              label="Điểm TB"
-              value={recommendation.avgScore.toFixed(2)}
-            />
-            <Metric
-              label="Tín chỉ đã học"
-              value={recommendation.studiedCredits}
-            />
-
-            <Metric
-              label="Điểm môn chung"
-              value={`${(recommendation.sharedSubjectScore * 100).toFixed(0)}%`}
-            />
-          </Box>
-
-          <Box
-            sx={{
-              borderRadius: 2.5,
-              px: 1.5,
-              py: 1.25,
-              bgcolor: "#EEF5FF",
-              border: "1px solid #D5E5FF",
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{ color: "#52627E", fontWeight: 600 }}
-            >
-              Môn học chung trong học kỳ
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{ color: "#204B8A", fontWeight: 800, mt: 0.25 }}
-            >
-              {recommendation.sharedSubjectCount} môn
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 1.5, mt: 1 }}>
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={() => onConnect?.(recommendation.userId)}
-              sx={{
-                textTransform: "none",
-                fontWeight: 700,
-                borderRadius: 2,
-                background: "linear-gradient(135deg, #1F8F48 0%, #28A745 100%)",
-                boxShadow: "0 6px 14px rgba(31, 143, 72, 0.25)",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #18773A 0%, #23963E 100%)",
-                },
-              }}
-            >
-              Kết nối
-            </Button>
-
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={() => onReject?.(recommendation.userId)}
-              sx={{
-                textTransform: "none",
-                fontWeight: 700,
-                borderRadius: 2,
-                borderColor: "#E57373",
-                color: "#D32F2F",
-                "&:hover": {
-                  borderColor: "#C62828",
-                  backgroundColor: "#FFF3F3",
-                },
-              }}
-            >
-              Từ chối
-            </Button>
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string | number }) {
-  return (
-    <Box
-      sx={{
-        p: 1.25,
-        borderRadius: 2,
-        bgcolor: "#F7FAFF",
-        border: "1px solid #E6EEFB",
-      }}
-    >
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 700, color: "#24324F", mt: 0.25 }}
-      >
-        {value}
-      </Typography>
-    </Box>
+      <div className="mt-auto">
+        <button
+          type="button"
+          onClick={() => {
+            if (canAcceptFriendRequest && friendRequest?.id) {
+              onAccept?.(friendRequest.id);
+              return;
+            }
+            onConnect?.(recommendation.userId);
+          }}
+          disabled={actionButton.disabled}
+          className={`flex w-full items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold ${actionButton.className}`}
+        >
+          {actionButton.icon}
+          {actionButton.label}
+        </button>
+      </div>
+    </article>
   );
 }

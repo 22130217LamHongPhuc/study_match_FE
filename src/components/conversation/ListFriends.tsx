@@ -108,29 +108,69 @@ export default function ListFriends() {
     return (
         <Box
             sx={{
-                width: "25%",
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-                p: "10px",
-                overflow: "hidden",
-                borderLeft: "1px solid rgba(0,0,0,0.08)",
-                bgcolor: "#fff",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-        >
+          >
+            <CircularProgress size={24} />
+          </Box>
+        ) : filteredFriends.length === 0 ? (
+          <Box
+            sx={{
+              py: 4,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <Typography sx={{ color: "#8d8fa3", fontSize: 14 }}>
+              Chưa có bạn bè
+            </Typography>
+          </Box>
+        ) : (
+          filteredFriends.map((friend) => (
             <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mt: "10px",
-                    mb: 2,
-                    flexShrink: 0,
-                }}
+              key={friend.user_id}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                py: 1.5,
+                px: 1,
+                borderRadius: "14px",
+                "&:hover": {
+                  bgcolor: "#f0f2f8",
+                  cursor: "pointer",
+                },
+              }}
             >
-                <ArrowForwardIcon sx={{ color: "#8d8fa3" }} />
-                <Typography sx={{ fontWeight: 700 }}>Bạn bè</Typography>
-                <Box sx={{ width: 24 }} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Avatar
+                  src={friend.avatar_url ?? undefined}
+                  sx={{ width: 45, height: 45 }}
+                />
+                <Box>
+                  <Typography
+                    sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44" }}
+                  >
+                    {friend.full_name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 13,
+                      color: "#8d8fa3",
+                      mt: "2px",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      maxWidth: "160px",
+                    }}
+                  >
+                    Bạn bè
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
 
             <TextField

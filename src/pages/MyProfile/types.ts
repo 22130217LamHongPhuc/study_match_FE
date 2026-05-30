@@ -127,6 +127,7 @@ export interface FreeTimeGroupVm {
 }
 
 export interface ProfileViewModel {
+  userId: number;
   fullName: string;
   studentCode: string;
   gender: string;
@@ -143,9 +144,9 @@ export interface ProfileViewModel {
   studyGoal: string;
   studyModeLabel: string;
   mainSubjectName: string;
+  mainSubjectId: number;
   enrolledSubjects: SubjectApi[];
   freeTimeGroups: FreeTimeGroupVm[];
   scheduleRows: ScheduleRowVm[];
   dayHeaders: DayHeader[];
 }
-
