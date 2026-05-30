@@ -1,4 +1,3 @@
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { Avatar, Box, CircularProgress, TextField, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -13,16 +12,23 @@ import {
 
 export default function ListFriends() {
     const navigate = useNavigate();
+
     const [friends, setFriends] = useState<FriendUser[]>([]);
     const [searchText, setSearchText] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const socketEvent = useSelector((state: RootState) => state.chat.newMess?.event);
-    const socketData = useSelector((state: RootState) => state.chat.newMess?.data);
-    const friendIdsKey = useMemo(
-        () => friends.map((friend) => friend.userId).join(","),
-        [friends]
+
+    const socketEvent = useSelector(
+        (state: RootState) => state.chat.newMess?.event
     );
+
+    const socketData = useSelector(
+        (state: RootState) => state.chat.newMess?.data
+    );
+
+    const friendIdsKey = useMemo(() => {
+        return friends.map((friend) => friend.userId).join(",");
+    }, [friends]);
 
     useEffect(() => {
         let mounted = true;
@@ -31,13 +37,22 @@ export default function ListFriends() {
             try {
                 setLoading(true);
                 setError("");
+
                 const data = await loadAllFriendsService();
-                if (mounted) setFriends(data);
+
+                if (mounted) {
+                    setFriends(data);
+                }
             } catch (err) {
                 console.error(err);
-                if (mounted) setError("Không tải được danh sách bạn bè");
+
+                if (mounted) {
+                    setError("Không tải được danh sách bạn bè");
+                }
             } finally {
-                if (mounted) setLoading(false);
+                if (mounted) {
+                    setLoading(false);
+                }
             }
         };
 
@@ -51,30 +66,56 @@ export default function ListFriends() {
     useEffect(() => {
         if (!friendIdsKey) return;
 
+        let mounted = true;
+
         const refreshStatuses = async () => {
-            const friendIds = friendIdsKey.split(",").map(Number).filter(Boolean);
-            const statuses = await loadFriendOnlineStatusesService(friendIds);
-            setFriends((prev) =>
-                prev.map((friend) => ({
-                    ...friend,
-                    online: Boolean(statuses[String(friend.userId)]),
-                }))
-            );
+            try {
+                const friendIds = friendIdsKey
+                    .split(",")
+                    .map(Number)
+                    .filter(Boolean);
+
+                const statuses = await loadFriendOnlineStatusesService(friendIds);
+
+                if (!mounted) return;
+
+                setFriends((prev) =>
+                    prev.map((friend) => ({
+                        ...friend,
+                        online: Boolean(statuses[String(friend.userId)]),
+                    }))
+                );
+            } catch (err) {
+                console.error(err);
+            }
         };
 
+        void refreshStatuses();
+
         const intervalId = window.setInterval(() => {
-            refreshStatuses().catch(console.error);
+            void refreshStatuses();
         }, 10000);
 
-        return () => window.clearInterval(intervalId);
+        return () => {
+            mounted = false;
+            window.clearInterval(intervalId);
+        };
     }, [friendIdsKey]);
 
     useEffect(() => {
-        if (socketEvent !== SocketEvent.USER_PRESENCE || !socketData || typeof socketData !== "object") {
+        if (
+            socketEvent !== SocketEvent.USER_PRESENCE ||
+            !socketData ||
+            typeof socketData !== "object"
+        ) {
             return;
         }
 
-        const presence = socketData as { userId?: number; online?: boolean };
+        const presence = socketData as {
+            userId?: number;
+            online?: boolean;
+        };
+
         if (!presence.userId) return;
 
         setFriends((prev) =>
@@ -88,10 +129,13 @@ export default function ListFriends() {
 
     const visibleFriends = useMemo(() => {
         const keyword = searchText.trim().toLowerCase();
+
         if (!keyword) return friends;
 
         return friends.filter((friend) =>
-            `${friend.fullName ?? ""} ${friend.email ?? ""}`.toLowerCase().includes(keyword)
+            `${friend.fullName ?? ""} ${friend.email ?? ""}`
+                .toLowerCase()
+                .includes(keyword)
         );
     }, [friends, searchText]);
 
@@ -108,71 +152,12 @@ export default function ListFriends() {
     return (
         <Box
             sx={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CircularProgress size={24} />
-          </Box>
-        ) : filteredFriends.length === 0 ? (
-          <Box
-            sx={{
-              py: 4,
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            <Typography sx={{ color: "#8d8fa3", fontSize: 14 }}>
-              Chưa có bạn bè
-            </Typography>
-          </Box>
-        ) : (
-          filteredFriends.map((friend) => (
-            <Box
-              key={friend.user_id}
-              sx={{
+                height: "100%",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                py: 1.5,
-                px: 1,
-                borderRadius: "14px",
-                "&:hover": {
-                  bgcolor: "#f0f2f8",
-                  cursor: "pointer",
-                },
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Avatar
-                  src={friend.avatar_url ?? undefined}
-                  sx={{ width: 45, height: 45 }}
-                />
-                <Box>
-                  <Typography
-                    sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44" }}
-                  >
-                    {friend.full_name}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 13,
-                      color: "#8d8fa3",
-                      mt: "2px",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      maxWidth: "160px",
-                    }}
-                  >
-                    Bạn bè
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-
+                flexDirection: "column",
+                minHeight: 0,
+            }}
+        >
             <TextField
                 fullWidth
                 placeholder="Tìm kiếm bạn bè"
@@ -195,8 +180,16 @@ export default function ListFriends() {
 
             <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
                 {loading && (
-                    <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-                        <CircularProgress aria-label="Loading…" size={24} />
+                    <Box
+                        sx={{
+                            height: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            py: 3,
+                        }}
+                    >
+                        <CircularProgress size={24} />
                     </Box>
                 )}
 
@@ -231,11 +224,22 @@ export default function ListFriends() {
                                 },
                             }}
                         >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1.5,
+                                    minWidth: 0,
+                                }}
+                            >
                                 <Box sx={{ position: "relative", flexShrink: 0 }}>
-                                    <Avatar src={friend.avatarUrl ?? undefined} sx={{ width: 45, height: 45 }}>
+                                    <Avatar
+                                        src={friend.avatarUrl ?? undefined}
+                                        sx={{ width: 45, height: 45 }}
+                                    >
                                         {friend.fullName?.charAt(0)?.toUpperCase()}
                                     </Avatar>
+
                                     <Box
                                         title={friend.online ? "Online" : "Offline"}
                                         sx={{
@@ -250,6 +254,7 @@ export default function ListFriends() {
                                         }}
                                     />
                                 </Box>
+
                                 <Box sx={{ minWidth: 0 }}>
                                     <Typography
                                         sx={{
@@ -263,6 +268,7 @@ export default function ListFriends() {
                                     >
                                         {friend.fullName || friend.email || `User ${friend.userId}`}
                                     </Typography>
+
                                     <Typography
                                         sx={{
                                             fontSize: 13,

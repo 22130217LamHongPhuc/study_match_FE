@@ -98,13 +98,13 @@ export default function StudySessionPage() {
         const content = sessionResponse.data?.content ?? [];
         const friends = friendsResponse.data ?? [];
         const friendsById = new Map<number, FriendListItem>(
-          friends.map((friend) => [friend.user_id, friend]),
+          friends.map((friend: any) => [friend.user_id, friend]),
         );
 
         if (!mounted) return;
 
         setSessions(
-          content.map((session) => mapSessionToVm(session, friendsById)),
+          content.map((session: any) => mapSessionToVm(session, friendsById)),
         );
       } catch {
         if (!mounted) return;
