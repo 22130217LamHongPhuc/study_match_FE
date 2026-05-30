@@ -227,140 +227,195 @@ export default function ConversationPage() {
       return;
     }
 
-    const pageToLoad = nextMessagePageRef.current;
-    const loadingStartedAt = Date.now();
-    loadingOlderMessagesRef.current = true;
-    setLoadingOlderMessages(true);
-    console.log("[MessagePagination][FE][load-old]", {
-      currentUserId,
-      targetUserId,
-      page: pageToLoad,
-    });
-
-    try {
-      const result: APIResponse = await loadConversation(
-        currentUserId,
-        targetUserId,
-        pageToLoad,
-      );
-      const olderMessages = (result.data?.listMess || []) as MessageInterface[];
-      console.log("[MessagePagination][FE][load-old-success]", {
-        page: pageToLoad,
-        count: olderMessages.length,
-      });
-
-      setConversation((prev) => {
-        const existedMessageIds = new Set(
-          prev.map((message) => message.messageId),
-        );
-        const uniqueOlderMessages = olderMessages.filter(
-          (message) => !existedMessageIds.has(message.messageId),
-        );
-        return [...prev, ...uniqueOlderMessages];
-      });
-
-      nextMessagePageRef.current = pageToLoad + 1;
-      const hasNextPage = olderMessages.length === MESSAGE_PAGE_SIZE;
-      hasMoreMessagesRef.current = hasNextPage;
-      setHasMoreMessages(hasNextPage);
-    } catch (error) {
-      console.error("[MessagePagination][FE][load-old-error]", error);
-    } finally {
-      await waitForMinLoading(loadingStartedAt);
-      loadingOlderMessagesRef.current = false;
-      setLoadingOlderMessages(false);
+    const storeNewMess = useSelector((state: RootState) => state.chat.newMess)
+    const storeEvent = useSelector((state: RootState) => state.chat.newMess?.event)
+    const isSocketData = (data: unknown): data is SocketData => {
+        return !!data && typeof data === "object" && "message" in data
     }
-  };
+    const isMessageStatusData = (data: unknown): data is MessageStatusData => {
+        return !!data && typeof data === "object" && "messageIds" in data
+    }
+    const shouldApplyStatus = (
+        currentStatus: MessageInterface["status"],
+        nextStatus: MessageInterface["status"]
+    ) => {
+        const order = {
+            SENDING: 0,
+            SENT: 1,
+            DELIVERED: 2,
+            SEEN: 3,
+        }
+        if (!nextStatus) return false
+        if (!currentStatus) return true
+        return order[nextStatus] > order[currentStatus]
+    }
+    const setVisibleStatusIfNewer = (
+        messageId: number,
+        status: MessageInterface["status"]
+    ) => {
+        if (!status) return
+        setVisibleMessageStatus((prev) => {
+            if (!prev) {
+                return { messageId, status }
+            }
 
-  const storeNewMess = useSelector((state: RootState) => state.chat.newMess);
-  const storeEvent = useSelector(
-    (state: RootState) => state.chat.newMess?.event,
-  );
-  const hasConversationId = (
-    data: unknown,
-  ): data is {
-    conversationId: number;
-  } => {
-    return !!data && typeof data === "object" && "conversationId" in data;
-  };
-  const isSocketData = (data: unknown): data is SocketData => {
-    return !!data && typeof data === "object" && "message" in data;
-  };
-  const isMessageStatusData = (data: unknown): data is MessageStatusData => {
-    return !!data && typeof data === "object" && "messageIds" in data;
-  };
-  const shouldApplyStatus = (
-    currentStatus: MessageInterface["status"],
-    nextStatus: MessageInterface["status"],
-  ) => {
-    const order = {
-      SENDING: 0,
-      SENT: 1,
-      DELIVERED: 2,
-      SEEN: 3,
-    };
-    if (!nextStatus) return false;
-    if (!currentStatus) return true;
-    return order[nextStatus] > order[currentStatus];
-  };
-  const setVisibleStatusIfNewer = (
-    messageId: number,
-    status: MessageInterface["status"],
-  ) => {
-    if (!status) return;
-    setVisibleMessageStatus((prev) => {
-      if (!prev) {
-        return { messageId, status };
-      }
+            // Temporary ids are negative and represent the newest optimistic message.
+            // Always prioritize them over older persisted ids for status display.
+            if (messageId < 0) {
+                return { messageId, status }
+            }
 
-      if (prev.messageId !== messageId) {
-        return messageId > prev.messageId ? { messageId, status } : prev;
-      }
+            // If previous status is from an optimistic id, move to persisted id as soon as it appears.
+            if (prev.messageId < 0 && messageId > 0) {
+                return { messageId, status }
+            }
 
-      return shouldApplyStatus(prev.status, status)
-        ? { messageId, status }
-        : prev;
-    });
-  };
-  const updateOutgoingMessageStatus = (
-    messageIds: number[],
-    status: MessageInterface["status"],
-  ) => {
-    if (!status) return;
-    setConversation((prev) => {
-      const pendingIds = [...pendingTempMessageIds.current];
-      const tempIdToRealId = new Map<number, number>();
-      const statusMessageIds = new Set<number>();
-      const latestStatusMessageId =
-        messageIds.length > 0 ? Math.max(...messageIds) : null;
+            if (prev.messageId !== messageId) {
+                return messageId > prev.messageId ? { messageId, status } : prev
+            }
 
-      if (status === "SENT" || status === "DELIVERED" || status === "SEEN") {
-        messageIds.forEach((messageId) => {
-          const alreadyExists = prev.some(
-            (message) => message.messageId === messageId,
-          );
-          if (!alreadyExists && pendingIds.length > 0) {
-            const tempMessageId = pendingIds.shift() as number;
-            tempIdToRealId.set(tempMessageId, messageId);
-            statusMessageIds.add(messageId);
-          }
-        });
-      }
+            return shouldApplyStatus(prev.status, status) ? { messageId, status } : prev
+        })
+    }
+    const updateOutgoingMessageStatus = (messageIds: number[], status: MessageInterface["status"]) => {
+        if (!status) return
+        setConversation((prev) => {
+            const pendingIds = [...pendingTempMessageIds.current]
+            const tempIdToRealId = new Map<number, number>()
+            const statusMessageIds = new Set<number>()
+            const latestStatusMessageId = messageIds.length > 0 ? Math.max(...messageIds) : null
 
-      const next = prev.map((message) => {
-        const isOutgoing = message.senderId === currentUserId;
-        const isExplicitStatusMessage = messageIds.includes(message.messageId);
-        const isSeenBeforeLatest =
-          status === "SEEN" &&
-          latestStatusMessageId !== null &&
-          message.messageId > 0 &&
-          message.messageId <= latestStatusMessageId;
+            if (status === "SENT" || status === "DELIVERED" || status === "SEEN") {
+                messageIds.forEach((messageId) => {
+                    const alreadyExists = prev.some((message) => message.messageId === messageId)
+                    if (!alreadyExists && pendingIds.length > 0) {
+                        const tempMessageId = pendingIds.shift() as number
+                        tempIdToRealId.set(tempMessageId, messageId)
+                        statusMessageIds.add(messageId)
+                    }
+                })
+            }
 
-        if (isOutgoing && (isExplicitStatusMessage || isSeenBeforeLatest)) {
-          statusMessageIds.add(message.messageId);
-          return shouldApplyStatus(message.status, status)
-            ? { ...message, status }
-            : message;
+            const next = prev.map((message) => {
+                const isOutgoing = message.senderId === currentUserId
+                const isExplicitStatusMessage = messageIds.includes(message.messageId)
+                const isSeenBeforeLatest =
+                    status === "SEEN" &&
+                    latestStatusMessageId !== null &&
+                    message.messageId > 0 &&
+                    message.messageId <= latestStatusMessageId
+
+                if (isOutgoing && (isExplicitStatusMessage || isSeenBeforeLatest)) {
+                    statusMessageIds.add(message.messageId)
+                    return shouldApplyStatus(message.status, status) ? { ...message, status } : message
+                }
+
+                const realMessageId = tempIdToRealId.get(message.messageId)
+                if (realMessageId) {
+                    const nextStatus = shouldApplyStatus(message.status, status) ? status : message.status
+                    return { ...message, messageId: realMessageId, status: nextStatus }
+                }
+
+                return message
+            })
+            pendingTempMessageIds.current = pendingIds
+            const visibleStatusMessageId = statusMessageIds.size > 0
+                ? Math.max(...Array.from(statusMessageIds))
+                : null
+            if (visibleStatusMessageId !== null) {
+                setVisibleStatusIfNewer(visibleStatusMessageId, status)
+            }
+            return next
+        })
+    }
+
+    useEffect(() => {
+        const latestOutgoingWithStatus = conversation.find(
+            (message) => message.senderId === currentUserId && !!message.status
+        )
+        if (!latestOutgoingWithStatus?.status) {
+            setVisibleMessageStatus(null)
+            return
+        }
+        setVisibleStatusIfNewer(
+            latestOutgoingWithStatus.messageId,
+            latestOutgoingWithStatus.status
+        )
+    }, [conversation, currentUserId])
+    useEffect(() => {
+        if (!storeNewMess?.data || conversationId.current !== storeNewMess.data.conversationId) return
+        console.log(storeEvent, 'socket event nè')
+        if (storeEvent === SocketEvent.MESSAGE_ACK && isSocketData(storeNewMess.data)) {
+            console.log('trong conver page', storeNewMess)
+            const message = storeNewMess.data.message
+
+
+
+
+            setConversation((prev: MessageInterface[]) => {
+                if (prev.some((item) => item.messageId === message.messageId)) {
+                    return prev
+                }
+                return [message, ...prev];
+            })
+            if (fileLoading) {
+                setFileLoading(false)
+            }
+            setMessageText("");
+        }
+        if (storeEvent === SocketEvent.MESSAGE_RECALL) {
+            console.log('nhảy vào recall trong converation')
+            setConversation((prev: any[]) => {
+                return prev.map((item) => {
+                    if (item.messageId === (storeNewMess.data as any)?.message?.messageId) {
+                        return (storeNewMess.data as any)?.message;
+                    }
+                    return item;
+                });
+            });
+        }
+    }, [storeNewMess, storeEvent, fileLoading])
+
+    useEffect(() => {
+        if (!storeNewMess?.data || conversationId.current !== storeNewMess.data.conversationId) return
+
+        if (storeEvent === SocketEvent.NEW_MESSAGE && isSocketData(storeNewMess.data)) {
+            const incomingMessage = storeNewMess.data.message
+
+            setConversation((prev: MessageInterface[]) => {
+                if (prev.some((item) => item.messageId === incomingMessage.messageId)) {
+                    return prev
+                }
+                return [incomingMessage, ...prev]
+            })
+
+            if (incomingMessage.senderId !== currentUserId) {
+                if (document.visibilityState === "visible") {
+                    markLatestIncomingSeen(
+                        [...conversation, incomingMessage],
+                        storeNewMess.data.conversationId
+                    )
+                } else {
+                    dispatch(increaseUnread({ conversationId: storeNewMess.data.conversationId }))
+                }
+            }
+        }
+
+        if (
+            (
+                storeEvent === SocketEvent.MESSAGE_SENT ||
+                storeEvent === SocketEvent.MESSAGE_DELIVERED ||
+                storeEvent === SocketEvent.MESSAGE_SEEN
+            ) &&
+            isMessageStatusData(storeNewMess.data)
+        ) {
+            updateOutgoingMessageStatus(storeNewMess.data.messageIds, storeNewMess.data.status)
+            if (fileLoading) {
+                setFileLoading(false)
+            }
+            if (storeEvent === SocketEvent.MESSAGE_SEEN) {
+                dispatch(clearUnread({ conversationId: storeNewMess.data.conversationId }))
+            }
         }
 
         const realMessageId = tempIdToRealId.get(message.messageId);

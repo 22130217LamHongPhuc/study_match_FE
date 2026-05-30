@@ -1,6 +1,6 @@
 import { Box } from "@mui/system";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Navigate, Outlet, replace, useNavigate } from "react-router-dom";
+import React, { useLayoutEffect, useRef, useState } from "react";
+import { Outlet } from "react-router-dom";
 import SideBar from "../../components/sidebar/SideBar";
 import Header from "../../components/header/Header";
 import WebSocketManager from "../../socket/WebSocketManager";
@@ -27,18 +27,24 @@ import StudySessionReminderToast from "../../components/toastComponent/StudySess
 
 export default function MainLayout() {
   const dispatch = useDispatch();
+
   const currentConverId = useSelector(
     (state: RootState) => state.chat.currentConversationId,
   );
+
   const currentConverIdRef = useRef<number | null>(null);
+
   const [activeVideoCall, setActiveVideoCall] = useState<VideoCallInfo | null>(
     null,
   );
+
   const [incomingVideoCall, setIncomingVideoCall] =
     useState<VideoCallInviteData | null>(null);
+
   const [incomingPeer, setIncomingPeer] = useState<VideoCallPeerInfo | null>(
     null,
   );
+
   const [callActionLoading, setCallActionLoading] = useState(false);
 
   useLayoutEffect(() => {
@@ -46,12 +52,20 @@ export default function MainLayout() {
   }, [currentConverId]);
 
   useLayoutEffect(() => {
-    let ws = WebSocketManager.getInstance();
+    const ws = WebSocketManager.getInstance();
+
+    const unsubscribeOnConnected = ws.onConnected(() => {
+      ws.sendMessage("/chat/send", {
+        event: SocketEvent.CLIENT_READY,
+        data: {},
+      });
+    });
 
     ws.connect()
       .then(() => {
         ws.onMessage("/user/queue/chat", (msg: any) => {
           const parsed: SocketResponse = JSON.parse(msg);
+
           console.log("[VideoCall][FE][socket][message]", parsed);
           dispatch(updateNewMess(parsed));
 
@@ -78,6 +92,7 @@ export default function MainLayout() {
               roomId: parsed.data.roomId,
               hasToken: !!parsed.data.token,
             });
+
             setActiveVideoCall(parsed.data);
             return;
           }
@@ -87,24 +102,24 @@ export default function MainLayout() {
             isVideoCallInvite(parsed.data)
           ) {
             console.log("[VideoCall][FE][socket][invite]", parsed.data);
+
             const currentUserId = Number(localStorage.getItem("userId"));
             if (parsed.data.callerId === currentUserId) return;
 
-            setIncomingPeer({
+            const peer = {
               userId: parsed.data.callerId,
               fullName:
                 parsed.data.callerName || `User ${parsed.data.callerId}`,
               avatar: parsed.data.callerAvatar || null,
-            });
+            };
+
+            setIncomingPeer(peer);
+
             localStorage.setItem(
               `videoCallPeer:${parsed.data.sessionId}`,
-              JSON.stringify({
-                userId: parsed.data.callerId,
-                fullName:
-                  parsed.data.callerName || `User ${parsed.data.callerId}`,
-                avatar: parsed.data.callerAvatar || null,
-              }),
+              JSON.stringify(peer),
             );
+
             setIncomingVideoCall(parsed.data);
             return;
           }
@@ -115,6 +130,7 @@ export default function MainLayout() {
             "message" in parsed.data
           ) {
             const currentUserId = Number(localStorage.getItem("userId"));
+
             if (parsed.data.message.senderId !== currentUserId) {
               sendDelivered(parsed.data.conversationId, [
                 parsed.data.message.messageId,
@@ -129,13 +145,16 @@ export default function MainLayout() {
             parsed.data.conversationId !== Number(currentConverIdRef.current)
           ) {
             dispatch(
-              increaseUnread({ conversationId: parsed.data.conversationId }),
+              increaseUnread({
+                conversationId: parsed.data.conversationId,
+              }),
             );
+
             toast(
               <ToastCustom
                 message={parsed.data.message.content || ""}
                 userName={parsed.data.message.senderId.toString() || ""}
-              ></ToastCustom>,
+              />,
               {
                 position: "bottom-right",
                 autoClose: 4000,
@@ -166,10 +185,22 @@ export default function MainLayout() {
             );
           }
         });
+
+        ws.onMessage("/topic/presence", (msg: any) => {
+          const parsed: SocketResponse = JSON.parse(msg);
+
+          if (parsed.event === SocketEvent.USER_PRESENCE) {
+            dispatch(updateNewMess(parsed));
+          }
+        });
       })
       .catch((err) => {
         console.error("Loi connect:", err);
       });
+
+    return () => {
+      unsubscribeOnConnected();
+    };
   }, [dispatch]);
 
   const isVideoCallInvite = (data: unknown): data is VideoCallInviteData => {
@@ -219,7 +250,9 @@ export default function MainLayout() {
     if (!incomingVideoCall || callActionLoading) return;
 
     setCallActionLoading(true);
+
     console.log("[VideoCall][FE][modal][accept]", incomingVideoCall);
+
     joinVideoCall(incomingVideoCall.sessionId)
       .then((call) => {
         console.log("[VideoCall][FE][modal][accept-success]", {
@@ -227,11 +260,13 @@ export default function MainLayout() {
           roomId: call.roomId,
           hasToken: !!call.token,
         });
+
         setIncomingVideoCall(null);
         setActiveVideoCall(call);
       })
       .catch((error) => {
         console.error("Cannot join video call", error);
+
         alert(
           error instanceof Error
             ? error.message
@@ -245,7 +280,9 @@ export default function MainLayout() {
     if (!incomingVideoCall || callActionLoading) return;
 
     setCallActionLoading(true);
+
     console.log("[VideoCall][FE][modal][reject]", incomingVideoCall);
+
     rejectVideoCall(incomingVideoCall.sessionId)
       .catch((error) => {
         console.error("Cannot reject video call", error);
@@ -271,6 +308,7 @@ export default function MainLayout() {
           </Box>
         </Box>
       </Box>
+
       {activeVideoCall && (
         <VideoCallRoom
           call={activeVideoCall}
@@ -278,6 +316,7 @@ export default function MainLayout() {
           onClose={() => setActiveVideoCall(null)}
         />
       )}
+
       <VideoCallModal
         open={!!incomingVideoCall}
         mode="incoming"
