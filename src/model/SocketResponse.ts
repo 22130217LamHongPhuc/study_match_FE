@@ -2,6 +2,7 @@ import { MessageInterface } from "./Conversation";
 import { VideoCallInfo, VideoCallInviteData } from "./VideoCall";
 
 export interface StudySessionReminderData {
+  conversationId: number;
   sessionId: number;
   title: string;
   startTime: string;

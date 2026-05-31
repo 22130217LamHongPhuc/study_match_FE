@@ -5,6 +5,7 @@ import SideBar from "../../components/sidebar/SideBar";
 import Header from "../../components/header/Header";
 import WebSocketManager from "../../socket/WebSocketManager";
 import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import ToastCustom from "../../components/toastComponent/ToastCustom";
 import { useDispatch, useSelector } from "react-redux";
 import { increaseUnread, updateNewMess } from "../../redux/ChatReducer";
@@ -166,23 +167,45 @@ export default function MainLayout() {
             parsed.event === SocketEvent.STUDY_SESSION_REMINDER &&
             isStudySessionReminder(parsed.data)
           ) {
+            console.log(
+              "[StudySessionReminder][FE][socket][reminder]",
+              parsed.data,
+            );
+            const reminder = normalizeStudySessionReminder(parsed.data);
+            console.log(
+              "[StudySessionReminder][FE][normalize] result:",
+              reminder,
+            );
+            if (!reminder) {
+              console.warn(
+                "[StudySessionReminder][FE] normalizeStudySessionReminder returned null, skipping toast",
+              );
+              return;
+            }
+
+            console.log(
+              "[StudySessionReminder][FE] Calling toast with toastId:",
+              reminder.toastId,
+            );
             toast(
               <StudySessionReminderToast
-                title={parsed.data.title}
-                startTime={parsed.data.startTime}
-                groupName={parsed.data.groupName}
-                subjectName={parsed.data.subjectName}
-                studyMode={parsed.data.studyMode}
-                location={parsed.data.location}
-                minutesBefore={parsed.data.minutesBefore}
+                title={reminder.title}
+                startTime={reminder.startTime}
+                groupName={reminder.groupName}
+                subjectName={reminder.subjectName}
+                studyMode={reminder.studyMode}
+                location={reminder.location}
+                minutesBefore={reminder.minutesBefore}
               />,
               {
                 position: "top-right",
                 autoClose: 7000,
                 closeOnClick: true,
                 hideProgressBar: false,
+                toastId: reminder.toastId,
               },
             );
+            console.log("[StudySessionReminder][FE] toast() called successfully");
           }
         });
 
@@ -237,13 +260,86 @@ export default function MainLayout() {
     minutesBefore?: number | null;
     recipientName?: string | null;
   } => {
-    return (
-      !!data &&
-      typeof data === "object" &&
-      "sessionId" in data &&
-      "title" in data &&
-      "startTime" in data
-    );
+    return !!data && typeof data === "object";
+  };
+
+  const normalizeStudySessionReminder = (data: {
+    sessionId: number;
+    title: string;
+    startTime: string;
+    endTime?: string | null;
+    groupName?: string | null;
+    subjectName?: string | null;
+    studyMode?: string | null;
+    location?: string | null;
+    meetingUrl?: string | null;
+    minutesBefore?: number | null;
+    recipientName?: string | null;
+  }): {
+    title: string;
+    startTime: string;
+    groupName?: string | null;
+    subjectName?: string | null;
+    studyMode?: string | null;
+    location?: string | null;
+    minutesBefore?: number | null;
+    toastId: string;
+  } | null => {
+    const rawData = data as unknown as Record<string, unknown>;
+
+    const readString = (...keys: string[]) => {
+      for (const key of keys) {
+        const value = rawData[key];
+        if (typeof value === "string" && value.trim().length > 0) {
+          return value;
+        }
+      }
+      return undefined;
+    };
+
+    const readNumber = (...keys: string[]) => {
+      for (const key of keys) {
+        const value = rawData[key];
+        if (typeof value === "number" && Number.isFinite(value)) {
+          return value;
+        }
+        if (typeof value === "string") {
+          const parsed = Number(value);
+          if (Number.isFinite(parsed)) {
+            return parsed;
+          }
+        }
+      }
+      return undefined;
+    };
+
+    const reminderTitle =
+      readString("title", "sessionTitle", "studySessionTitle", "name") ||
+      "Lịch học sắp bắt đầu";
+
+    const reminderStartTime =
+      readString("startTime", "startAt", "sessionStartTime", "startsAt") ||
+      new Date().toISOString();
+
+    const reminderSessionId =
+      readNumber("sessionId", "studySessionId", "id") || 0;
+
+    if (!reminderTitle && !reminderStartTime) {
+      return null;
+    }
+
+    return {
+      title: reminderTitle,
+      startTime: reminderStartTime,
+      groupName: readString("groupName", "studyGroupName", "group"),
+      subjectName: readString("subjectName", "subject"),
+      studyMode: readString("studyMode", "mode"),
+      location: readString("location", "place"),
+      minutesBefore:
+        readNumber("minutesBefore", "minutesLeft", "remindBeforeMinutes") ||
+        null,
+      toastId: `study-reminder-${reminderSessionId}-${reminderStartTime}`,
+    };
   };
 
   const acceptIncomingCall = () => {
@@ -295,6 +391,7 @@ export default function MainLayout() {
 
   return (
     <div>
+      <ToastContainer />
       <Box sx={{ display: "flex", minHeight: "100vh", background: "#fafaf8" }}>
         <Box sx={{ flexShrink: 0 }}>
           <SideBar />
@@ -303,7 +400,6 @@ export default function MainLayout() {
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Header />
           <Box>
-            <ToastContainer />
             <Outlet />
           </Box>
         </Box>
