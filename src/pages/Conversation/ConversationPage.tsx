@@ -38,12 +38,14 @@ import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
 import ReplyMessage from "../../components/conversation/ReplyMessage";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { clearUnread, increaseUnread, updateCurrentConverId } from "../../redux/ChatReducer";
+import { clearUnread, increaseUnread, updateCurrentConverId, upsertGroupMemberProfiles } from "../../redux/ChatReducer";
 import { SocketEvent } from "../../enum/SocketEvent";
 import { MessageStatusData, SocketData } from "../../model/SocketResponse";
 import { VideoCallInfo } from "../../model/VideoCall";
 import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
 import VideoCallModal from "../../components/conversation/VideoCallModal";
+import { loadFriendProfilesService } from "../../services/FriendService";
+import { getActiveGroupMemberIds } from "../../services/GroupService";
 
 
 enum FileEnum {
@@ -75,6 +77,7 @@ export default function ConversationPage() {
     const currentUserId = Number(localStorage.getItem('userId'))
     const currentUser = useSelector((state: RootState) => state.user)
     const currentConversationId = useSelector((state: RootState) => state.chat.currentConversationId)
+    const groupMemberProfiles = useSelector((state: RootState) => state.chat.groupMemberProfiles)
     const location = useLocation();
     const routeState = location.state as {
         conversationKind?: "PRIVATE" | "GROUP";
@@ -245,6 +248,65 @@ export default function ConversationPage() {
         loadMess();
         if (!conversationId.current) return
     }, [selectedConversationKey, targetUserId, groupId, isGroupConversation, fallbackConversationId, currentUserId, dispatch])
+
+    useEffect(() => {
+        if (!isGroupConversation || !groupId) {
+            return
+        }
+
+        let cancelled = false
+        const loadGroupMemberProfiles = async () => {
+            const fallbackSenderIds = Array.from(new Set(
+                conversation
+                    .map((message) => message.senderId)
+                    .filter((senderId) => senderId !== currentUserId)
+                    .filter((senderId) => Number.isFinite(senderId) && senderId > 0)
+            ))
+
+            let memberIds = fallbackSenderIds
+            try {
+                const result = await getActiveGroupMemberIds(groupId)
+                const activeMemberIds = (result.data || [])
+                    .map((memberId) => Number(memberId))
+                    .filter((memberId) => memberId !== currentUserId)
+                    .filter((memberId) => Number.isFinite(memberId) && memberId > 0)
+                if (activeMemberIds.length > 0) {
+                    memberIds = activeMemberIds
+                }
+            } catch (error) {
+                console.error("[GroupMessage][FE][load-member-ids-error]", error)
+            }
+
+            const missingMemberIds = Array.from(new Set(memberIds))
+                .filter((memberId) => !groupMemberProfiles[memberId])
+            if (missingMemberIds.length === 0 || cancelled) return
+
+            try {
+                const profiles = await loadFriendProfilesService(missingMemberIds)
+                if (cancelled) return
+                const foundProfileIds = new Set(profiles.map((profile) => profile.userId))
+                const fallbackProfiles = missingMemberIds
+                    .filter((senderId) => !foundProfileIds.has(senderId))
+                    .map((senderId) => ({
+                        userId: senderId,
+                        fullName: `User ${senderId}`,
+                        avatarUrl: null,
+                    }))
+                dispatch(upsertGroupMemberProfiles([
+                    ...profiles,
+                    ...fallbackProfiles,
+                ]))
+            } catch (error) {
+                console.error("[GroupMessage][FE][load-sender-profiles-error]", error)
+            }
+        }
+
+        loadGroupMemberProfiles()
+
+        return () => {
+            cancelled = true
+        }
+    }, [conversation, currentUserId, dispatch, groupId, groupMemberProfiles, isGroupConversation])
 
     const loadOlderMessages = async () => {
         if ((!targetUserId && !fallbackConversationId && !isGroupConversation) || (isGroupConversation && !groupId) || loadingOlderMessagesRef.current || !hasMoreMessagesRef.current) {
@@ -926,7 +988,7 @@ export default function ConversationPage() {
                         </IconButton>
                     </Box>
                 </Box>
-                {conversation.length > 0 ? <ListMess fileLoading={fileLoading} conversation={conversation} setReplyMess={setReplyMess} visibleMessageStatus={visibleMessageStatus} onCallAgain={handleStartCall} onLoadOlderMessages={loadOlderMessages} loadingOlderMessages={loadingOlderMessages} hasMoreMessages={hasMoreMessages} onRecallMessage={handleRecallMessage} /> : <WelcomeConversation />}
+                {conversation.length > 0 ? <ListMess fileLoading={fileLoading} conversation={conversation} setReplyMess={setReplyMess} visibleMessageStatus={visibleMessageStatus} onCallAgain={handleStartCall} onLoadOlderMessages={loadOlderMessages} loadingOlderMessages={loadingOlderMessages} hasMoreMessages={hasMoreMessages} onRecallMessage={handleRecallMessage} isGroupConversation={isGroupConversation} senderProfiles={groupMemberProfiles} /> : <WelcomeConversation />}
 
                 {/* thanh reply nè */}
                 {
