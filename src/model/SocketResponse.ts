@@ -1,4 +1,5 @@
 import { MessageInterface } from "./Conversation"
+import { ReactionData } from "./Reaction"
 import { VideoCallInfo, VideoCallInviteData } from "./VideoCall"
 
 export interface SocketData {
@@ -24,5 +25,5 @@ export interface ReplyData {
 
 export interface SocketResponse {
     event: string | null,
-    data: SocketData | ReplyData | MessageStatusData | VideoCallInviteData | VideoCallInfo | null
+    data: SocketData | ReplyData | MessageStatusData | ReactionData | VideoCallInviteData | VideoCallInfo | null
 }

@@ -26,7 +26,7 @@ import React, { use, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { Client } from "@stomp/stompjs";
 import WebSocketManager from "../../socket/WebSocketManager";
-import { loadConversation, replyText, sendSeen, sendText, uploadMedia } from "../../services/ChatService";
+import { loadConversation, loadConversationById, loadGroupConversation, recallMess, replyText, sendSeen, sendText, uploadMedia } from "../../services/ChatService";
 import { South } from "@mui/icons-material";
 import { useLocation } from "react-router-dom";
 import { MessageInterface } from "../../model/Conversation";
@@ -74,10 +74,39 @@ export default function ConversationPage() {
     const stompClient = useRef<Client | null>(null);
     const currentUserId = Number(localStorage.getItem('userId'))
     const currentUser = useSelector((state: RootState) => state.user)
+    const currentConversationId = useSelector((state: RootState) => state.chat.currentConversationId)
     const location = useLocation();
-    const targetUserId = location.state?.targetUserId;
-    const avatar = location.state?.avatar;
-    const fullName = location.state?.fullName;
+    const routeState = location.state as {
+        conversationKind?: "PRIVATE" | "GROUP";
+        conversationType?: number;
+        targetUserId?: number | null;
+        groupId?: number | null;
+        avatar?: string | null;
+        fullName?: string | null;
+        groupName?: string | null;
+    } | null;
+    const targetUserIdFromState = Number(location.state?.targetUserId);
+    const targetUserId =
+        Number.isFinite(targetUserIdFromState) && targetUserIdFromState > 0
+            ? targetUserIdFromState
+            : null;
+    const groupIdFromState = Number(location.state?.groupId);
+    const groupId = Number.isFinite(groupIdFromState) && groupIdFromState > 0 ? groupIdFromState : null;
+    const isGroupConversation =
+        routeState?.conversationKind === "GROUP" ||
+        Number(routeState?.conversationType) === 0 ||
+        groupId !== null;
+    const fallbackConversationId = !targetUserId && !isGroupConversation ? currentConversationId : null;
+    const avatar = routeState?.avatar;
+    const fullName = routeState?.fullName;
+    const groupName = routeState?.groupName;
+    const selectedConversationKey = isGroupConversation
+        ? (groupId ? `group:${groupId}` : "none")
+        : targetUserId
+            ? `private:${targetUserId}`
+            : fallbackConversationId
+                ? `conversation:${fallbackConversationId}`
+                : "none";
     const [conversation, setConversation] = useState<MessageInterface[]>([]);
     const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
@@ -97,6 +126,8 @@ export default function ConversationPage() {
     const nextMessagePageRef = useRef(1)
     const loadingOlderMessagesRef = useRef(false)
     const hasMoreMessagesRef = useRef(true)
+    const activeConversationKeyRef = useRef("none")
+    const emojiPickerRef = useRef<HTMLDivElement | null>(null)
 
     const markLatestIncomingSeen = (messages: MessageInterface[], targetConversationId: number | null) => {
         if (!targetConversationId || document.visibilityState !== "visible") return
@@ -138,11 +169,36 @@ export default function ConversationPage() {
         setMessageText((prev) => prev + emojiObject.emoji);
         // setShowEmojiPicker(false);
     }
+
+    useEffect(() => {
+        if (!showEmojiPicker) return
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (!emojiPickerRef.current?.contains(event.target as Node)) {
+                setShowEmojiPicker(false)
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [showEmojiPicker])
+
     useLayoutEffect(() => {
         const loadMess = async () => {
+            const loadKey = selectedConversationKey
+            activeConversationKeyRef.current = loadKey
             console.log("đây là targetUserId", targetUserId)
             console.log("đây là currentUserId", currentUserId)
-            if (!targetUserId) return
+            if (!isGroupConversation && !targetUserId && !fallbackConversationId) {
+                setConversation([])
+                conversationId.current = null
+                return
+            }
+            if (isGroupConversation && !groupId) {
+                setConversation([])
+                conversationId.current = null
+                return
+            }
 
             nextMessagePageRef.current = 1
             hasMoreMessagesRef.current = true
@@ -152,38 +208,51 @@ export default function ConversationPage() {
             setConversation([])
 
             try {
-            const result: APIResponse = await loadConversation(currentUserId, targetUserId, 0);
-            console.log("đây là result", result.data)
-            conversationId.current = result.data.conversationId;
-            dispatch(updateCurrentConverId({ currentConversationId: result.data.conversationId }))
-            console.warn("đây là conversationId sau khi loadMess", conversationId.current)
-            const loadedMessages = result.data.listMess as MessageInterface[]
-            setConversation(loadedMessages);
-            const hasNextPage = loadedMessages.length === MESSAGE_PAGE_SIZE
-            hasMoreMessagesRef.current = hasNextPage
-            setHasMoreMessages(hasNextPage)
-            const latestOutgoingWithStatus = loadedMessages.find((message) =>
-                message.senderId === currentUserId && !!message.status && message.messageId > 0
-            )
-            setVisibleMessageStatus(latestOutgoingWithStatus?.status ? {
-                messageId: latestOutgoingWithStatus.messageId,
-                status: latestOutgoingWithStatus.status,
-            } : null)
-            markLatestIncomingSeen(loadedMessages, result.data.conversationId)
+                const result: APIResponse = isGroupConversation
+                    ? await loadGroupConversation(currentUserId, groupId as number, 0)
+                    : targetUserId
+                        ? await loadConversation(currentUserId, targetUserId, 0)
+                        : await loadConversationById(currentUserId, fallbackConversationId as number, 0);
+                if (activeConversationKeyRef.current !== loadKey) {
+                    return
+                }
+                if (!result?.data) {
+                    setConversation([])
+                    conversationId.current = null
+                    return
+                }
+                console.log("đây là result", result.data)
+                conversationId.current = result.data.conversationId;
+                dispatch(updateCurrentConverId({ currentConversationId: result.data.conversationId }))
+                console.warn("đây là conversationId sau khi loadMess", conversationId.current)
+                const loadedMessages = result.data.listMess as MessageInterface[]
+                setConversation(loadedMessages);
+                const hasNextPage = loadedMessages.length === MESSAGE_PAGE_SIZE
+                hasMoreMessagesRef.current = hasNextPage
+                setHasMoreMessages(hasNextPage)
+                const latestOutgoingWithStatus = loadedMessages.find((message) =>
+                    message.senderId === currentUserId && !!message.status && message.messageId > 0
+                )
+                setVisibleMessageStatus(latestOutgoingWithStatus?.status ? {
+                    messageId: latestOutgoingWithStatus.messageId,
+                    status: latestOutgoingWithStatus.status,
+                } : null)
+                markLatestIncomingSeen(loadedMessages, result.data.conversationId)
             } catch (error) {
                 console.error("[MessagePagination][FE][load-first-error]", error)
             }
         }
         loadMess();
         if (!conversationId.current) return
-    }, [targetUserId, currentUserId, dispatch])
+    }, [selectedConversationKey, targetUserId, groupId, isGroupConversation, fallbackConversationId, currentUserId, dispatch])
 
     const loadOlderMessages = async () => {
-        if (!targetUserId || loadingOlderMessagesRef.current || !hasMoreMessagesRef.current) {
+        if ((!targetUserId && !fallbackConversationId && !isGroupConversation) || (isGroupConversation && !groupId) || loadingOlderMessagesRef.current || !hasMoreMessagesRef.current) {
             return
         }
 
         const pageToLoad = nextMessagePageRef.current
+        const loadKey = selectedConversationKey
         const loadingStartedAt = Date.now()
         loadingOlderMessagesRef.current = true
         setLoadingOlderMessages(true)
@@ -194,7 +263,14 @@ export default function ConversationPage() {
         })
 
         try {
-            const result: APIResponse = await loadConversation(currentUserId, targetUserId, pageToLoad)
+            const result: APIResponse = isGroupConversation
+                ? await loadGroupConversation(currentUserId, groupId as number, pageToLoad)
+                : targetUserId
+                    ? await loadConversation(currentUserId, targetUserId, pageToLoad)
+                    : await loadConversationById(currentUserId, fallbackConversationId as number, pageToLoad)
+            if (activeConversationKeyRef.current !== loadKey) {
+                return
+            }
             const olderMessages = (result.data?.listMess || []) as MessageInterface[]
             console.log("[MessagePagination][FE][load-old-success]", {
                 page: pageToLoad,
@@ -227,6 +303,9 @@ export default function ConversationPage() {
     }
     const isMessageStatusData = (data: unknown): data is MessageStatusData => {
         return !!data && typeof data === "object" && "messageIds" in data
+    }
+    const isReactionData = (data: unknown): data is { conversationId: number, message: { messageId?: number, messageID?: number, reactionId?: number, senderId?: number, emoji: string } | null } => {
+        return !!data && typeof data === "object" && "message" in data
     }
     const shouldApplyStatus = (
         currentStatus: MessageInterface["status"],
@@ -270,7 +349,11 @@ export default function ConversationPage() {
             return shouldApplyStatus(prev.status, status) ? { messageId, status } : prev
         })
     }
-    const updateOutgoingMessageStatus = (messageIds: number[], status: MessageInterface["status"]) => {
+    const updateOutgoingMessageStatus = (
+        messageIds: number[],
+        status: MessageInterface["status"],
+        shouldResolvePendingIds: boolean = false
+    ) => {
         if (!status) return
         setConversation((prev) => {
             const pendingIds = [...pendingTempMessageIds.current]
@@ -278,13 +361,18 @@ export default function ConversationPage() {
             const statusMessageIds = new Set<number>()
             const latestStatusMessageId = messageIds.length > 0 ? Math.max(...messageIds) : null
 
-            if (status === "SENT" || status === "DELIVERED" || status === "SEEN") {
+            if (shouldResolvePendingIds) {
                 messageIds.forEach((messageId) => {
                     const alreadyExists = prev.some((message) => message.messageId === messageId)
                     if (!alreadyExists && pendingIds.length > 0) {
                         const tempMessageId = pendingIds.shift() as number
                         tempIdToRealId.set(tempMessageId, messageId)
                         statusMessageIds.add(messageId)
+                        console.log("[MessageAck][FE][resolve-temp-id]", {
+                            tempMessageId,
+                            realMessageId: messageId,
+                            status,
+                        })
                     }
                 })
             }
@@ -322,6 +410,65 @@ export default function ConversationPage() {
         })
     }
 
+    const applyMessageAck = (savedMessage: MessageInterface) => {
+        setConversation((prev) => {
+            const existingMessage = prev.some((message) => message.messageId === savedMessage.messageId)
+            const pendingMessageId = pendingTempMessageIds.current.find((id) =>
+                prev.some((message) => message.messageId === id)
+            )
+            const matchingTempMessage = prev.find((message) =>
+                message.messageId < 0 &&
+                message.senderId === savedMessage.senderId &&
+                message.type === savedMessage.type &&
+                (message.content || "") === (savedMessage.content || "")
+            )
+            const tempMessageIdToReplace = pendingMessageId ?? matchingTempMessage?.messageId
+
+            console.log("[MessageAck][FE][message-ack]", {
+                savedMessage,
+                pendingMessageId,
+                matchingTempMessage,
+                tempMessageIdToReplace,
+                existingMessage,
+                pendingTempMessageIds: pendingTempMessageIds.current,
+            })
+
+            if (existingMessage) {
+                pendingTempMessageIds.current = pendingTempMessageIds.current.filter((id) => id !== tempMessageIdToReplace)
+                return prev
+                    .filter((message) => message.messageId >= 0 || message.messageId !== tempMessageIdToReplace)
+                    .map((message) => message.messageId === savedMessage.messageId
+                        ? { ...message, ...savedMessage, status: message.status || "SENT" }
+                        : message
+                    )
+            }
+
+            if (tempMessageIdToReplace !== undefined) {
+                pendingTempMessageIds.current = pendingTempMessageIds.current.filter((id) => id !== tempMessageIdToReplace)
+                setVisibleStatusIfNewer(savedMessage.messageId, "SENT")
+                return prev.map((message) => message.messageId === pendingMessageId
+                    || message.messageId === tempMessageIdToReplace
+                    ? {
+                        ...message,
+                        ...savedMessage,
+                        status: "SENT",
+                    }
+                    : message
+                )
+            }
+
+            if (savedMessage.senderId === currentUserId) {
+                console.log("[MessageAck][FE][skip-prepend-own-ack]", {
+                    savedMessage,
+                    pendingTempMessageIds: pendingTempMessageIds.current,
+                })
+                return prev
+            }
+
+            return prev
+        })
+    }
+
     useEffect(() => {
         const latestOutgoingWithStatus = conversation.find(
             (message) => message.senderId === currentUserId && !!message.status
@@ -341,16 +488,7 @@ export default function ConversationPage() {
         if (storeEvent === SocketEvent.MESSAGE_ACK && isSocketData(storeNewMess.data)) {
             console.log('trong conver page', storeNewMess)
             const message = storeNewMess.data.message
-
-
-
-
-            setConversation((prev: MessageInterface[]) => {
-                if (prev.some((item) => item.messageId === message.messageId)) {
-                    return prev
-                }
-                return [message, ...prev];
-            })
+            applyMessageAck(message)
             if (fileLoading) {
                 setFileLoading(false)
             }
@@ -402,12 +540,63 @@ export default function ConversationPage() {
             ) &&
             isMessageStatusData(storeNewMess.data)
         ) {
-            updateOutgoingMessageStatus(storeNewMess.data.messageIds, storeNewMess.data.status)
+            console.log("[MessageAck][FE][status-event]", {
+                event: storeEvent,
+                data: storeNewMess.data,
+                pendingTempMessageIds: pendingTempMessageIds.current,
+            })
+            updateOutgoingMessageStatus(
+                storeNewMess.data.messageIds,
+                storeNewMess.data.status,
+                storeEvent === SocketEvent.MESSAGE_SENT
+            )
             if (fileLoading) {
                 setFileLoading(false)
             }
             if (storeEvent === SocketEvent.MESSAGE_SEEN) {
                 dispatch(clearUnread({ conversationId: storeNewMess.data.conversationId }))
+            }
+        }
+
+        if (
+            (storeEvent === SocketEvent.REACTION_ADD || storeEvent === SocketEvent.REACTION_ACK) &&
+            isReactionData(storeNewMess.data) &&
+            storeNewMess.data.message
+        ) {
+            console.log("[Reaction][FE][ConversationPage][receive]", {
+                event: storeEvent,
+                conversationId: storeNewMess.data.conversationId,
+                currentConversationId: conversationId.current,
+                payload: storeNewMess.data.message,
+            })
+            const reactionMessageId = Number(storeNewMess.data.message.messageId ?? storeNewMess.data.message.messageID)
+            if (Number.isFinite(reactionMessageId) && reactionMessageId > 0) {
+                const reaction = {
+                    ...storeNewMess.data.message,
+                    messageId: reactionMessageId,
+                }
+                setConversation((prev) => prev.map((message) => {
+                    if (message.messageId !== reactionMessageId) {
+                        return message
+                    }
+                    console.log("[Reaction][FE][ConversationPage][apply]", {
+                        reactionMessageId,
+                        message,
+                        reaction,
+                    })
+                    const reactions = message.reactions || []
+                    const senderId = reaction.senderId
+                    const nextReactions =
+                        senderId === undefined || senderId === null
+                            ? [...reactions, reaction]
+                            : reactions.some((item) => item.senderId === senderId)
+                                ? reactions.map((item) => item.senderId === senderId ? reaction : item)
+                                : [...reactions, reaction]
+                    return {
+                        ...message,
+                        reactions: nextReactions,
+                    }
+                }))
             }
         }
 
@@ -464,15 +653,99 @@ export default function ConversationPage() {
         return () => document.removeEventListener("visibilitychange", markCurrentConversationSeen)
     }, [conversation, currentUserId, dispatch])
 
-    const sendMessage = () => {
+    const ensureConversationIdBeforeSend = async () => {
+        if (conversationId.current) {
+            return conversationId.current
+        }
+
+        try {
+            const result: APIResponse | null = isGroupConversation
+                ? await loadGroupConversation(currentUserId, groupId as number, 0)
+                : targetUserId
+                    ? await loadConversation(currentUserId, targetUserId, 0)
+                    : fallbackConversationId
+                        ? await loadConversationById(currentUserId, fallbackConversationId, 0)
+                        : null
+
+            const loadedConversationId = result?.data?.conversationId
+            if (!loadedConversationId) {
+                return null
+            }
+
+            conversationId.current = Number(loadedConversationId)
+            dispatch(updateCurrentConverId({ currentConversationId: Number(loadedConversationId) }))
+            if (Array.isArray(result.data.listMess)) {
+                setConversation(result.data.listMess as MessageInterface[])
+            }
+
+            return conversationId.current
+        } catch (error) {
+            console.error("Cannot ensure conversation before send", error)
+            return null
+        }
+    }
+
+    const markMessageDeletedLocally = (messageId: number) => {
+        setConversation((prev) => prev.map((message) => {
+            if (message.messageId !== messageId) {
+                return message
+            }
+            return {
+                ...message,
+                content: "",
+                mediaURL: null,
+                fileName: null,
+                isDeleted: true,
+                reactions: [],
+            }
+        }))
+    }
+
+    const handleRecallMessage = (messageId: number) => {
+        if (!conversationId.current) return
+
+        markMessageDeletedLocally(messageId)
+
+        if (messageId < 0) {
+            pendingTempMessageIds.current = pendingTempMessageIds.current.filter((id) => id !== messageId)
+            console.log("[Recall][FE][local-temp-message]", {
+                messageId,
+                conversationId: conversationId.current,
+            })
+            return
+        }
+
+        console.log("[Recall][FE][send]", {
+            messageId,
+            conversationId: conversationId.current,
+        })
+        recallMess(conversationId.current, messageId)
+    }
+
+    const sendMessage = async () => {
         console.log("gửi nè")
         console.log(preview, selectedFile, 'trong send mess')
         if (messageText.trim().length === 0 && (!preview && !selectedFile)) return
+        const activeConversationId = await ensureConversationIdBeforeSend()
+        if (!activeConversationId) {
+            console.warn("Cannot send message without conversationId", {
+                selectedConversationKey,
+                groupId,
+                targetUserId,
+            })
+            return
+        }
         if (!preview && !selectedFile && !replymess) {
             console.log('nhảy vào text')
             const tempMessageId = nextTempMessageId.current--
             const content = messageText
             pendingTempMessageIds.current.push(tempMessageId)
+            console.log("[MessageAck][FE][create-temp-message]", {
+                tempMessageId,
+                conversationId: activeConversationId,
+                content,
+                pendingTempMessageIds: pendingTempMessageIds.current,
+            })
             setVisibleStatusIfNewer(tempMessageId, "SENDING")
             setConversation((prev) => [{
                 messageId: tempMessageId,
@@ -485,7 +758,7 @@ export default function ConversationPage() {
                 status: "SENDING",
             }, ...prev])
             setMessageText("");
-            sendText(content, conversationId.current as number);
+            sendText(content, activeConversationId);
             return
         }
 
@@ -530,7 +803,7 @@ export default function ConversationPage() {
         setFileLoading(true)
         setSelectedFile(null)
         setMessageText("");
-        uploadMedia(String(conversationId.current), selectedFile, messageText)
+        uploadMedia(String(activeConversationId), selectedFile, messageText)
 
     }
 
@@ -637,7 +910,7 @@ export default function ConversationPage() {
                         />
                         <Box>
                             <Typography sx={{ fontWeight: 700, fontSize: 18, color: "#1f1f1f" }}>
-                                {fullName}
+                                {isGroupConversation ? (groupName || "Nhóm học") : fullName}
                             </Typography>
                             <Typography sx={{ fontSize: 14, color: "#7f735e" }}>
                                 Hoạt động 9 phút trước
@@ -653,11 +926,11 @@ export default function ConversationPage() {
                         </IconButton>
                     </Box>
                 </Box>
-                {conversation ? <ListMess fileLoading={fileLoading} conversation={conversation} setReplyMess={setReplyMess} visibleMessageStatus={visibleMessageStatus} onCallAgain={handleStartCall} onLoadOlderMessages={loadOlderMessages} loadingOlderMessages={loadingOlderMessages} hasMoreMessages={hasMoreMessages} /> : <WelcomeConversation />}
+                {conversation.length > 0 ? <ListMess fileLoading={fileLoading} conversation={conversation} setReplyMess={setReplyMess} visibleMessageStatus={visibleMessageStatus} onCallAgain={handleStartCall} onLoadOlderMessages={loadOlderMessages} loadingOlderMessages={loadingOlderMessages} hasMoreMessages={hasMoreMessages} onRecallMessage={handleRecallMessage} /> : <WelcomeConversation />}
 
                 {/* thanh reply nè */}
                 {
-                    replymess && (<>   <ReplyMessage fullName={replymess.senderId === Number(localStorage.getItem('userId')) ? 'chính mình' : fullName}
+                    replymess && (<>   <ReplyMessage fullName={replymess.senderId === Number(localStorage.getItem('userId')) ? 'chính mình' : (fullName || groupName || "")}
                         mess={replymess ? replymess.content : ""}
                         setReplyMess={setReplyMess}
                     />  </>)
@@ -815,7 +1088,7 @@ export default function ConversationPage() {
                                 sx={{ flex: 1, fontSize: 16, color: "#6b6b6b" }}
                             />
 
-                            <Box sx={{ position: "relative", flexShrink: 0 }}>
+                            <Box ref={emojiPickerRef} sx={{ position: "relative", flexShrink: 0 }}>
                                 {showEmojiPicker && (
                                     <Box
                                         sx={{

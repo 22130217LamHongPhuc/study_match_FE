@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [modalEdit, setModalEdit] = useState<boolean>(false);
   console.warn(modalEdit, "modal edit");
   const [statusFriend, setStatusFriend] = useState<string>("");
+  const [activeTab, setActiveTab] = useState(0);
 
   const { id } = useParams();
   useEffect(() => {
@@ -28,7 +29,9 @@ export default function ProfilePage() {
       console.warn(response, "load profile nè");
       console.warn(profile, "profile nè");
     };
-    fetchProfile();
+    fetchProfile().catch((error) => {
+      console.error("Cannot load profile", error);
+    });
   }, [id]);
   // useEffect(() => {
   //     console.warn(profile, "profile sau khi set");
@@ -51,6 +54,7 @@ export default function ProfilePage() {
     console.warn("send mess");
     navigate("/conversation", {
       state: {
+        conversationKind: "PRIVATE",
         targetUserId: Number(id),
         avatar: profile?.avatarUrl,
         fullName: profile?.fullName,
@@ -283,7 +287,12 @@ export default function ProfilePage() {
               },
             }}
           >
-            <Tabs aria-label="basic tabs example" centered>
+            <Tabs
+              value={activeTab}
+              onChange={(_, value) => setActiveTab(value)}
+              aria-label="basic tabs example"
+              centered
+            >
               <Tab label="Bản tin" />
               <Tab label="Thành tích" />
               <Tab label="Thống kê" />

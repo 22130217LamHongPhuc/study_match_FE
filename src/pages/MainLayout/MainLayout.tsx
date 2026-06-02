@@ -93,8 +93,7 @@ export default function MainLayout() {
 
         if (
           parsed.event === SocketEvent.NEW_MESSAGE &&
-          parsed.data &&
-          "message" in parsed.data
+          isNewMessageData(parsed.data)
         ) {
           const currentUserId = Number(localStorage.getItem("userId"))
           if (parsed.data.message.senderId !== currentUserId) {
@@ -104,8 +103,7 @@ export default function MainLayout() {
 
         if (
           parsed.event === SocketEvent.NEW_MESSAGE &&
-          parsed.data &&
-          "message" in parsed.data &&
+          isNewMessageData(parsed.data) &&
           parsed.data.conversationId !== Number(currentConverIdRef.current)
         ) {
           dispatch(increaseUnread({ conversationId: parsed.data.conversationId }))
@@ -135,6 +133,16 @@ export default function MainLayout() {
 
   const isVideoCallInfo = (data: unknown): data is VideoCallInfo => {
     return !!data && typeof data === "object" && "sessionId" in data && "token" in data && "appId" in data
+  }
+
+  const isNewMessageData = (data: unknown): data is { conversationId: number; message: { messageId: number; senderId: number; content?: string | null } } => {
+    return !!data &&
+      typeof data === "object" &&
+      "conversationId" in data &&
+      "message" in data &&
+      !!(data as any).message &&
+      typeof (data as any).message.messageId === "number" &&
+      typeof (data as any).message.senderId === "number"
   }
 
   const acceptIncomingCall = () => {

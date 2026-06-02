@@ -1,4 +1,6 @@
 
+import { ReactionDTO } from "./Reaction";
+
 
 
 export type MessageInterface = {
@@ -11,6 +13,8 @@ export type MessageInterface = {
     createAt?: string;
     createdAt?: string;
     status?: 'SENDING' | 'SENT' | 'DELIVERED' | 'SEEN';
+    reactions?: ReactionDTO[];
+    isDeleted?: boolean;
 }
 
 

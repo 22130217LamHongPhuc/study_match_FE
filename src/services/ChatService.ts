@@ -70,6 +70,30 @@ export const loadConversation = async (currentU: number, targetU: number, page: 
 
 }
 
+export const loadGroupConversation = async (currentU: number, groupId: number, page: number = 0) => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/group?currentUser=${currentU}&groupId=${groupId}&page=${page}`
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    const data = await res.json();
+    return data;
+}
+
+export const loadConversationById = async (currentU: number, conversationId: number, page: number = 0) => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/by-id?currentUser=${currentU}&conversationId=${conversationId}&page=${page}`
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    const data = await res.json();
+    return data;
+}
+
 export function recallMess(conversationId: number, messageId: number) {
     let ws = WebSocketManager.getInstance()
     ws.connect().then(() => {
