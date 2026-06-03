@@ -2,6 +2,21 @@ import WebSocketManager from "../socket/WebSocketManager"
 import { SocketEvent } from "../enum/SocketEvent"
 import { BASE_CHAT_SERVICE, SOCKET_SEND_MESSAGE } from "../config/BaseConfig"
 
+export type MessageRequestItem = {
+    conversationId: number;
+    otherUserId: number;
+    lastMessage?: {
+        messageId: number;
+        senderId: number;
+        type: string;
+        content: string | null;
+        mediaURL?: string | null;
+        fileName?: string | null;
+        createdAt?: string;
+        isDeleted?: boolean;
+    } | null;
+}
+
 
 export const sendText = (content: string, conversationId: number) => {
 
@@ -45,7 +60,7 @@ export const sendFirstMessage = (content: string, to: number) => {
         ws.sendMessage(SOCKET_SEND_MESSAGE, {
             event: SocketEvent.FIRST_PRIVATE_MESS,
             data: {
-                senderId: 1,
+                senderId: Number(localStorage.getItem('userId')),
                 to: to,
                 type: "text",
                 content: content,
@@ -92,6 +107,42 @@ export const loadConversationById = async (currentU: number, conversationId: num
     });
     const data = await res.json();
     return data;
+}
+
+export const loadMessageRequests = async (currentUserId: number): Promise<MessageRequestItem[]> => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/message-requests?currentUser=${currentUserId}`
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error(`Cannot load message requests. HTTP ${res.status}`);
+    }
+
+    const payload = await res.json();
+    const data = payload?.data ?? payload?.result ?? payload;
+    return Array.isArray(data) ? data : [];
+}
+
+export const loadAcceptedDirectConversations = async (currentUserId: number): Promise<MessageRequestItem[]> => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/accepted-direct?currentUser=${currentUserId}`
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error(`Cannot load accepted direct conversations. HTTP ${res.status}`);
+    }
+
+    const payload = await res.json();
+    const data = payload?.data ?? payload?.result ?? payload;
+    return Array.isArray(data) ? data : [];
 }
 
 export function recallMess(conversationId: number, messageId: number) {
