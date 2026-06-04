@@ -1,11 +1,11 @@
 import type { ScheduleStatus, StudyMode, ScheduleType } from "../types";
 
-// ── Status badge ────────────────────────────────────────────────
 const statusStyles: Record<ScheduleStatus, string> = {
   SCHEDULED: "bg-accent-50 text-accent-700",
   ONGOING: "bg-amber-50 text-amber-700",
   COMPLETED: "bg-sage-50 text-sage-700",
   CANCELLED: "bg-rose-50 text-rose-700",
+  UPCOMING: "bg-blue-50 text-blue-700",
 };
 
 const statusLabels: Record<ScheduleStatus, string> = {
@@ -13,6 +13,7 @@ const statusLabels: Record<ScheduleStatus, string> = {
   ONGOING: "Đang diễn ra",
   COMPLETED: "Hoàn thành",
   CANCELLED: "Đã hủy",
+  UPCOMING: "Sắp diễn ra",
 };
 
 export function ScheduleStatusBadge({ status }: { status: ScheduleStatus }) {
@@ -25,7 +26,6 @@ export function ScheduleStatusBadge({ status }: { status: ScheduleStatus }) {
   );
 }
 
-// ── Study mode badge ────────────────────────────────────────────
 const modeStyles: Record<StudyMode, string> = {
   ONLINE: "bg-sky-50 text-sky-700",
   OFFLINE: "bg-sand-100 text-sand-700",
