@@ -67,7 +67,7 @@ export const mockSchedules: ScheduleRow[] = [
     studyMode: "OFFLINE",
     memberCount: 12,
     maxMembers: 20,
-    status: "IN_PROGRESS",
+    status: "UPCOMING",
     subject: "Cơ sở dữ liệu",
     description: "Thảo luận về các dạng chuẩn hóa: 1NF, 2NF, 3NF, BCNF.",
     location: "Phòng E404 – Tòa E, ĐH Sư phạm Kỹ thuật",
@@ -200,7 +200,7 @@ export const mockSchedules: ScheduleRow[] = [
     studyMode: "HYBRID",
     memberCount: 15,
     maxMembers: 30,
-    status: "IN_PROGRESS",
+    status: "UPCOMING",
     subject: "Git & GitHub",
     description:
       "Hướng dẫn sử dụng Git cơ bản, tạo repository, push/pull, merge conflict.",

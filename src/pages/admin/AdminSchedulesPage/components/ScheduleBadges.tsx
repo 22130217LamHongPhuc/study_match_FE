@@ -1,20 +1,16 @@
-import type {
-  ScheduleStatus,
-  StudyMode,
-  ScheduleType,
-} from "../types";
+import type { ScheduleStatus, StudyMode, ScheduleType } from "../types";
 
 // ── Status badge ────────────────────────────────────────────────
 const statusStyles: Record<ScheduleStatus, string> = {
-  UPCOMING: "bg-accent-50 text-accent-700",
-  IN_PROGRESS: "bg-amber-50 text-amber-700",
+  SCHEDULED: "bg-accent-50 text-accent-700",
+  ONGOING: "bg-amber-50 text-amber-700",
   COMPLETED: "bg-sage-50 text-sage-700",
   CANCELLED: "bg-rose-50 text-rose-700",
 };
 
 const statusLabels: Record<ScheduleStatus, string> = {
-  UPCOMING: "Sắp diễn ra",
-  IN_PROGRESS: "Đang diễn ra",
+  SCHEDULED: "Sắp diễn ra",
+  ONGOING: "Đang diễn ra",
   COMPLETED: "Hoàn thành",
   CANCELLED: "Đã hủy",
 };

@@ -1,6 +1,7 @@
 export type ScheduleStatus =
+  | "SCHEDULED"
   | "UPCOMING"
-  | "IN_PROGRESS"
+  | "ONGOING"
   | "COMPLETED"
   | "CANCELLED";
 
@@ -42,6 +43,29 @@ export interface ScheduleStatCard {
   change: string;
   icon: React.ComponentType<{ size?: number }>;
   warning?: boolean;
+}
+
+export interface AdminSessionStatsResponse {
+  totalSessions: number;
+  upcomingSessions: number;
+  ongoingSessions: number;
+  completedCancelledSessions: number;
+  completionPercentage: number;
+}
+
+export interface AdminSessionRowResponse {
+  id: number;
+  title: string;
+  subjectName: string | null;
+  groupName: string | null;
+  sessionType: ScheduleType;
+  creatorName: string;
+  startTime: string;
+  endTime: string;
+  studyMode: StudyMode;
+  membersCount: number;
+  maxMembers: number;
+  status: ScheduleStatus;
 }
 
 export const SCHEDULE_PAGE_SIZE = 8;

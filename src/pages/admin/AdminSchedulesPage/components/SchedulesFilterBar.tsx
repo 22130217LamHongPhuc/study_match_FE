@@ -9,8 +9,8 @@ import type {
 // ── Filter options ──────────────────────────────────────────────
 const statusOptions: Array<{ label: string; value: ScheduleStatus | null }> = [
   { label: "Tất cả", value: null },
-  { label: "Sắp diễn ra", value: "UPCOMING" },
-  { label: "Đang diễn ra", value: "IN_PROGRESS" },
+  { label: "Sắp diễn ra", value: "SCHEDULED" },
+  { label: "Đang diễn ra", value: "ONGOING" },
   { label: "Hoàn thành", value: "COMPLETED" },
   { label: "Đã hủy", value: "CANCELLED" },
 ];
