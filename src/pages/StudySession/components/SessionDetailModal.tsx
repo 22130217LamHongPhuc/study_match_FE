@@ -359,9 +359,7 @@ export function SessionDetailModal({
           )}
 
           <div className="rounded-xl bg-gray-50 p-4">
-            <div className="text-sm font-semibold text-gray-500">
-              Thời gian
-            </div>
+            <div className="text-sm font-semibold text-gray-500">Thời gian</div>
             <div className="mt-1 font-bold text-gray-800">
               {formatDateTime(currentSession?.startTime || session.startTime)}
             </div>

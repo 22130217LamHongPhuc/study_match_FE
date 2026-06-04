@@ -25,6 +25,7 @@ import StudyMatchAdminLayout from "../layouts/admin/StudyMatchAdminLayout";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
 import AdminGroupsPage from "../pages/admin/AdminGroupsPage/AdminGroupsPage";
 import AdminUsersPage from "../pages/admin/AdminUsersPage/AdminUsersPage";
+import AdminSchedulesPage from "../pages/admin/AdminSchedulesPage/AdminSchedulesPage";
 import StudySessionPage from "../pages/StudySession/StudySessionPage";
 
 const ProtectedRoute = () => {
@@ -110,6 +111,10 @@ export const router = createBrowserRouter([
       {
         path: "groups",
         element: <AdminGroupsPage />,
+      },
+      {
+        path: "schedules",
+        element: <AdminSchedulesPage />,
       },
     ],
   },

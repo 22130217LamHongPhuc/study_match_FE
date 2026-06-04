@@ -544,21 +544,6 @@ export function CreateSessionModal({
             </label>
           )}
 
-          {sessionType === "USER_PAIR" && (
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-gray-700">
-                Link học online
-              </span>
-
-              <input
-                value={meetingUrl}
-                onChange={(event) => setMeetingUrl(event.target.value)}
-                placeholder="https://meet.google.com/..."
-                className={inputClass}
-              />
-            </label>
-          )}
-
           {needSystemRoom && (
             <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3">
               <p className="text-sm font-bold text-green-700">
