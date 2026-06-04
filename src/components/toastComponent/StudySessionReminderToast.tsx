@@ -3,7 +3,6 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import RoomOutlinedIcon from "@mui/icons-material/RoomOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
-import { useNavigate } from "react-router-dom";
 
 type StudySessionReminderToastProps = {
   title: string;
@@ -39,7 +38,15 @@ export default function StudySessionReminderToast({
   location,
   minutesBefore,
 }: StudySessionReminderToastProps) {
-  const navigate = useNavigate();
+  console.log("StudySessionReminderToast rendered with: ", {
+    title,
+    startTime,
+    groupName,
+    subjectName,
+    studyMode,
+    location,
+    minutesBefore,
+  });
   const reminderText =
     minutesBefore && minutesBefore > 0
       ? `Sắp bắt đầu trong ${minutesBefore} phút`
@@ -158,7 +165,7 @@ export default function StudySessionReminderToast({
           </Typography>
 
           <Button
-            onClick={() => navigate("/schedule")}
+            onClick={() => (window.location.href = "/schedule")}
             size="small"
             variant="contained"
             sx={{

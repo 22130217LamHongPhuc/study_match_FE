@@ -7,13 +7,14 @@ import { TodaySessionList } from "./components/TodaySessionList";
 import { AllSessionList } from "./components/AllSessionList";
 import { CreateSessionModal } from "./components/CreateSessionModal";
 import { SessionDetailModal } from "./components/SessionDetailModal";
+import { StudySessionRoom } from "./components/StudySessionRoom";
 import type { ScheduleFilter, StudySessionVm } from "./types";
 import { getUserStudySessions } from "../../services/StudySessionService";
 import {
   getFriendsListService,
   type FriendListItem,
 } from "../../services/FriendService";
-import type { StudySessionResponse } from "./types";
+import type { JoinStudySessionResponse, StudySessionResponse } from "./types";
 
 function resolvePartnerName(
   session: StudySessionResponse,
@@ -68,8 +69,17 @@ export default function StudySessionPage() {
   const [selectedSession, setSelectedSession] = useState<StudySessionVm | null>(
     null,
   );
+  const [joinedRoom, setJoinedRoom] = useState<JoinStudySessionResponse | null>(
+    null,
+  );
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionError, setSessionError] = useState("");
+
+  const currentUserName =
+    localStorage.getItem("fullName") ||
+    localStorage.getItem("userName") ||
+    localStorage.getItem("username") ||
+    "Người dùng";
 
   useEffect(() => {
     let mounted = true;
@@ -161,6 +171,15 @@ export default function StudySessionPage() {
     setIsCreateOpen(false);
   };
 
+  const handleJoinSession = (joinData: JoinStudySessionResponse) => {
+    setJoinedRoom(joinData);
+    setSelectedSession(null);
+  };
+
+  const handleLeaveRoom = () => {
+    setJoinedRoom(null);
+  };
+
   if (loadingSessions) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-orange-50/30 px-4 py-5">
@@ -223,7 +242,16 @@ export default function StudySessionPage() {
           );
           setSelectedSession(updatedSession);
         }}
+        onJoinSession={handleJoinSession}
       />
+
+      {joinedRoom && (
+        <StudySessionRoom
+          joinData={joinedRoom}
+          userName={currentUserName}
+          onLeave={handleLeaveRoom}
+        />
+      )}
     </div>
   );
 }

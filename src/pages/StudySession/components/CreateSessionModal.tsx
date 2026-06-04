@@ -62,22 +62,18 @@ export function CreateSessionModal({
 
   const needSystemRoom = studyMode === "ONLINE" || studyMode === "HYBRID";
 
-  const toConvertTime = (value: string) => {
+  const formatLocalDateTime = (value: string) => {
     if (!value) return value;
 
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
+    if (value.length === 16) {
+      return `${value}:00`;
+    }
 
-    const offsetMinutes = -date.getTimezoneOffset();
-    const sign = offsetMinutes >= 0 ? "+" : "-";
-    const absoluteOffset = Math.abs(offsetMinutes);
-    const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(
-      2,
-      "0",
-    );
-    const offsetRemainder = String(absoluteOffset % 60).padStart(2, "0");
+    if (value.length === 19) {
+      return value;
+    }
 
-    return `${value}:00${sign}${offsetHours}:${offsetRemainder}`;
+    return value;
   };
 
   useEffect(() => {
@@ -225,8 +221,8 @@ export function CreateSessionModal({
         const payload = {
           title,
           description,
-          startTime: toConvertTime(startTime),
-          endTime: toConvertTime(endTime),
+          startTime: formatLocalDateTime(startTime),
+          endTime: formatLocalDateTime(endTime),
           studyMode,
           location:
             studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
@@ -273,8 +269,8 @@ export function CreateSessionModal({
       const payload = {
         title,
         description,
-        startTime: toConvertTime(startTime),
-        endTime: toConvertTime(endTime),
+        startTime: formatLocalDateTime(startTime),
+        endTime: formatLocalDateTime(endTime),
         studyMode,
         location:
           studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
