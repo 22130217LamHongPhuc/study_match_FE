@@ -6,6 +6,13 @@ import {
   JoinStudySessionResponse,
 } from "../pages/StudySession/types";
 import type { SessionConfirmationStatsResponse } from "../pages/StudySession/types";
+import type {
+  AdminSessionRowResponse,
+  AdminSessionStatsResponse,
+  ScheduleStatus,
+  StudyMode,
+  ScheduleType,
+} from "../pages/admin/AdminSchedulesPage/types";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -121,6 +128,52 @@ export async function joinStudySession(
     `/api/study-sessions/${sessionId}/join?userId=${userId}`,
     {
       method: "POST",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export async function getAdminSessionStats(): Promise<
+  APIResponseData<AdminSessionStatsResponse>
+> {
+  const response = await apiFetch<AdminSessionStatsResponse>(
+    "/api/admin/sessions/stats",
+    {
+      method: "GET",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export async function getAdminSessions(params: {
+  keyword?: string;
+  status?: ScheduleStatus | null;
+  studyMode?: StudyMode | null;
+  sessionType?: ScheduleType | null;
+  startFrom?: string;
+  startTo?: string;
+  page?: number;
+  limit?: number;
+}): Promise<APIResponseData<PageResponse<AdminSessionRowResponse>>> {
+  const query = new URLSearchParams();
+
+  if (params.keyword) query.set("keyword", params.keyword);
+  if (params.status) query.set("status", params.status);
+  if (params.studyMode) query.set("studyMode", params.studyMode);
+  if (params.sessionType) query.set("sessionType", params.sessionType);
+  if (params.startFrom) query.set("startFrom", params.startFrom);
+  if (params.startTo) query.set("startTo", params.startTo);
+  query.set("page", String(params.page ?? 0));
+  query.set("limit", String(params.limit ?? 10));
+
+  const response = await apiFetch<PageResponse<AdminSessionRowResponse>>(
+    `/api/admin/sessions?${query.toString()}`,
+    {
+      method: "GET",
     },
     API_BASE_URL,
   );

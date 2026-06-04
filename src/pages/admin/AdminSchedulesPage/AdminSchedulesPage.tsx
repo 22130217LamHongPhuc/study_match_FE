@@ -1,48 +1,107 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { SchedulesToolbar } from "./components/SchedulesToolbar";
-import { ScheduleStatCard } from "./components/ScheduleStatCard";
+import { ScheduleStatCard as ScheduleStatCardView } from "./components/ScheduleStatCard";
 import { SchedulesFilterBar } from "./components/SchedulesFilterBar";
 import { AdminSchedulesTable } from "./components/AdminSchedulesTable";
 import { ScheduleDetailModal } from "./components/ScheduleDetailModal";
 
-import { mockSchedules, mockScheduleStats } from "./mockData";
+import { mockScheduleStats } from "./mockData";
 import type {
+  AdminSessionRowResponse,
   ScheduleRow,
+  ScheduleStatCard as ScheduleStatCardModel,
   ScheduleStatus,
   StudyMode,
   ScheduleType,
   TimeFilter,
 } from "./types";
 import { SCHEDULE_PAGE_SIZE } from "./types";
+import {
+  getAdminSessionStats,
+  getAdminSessions,
+} from "../../../services/StudySessionService";
 
-function isToday(iso: string) {
-  const d = new Date(iso);
-  const now = new Date();
-  return (
-    d.getDate() === now.getDate() &&
-    d.getMonth() === now.getMonth() &&
-    d.getFullYear() === now.getFullYear()
-  );
+function toLocalDateTimeString(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate(),
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(
+    date.getSeconds(),
+  )}`;
 }
 
-function isThisWeek(iso: string) {
-  const d = new Date(iso);
+function getTimeRange(filter: TimeFilter) {
   const now = new Date();
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 7);
-  return d >= startOfWeek && d < endOfWeek;
+
+  if (filter === "TODAY") {
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+
+    return {
+      startFrom: toLocalDateTimeString(start),
+      startTo: toLocalDateTimeString(end),
+    };
+  }
+
+  if (filter === "THIS_WEEK") {
+    const start = new Date(now);
+    start.setDate(now.getDate() - now.getDay());
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+
+    return {
+      startFrom: toLocalDateTimeString(start),
+      startTo: toLocalDateTimeString(end),
+    };
+  }
+
+  if (filter === "THIS_MONTH") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const end = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    return {
+      startFrom: toLocalDateTimeString(start),
+      startTo: toLocalDateTimeString(end),
+    };
+  }
+
+  return {};
 }
 
-function isThisMonth(iso: string) {
-  const d = new Date(iso);
-  const now = new Date();
-  return (
-    d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-  );
+function mapSessionToRow(session: AdminSessionRowResponse): ScheduleRow {
+  return {
+    id: session.id,
+    sessionName: session.title,
+    groupName: session.groupName,
+    scheduleType: session.sessionType,
+    creatorName: session.creatorName,
+    creatorAvatar: null,
+    startTime: session.startTime,
+    endTime: session.endTime,
+    studyMode: session.studyMode,
+    memberCount: session.membersCount,
+    maxMembers: session.maxMembers,
+    status: session.status,
+    subject: session.subjectName,
+    description: null,
+    location: null,
+    onlineLink: null,
+    members: [],
+  };
 }
 
 export default function AdminSchedulesPage() {
@@ -54,97 +113,195 @@ export default function AdminSchedulesPage() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("ALL");
 
   const [page, setPage] = useState(1);
+  const [refreshTick, setRefreshTick] = useState(0);
   const [loading, setLoading] = useState(false);
-
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
+  const [sessionsError, setSessionsError] = useState("");
+  const [stats, setStats] =
+    useState<ScheduleStatCardModel[]>(mockScheduleStats);
+  const [sessions, setSessions] = useState<ScheduleRow[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [detailSchedule, setDetailSchedule] = useState<ScheduleRow | null>(
     null,
   );
+
+  const loadStats = async () => {
+    try {
+      setStatsLoading(true);
+      setStatsError("");
+
+      const response = await getAdminSessionStats();
+      const data = response.data;
+
+      if (!data) return;
+
+      setStats([
+        {
+          ...mockScheduleStats[0],
+          value: String(data.totalSessions),
+          change: "Tổng lịch học",
+        },
+        {
+          ...mockScheduleStats[1],
+          value: String(data.upcomingSessions),
+          change: "Trong thời gian tới",
+        },
+        {
+          ...mockScheduleStats[2],
+          value: String(data.ongoingSessions),
+          change: "Đang diễn ra",
+          warning: true,
+        },
+        {
+          ...mockScheduleStats[3],
+          value: String(data.completedCancelledSessions),
+          change: `${data.completionPercentage.toFixed(1)}% hoàn thành`,
+        },
+      ]);
+    } catch {
+      setStatsError("Không thể tải thống kê lịch học");
+      setStats(mockScheduleStats);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setDebouncedKeyword(keyword.trim());
       setPage(1);
     }, 400);
+
     return () => window.clearTimeout(timer);
   }, [keyword]);
 
   useEffect(() => {
-    setPage(1);
-  }, [statusFilter, modeFilter, typeFilter, timeFilter]);
+    loadStats();
+  }, [refreshTick]);
 
-  const filtered = useMemo(() => {
-    let list = [...mockSchedules];
+  useEffect(() => {
+    let mounted = true;
 
-    if (debouncedKeyword) {
-      const q = debouncedKeyword.toLowerCase();
-      list = list.filter(
-        (s) =>
-          s.sessionName.toLowerCase().includes(q) ||
-          (s.groupName ?? "").toLowerCase().includes(q) ||
-          s.creatorName.toLowerCase().includes(q),
-      );
+    async function loadSessions() {
+      try {
+        setLoading(true);
+        setSessionsError("");
+
+        const timeRange = getTimeRange(timeFilter);
+        const response = await getAdminSessions({
+          keyword: debouncedKeyword || undefined,
+          status: statusFilter,
+          studyMode: modeFilter,
+          sessionType: typeFilter,
+          startFrom: timeRange.startFrom,
+          startTo: timeRange.startTo,
+          page: page - 1,
+          limit: SCHEDULE_PAGE_SIZE,
+        });
+
+        if (!mounted) return;
+
+        const data = response.data;
+        const content = data?.content ?? [];
+
+        setSessions(content.map(mapSessionToRow));
+        setTotalItems(data?.totalElements ?? 0);
+        setTotalPages(Math.max(data?.totalPages ?? 0, 1));
+      } catch {
+        if (!mounted) return;
+
+        setSessions([]);
+        setTotalItems(0);
+        setTotalPages(1);
+        setSessionsError("Không thể tải danh sách lịch học");
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
     }
 
-    if (statusFilter) {
-      list = list.filter((s) => s.status === statusFilter);
-    }
+    loadSessions();
 
-    if (modeFilter) {
-      list = list.filter((s) => s.studyMode === modeFilter);
-    }
-
-    if (typeFilter) {
-      list = list.filter((s) => s.scheduleType === typeFilter);
-    }
-
-    if (timeFilter === "TODAY") {
-      list = list.filter((s) => isToday(s.startTime));
-    } else if (timeFilter === "THIS_WEEK") {
-      list = list.filter((s) => isThisWeek(s.startTime));
-    } else if (timeFilter === "THIS_MONTH") {
-      list = list.filter((s) => isThisMonth(s.startTime));
-    }
-
-    return list;
-  }, [debouncedKeyword, statusFilter, modeFilter, typeFilter, timeFilter]);
-
-  const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / SCHEDULE_PAGE_SIZE);
-  const paginated = filtered.slice(
-    (page - 1) * SCHEDULE_PAGE_SIZE,
-    page * SCHEDULE_PAGE_SIZE,
-  );
+    return () => {
+      mounted = false;
+    };
+  }, [
+    debouncedKeyword,
+    statusFilter,
+    modeFilter,
+    typeFilter,
+    timeFilter,
+    page,
+    refreshTick,
+  ]);
 
   const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 600);
+    setRefreshTick((prev) => prev + 1);
   };
 
   return (
     <main className="space-y-6">
       <SchedulesToolbar onRefresh={handleRefresh} />
 
+      {statsError && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          {statsError}
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {mockScheduleStats.map((stat) => (
-          <ScheduleStatCard key={stat.title} card={stat} />
-        ))}
+        {statsLoading
+          ? mockScheduleStats.map((stat) => (
+              <ScheduleStatCardView
+                key={stat.title}
+                card={{
+                  ...stat,
+                  value: "--",
+                  change: "Đang tải...",
+                }}
+              />
+            ))
+          : stats.map((stat) => (
+              <ScheduleStatCardView key={stat.title} card={stat} />
+            ))}
       </div>
 
       <SchedulesFilterBar
         keyword={keyword}
         setKeyword={setKeyword}
         statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
+        onStatusChange={(value) => {
+          setStatusFilter(value);
+          setPage(1);
+        }}
         modeFilter={modeFilter}
-        onModeChange={setModeFilter}
+        onModeChange={(value) => {
+          setModeFilter(value);
+          setPage(1);
+        }}
         typeFilter={typeFilter}
-        onTypeChange={setTypeFilter}
+        onTypeChange={(value) => {
+          setTypeFilter(value);
+          setPage(1);
+        }}
         timeFilter={timeFilter}
-        onTimeChange={setTimeFilter}
+        onTimeChange={(value) => {
+          setTimeFilter(value);
+          setPage(1);
+        }}
       />
 
+      {sessionsError && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          {sessionsError}
+        </div>
+      )}
+
       <AdminSchedulesTable
-        schedules={paginated}
+        schedules={sessions}
         page={page}
         pageSize={SCHEDULE_PAGE_SIZE}
         totalItems={totalItems}
