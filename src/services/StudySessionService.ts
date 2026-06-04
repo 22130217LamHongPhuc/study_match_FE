@@ -3,6 +3,7 @@ import { APIResponseData } from "../config/APIResponse";
 import {
   CreateStudySessionRequest,
   StudySessionResponse,
+  JoinStudySessionResponse,
 } from "../pages/StudySession/types";
 import type { SessionConfirmationStatsResponse } from "../pages/StudySession/types";
 
@@ -105,6 +106,21 @@ export async function getConfirmationStats(
     `/api/study-sessions/${sessionId}/confirmation-stats?userId=${userId}`,
     {
       method: "GET",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export async function joinStudySession(
+  sessionId: number,
+  userId: number,
+): Promise<APIResponseData<JoinStudySessionResponse>> {
+  const response = await apiFetch<JoinStudySessionResponse>(
+    `/api/study-sessions/${sessionId}/join?userId=${userId}`,
+    {
+      method: "POST",
     },
     API_BASE_URL,
   );

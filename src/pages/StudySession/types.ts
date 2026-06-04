@@ -102,3 +102,10 @@ export interface SessionConfirmationStatsResponse {
   declinedCount: number;
   otherParticipants: SessionParticipantConfirmationResponse[];
 }
+
+export interface JoinStudySessionResponse {
+  sessionId: number;
+  roomId: string;
+  token: string;
+  joinedAt: string;
+}
