@@ -4,8 +4,11 @@ export type ReactionInterface = {
     emoji: string;
     currentUser: number;
 }
-type ReactionDTO = {
-    messageID: number
+export type ReactionDTO = {
+    reactionId?: number
+    messageID?: number
+    messageId?: number
+    senderId?: number
     emoji: string
 }
 

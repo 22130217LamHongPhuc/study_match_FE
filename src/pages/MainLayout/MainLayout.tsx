@@ -70,152 +70,60 @@ export default function MainLayout() {
           console.log("[VideoCall][FE][socket][message]", parsed);
           dispatch(updateNewMess(parsed));
 
-          if (parsed.event === SocketEvent.VIDEO_CALL_ENDED) {
-            console.log("[VideoCall][FE][socket][ended]", parsed.data);
-            setActiveVideoCall(null);
-            setIncomingVideoCall(null);
-            return;
+        if (parsed.event === SocketEvent.VIDEO_CALL_INVITE && isVideoCallInvite(parsed.data)) {
+          console.log("[VideoCall][FE][socket][invite]", parsed.data)
+          const currentUserId = Number(localStorage.getItem("userId"))
+          if (parsed.data.callerId === currentUserId) return
+          const isGroupCall = Boolean(parsed.data.isGroupCall || parsed.data.groupId || parsed.data.conversationType === 0)
+          const peerName = isGroupCall
+            ? (parsed.data.groupName || "Nhóm học")
+            : (parsed.data.callerName || `User ${parsed.data.callerId}`)
+          const peerAvatar = isGroupCall
+            ? (parsed.data.groupAvatar || null)
+            : (parsed.data.callerAvatar || null)
+
+          setIncomingPeer({
+            userId: isGroupCall ? null : parsed.data.callerId,
+            fullName: peerName,
+            avatar: peerAvatar,
+            isGroupCall,
+          })
+          localStorage.setItem(`videoCallPeer:${parsed.data.sessionId}`, JSON.stringify({
+            userId: isGroupCall ? null : parsed.data.callerId,
+            fullName: peerName,
+            avatar: peerAvatar,
+            isGroupCall,
+          }))
+          setIncomingVideoCall(parsed.data)
+          return
+        }
+
+        if (
+          parsed.event === SocketEvent.NEW_MESSAGE &&
+          isNewMessageData(parsed.data)
+        ) {
+          const currentUserId = Number(localStorage.getItem("userId"))
+          if (parsed.data.message.senderId !== currentUserId) {
+            sendDelivered(parsed.data.conversationId, [parsed.data.message.messageId])
           }
 
-          if (parsed.event === SocketEvent.VIDEO_CALL_REJECTED) {
-            console.log("[VideoCall][FE][socket][rejected]", parsed.data);
-            setActiveVideoCall(null);
-            setIncomingVideoCall(null);
-            return;
-          }
-
-          if (
-            parsed.event === SocketEvent.VIDEO_CALL_ACCEPTED &&
-            isVideoCallInfo(parsed.data)
-          ) {
-            console.log("[VideoCall][FE][socket][accepted]", {
-              sessionId: parsed.data.sessionId,
-              roomId: parsed.data.roomId,
-              hasToken: !!parsed.data.token,
-            });
-
-            setActiveVideoCall(parsed.data);
-            return;
-          }
-
-          if (
-            parsed.event === SocketEvent.VIDEO_CALL_INVITE &&
-            isVideoCallInvite(parsed.data)
-          ) {
-            console.log("[VideoCall][FE][socket][invite]", parsed.data);
-
-            const currentUserId = Number(localStorage.getItem("userId"));
-            if (parsed.data.callerId === currentUserId) return;
-
-            const peer = {
-              userId: parsed.data.callerId,
-              fullName:
-                parsed.data.callerName || `User ${parsed.data.callerId}`,
-              avatar: parsed.data.callerAvatar || null,
-            };
-
-            setIncomingPeer(peer);
-
-            localStorage.setItem(
-              `videoCallPeer:${parsed.data.sessionId}`,
-              JSON.stringify(peer),
-            );
-
-            setIncomingVideoCall(parsed.data);
-            return;
-          }
-
-          if (
-            parsed.event === SocketEvent.NEW_MESSAGE &&
-            parsed.data &&
-            "message" in parsed.data
-          ) {
-            const currentUserId = Number(localStorage.getItem("userId"));
-
-            if (parsed.data.message.senderId !== currentUserId) {
-              sendDelivered(parsed.data.conversationId, [
-                parsed.data.message.messageId,
-              ]);
-            }
-          }
-
-          if (
-            parsed.event === SocketEvent.NEW_MESSAGE &&
-            parsed.data &&
-            "message" in parsed.data &&
-            parsed.data.conversationId !== Number(currentConverIdRef.current)
-          ) {
-            dispatch(
-              increaseUnread({
-                conversationId: parsed.data.conversationId,
-              }),
-            );
-
-            toast(
-              <ToastCustom
-                message={parsed.data.message.content || ""}
-                userName={parsed.data.message.senderId.toString() || ""}
-              />,
-              {
-                position: "bottom-right",
-                autoClose: 4000,
-              },
-            );
-          }
-
-          if (
-            parsed.event === SocketEvent.STUDY_SESSION_REMINDER &&
-            isStudySessionReminder(parsed.data)
-          ) {
-            console.log(
-              "[StudySessionReminder][FE][socket][reminder]",
-              parsed.data,
-            );
-            const reminder = normalizeStudySessionReminder(parsed.data);
-            console.log(
-              "[StudySessionReminder][FE][normalize] result:",
-              reminder,
-            );
-            if (!reminder) {
-              console.warn(
-                "[StudySessionReminder][FE] normalizeStudySessionReminder returned null, skipping toast",
-              );
-              return;
-            }
-
-            console.log(
-              "[StudySessionReminder][FE] Calling toast with toastId:",
-              reminder.toastId,
-            );
-            toast(
-              <StudySessionReminderToast
-                title={reminder.title}
-                startTime={reminder.startTime}
-                groupName={reminder.groupName}
-                subjectName={reminder.subjectName}
-                studyMode={reminder.studyMode}
-                location={reminder.location}
-                minutesBefore={reminder.minutesBefore}
-              />,
-              {
-                position: "top-right",
-                autoClose: 7000,
-                closeOnClick: true,
-                hideProgressBar: false,
-                toastId: reminder.toastId,
-              },
-            );
-            console.log("[StudySessionReminder][FE] toast() called successfully");
-          }
-        });
-
-        ws.onMessage("/topic/presence", (msg: any) => {
-          const parsed: SocketResponse = JSON.parse(msg);
-
-          if (parsed.event === SocketEvent.USER_PRESENCE) {
-            dispatch(updateNewMess(parsed));
-          }
-        });
+        if (
+          parsed.event === SocketEvent.NEW_MESSAGE &&
+          isNewMessageData(parsed.data) &&
+          parsed.data.conversationId !== Number(currentConverIdRef.current)
+        ) {
+          dispatch(increaseUnread({ conversationId: parsed.data.conversationId }))
+          toast(<ToastCustom message={parsed.data.message.content || ""} userName={parsed.data.message.senderId.toString() || ""}></ToastCustom>, {
+            position: "bottom-right",
+            autoClose: 4000,
+          })
+        }
+      })
+      ws.onMessage("/topic/presence", (msg: any) => {
+        const parsed: SocketResponse = JSON.parse(msg)
+        if (parsed.event === SocketEvent.USER_PRESENCE) {
+          dispatch(updateNewMess(parsed))
+        }
       })
       .catch((err) => {
         console.error("Loi connect:", err);
@@ -342,6 +250,16 @@ export default function MainLayout() {
     };
   };
 
+  const isNewMessageData = (data: unknown): data is { conversationId: number; message: { messageId: number; senderId: number; content?: string | null } } => {
+    return !!data &&
+      typeof data === "object" &&
+      "conversationId" in data &&
+      "message" in data &&
+      !!(data as any).message &&
+      typeof (data as any).message.messageId === "number" &&
+      typeof (data as any).message.senderId === "number"
+  }
+
   const acceptIncomingCall = () => {
     if (!incomingVideoCall || callActionLoading) return;
 
@@ -355,10 +273,16 @@ export default function MainLayout() {
           sessionId: call.sessionId,
           roomId: call.roomId,
           hasToken: !!call.token,
-        });
-
-        setIncomingVideoCall(null);
-        setActiveVideoCall(call);
+        })
+        setIncomingVideoCall(null)
+        setActiveVideoCall({
+          ...call,
+          isGroupCall: Boolean(incomingVideoCall.isGroupCall || incomingVideoCall.groupId || incomingVideoCall.conversationType === 0),
+          groupId: incomingVideoCall.groupId ?? call.groupId,
+          groupName: incomingVideoCall.groupName ?? call.groupName,
+          groupAvatar: incomingVideoCall.groupAvatar ?? call.groupAvatar,
+          conversationType: incomingVideoCall.conversationType ?? call.conversationType,
+        })
       })
       .catch((error) => {
         console.error("Cannot join video call", error);

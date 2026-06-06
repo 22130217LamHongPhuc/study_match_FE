@@ -184,7 +184,35 @@ export const loadProfileService = async (targetUserId: number) => {
 
 }
 
+export const updateUserProfileService = async (
+    userId: number,
+    payload: { fullName: string; bio: string; avatarUrl?: string | null },
+) => {
+    const token = localStorage.getItem('accessToken');
+    const res = await fetch(BASE_USER_SERVICE + `/users/${userId}/profile`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+        throw new Error(`Cannot update profile. HTTP ${res.status}`);
+    }
+
+    return readJson(res);
+}
+
 const unwrapPayload = (payload: any) => payload?.data ?? payload?.result ?? payload;
+
+const normalizeFriendUser = (item: any): FriendUser => ({
+    userId: Number(item?.userId ?? item?.user_id ?? item?.id),
+    fullName: item?.fullName ?? item?.full_name ?? item?.name ?? item?.username ?? "",
+    avatarUrl: item?.avatarUrl ?? item?.avatar_url ?? item?.avatar ?? null,
+    email: item?.email ?? null,
+})
 
 export const loadFriendListService = async (userId?: number): Promise<FriendUser[]> => {
     const currentUserId = userId ?? Number(localStorage.getItem('userId'));
@@ -205,12 +233,7 @@ export const loadFriendListService = async (userId?: number): Promise<FriendUser
     if (!Array.isArray(payload)) return [];
 
     return (payload as SocialFriendItem[])
-        .map((item) => ({
-            userId: Number(item.userId ?? item.user_id),
-            fullName: item.fullName ?? item.full_name ?? "",
-            avatarUrl: item.avatarUrl ?? item.avatar_url ?? null,
-            email: item.email ?? null,
-        }))
+        .map(normalizeFriendUser)
         .filter((item) => Boolean(item.userId));
 }
 
@@ -232,7 +255,11 @@ export const loadFriendProfilesService = async (friendIds: number[]): Promise<Fr
     }
 
     const payload = unwrapPayload(await readJson(res));
-    return Array.isArray(payload) ? payload : [];
+    if (!Array.isArray(payload)) return [];
+
+    return payload
+        .map(normalizeFriendUser)
+        .filter((item) => Boolean(item.userId));
 }
 
 export const loadFriendOnlineStatusesService = async (friendIds: number[]): Promise<Record<string, boolean>> => {

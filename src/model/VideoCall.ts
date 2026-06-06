@@ -9,6 +9,11 @@ export interface VideoCallInfo {
     tokenExpiredAt: number
     targetUserId?: number | null
     callType?: "AUDIO" | "VIDEO"
+    isGroupCall?: boolean
+    groupId?: number | null
+    groupName?: string | null
+    groupAvatar?: string | null
+    conversationType?: number | null
 }
 
 export interface VideoCallInviteData {
@@ -19,10 +24,16 @@ export interface VideoCallInviteData {
     callerName?: string | null
     callerAvatar?: string | null
     callType?: "AUDIO" | "VIDEO"
+    isGroupCall?: boolean
+    groupId?: number | null
+    groupName?: string | null
+    groupAvatar?: string | null
+    conversationType?: number | null
 }
 
 export interface VideoCallPeerInfo {
     userId?: number | null
     fullName: string
     avatar?: string | null
+    isGroupCall?: boolean
 }

@@ -58,10 +58,12 @@ export default function VideoCallRoom({ call, peer, onClose }: VideoCallRoomProp
         const zego = ZegoUIKitPrebuilt.create(kitToken)
         zegoRef.current = zego
 
+        const isGroupCall = Boolean(call.isGroupCall || displayPeer?.isGroupCall || call.conversationType === 0 || call.groupId)
+
         zego.joinRoom({
             container: containerRef.current,
             scenario: {
-                mode: ZegoUIKitPrebuilt.OneONoneCall,
+                mode: isGroupCall ? ZegoUIKitPrebuilt.GroupCall : ZegoUIKitPrebuilt.OneONoneCall,
             },
             showPreJoinView: false,
             turnOnMicrophoneWhenJoining: true,
@@ -81,7 +83,7 @@ export default function VideoCallRoom({ call, peer, onClose }: VideoCallRoomProp
                 console.error("Cannot destroy ZEGO audio room", error)
             }
         }
-    }, [call, onClose])
+    }, [call, displayPeer, onClose])
 
     const closeCall = () => {
         if (ending) return

@@ -6,15 +6,14 @@ import VideocamIcon from '@mui/icons-material/Videocam'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ReplyIcon from '@mui/icons-material/Reply'
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt'
-import { Avatar, Box, CircularProgress, IconButton } from '@mui/material'
+import { Avatar, Box, CircularProgress, IconButton, Tooltip } from '@mui/material'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MessageInterface } from '../../model/Conversation'
 import { submitReaction } from '../../services/ReactionService'
-import { recallMess } from '../../services/ChatService'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
 import { SocketEvent } from '../../enum/SocketEvent'
-import { ReactionData } from '../../model/Reaction'
+import { ReactionData, ReactionDTO } from '../../model/Reaction'
 
 type VisibleMessageStatus = {
     messageId: number
@@ -30,14 +29,29 @@ type ListMessProps = {
     onLoadOlderMessages?: () => void
     loadingOlderMessages?: boolean
     hasMoreMessages?: boolean
+    onRecallMessage?: (messageId: number) => void
+    isGroupConversation?: boolean
+    senderProfiles?: Record<number, {
+        userId?: number
+        user_id?: number
+        id?: number
+        fullName?: string | null
+        full_name?: string | null
+        name?: string | null
+        username?: string | null
+        avatarUrl?: string | null
+        avatar_url?: string | null
+        avatar?: string | null
+    }>
 }
 
-export default function ListMess({ conversation, setReplyMess, fileLoading, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false }: ListMessProps) {
+export default function ListMess({ conversation, setReplyMess, fileLoading, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false, onRecallMessage, isGroupConversation = false, senderProfiles = {} }: ListMessProps) {
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
-    const [messageReactions, setMessageReactions] = useState<Record<number, string>>({})
+    const [messageReactions, setMessageReactions] = useState<Record<number, ReactionDTO[]>>({})
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
     const currentUserId = Number(localStorage.getItem("userId"))
+    const currentUser = useSelector((state: RootState) => state.user)
     const currentConversationId = useSelector((state: RootState) => state.chat.currentConversationId)
     const scrollContainerRef = useRef<HTMLDivElement | null>(null)
     const previousMessageCountRef = useRef(conversation.length)
@@ -51,6 +65,133 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
     const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim"]
     const currenConverID = useSelector((state: RootState) => state.chat.currentConversationId)
     const latestOutgoingMessageId = conversation.find((message) => message.senderId === currentUserId)?.messageId ?? null
+
+    const upsertReaction = (current: ReactionDTO[], reaction: ReactionDTO) => {
+        const senderId = reaction.senderId
+        if (senderId === undefined || senderId === null) {
+            return [...current, reaction]
+        }
+        const exists = current.some((item) => item.senderId === senderId)
+        if (!exists) {
+            return [...current, reaction]
+        }
+        return current.map((item) => item.senderId === senderId ? reaction : item)
+    }
+
+    const renderReactionBadges = (messageId: number) => {
+        const reactionItems = messageReactions[messageId] || []
+        const uniqueEmojis = Array.from(new Set(reactionItems.map((reaction) => reaction.emoji).filter(Boolean)))
+        return uniqueEmojis
+    }
+
+    const getSenderProfile = (senderId: number) => senderProfiles[senderId]
+
+    const getSenderName = (senderId: number) => {
+        const profile = getSenderProfile(senderId)
+        return profile?.fullName || profile?.full_name || profile?.name || profile?.username || `User ${senderId}`
+    }
+
+    const getSenderAvatar = (senderId: number) => {
+        const profile = getSenderProfile(senderId)
+        return profile?.avatarUrl || profile?.avatar_url || profile?.avatar || undefined
+    }
+
+    const getReactionSenderName = (senderId?: number) => {
+        if (!senderId) return "Ng\u01b0\u1eddi d\u00f9ng"
+        if (senderId === currentUserId) return currentUser.username || "B\u1ea1n"
+        return getSenderName(senderId)
+    }
+
+    const renderReactionBadge = (messageId: number, horizontal: "left" | "right") => {
+        const badgeEmojis = renderReactionBadges(messageId)
+        if (badgeEmojis.length === 0) return null
+
+        const reactionItems = messageReactions[messageId] || []
+        const badge = (
+            <Box
+                sx={{
+                    position: "absolute",
+                    [horizontal]: -8,
+                    bottom: -12,
+                    minWidth: 22,
+                    height: 22,
+                    px: 0.4,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bgcolor: "#fff",
+                    color: "#202124",
+                    border: "1px solid rgba(0,0,0,0.08)",
+                    borderRadius: "50%",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
+                    fontSize: 13,
+                    lineHeight: 1,
+                    cursor: isGroupConversation ? "default" : "inherit",
+                }}
+            >
+                {badgeEmojis.join("")}
+            </Box>
+        )
+
+        if (!isGroupConversation) return badge
+
+        return (
+            <Tooltip
+                arrow
+                placement="top"
+                title={
+                    <Box sx={{ py: 0.25, fontFamily: '"Inter", "Roboto", "Arial", sans-serif' }}>
+                        {reactionItems.map((reaction, index) => (
+                            <Box
+                                key={`${reaction.senderId ?? "unknown"}-${reaction.emoji}-${index}`}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: 1.5,
+                                    minWidth: 130,
+                                    fontSize: 13,
+                                    lineHeight: 1.5,
+                                }}
+                            >
+                                <Box component="span">{getReactionSenderName(reaction.senderId)}</Box>
+                                <Box component="span">{reaction.emoji}</Box>
+                            </Box>
+                        ))}
+                    </Box>
+                }
+            >
+                {badge}
+            </Tooltip>
+        )
+    }
+
+    useEffect(() => {
+        const loadedReactions: Record<number, ReactionDTO[]> = {}
+        conversation.forEach((message) => {
+            if (message.messageId > 0 && message.reactions && message.reactions.length > 0) {
+                loadedReactions[message.messageId] = message.reactions
+            }
+        })
+        setMessageReactions((prev) => {
+            const currentMessageIds = new Set(conversation.map((message) => message.messageId))
+            const next: Record<number, ReactionDTO[]> = {}
+            Object.entries(prev).forEach(([messageId, reactions]) => {
+                const numericMessageId = Number(messageId)
+                if (currentMessageIds.has(numericMessageId)) {
+                    next[numericMessageId] = reactions
+                }
+            })
+            Object.entries(loadedReactions).forEach(([messageId, reactions]) => {
+                const numericMessageId = Number(messageId)
+                next[numericMessageId] = reactions.reduce(
+                    (current, reaction) => upsertReaction(current, reaction),
+                    next[numericMessageId] || []
+                )
+            })
+            return next
+        })
+    }, [conversation])
 
     useLayoutEffect(() => {
         const previousMessageCount = previousMessageCountRef.current
@@ -76,54 +217,91 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
     }, [conversation.length])
 
     useEffect(() => {
-        if (activeMoreMessageId === null) {
+        if (activeMoreMessageId === null && activeReactionMessageId === null) {
             return
         }
         const handleClickOutside = (event: MouseEvent) => {
             if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
                 setActiveMoreMessageId(null)
+                setActiveReactionMessageId(null)
             }
         }
         document.addEventListener("mousedown", handleClickOutside)
         return () => document.removeEventListener("mousedown", handleClickOutside)
-    }, [activeMoreMessageId])
+    }, [activeMoreMessageId, activeReactionMessageId])
 
     const emojjRef = useRef<number>(-10)
     const hanldeClickEmojj = (messageId: number, emojj: string) => {
         emojjRef.current = messageId
         console.log("Clicked emoji:", emojj, "for message ID:", messageId);
         if (!currenConverID) return
+        setActiveReactionMessageId(null);
+        setMessageReactions((prev) => ({
+            ...prev,
+            [messageId]: upsertReaction(prev[messageId] || [], {
+                messageId,
+                senderId: currentUserId,
+                emoji: emojj,
+            }),
+        }));
+        setActiveMoreMessageId(null);
         submitReaction(emojj, messageId, currenConverID)
-        // setActiveReactionMessageId(null);
-        // setMessageReactions((prev) => ({
-        //     ...prev,
-        //     [messageId]: res?.data?.emoji ?? emojj,
-        // }));
-        // setActiveMoreMessageId(null);
-        // console.log({ messageId, emojj })
-
     }
     const store = useSelector((state: RootState) => state.chat.newMess)
     const storeEvent = useSelector((state: RootState) => state.chat.newMess?.event)
     const storeData = useSelector((state: RootState) => state.chat.newMess?.data) as ReactionData | undefined;
     useEffect(() => {
-        if (!storeEvent || emojjRef.current <= 0 || !storeData || !storeData.message) return
-        if (storeEvent === SocketEvent.REACTION_ADD) {
+        if (!storeEvent || !storeData || !storeData.message) return
+        if (storeEvent === SocketEvent.REACTION_ADD || storeEvent === SocketEvent.REACTION_ACK) {
+            console.log("[Reaction][FE][ListMess][receive]", {
+                event: storeEvent,
+                currentConversationId,
+                socketConversationId: storeData.conversationId,
+                payload: storeData.message,
+                currentMessageIds: conversation.map((message) => message.messageId),
+            })
+            const reactionMessageId = Number(storeData.message.messageId ?? storeData.message.messageID)
+            if (!Number.isFinite(reactionMessageId) || reactionMessageId <= 0) {
+                console.log("[Reaction][FE][ListMess][skip-invalid-message-id]", {
+                    reactionMessageId,
+                    payload: storeData.message,
+                })
+                return
+            }
+            const belongsToCurrentConversation =
+                storeData.conversationId === null ||
+                Number(storeData.conversationId) === Number(currentConversationId) ||
+                conversation.some((message) => message.messageId === reactionMessageId)
+            if (!belongsToCurrentConversation) {
+                console.log("[Reaction][FE][ListMess][skip-wrong-conversation]", {
+                    reactionMessageId,
+                    currentConversationId,
+                    socketConversationId: storeData.conversationId,
+                })
+                return
+            }
             setActiveReactionMessageId(null);
-            const emoji = storeData.message.emoji;
+            const reaction = {
+                ...storeData.message,
+                messageId: reactionMessageId,
+            }
             setMessageReactions((prev) => ({
                 ...prev,
-                [emojjRef.current]: emoji,
+                [reactionMessageId]: upsertReaction(prev[reactionMessageId] || [], reaction),
             }));
+            console.log("[Reaction][FE][ListMess][apply]", {
+                reactionMessageId,
+                reaction,
+            })
             setActiveMoreMessageId(null);
         }
 
-    }, [store])
+    }, [store, currentConversationId, storeData, storeEvent])
     const clickMoreButton = (action: string, messageId: number) => {
         console.log('nhan vao more nè', action, messageId)
         if (!currentConversationId) return
         if (action === 'Gỡ') {
-            recallMess(currentConversationId, messageId)
+            onRecallMessage?.(messageId)
         }
 
     }
@@ -171,7 +349,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
 
         return (
             <Box
-                ref={activeMoreMessageId === mess.messageId ? moreMenuRef : undefined}
+                ref={isActive ? moreMenuRef : undefined}
                 className="message-actions"
                 sx={{
                     display: "flex",
@@ -337,6 +515,41 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
     }
 
     const isCallMessage = (mess: MessageInterface) => mess.type === "CALL_AUDIO" || mess.type === "CALL_VIDEO"
+
+    const isDeletedMessage = (mess: MessageInterface) => mess.isDeleted || (!mess.content && !mess.mediaURL)
+
+    const renderDeletedMessage = (mess: MessageInterface) => {
+        const isMine = mess.senderId === currentUserId
+        return (
+            <Box
+                key={mess.messageId}
+                sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: isMine ? "flex-end" : "flex-start",
+                    mb: 1,
+                    pl: isMine ? 0 : 4.75,
+                }}
+            >
+                <Box
+                    sx={{
+                        maxWidth: "70%",
+                        px: 2,
+                        py: 1,
+                        borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                        bgcolor: isMine ? "#b30000" : "#fff",
+                        color: isMine ? "#fff" : "#5f6368",
+                        fontSize: 15,
+                        fontStyle: "italic",
+                        lineHeight: 1.4,
+                        wordBreak: "break-word",
+                    }}
+                >
+                    Đã gỡ tin nhắn
+                </Box>
+            </Box>
+        )
+    }
 
     const renderCallHistory = (mess: MessageInterface) => {
         let detail: { status?: string; durationSeconds?: number; callType?: "AUDIO" | "VIDEO" } = {}
@@ -652,7 +865,181 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                 if (isCallMessage(mess)) {
                     return renderCallHistory(mess)
                 }
+                if (isDeletedMessage(mess)) {
+                    return renderDeletedMessage(mess)
+                }
                 if (mess.senderId !== currentUserId) {
+                    if (!isGroupConversation) {
+                        return (
+                            <>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "flex-start",
+                                        mb: 1,
+                                        alignItems: "flex-end",
+                                        gap: 1,
+                                        width: "100%",
+                                        "&:hover .message-actions": {
+                                            opacity: 1,
+                                            pointerEvents: "auto",
+                                        },
+                                    }} key={mess.messageId}
+                                >
+
+                                    <Avatar
+                                        src="https://i.pravatar.cc/100?img=12"
+                                        sx={{ width: 30, height: 30 }}
+                                    />
+                                    {
+                                        (mess.type === 'text' && mess.content) ?
+
+                                            (<>
+                                                <Box
+                                                    sx={{
+                                                        position: "relative",
+                                                        bgcolor: "#fff",
+                                                        px: 2,
+                                                        py: 1,
+                                                        borderRadius: "18px 18px 18px 4px",
+                                                        maxWidth: "70%",
+                                                    }}
+                                                >
+                                                    {mess.content ? mess.content : 'Tin nháº¯n Ä‘Ã£ Ä‘Æ°á»£c thu há»“i'}
+                                                    {renderReactionBadge(mess.messageId, "right")}
+                                                </Box>
+                                                {renderMessageActions(mess, "right")}
+                                            </>) :
+
+
+                                            (<>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+
+                                                        mb: 1,
+                                                        width: "100%",
+                                                    }}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            width: 240,
+                                                            overflow: "hidden",
+                                                            borderRadius: "18px 18px 4px 18px",
+                                                            bgcolor: "#b30000",
+                                                            color: "#fff",
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: "100%",
+                                                                height: 170,
+                                                                overflow: "hidden",
+                                                                position: "relative",
+                                                                bgcolor: "black",
+                                                            }}
+                                                        >
+                                                            {
+                                                                (mess.type === 'video/mp4') ?
+
+                                                                    (<><Box
+                                                                        component="video"
+                                                                        controls
+                                                                        src={mess.mediaURL ? mess.mediaURL : ''}
+
+                                                                        sx={{
+                                                                            width: "100%",
+                                                                            height: "100%",
+                                                                            objectFit: "cover",
+                                                                            display: "block",
+                                                                        }}
+                                                                    /></>) :
+
+
+                                                                    (<><Box
+                                                                        component="img"
+                                                                        src={mess.mediaURL ? mess.mediaURL : ''}
+                                                                        alt="image message"
+                                                                        sx={{
+                                                                            width: "100%",
+                                                                            height: "100%",
+                                                                            objectFit: "cover",
+                                                                            display: "block",
+                                                                        }}
+                                                                    />
+
+                                                                        <Box
+                                                                            component="a"
+                                                                            href={mess.mediaURL ? mess.mediaURL : ''}
+                                                                            target='_blank'
+                                                                            download={mess.fileName}
+                                                                            sx={{
+                                                                                position: "absolute",
+                                                                                top: 8,
+                                                                                right: 8,
+                                                                                width: 34,
+                                                                                height: 34,
+                                                                                borderRadius: "50%",
+                                                                                bgcolor: "#fff",
+                                                                                color: "black",
+                                                                                display: "flex",
+                                                                                alignItems: "center",
+                                                                                justifyContent: "center",
+                                                                                textDecoration: "none",
+                                                                                fontSize: 18,
+                                                                                fontWeight: 700,
+                                                                                cursor: "pointer",
+                                                                            }}
+                                                                        >
+                                                                            â†“
+                                                                        </Box>
+                                                                    </>)
+                                                            }
+
+
+
+
+                                                        </Box>
+
+                                                        {
+                                                            mess.content && (
+                                                                <>
+                                                                    <Box
+                                                                        sx={{
+                                                                            px: 1.5,
+                                                                            py: 1,
+                                                                            fontSize: 14,
+                                                                            lineHeight: 1.4,
+                                                                            wordBreak: "break-word",
+                                                                        }}
+                                                                    >
+                                                                        {mess.content}
+                                                                    </Box>
+                                                                </>
+                                                            )
+                                                        }
+
+
+                                                    </Box>
+                                                </Box>
+
+                                            </>)
+                                    }
+
+                                </Box>
+
+                            </>
+                        )
+                    }
+
+                    const senderName = getSenderName(mess.senderId)
+                    const senderAvatar = getSenderAvatar(mess.senderId)
+                    console.log("[GroupMessage][FE][render-sender-profile]", {
+                        senderId: mess.senderId,
+                        profile: getSenderProfile(mess.senderId),
+                        senderName,
+                        senderAvatar,
+                    })
                     return (
                         <>
                             <Box
@@ -660,7 +1047,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                                     display: "flex",
                                     justifyContent: "flex-start",
                                     mb: 1,
-                                    alignItems: "flex-end",
+                                    alignItems: "flex-start",
                                     gap: 1,
                                     width: "100%",
                                     "&:hover .message-actions": {
@@ -671,13 +1058,39 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                             >
 
                                 <Avatar
-                                    src="https://i.pravatar.cc/100?img=12"
-                                    sx={{ width: 30, height: 30 }}
-                                />
+                                    src={isGroupConversation ? senderAvatar : "https://i.pravatar.cc/100?img=12"}
+                                    sx={{ width: 30, height: 30, mt: "18px" }}
+                                >
+                                    {isGroupConversation ? senderName.charAt(0).toUpperCase() : undefined}
+                                </Avatar>
+                                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", maxWidth: "70%" }}>
+                                    {isGroupConversation && (
+                                        <Box
+                                            sx={{
+                                                ml: 1,
+                                                mb: 0.3,
+                                                color: "#5f4638",
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                lineHeight: "16px",
+                                                minHeight: 16,
+                                            }}
+                                        >
+                                            {senderName}
+                                        </Box>
+                                    )}
                                 {
                                     (mess.type === 'text' && mess.content) ?
 
                                         (<>
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "flex-end",
+                                                    gap: 1,
+                                                    width: "100%",
+                                                }}
+                                            >
                                             <Box
                                                 sx={{
                                                     position: "relative",
@@ -685,34 +1098,14 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                                                     px: 2,
                                                     py: 1,
                                                     borderRadius: "18px 18px 18px 4px",
-                                                    maxWidth: "70%",
+                                                    maxWidth: "100%",
                                                 }}
                                             >
                                                 {mess.content ? mess.content : 'Tin nhắn đã được thu hồi'}
-                                                {messageReactions[mess.messageId] && (
-                                                    <Box
-                                                        sx={{
-                                                            position: "absolute",
-                                                            right: -8,
-                                                            bottom: -12,
-                                                            width: 22,
-                                                            height: 22,
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            bgcolor: "#fff",
-                                                            border: "1px solid rgba(0,0,0,0.08)",
-                                                            borderRadius: "50%",
-                                                            boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
-                                                            fontSize: 13,
-                                                            lineHeight: 1,
-                                                        }}
-                                                    >
-                                                        {messageReactions[mess.messageId]}
-                                                    </Box>
-                                                )}
+                                                {renderReactionBadge(mess.messageId, "right")}
                                             </Box>
                                             {renderMessageActions(mess, "right")}
+                                            </Box>
                                         </>) :
 
 
@@ -829,6 +1222,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
 
                                         </>)
                                 }
+                                </Box>
 
                             </Box>
 
@@ -880,29 +1274,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                                                 }}
                                             >
                                                 {mess.content ? mess.content : 'Bạn đã thu hồi tin nhắn'}
-                                                {messageReactions[mess.messageId] && (
-                                                    <Box
-                                                        sx={{
-                                                            position: "absolute",
-                                                            left: -8,
-                                                            bottom: -12,
-                                                            width: 22,
-                                                            height: 22,
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            bgcolor: "#fff",
-                                                            color: "#202124",
-                                                            border: "1px solid rgba(0,0,0,0.08)",
-                                                            borderRadius: "50%",
-                                                            boxShadow: "0 2px 6px rgba(0,0,0,0.16)",
-                                                            fontSize: 13,
-                                                            lineHeight: 1,
-                                                        }}
-                                                    >
-                                                        {messageReactions[mess.messageId]}
-                                                    </Box>
-                                                )}
+                                                {renderReactionBadge(mess.messageId, "left")}
                                             </Box>
                                         </Box>
                                         {renderOutgoingStatus(mess)}

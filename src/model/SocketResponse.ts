@@ -1,20 +1,6 @@
-import { MessageInterface } from "./Conversation";
-import { VideoCallInfo, VideoCallInviteData } from "./VideoCall";
-
-export interface StudySessionReminderData {
-  conversationId: number;
-  sessionId: number;
-  title: string;
-  startTime: string;
-  endTime?: string | null;
-  groupName?: string | null;
-  subjectName?: string | null;
-  studyMode?: string | null;
-  location?: string | null;
-  meetingUrl?: string | null;
-  minutesBefore?: number | null;
-  recipientName?: string | null;
-}
+import { MessageInterface } from "./Conversation"
+import { ReactionData } from "./Reaction"
+import { VideoCallInfo, VideoCallInviteData } from "./VideoCall"
 
 export interface SocketData {
   conversationId: number;
@@ -37,13 +23,6 @@ export interface ReplyData {
 }
 
 export interface SocketResponse {
-  event: string | null;
-  data:
-    | SocketData
-    | ReplyData
-    | MessageStatusData
-    | VideoCallInviteData
-    | VideoCallInfo
-    | StudySessionReminderData
-    | null;
+    event: string | null,
+    data: SocketData | ReplyData | MessageStatusData | ReactionData | VideoCallInviteData | VideoCallInfo | null
 }

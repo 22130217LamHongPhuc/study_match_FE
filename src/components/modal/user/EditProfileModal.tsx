@@ -1,89 +1,210 @@
-import {
-    Modal,
-    Box,
-    Typography,
-    TextField,
-    Avatar,
-    Button,
-    IconButton,
-    Stack,
-    styled
-} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
-import { stat } from 'fs';
+import {
+    Avatar,
+    Box,
+    Button,
+    IconButton,
+    Modal,
+    Stack,
+    TextField,
+    Typography,
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { UserProfile } from '../../../model/UserModel';
+import { updateUserProfileService } from '../../../services/FriendService';
+import { uploadPostMedia } from '../../../services/SocialPostService';
 
-export default function EditProfileModal({ stateModal, setModalEdit }: { stateModal: boolean, setModalEdit: React.Dispatch<React.SetStateAction<boolean>>; }) {
-    const user = useSelector((state: RootState) => state.user)
+type EditProfileModalProps = {
+    stateModal: boolean;
+    setModalEdit: React.Dispatch<React.SetStateAction<boolean>>;
+    profile?: UserProfile;
+    onProfileUpdated?: (profile: UserProfile) => void;
+};
+
+export default function EditProfileModal({
+    stateModal,
+    setModalEdit,
+    profile,
+    onProfileUpdated,
+}: EditProfileModalProps) {
+    const [fullName, setFullName] = useState('');
+    const [bio, setBio] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        if (!stateModal) return;
+        setFullName(profile?.fullName || '');
+        setBio(profile?.bio || '');
+        setAvatarUrl(profile?.avatarUrl || null);
+        setAvatarFile(null);
+        setAvatarPreview((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return null;
+        });
+    }, [stateModal, profile]);
+
+    useEffect(() => {
+        return () => {
+            if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        };
+    }, [avatarPreview]);
+
+    const handleClose = () => {
+        if (saving) return;
+        setModalEdit(false);
+    };
+
+    const handleSelectAvatar = (file: File | null) => {
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            alert('Chỉ chọn ảnh đại diện dạng hình ảnh');
+            return;
+        }
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+    };
+
+    const handleSave = async () => {
+        const userId = Number(localStorage.getItem('userId'));
+        if (!userId) {
+            alert('Không tìm thấy userId. Vui lòng đăng nhập lại.');
+            return;
+        }
+        if (!fullName.trim()) {
+            alert('Họ và tên không được để trống');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const uploadedAvatar = avatarFile ? await uploadPostMedia(avatarFile) : null;
+            const updated = await updateUserProfileService(userId, {
+                fullName: fullName.trim(),
+                bio: bio.trim(),
+                avatarUrl: uploadedAvatar?.mediaUrl || avatarUrl,
+            });
+            onProfileUpdated?.({
+                ...(profile as UserProfile),
+                ...updated,
+                fullName: updated?.fullName ?? fullName.trim(),
+                bio: updated?.bio ?? bio.trim(),
+                avatarUrl: updated?.avatarUrl ?? uploadedAvatar?.mediaUrl ?? avatarUrl ?? '',
+            });
+            setModalEdit(false);
+        } catch (error) {
+            console.error(error);
+            alert('Không thể cập nhật hồ sơ');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
-        <>
-            <Modal
-                open={stateModal}
-                aria-labelledby="edit-profile-title"
-                aria-describedby="edit-profile-description"
-            >
-                <Box sx={{
+        <Modal
+            open={stateModal}
+            onClose={handleClose}
+            aria-labelledby="edit-profile-title"
+            aria-describedby="edit-profile-description"
+        >
+            <Box
+                sx={{
                     position: 'absolute',
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: { xs: '90%', sm: 500 },
+                    width: { xs: '92%', sm: 560 },
                     bgcolor: 'background.paper',
                     boxShadow: 24,
                     p: 4,
                     borderRadius: 2,
                     outline: 'none',
-                }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                        <Typography id="edit-profile-title" variant="h6" component="h2" fontWeight="bold">
-                            Chỉnh sửa thông tin
-                        </Typography>
-                        <IconButton size="medium" onClick={() => setModalEdit(false)}>
-                            <CloseIcon />
-                        </IconButton>
-                    </Stack>
+                }}
+            >
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                    <Typography id="edit-profile-title" variant="h5" component="h2" fontWeight="bold">
+                        Chỉnh sửa thông tin
+                    </Typography>
+                    <IconButton size="medium" onClick={handleClose}>
+                        <CloseIcon />
+                    </IconButton>
+                </Stack>
 
-
-                    <Stack spacing={3}>
-                        <Box textAlign="center" mb={2}>
+                <Stack spacing={3}>
+                    <Box textAlign="center" mb={1}>
+                        <Button component="label" sx={{ p: 0, borderRadius: '50%', position: 'relative' }}>
                             <Avatar
-                                src={user?.avatar || 'https://www.shutterstock.com/image-illustration/generic-image-default-avatar-profile-600nw-1902153229.jpg'}
-                                sx={{ width: 100, height: 100, mx: 'auto', border: '2px solid #ddd' }}
+                                src={avatarPreview || avatarUrl || undefined}
+                                sx={{ width: 126, height: 126, mx: 'auto', border: '2px solid #ddd' }}
+                            >
+                                {fullName?.charAt(0)?.toUpperCase()}
+                            </Avatar>
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    right: 8,
+                                    bottom: 8,
+                                    width: 34,
+                                    height: 34,
+                                    borderRadius: '50%',
+                                    bgcolor: '#e5e7eb',
+                                    color: '#111827',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                                }}
+                            >
+                                <PhotoCameraIcon sx={{ fontSize: 19 }} />
+                            </Box>
+                            <input
+                                hidden
+                                type="file"
+                                accept="image/*"
+                                onChange={(event) => {
+                                    handleSelectAvatar(event.target.files?.[0] || null);
+                                    event.target.value = '';
+                                }}
                             />
-                        </Box>
-
-                        <TextField
-                            label="Họ và tên"
-                            name="name"
-                            variant="outlined"
-                            fullWidth
-                            value={user.username}
-                        />
-                        <TextField
-                            label="Bio"
-                            name="bio"
-                            variant="outlined"
-                            fullWidth
-                            multiline
-                            rows={4}
-                            value={'đây la mô tả'}
-                        />
-                    </Stack>
-
-                    <Stack direction="row" justifyContent="flex-end" spacing={2} mt={4}>
-                        <Button variant="outlined" onClick={() => setModalEdit(false)}>
-                            Hủy
                         </Button>
-                        <Button variant="contained" sx={{ px: 5, background: "linear-gradient(90deg, #4f8dfd, #3b82f6)" }}>
-                            Lưu
-                        </Button>
-                    </Stack>
-                </Box>
-            </Modal>
+                    </Box>
 
-        </>
-    )
+                    <TextField
+                        label="Họ và tên"
+                        variant="outlined"
+                        fullWidth
+                        value={fullName}
+                        onChange={(event) => setFullName(event.target.value)}
+                    />
+                    <TextField
+                        label="Bio"
+                        variant="outlined"
+                        fullWidth
+                        multiline
+                        rows={5}
+                        value={bio}
+                        onChange={(event) => setBio(event.target.value)}
+                    />
+                </Stack>
+
+                <Stack direction="row" justifyContent="flex-end" spacing={2} mt={4}>
+                    <Button variant="outlined" onClick={handleClose} disabled={saving}>
+                        Hủy
+                    </Button>
+                    <Button
+                        variant="contained"
+                        disabled={saving}
+                        onClick={handleSave}
+                        sx={{ px: 5, background: 'linear-gradient(90deg, #4f8dfd, #3b82f6)' }}
+                    >
+                        {saving ? 'Đang lưu...' : 'Lưu'}
+                    </Button>
+                </Stack>
+            </Box>
+        </Modal>
+    );
 }

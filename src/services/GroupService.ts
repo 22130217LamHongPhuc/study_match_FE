@@ -309,3 +309,17 @@ export async function joinMemberIntoGroup(
 
   return response;
 }
+
+export async function getActiveGroupMemberIds(
+  groupId: number,
+): Promise<APIResponseData<number[]>> {
+  const response = await apiFetch<number[]>(
+    `/api/groups/${groupId}/members/active-user-ids`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
