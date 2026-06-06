@@ -34,11 +34,11 @@ export default function Header() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    const response = await logout();
     WebSocketManager.getInstance().disconnect();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");
+    const response = await logout();
     if (response.success) {
       navigate("/login");
     } else {
@@ -74,7 +74,19 @@ export default function Header() {
     navigate("/register");
   };
 
-  const isLoggedIn = Boolean(user?.username);
+  const hanldeLougout = async () => {
+    const response = await logout();
+
+    WebSocketManager.getInstance().disconnect();
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    if (response.success) {
+      navigate("/login");
+    }
+  };
+
+  const isLoggedIn = localStorage.getItem("accessToken") ? true : false;
 
   return (
     <>
@@ -283,7 +295,9 @@ export default function Header() {
         >
           {isLoggedIn ? (
             <Box sx={{ px: 1.5, py: 1 }}>
-              <Typography sx={{ fontWeight: 700, fontSize: 14, color: "#1f2937" }}>
+              <Typography
+                sx={{ fontWeight: 700, fontSize: 14, color: "#1f2937" }}
+              >
                 {user?.username}
               </Typography>
               <Typography sx={{ fontSize: 12, color: "#9ca3af" }}>
@@ -292,7 +306,9 @@ export default function Header() {
             </Box>
           ) : (
             <Box sx={{ px: 1.5, py: 1 }}>
-              <Typography sx={{ fontWeight: 700, fontSize: 14, color: "#1f2937" }}>
+              <Typography
+                sx={{ fontWeight: 700, fontSize: 14, color: "#1f2937" }}
+              >
                 Chào bạn
               </Typography>
               <Typography sx={{ fontSize: 12, color: "#9ca3af" }}>
@@ -313,7 +329,9 @@ export default function Header() {
                   "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
                 }}
               >
-                <PersonOutlineIcon sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }} />
+                <PersonOutlineIcon
+                  sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }}
+                />
                 Hồ sơ của tôi
               </MenuItem>
               <MenuItem
@@ -326,7 +344,9 @@ export default function Header() {
                   "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }} />
+                <SettingsOutlinedIcon
+                  sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }}
+                />
                 Cài đặt tài khoản
               </MenuItem>
               <MenuItem
@@ -339,7 +359,9 @@ export default function Header() {
                   "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
                 }}
               >
-                <HelpOutlineIcon sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }} />
+                <HelpOutlineIcon
+                  sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }}
+                />
                 Hỗ trợ
               </MenuItem>
               <Divider sx={{ my: 0.5, borderColor: "#f0e6d9" }} />
@@ -353,7 +375,9 @@ export default function Header() {
                   "&:hover": { bgcolor: "#fef2f2" },
                 }}
               >
-                <LogoutOutlinedIcon sx={{ fontSize: 17, mr: 1, color: "#ef4444" }} />
+                <LogoutOutlinedIcon
+                  sx={{ fontSize: 17, mr: 1, color: "#ef4444" }}
+                />
                 Đăng xuất
               </MenuItem>
             </>
@@ -369,7 +393,9 @@ export default function Header() {
                   "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
                 }}
               >
-                <PersonOutlineIcon sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }} />
+                <PersonOutlineIcon
+                  sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }}
+                />
                 Đăng nhập
               </MenuItem>
               <MenuItem
@@ -382,7 +408,9 @@ export default function Header() {
                   "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }} />
+                <SettingsOutlinedIcon
+                  sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }}
+                />
                 Tạo tài khoản
               </MenuItem>
               <MenuItem
@@ -395,16 +423,15 @@ export default function Header() {
                   "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
                 }}
               >
-                <HelpOutlineIcon sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }} />
+                <HelpOutlineIcon
+                  sx={{ fontSize: 17, mr: 1, color: "#9ca3af" }}
+                />
                 Hỗ trợ
               </MenuItem>
             </>
           )}
         </Menu>
-        <SignInModal
-          open={modalSignIn}
-          setModal={setModalSignIn}
-        ></SignInModal>
+        <SignInModal open={modalSignIn} setModal={setModalSignIn}></SignInModal>
       </>
     </>
   );

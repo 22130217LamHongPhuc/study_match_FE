@@ -7,22 +7,24 @@ import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt
 import SendIcon from "@mui/icons-material/Send";
 import WelcomeConversation from "../../components/conversation/WelcomeConversion";
 import {
-    Avatar,
-    Box,
-    IconButton,
-    InputBase,
-    Paper,
-    Typography,
-    TextField,
+  Avatar,
+  Box,
+  IconButton,
+  InputBase,
+  Paper,
+  Typography,
+  TextField,
 } from "@mui/material";
-
-
-
-
 
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import React, { use, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { Client } from "@stomp/stompjs";
 import WebSocketManager from "../../socket/WebSocketManager";
@@ -34,7 +36,7 @@ import { APIResponse } from "../../model/APIResponse";
 import ListFriends from "../../components/conversation/ListFriends";
 import ListMess from "../../components/conversation/ListMess";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
-import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
+import CancelPresentationIcon from "@mui/icons-material/CancelPresentation";
 import ReplyMessage from "../../components/conversation/ReplyMessage";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
@@ -42,27 +44,29 @@ import { clearUnread, increaseUnread, updateCurrentConverId, upsertGroupMemberPr
 import { SocketEvent } from "../../enum/SocketEvent";
 import { MessageStatusData, SocketData } from "../../model/SocketResponse";
 import { VideoCallInfo } from "../../model/VideoCall";
-import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
+import {
+  rejectVideoCall,
+  startVideoCall,
+} from "../../services/VideoCallService";
 import VideoCallModal from "../../components/conversation/VideoCallModal";
 import { loadFriendProfilesService } from "../../services/FriendService";
 import { getActiveGroupMemberIds } from "../../services/GroupService";
 
-
 enum FileEnum {
-    IMAGE = 'IMAGE',
-    VIDEO = 'VIDEO',
-    FILE = 'FILE'
+  IMAGE = "IMAGE",
+  VIDEO = "VIDEO",
+  FILE = "FILE",
 }
 
-const MESSAGE_PAGE_SIZE = 25
-const MESSAGE_LOADING_MIN_MS = 250
+const MESSAGE_PAGE_SIZE = 25;
+const MESSAGE_LOADING_MIN_MS = 250;
 
 const waitForMinLoading = async (startedAt: number) => {
-    const remainingTime = MESSAGE_LOADING_MIN_MS - (Date.now() - startedAt)
-    if (remainingTime > 0) {
-        await new Promise((resolve) => setTimeout(resolve, remainingTime))
-    }
-}
+  const remainingTime = MESSAGE_LOADING_MIN_MS - (Date.now() - startedAt);
+  if (remainingTime > 0) {
+    await new Promise((resolve) => setTimeout(resolve, remainingTime));
+  }
+};
 
 export default function ConversationPage() {
     const [fileLoading, setFileLoading] = useState<boolean>(false)
@@ -358,15 +362,28 @@ export default function ConversationPage() {
             loadingOlderMessagesRef.current = false
             setLoadingOlderMessages(false)
         }
-    }
 
-    const storeNewMess = useSelector((state: RootState) => state.chat.newMess)
-    const storeEvent = useSelector((state: RootState) => state.chat.newMess?.event)
-    const isSocketData = (data: unknown): data is SocketData => {
-        return !!data && typeof data === "object" && "message" in data
-    }
-    const isMessageStatusData = (data: unknown): data is MessageStatusData => {
-        return !!data && typeof data === "object" && "messageIds" in data
+        return message;
+      });
+      pendingTempMessageIds.current = pendingIds;
+      const visibleStatusMessageId =
+        statusMessageIds.size > 0
+          ? Math.max(...Array.from(statusMessageIds))
+          : null;
+      if (visibleStatusMessageId !== null) {
+        setVisibleStatusIfNewer(visibleStatusMessageId, status);
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const latestOutgoingWithStatus = conversation.find(
+      (message) => message.senderId === currentUserId && !!message.status,
+    );
+    if (!latestOutgoingWithStatus?.status) {
+      setVisibleMessageStatus(null);
+      return;
     }
     const isReactionData = (data: unknown): data is { conversationId: number, message: { messageId?: number, messageID?: number, reactionId?: number, senderId?: number, emoji: string } | null } => {
         return !!data && typeof data === "object" && "message" in data
@@ -381,37 +398,25 @@ export default function ConversationPage() {
             DELIVERED: 2,
             SEEN: 3,
         }
-        if (!nextStatus) return false
-        if (!currentStatus) return true
-        return order[nextStatus] > order[currentStatus]
+        return [message, ...prev];
+      });
+      if (fileLoading) {
+        setFileLoading(false);
+      }
+      setMessageText("");
     }
-    const setVisibleStatusIfNewer = (
-        messageId: number,
-        status: MessageInterface["status"]
-    ) => {
-        if (!status) return
-        setVisibleMessageStatus((prev) => {
-            if (!prev) {
-                return { messageId, status }
-            }
-
-            // Temporary ids are negative and represent the newest optimistic message.
-            // Always prioritize them over older persisted ids for status display.
-            if (messageId < 0) {
-                return { messageId, status }
-            }
-
-            // If previous status is from an optimistic id, move to persisted id as soon as it appears.
-            if (prev.messageId < 0 && messageId > 0) {
-                return { messageId, status }
-            }
-
-            if (prev.messageId !== messageId) {
-                return messageId > prev.messageId ? { messageId, status } : prev
-            }
-
-            return shouldApplyStatus(prev.status, status) ? { messageId, status } : prev
-        })
+    if (storeEvent === SocketEvent.MESSAGE_RECALL) {
+      console.log("nhảy vào recall trong converation");
+      setConversation((prev: any[]) => {
+        return prev.map((item) => {
+          if (
+            item.messageId === (storeNewMess.data as any)?.message?.messageId
+          ) {
+            return (storeNewMess.data as any)?.message;
+          }
+          return item;
+        });
+      });
     }
     const updateOutgoingMessageStatus = (
         messageIds: number[],
@@ -667,43 +672,92 @@ export default function ConversationPage() {
         if (storeEvent === SocketEvent.VIDEO_CALL_ENDED) {
             setWaitingVideoCall(null)
         }
+        return [incomingMessage, ...prev];
+      });
 
-        if (storeEvent === SocketEvent.VIDEO_CALL_ACCEPTED || storeEvent === SocketEvent.VIDEO_CALL_REJECTED) {
-            setWaitingVideoCall(null)
-            if (storeEvent === SocketEvent.VIDEO_CALL_REJECTED) {
-                setRejectedVideoCall(true)
-            }
+      if (incomingMessage.senderId !== currentUserId) {
+        if (document.visibilityState === "visible") {
+          markLatestIncomingSeen(
+            [...conversation, incomingMessage],
+            storeNewMess.data.conversationId,
+          );
+        } else {
+          dispatch(
+            increaseUnread({
+              conversationId: storeNewMess.data.conversationId,
+            }),
+          );
         }
-    }, [storeNewMess, storeEvent, currentUserId, dispatch, fileLoading])
-
-    const handleOpenFile = () => {
-        fileInputRef.current.click();
+      }
     }
-    const maxVideoSize = 50 * 1024 * 1024;
-    const handleFileChange = (e: any) => {
-        const file = e.target.files[0];
-        if (!file) return;
 
-        console.log("File đã chọn:", file);
-        console.log("Tên file:", file.name);
-        console.log("Loại file:", file.type);
+    if (
+      (storeEvent === SocketEvent.MESSAGE_SENT ||
+        storeEvent === SocketEvent.MESSAGE_DELIVERED ||
+        storeEvent === SocketEvent.MESSAGE_SEEN) &&
+      isMessageStatusData(storeNewMess.data)
+    ) {
+      updateOutgoingMessageStatus(
+        storeNewMess.data.messageIds,
+        storeNewMess.data.status,
+      );
+      if (fileLoading) {
+        setFileLoading(false);
+      }
+      if (storeEvent === SocketEvent.MESSAGE_SEEN) {
+        dispatch(
+          clearUnread({ conversationId: storeNewMess.data.conversationId }),
+        );
+      }
+    }
 
+    if (storeEvent === SocketEvent.VIDEO_CALL_ENDED) {
+      setWaitingVideoCall(null);
+    }
 
-        if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
-            alert("Chỉ được chọn ảnh hoặc video");
-            return;
-        }
-        if (file.type.startsWith("video/")) {
-            if (file.size > maxVideoSize) {
-                alert("Video không được vượt quá 50MB");
-                return;
-            }
-        }
-        const previewUrl = URL.createObjectURL(file);
-        console.log('previewUrl', previewUrl)
-        setPreview(previewUrl)
-        setSelectedFile(file)
+    if (
+      storeEvent === SocketEvent.VIDEO_CALL_ACCEPTED ||
+      storeEvent === SocketEvent.VIDEO_CALL_REJECTED
+    ) {
+      setWaitingVideoCall(null);
+      if (storeEvent === SocketEvent.VIDEO_CALL_REJECTED) {
+        setRejectedVideoCall(true);
+      }
+    }
+  }, [storeNewMess, storeEvent, currentUserId, dispatch, fileLoading]);
 
+  const handleOpenFile = () => {
+    fileInputRef.current.click();
+  };
+  const maxVideoSize = 50 * 1024 * 1024;
+  const handleFileChange = (e: any) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    console.log("File đã chọn:", file);
+    console.log("Tên file:", file.name);
+    console.log("Loại file:", file.type);
+
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      alert("Chỉ được chọn ảnh hoặc video");
+      return;
+    }
+    if (file.type.startsWith("video/")) {
+      if (file.size > maxVideoSize) {
+        alert("Video không được vượt quá 50MB");
+        return;
+      }
+    }
+    const previewUrl = URL.createObjectURL(file);
+    console.log("previewUrl", previewUrl);
+    setPreview(previewUrl);
+    setSelectedFile(file);
+  };
+  console.log("reply mess trong conver page", replymess);
+
+  useEffect(() => {
+    const markCurrentConversationSeen = () => {
+      markLatestIncomingSeen(conversation, conversationId.current);
     };
     console.log('reply mess trong conver page', replymess)
 
@@ -869,6 +923,41 @@ export default function ConversationPage() {
         setMessageText("");
         uploadMedia(String(activeConversationId), selectedFile, messageText)
 
+    markCurrentConversationSeen();
+    document.addEventListener("visibilitychange", markCurrentConversationSeen);
+    return () =>
+      document.removeEventListener(
+        "visibilitychange",
+        markCurrentConversationSeen,
+      );
+  }, [conversation, currentUserId, dispatch]);
+
+  const sendMessage = () => {
+    console.log("gửi nè");
+    console.log(preview, selectedFile, "trong send mess");
+    if (messageText.trim().length === 0 && !preview && !selectedFile) return;
+    if (!preview && !selectedFile && !replymess) {
+      console.log("nhảy vào text");
+      const tempMessageId = nextTempMessageId.current--;
+      const content = messageText;
+      pendingTempMessageIds.current.push(tempMessageId);
+      setVisibleStatusIfNewer(tempMessageId, "SENDING");
+      setConversation((prev) => [
+        {
+          messageId: tempMessageId,
+          senderId: currentUserId,
+          type: "text",
+          content,
+          mediaURL: null,
+          fileName: null,
+          createdAt: new Date().toISOString(),
+          status: "SENDING",
+        },
+        ...prev,
+      ]);
+      setMessageText("");
+      sendText(content, conversationId.current as number);
+      return;
     }
 
     const handleStartCall = async (callType: "AUDIO" | "VIDEO" = "AUDIO") => {
@@ -925,53 +1014,239 @@ export default function ConversationPage() {
         }
     }
 
-    const handleCancelWaitingCall = async () => {
-        if (!waitingVideoCall || cancelCallLoading) return
+    if (!selectedFile) return;
+    console.log("nhảy xuống dưới");
+    const tempMessageId = nextTempMessageId.current--;
+    pendingTempMessageIds.current.push(tempMessageId);
+    setVisibleStatusIfNewer(tempMessageId, "SENDING");
+    setConversation((prev) => [
+      {
+        messageId: tempMessageId,
+        senderId: currentUserId,
+        type: selectedFile.type,
+        content: messageText,
+        mediaURL: preview,
+        fileName: selectedFile.name,
+        createdAt: new Date().toISOString(),
+        status: "SENDING",
+      },
+      ...prev,
+    ]);
+    setPreview(null);
+    setFileLoading(true);
+    setSelectedFile(null);
+    setMessageText("");
+    uploadMedia(String(conversationId.current), selectedFile, messageText);
+  };
 
-        setCancelCallLoading(true)
-        try {
-            await rejectVideoCall(waitingVideoCall.sessionId)
-            setWaitingVideoCall(null)
-        } catch (error) {
-            console.error("Cannot cancel video call", error)
-            alert(error instanceof Error ? error.message : "Không thể hủy cuộc gọi video")
-        } finally {
-            setCancelCallLoading(false)
-        }
+  const handleStartCall = async (callType: "AUDIO" | "VIDEO" = "AUDIO") => {
+    console.log("[VideoCall][FE][ConversationPage][click]", {
+      conversationId: conversationId.current,
+      currentUserId,
+      targetUserId,
+      videoCallLoading,
+      callType,
+    });
+    if (!conversationId.current || videoCallLoading) {
+      console.warn("[VideoCall][FE][ConversationPage][skip-start]", {
+        reason: !conversationId.current ? "missing conversationId" : "loading",
+      });
+      return;
     }
 
+    setVideoCallLoading(true);
+    try {
+      const call = await startVideoCall(
+        conversationId.current,
+        currentUser.username || `User ${currentUserId}`,
+        currentUser.avatar,
+        callType,
+      );
+      setRejectedVideoCall(false);
+      console.log("[VideoCall][FE][ConversationPage][start-success]", {
+        sessionId: call.sessionId,
+        roomId: call.roomId,
+        appId: call.appId,
+        userId: call.userId,
+        targetUserId: call.targetUserId,
+        hasToken: !!call.token,
+        callType: call.callType,
+      });
+      setWaitingVideoCall(call);
+      localStorage.setItem(
+        `videoCallPeer:${call.sessionId}`,
+        JSON.stringify({
+          userId: targetUserId,
+          fullName: fullName || "Người dùng",
+          avatar: avatar || null,
+        }),
+      );
+    } catch (error) {
+      console.error("Cannot start video call", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Không thể bắt đầu cuộc gọi video",
+      );
+    } finally {
+      setVideoCallLoading(false);
+    }
+  };
 
-    return (
+  const handleCancelWaitingCall = async () => {
+    if (!waitingVideoCall || cancelCallLoading) return;
+
+    setCancelCallLoading(true);
+    try {
+      await rejectVideoCall(waitingVideoCall.sessionId);
+      setWaitingVideoCall(null);
+    } catch (error) {
+      console.error("Cannot cancel video call", error);
+      alert(
+        error instanceof Error ? error.message : "Không thể hủy cuộc gọi video",
+      );
+    } finally {
+      setCancelCallLoading(false);
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        height: "calc(100vh - 73px)",
+        minHeight: 0,
+        bgcolor: "#f4f6fb",
+        overflow: "hidden",
+      }}
+    >
+      <Box
+        sx={{
+          width: "75%",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          bgcolor: "#eef1f8",
+          overflow: "hidden",
+        }}
+      >
         <Box
-            sx={{
-                display: "flex",
-                height: "calc(100vh - 73px)",
-                minHeight: 0,
-                bgcolor: "#f4f6fb",
-                overflow: "hidden",
-            }}
+          sx={{
+            height: 78,
+            flexShrink: 0,
+            width: "100%",
+            px: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid rgba(0,0,0,0.08)",
+            bgcolor: "#fff",
+          }}
         >
-            <Box
-                sx={{
-                    width: "75%",
-                    display: "flex",
-                    flexDirection: "column",
-                    minHeight: 0,
-                    bgcolor: "#eef1f8",
-                    overflow: "hidden",
-                }}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Avatar
+              src="https://i.pravatar.cc/100?img=12"
+              sx={{ width: 52, height: 52 }}
+            />
+            <Box>
+              <Typography
+                sx={{ fontWeight: 700, fontSize: 18, color: "#1f1f1f" }}
+              >
+                {fullName}
+              </Typography>
+              <Typography sx={{ fontSize: 14, color: "#7f735e" }}>
+                Hoạt động 9 phút trước
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <IconButton
+              disabled={videoCallLoading}
+              onClick={() => handleStartCall("AUDIO")}
+              sx={{ color: "rgb(55, 145, 250)" }}
             >
-                <Box
+              <CallIcon />
+            </IconButton>
+            <IconButton
+              disabled={videoCallLoading}
+              onClick={() => handleStartCall("VIDEO")}
+              sx={{ color: "rgb(55, 145, 250)" }}
+            >
+              <VideocamIcon />
+            </IconButton>
+          </Box>
+        </Box>
+        {conversation ? (
+          <ListMess
+            fileLoading={fileLoading}
+            conversation={conversation}
+            setReplyMess={setReplyMess}
+            visibleMessageStatus={visibleMessageStatus}
+            onCallAgain={handleStartCall}
+            onLoadOlderMessages={loadOlderMessages}
+            loadingOlderMessages={loadingOlderMessages}
+            hasMoreMessages={hasMoreMessages}
+          />
+        ) : (
+          <WelcomeConversation />
+        )}
+
+        {/* thanh reply nè */}
+        {replymess && (
+          <>
+            {" "}
+            <ReplyMessage
+              fullName={
+                replymess.senderId === Number(localStorage.getItem("userId"))
+                  ? "chính mình"
+                  : fullName
+              }
+              mess={replymess ? replymess.content : ""}
+              setReplyMess={setReplyMess}
+            />{" "}
+          </>
+        )}
+
+        {/* thanh trả lời nè */}
+        <Box
+          sx={{
+            width: "100%",
+            bgcolor: "#fff",
+            borderTop: "1px solid rgba(0,0,0,0.08)",
+          }}
+        >
+          {preview && (
+            <Box
+              sx={{
+                px: 2,
+                pt: 1.5,
+                pb: 1,
+                bgcolor: "#fff",
+              }}
+            >
+              <Box
+                sx={{
+                  position: "relative",
+                  width: 60,
+                  height: 60,
+                  borderRadius: 3,
+                  overflow: "hidden",
+                  bgcolor: "#f3f3f3",
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                }}
+              >
+                {/* giả lập ảnh preview */}
+                {selectedFile?.type === "image/png" && (
+                  <Box
+                    component="img"
+                    src={preview || undefined}
+                    alt="preview"
                     sx={{
-                        height: 78,
-                        flexShrink: 0,
-                        width: "100%",
-                        px: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        borderBottom: "1px solid rgba(0,0,0,0.08)",
-                        bgcolor: "#fff",
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
                     }}
                 >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -1011,12 +1286,17 @@ export default function ConversationPage() {
                 {/* thanh trả lời nè */}
                 <Box
                     sx={{
-                        width: "100%",
-                        bgcolor: "#fff",
-                        borderTop: "1px solid rgba(0,0,0,0.08)",
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                      bgcolor: "#000",
+                      pointerEvents: "none",
                     }}
-                >
-
+                    preload="metadata"
+                    muted
+                  />
+                )}
 
                     {
                         preview && (
@@ -1201,25 +1481,118 @@ export default function ConversationPage() {
                     </Box>
                 </Box>
             </Box>
-            <ListFriends></ListFriends>
-            <VideoCallModal
-                open={!!waitingVideoCall}
-                mode="outgoing"
-                name={fullName || "Người dùng"}
-                avatar={avatar || null}
-                callType={waitingVideoCall?.callType}
-                loading={cancelCallLoading}
-                onReject={handleCancelWaitingCall}
-            />
-            <VideoCallModal
-                open={rejectedVideoCall}
-                mode="rejected"
-                name={fullName || "Người dùng"}
-                avatar={avatar || null}
-                callType="AUDIO"
-                onReject={() => setRejectedVideoCall(false)}
+          )}
+          {/* THANH NHẬP TIN NHẮN */}
+          <Box
+            sx={{
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              width: "100%",
+              gap: 1.5,
+              px: 2,
+              py: 1,
+              bgcolor: "#fff",
+              zIndex: 1,
+            }}
+          >
+            <IconButton sx={{ color: "#a40000", p: 0.5 }}>
+              <MicIcon />
+            </IconButton>
+
+            <IconButton
+              sx={{ color: "#a40000", p: 0.5 }}
+              onClick={(e) => handleOpenFile()}
+            >
+              <ImageIcon />
+            </IconButton>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              style={{ display: "none" }}
+              onChange={(e) => handleFileChange(e)}
             />
 
-        </Box >
-    );
+            <Paper
+              elevation={0}
+              sx={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                borderRadius: "999px",
+                px: 2,
+                py: 0.5,
+                bgcolor: "#f6e3de",
+              }}
+            >
+              <InputBase
+                placeholder="Aa"
+                value={messageText}
+                onChange={(event) => setMessageText(event.target.value)}
+                sx={{ flex: 1, fontSize: 16, color: "#6b6b6b" }}
+              />
+
+              <Box sx={{ position: "relative", flexShrink: 0 }}>
+                {showEmojiPicker && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      right: 0,
+                      bottom: "calc(100% + 12px)",
+                      zIndex: 10,
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                  </Box>
+                )}
+
+                <IconButton
+                  onClick={() => setShowEmojiPicker((prev) => !prev)}
+                  sx={{ color: "#a40000", p: 0.5 }}
+                >
+                  <SentimentSatisfiedAltIcon />
+                </IconButton>
+              </Box>
+            </Paper>
+
+            <IconButton
+              onClick={sendMessage}
+              sx={{
+                bgcolor: "#a40000",
+                color: "#fff",
+                p: 1.2,
+                "&:hover": { bgcolor: "#8a0000" },
+                flexShrink: 0,
+              }}
+            >
+              <SendIcon sx={{ fontSize: 22 }} />
+            </IconButton>
+          </Box>
+        </Box>
+      </Box>
+      <ListFriends></ListFriends>
+      <VideoCallModal
+        open={!!waitingVideoCall}
+        mode="outgoing"
+        name={fullName || "Người dùng"}
+        avatar={avatar || null}
+        callType={waitingVideoCall?.callType}
+        loading={cancelCallLoading}
+        onReject={handleCancelWaitingCall}
+      />
+      <VideoCallModal
+        open={rejectedVideoCall}
+        mode="rejected"
+        name={fullName || "Người dùng"}
+        avatar={avatar || null}
+        callType="AUDIO"
+        onReject={() => setRejectedVideoCall(false)}
+      />
+    </Box>
+  );
 }

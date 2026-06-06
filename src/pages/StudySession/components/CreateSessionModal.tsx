@@ -32,7 +32,7 @@ export function CreateSessionModal({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [targetName, setTargetName] = useState("");
-  const [selectedFriendId, setSelectedFriendId] = useState<number | "">("") ;
+  const [selectedFriendId, setSelectedFriendId] = useState<number | "">("");
   const [location, setLocation] = useState("");
   const [meetingUrl, setMeetingUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -61,6 +61,20 @@ export function CreateSessionModal({
   }, [friends, selectedFriendId]);
 
   const needSystemRoom = studyMode === "ONLINE" || studyMode === "HYBRID";
+
+  const formatLocalDateTime = (value: string) => {
+    if (!value) return value;
+
+    if (value.length === 16) {
+      return `${value}:00`;
+    }
+
+    if (value.length === 19) {
+      return value;
+    }
+
+    return value;
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -207,8 +221,8 @@ export function CreateSessionModal({
         const payload = {
           title,
           description,
-          startTime,
-          endTime,
+          startTime: formatLocalDateTime(startTime),
+          endTime: formatLocalDateTime(endTime),
           studyMode,
           location:
             studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
@@ -255,8 +269,8 @@ export function CreateSessionModal({
       const payload = {
         title,
         description,
-        startTime,
-        endTime,
+        startTime: formatLocalDateTime(startTime),
+        endTime: formatLocalDateTime(endTime),
         studyMode,
         location:
           studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
@@ -525,21 +539,6 @@ export function CreateSessionModal({
                 onChange={(event) => setLocation(event.target.value)}
                 required={studyMode === "OFFLINE" || studyMode === "HYBRID"}
                 placeholder="Ví dụ: Thư viện tầng 2, phòng B203"
-                className={inputClass}
-              />
-            </label>
-          )}
-
-          {sessionType === "USER_PAIR" && (
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-gray-700">
-                Link học online
-              </span>
-
-              <input
-                value={meetingUrl}
-                onChange={(event) => setMeetingUrl(event.target.value)}
-                placeholder="https://meet.google.com/..."
                 className={inputClass}
               />
             </label>

@@ -3,17 +3,20 @@ import type {
   SessionConfirmationStatsResponse,
   StudySessionVm,
   StudySessionResponse,
+  JoinStudySessionResponse,
 } from "../types";
 import {
   getStudySessionById,
   getConfirmationStats,
   respondToStudySession,
+  joinStudySession,
 } from "../../../services/StudySessionService";
 
 interface SessionDetailModalProps {
   session: StudySessionVm | null;
   onClose: () => void;
   onSessionUpdated?: (session: StudySessionVm) => void;
+  onJoinSession?: (joinData: JoinStudySessionResponse) => void;
 }
 
 function formatDateTime(value: string) {
@@ -114,6 +117,7 @@ export function SessionDetailModal({
   session,
   onClose,
   onSessionUpdated,
+  onJoinSession,
 }: SessionDetailModalProps) {
   const [detail, setDetail] = useState<StudySessionResponse | null>(null);
   const [confirmationStats, setConfirmationStats] =
@@ -124,6 +128,7 @@ export function SessionDetailModal({
   const [responding, setResponding] = useState<"ACCEPTED" | "DECLINED" | null>(
     null,
   );
+  const [joining, setJoining] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -286,6 +291,29 @@ export function SessionDetailModal({
     }
   };
 
+  const handleJoinSession = async () => {
+    if (!session || joining) return;
+
+    const userId = Number(localStorage.getItem("userId"));
+    if (!Number.isFinite(userId) || userId <= 0) {
+      setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    try {
+      setJoining(true);
+      setError("");
+      const response = await joinStudySession(session.id, userId);
+      if (response.data) {
+        onJoinSession?.(response.data);
+      }
+    } catch {
+      setError("Không thể tham gia phòng học");
+    } finally {
+      setJoining(false);
+    }
+  };
+
   if (!session) return null;
 
   return (
@@ -331,9 +359,7 @@ export function SessionDetailModal({
           )}
 
           <div className="rounded-xl bg-gray-50 p-4">
-            <div className="text-sm font-semibold text-gray-500">
-              Thời gian
-            </div>
+            <div className="text-sm font-semibold text-gray-500">Thời gian</div>
             <div className="mt-1 font-bold text-gray-800">
               {formatDateTime(currentSession?.startTime || session.startTime)}
             </div>
@@ -532,6 +558,41 @@ export function SessionDetailModal({
               </button>
             </div>
           )}
+
+          {["ACCEPTED", "JOINED"].includes(
+            currentSession?.participantStatus ||
+              session.participantStatus ||
+              "",
+          ) &&
+            (currentSession?.studyMode || session.studyMode) !== "OFFLINE" && (
+              <div className="border-t border-gray-100 pt-5">
+                <button
+                  type="button"
+                  onClick={handleJoinSession}
+                  disabled={joining}
+                  className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50"
+                >
+                  {joining ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Đang kết nối...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="h-5 w-5"
+                      >
+                        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
+                      </svg>
+                      Tham gia phòng học
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
         </div>
       </div>
     </div>
