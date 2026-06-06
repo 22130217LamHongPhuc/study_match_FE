@@ -101,8 +101,10 @@ export default function ConversationPage() {
         groupId !== null;
     const fallbackConversationId = !targetUserId && !isGroupConversation ? currentConversationId : null;
     const avatar = routeState?.avatar;
-    const fullName = routeState?.fullName;
+    const fullName = isGroupConversation ? (routeState?.groupName || "Nhóm học") : routeState?.fullName;
     const groupName = routeState?.groupName;
+    const callTargetName = isGroupConversation ? (groupName || "Nhóm học") : (fullName || "Người dùng");
+    const callTargetAvatar = isGroupConversation ? null : (avatar || null);
     const selectedConversationKey = isGroupConversation
         ? (groupId ? `group:${groupId}` : "none")
         : targetUserId
@@ -902,11 +904,18 @@ export default function ConversationPage() {
                 hasToken: !!call.token,
                 callType: call.callType,
             })
-            setWaitingVideoCall(call)
+            setWaitingVideoCall({
+                ...call,
+                isGroupCall: isGroupConversation,
+                groupId: isGroupConversation ? groupId : call.groupId,
+                groupName: isGroupConversation ? callTargetName : call.groupName,
+                conversationType: isGroupConversation ? 0 : call.conversationType,
+            })
             localStorage.setItem(`videoCallPeer:${call.sessionId}`, JSON.stringify({
-                userId: targetUserId,
+                userId: isGroupConversation ? null : targetUserId,
                 fullName: fullName || "Người dùng",
-                avatar: avatar || null,
+                avatar: callTargetAvatar,
+                isGroupCall: isGroupConversation,
             }))
         } catch (error) {
             console.error("Cannot start video call", error)

@@ -13,6 +13,17 @@ import { loadAcceptedDirectConversations, loadConversation, loadGroupConversatio
 import { FriendUser, loadAllFriendsService, loadFriendOnlineStatusesService, loadFriendProfilesService } from "../../services/FriendService";
 import { getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
 
+const getLastMessageTime = (conversation: MessageRequestItem) => {
+    const time = conversation.lastMessage?.createdAt
+        ? new Date(conversation.lastMessage.createdAt).getTime()
+        : 0;
+    return Number.isFinite(time) ? time : 0;
+};
+
+const sortByLatestMessage = <T extends MessageRequestItem>(conversations: T[]) => {
+    return [...conversations].sort((a, b) => getLastMessageTime(b) - getLastMessageTime(a));
+};
+
 export default function ListFriends() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -264,10 +275,12 @@ export default function ListFriends() {
                 displayName: profile?.fullName || profile?.email || `User ${request.otherUserId}`,
             };
         });
-        if (!keyword) return requests;
-        return requests.filter((request) =>
+        const filteredRequests = keyword
+            ? requests.filter((request) =>
             `${request.displayName} ${request.profile?.email ?? ""} ${request.lastMessage?.content ?? ""}`.toLowerCase().includes(keyword)
-        );
+            )
+            : requests;
+        return sortByLatestMessage(filteredRequests);
     }, [messageRequests, requestProfiles, searchText]);
 
     const visibleAcceptedDirectConversations = useMemo(() => {
@@ -280,10 +293,12 @@ export default function ListFriends() {
                 displayName: profile?.fullName || profile?.email || `User ${conversation.otherUserId}`,
             };
         });
-        if (!keyword) return conversations;
-        return conversations.filter((conversation) =>
+        const filteredConversations = keyword
+            ? conversations.filter((conversation) =>
             `${conversation.displayName} ${conversation.profile?.email ?? ""} ${conversation.lastMessage?.content ?? ""}`.toLowerCase().includes(keyword)
-        );
+            )
+            : conversations;
+        return sortByLatestMessage(filteredConversations);
     }, [acceptedDirectConversations, directProfiles, searchText]);
 
     const openConversation = (friend: FriendUser) => {
@@ -375,10 +390,32 @@ export default function ListFriends() {
         });
     };
 
+    const formatCallPreview = (lastMessage: NonNullable<MessageRequestItem["lastMessage"]>) => {
+        const callType = lastMessage.type === "CALL_AUDIO" ? "thoại" : "video";
+        let detail: { status?: string; durationSeconds?: number } = {};
+
+        try {
+            detail = lastMessage.content ? JSON.parse(lastMessage.content) : {};
+        } catch {
+            detail = {};
+        }
+
+        if (detail.status === "MISSED") {
+            return `Đã nhỡ cuộc gọi ${callType}`;
+        }
+
+        const duration = Math.max(0, Number(detail.durationSeconds || 0));
+        const durationText = duration < 60 ? `${duration} giây` : `${Math.ceil(duration / 60)} phút`;
+        return `Cuộc gọi ${callType} · ${durationText}`;
+    };
+
     const getLastMessagePreview = (request: MessageRequestItem) => {
         const lastMessage = request.lastMessage;
         if (!lastMessage) return "Tin nhắn mới";
         if (lastMessage.isDeleted) return "Tin nhắn đã được thu hồi";
+        if (lastMessage.type === "CALL_AUDIO" || lastMessage.type === "CALL_VIDEO") {
+            return formatCallPreview(lastMessage);
+        }
         if (lastMessage.content) return lastMessage.content;
         if (lastMessage.type?.startsWith("image/")) return "Đã gửi một ảnh";
         if (lastMessage.type?.startsWith("video/")) return "Đã gửi một video";

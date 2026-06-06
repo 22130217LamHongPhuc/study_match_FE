@@ -76,16 +76,25 @@ export default function MainLayout() {
           console.log("[VideoCall][FE][socket][invite]", parsed.data)
           const currentUserId = Number(localStorage.getItem("userId"))
           if (parsed.data.callerId === currentUserId) return
+          const isGroupCall = Boolean(parsed.data.isGroupCall || parsed.data.groupId || parsed.data.conversationType === 0)
+          const peerName = isGroupCall
+            ? (parsed.data.groupName || "Nhóm học")
+            : (parsed.data.callerName || `User ${parsed.data.callerId}`)
+          const peerAvatar = isGroupCall
+            ? (parsed.data.groupAvatar || null)
+            : (parsed.data.callerAvatar || null)
 
           setIncomingPeer({
-            userId: parsed.data.callerId,
-            fullName: parsed.data.callerName || `User ${parsed.data.callerId}`,
-            avatar: parsed.data.callerAvatar || null,
+            userId: isGroupCall ? null : parsed.data.callerId,
+            fullName: peerName,
+            avatar: peerAvatar,
+            isGroupCall,
           })
           localStorage.setItem(`videoCallPeer:${parsed.data.sessionId}`, JSON.stringify({
-            userId: parsed.data.callerId,
-            fullName: parsed.data.callerName || `User ${parsed.data.callerId}`,
-            avatar: parsed.data.callerAvatar || null,
+            userId: isGroupCall ? null : parsed.data.callerId,
+            fullName: peerName,
+            avatar: peerAvatar,
+            isGroupCall,
           }))
           setIncomingVideoCall(parsed.data)
           return
@@ -158,7 +167,14 @@ export default function MainLayout() {
           hasToken: !!call.token,
         })
         setIncomingVideoCall(null)
-        setActiveVideoCall(call)
+        setActiveVideoCall({
+          ...call,
+          isGroupCall: Boolean(incomingVideoCall.isGroupCall || incomingVideoCall.groupId || incomingVideoCall.conversationType === 0),
+          groupId: incomingVideoCall.groupId ?? call.groupId,
+          groupName: incomingVideoCall.groupName ?? call.groupName,
+          groupAvatar: incomingVideoCall.groupAvatar ?? call.groupAvatar,
+          conversationType: incomingVideoCall.conversationType ?? call.conversationType,
+        })
       })
       .catch((error) => {
         console.error("Cannot join video call", error)
