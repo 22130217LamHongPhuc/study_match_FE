@@ -70,60 +70,62 @@ export default function MainLayout() {
           console.log("[VideoCall][FE][socket][message]", parsed);
           dispatch(updateNewMess(parsed));
 
-        if (parsed.event === SocketEvent.VIDEO_CALL_INVITE && isVideoCallInvite(parsed.data)) {
-          console.log("[VideoCall][FE][socket][invite]", parsed.data)
-          const currentUserId = Number(localStorage.getItem("userId"))
-          if (parsed.data.callerId === currentUserId) return
-          const isGroupCall = Boolean(parsed.data.isGroupCall || parsed.data.groupId || parsed.data.conversationType === 0)
-          const peerName = isGroupCall
-            ? (parsed.data.groupName || "Nhóm học")
-            : (parsed.data.callerName || `User ${parsed.data.callerId}`)
-          const peerAvatar = isGroupCall
-            ? (parsed.data.groupAvatar || null)
-            : (parsed.data.callerAvatar || null)
+          if (parsed.event === SocketEvent.VIDEO_CALL_INVITE && isVideoCallInvite(parsed.data)) {
+            console.log("[VideoCall][FE][socket][invite]", parsed.data)
+            const currentUserId = Number(localStorage.getItem("userId"))
+            if (parsed.data.callerId === currentUserId) return
+            const isGroupCall = Boolean(parsed.data.isGroupCall || parsed.data.groupId || parsed.data.conversationType === 0)
+            const peerName = isGroupCall
+              ? (parsed.data.groupName || "Nhóm học")
+              : (parsed.data.callerName || `User ${parsed.data.callerId}`)
+            const peerAvatar = isGroupCall
+              ? (parsed.data.groupAvatar || null)
+              : (parsed.data.callerAvatar || null)
 
-          setIncomingPeer({
-            userId: isGroupCall ? null : parsed.data.callerId,
-            fullName: peerName,
-            avatar: peerAvatar,
-            isGroupCall,
-          })
-          localStorage.setItem(`videoCallPeer:${parsed.data.sessionId}`, JSON.stringify({
-            userId: isGroupCall ? null : parsed.data.callerId,
-            fullName: peerName,
-            avatar: peerAvatar,
-            isGroupCall,
-          }))
-          setIncomingVideoCall(parsed.data)
-          return
-        }
-
-        if (
-          parsed.event === SocketEvent.NEW_MESSAGE &&
-          isNewMessageData(parsed.data)
-        ) {
-          const currentUserId = Number(localStorage.getItem("userId"))
-          if (parsed.data.message.senderId !== currentUserId) {
-            sendDelivered(parsed.data.conversationId, [parsed.data.message.messageId])
+            setIncomingPeer({
+              userId: isGroupCall ? null : parsed.data.callerId,
+              fullName: peerName,
+              avatar: peerAvatar,
+              isGroupCall,
+            })
+            localStorage.setItem(`videoCallPeer:${parsed.data.sessionId}`, JSON.stringify({
+              userId: isGroupCall ? null : parsed.data.callerId,
+              fullName: peerName,
+              avatar: peerAvatar,
+              isGroupCall,
+            }))
+            setIncomingVideoCall(parsed.data)
+            return
           }
 
-        if (
-          parsed.event === SocketEvent.NEW_MESSAGE &&
-          isNewMessageData(parsed.data) &&
-          parsed.data.conversationId !== Number(currentConverIdRef.current)
-        ) {
-          dispatch(increaseUnread({ conversationId: parsed.data.conversationId }))
-          toast(<ToastCustom message={parsed.data.message.content || ""} userName={parsed.data.message.senderId.toString() || ""}></ToastCustom>, {
-            position: "bottom-right",
-            autoClose: 4000,
-          })
-        }
-      })
-      ws.onMessage("/topic/presence", (msg: any) => {
-        const parsed: SocketResponse = JSON.parse(msg)
-        if (parsed.event === SocketEvent.USER_PRESENCE) {
-          dispatch(updateNewMess(parsed))
-        }
+          if (
+            parsed.event === SocketEvent.NEW_MESSAGE &&
+            isNewMessageData(parsed.data)
+          ) {
+            const currentUserId = Number(localStorage.getItem("userId"))
+            if (parsed.data.message.senderId !== currentUserId) {
+              sendDelivered(parsed.data.conversationId, [parsed.data.message.messageId])
+            }
+
+            if (
+              parsed.event === SocketEvent.NEW_MESSAGE &&
+              isNewMessageData(parsed.data) &&
+              parsed.data.conversationId !== Number(currentConverIdRef.current)
+            ) {
+              dispatch(increaseUnread({ conversationId: parsed.data.conversationId }))
+              toast(<ToastCustom message={parsed.data.message.content || ""} userName={parsed.data.message.senderId.toString() || ""}></ToastCustom>, {
+                position: "bottom-right",
+                autoClose: 4000,
+              })
+            }
+          }
+        })
+        ws.onMessage("/topic/presence", (msg: any) => {
+          const parsed: SocketResponse = JSON.parse(msg)
+          if (parsed.event === SocketEvent.USER_PRESENCE) {
+            dispatch(updateNewMess(parsed))
+          }
+        })
       })
       .catch((err) => {
         console.error("Loi connect:", err);
