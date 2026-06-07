@@ -9,7 +9,10 @@ import { CreateSessionModal } from "./components/CreateSessionModal";
 import { SessionDetailModal } from "./components/SessionDetailModal";
 import { StudySessionRoom } from "./components/StudySessionRoom";
 import type { ScheduleFilter, StudySessionVm } from "./types";
-import { getUserStudySessions } from "../../services/StudySessionService";
+import {
+  getStudySessionById,
+  getUserStudySessions,
+} from "../../services/StudySessionService";
 import {
   getFriendsListService,
   type FriendListItem,
@@ -72,8 +75,13 @@ export default function StudySessionPage() {
   const [joinedRoom, setJoinedRoom] = useState<JoinStudySessionResponse | null>(
     null,
   );
+  const [joinedSession, setJoinedSession] = useState<StudySessionVm | null>(
+    null,
+  );
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionError, setSessionError] = useState("");
+
+  const currentUserId = Number(localStorage.getItem("userId"));
 
   const currentUserName =
     localStorage.getItem("fullName") ||
@@ -172,12 +180,41 @@ export default function StudySessionPage() {
   };
 
   const handleJoinSession = (joinData: JoinStudySessionResponse) => {
+    setJoinedSession(selectedSession);
     setJoinedRoom(joinData);
     setSelectedSession(null);
   };
 
-  const handleLeaveRoom = () => {
+  const handleLeaveRoom = async (sessionId: number) => {
     setJoinedRoom(null);
+    const fallback =
+      joinedSession ??
+      sessions.find((session) => session.id === sessionId) ??
+      null;
+
+    if (fallback) {
+      setSelectedSession(fallback);
+    }
+
+    if (!Number.isFinite(currentUserId) || currentUserId <= 0 || !fallback) {
+      setJoinedSession(null);
+      return;
+    }
+
+    try {
+      const response = await getStudySessionById(sessionId, currentUserId);
+      const updatedSession = mapSessionToVm(response.data, new Map());
+
+      setSessions((prev) =>
+        prev.map((session) =>
+          session.id === updatedSession.id ? updatedSession : session,
+        ),
+      );
+      setSelectedSession(updatedSession);
+    } catch {
+    } finally {
+      setJoinedSession(null);
+    }
   };
 
   if (loadingSessions) {
@@ -249,6 +286,7 @@ export default function StudySessionPage() {
         <StudySessionRoom
           joinData={joinedRoom}
           userName={currentUserName}
+          userId={currentUserId}
           onLeave={handleLeaveRoom}
         />
       )}

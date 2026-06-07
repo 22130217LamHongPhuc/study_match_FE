@@ -1,11 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import type { JoinStudySessionResponse } from "../types";
+import {
+  leaveStudySession,
+  leaveStudySessionOnUnload,
+} from "../../../services/StudySessionService";
 
 interface StudySessionRoomProps {
   joinData: JoinStudySessionResponse;
   userName: string;
-  onLeave: () => void;
+  userId: number;
+  onLeave: (sessionId: number) => void;
 }
 
 async function safeDestroyZego(zego: any): Promise<void> {
@@ -36,17 +41,35 @@ async function safeDestroyZego(zego: any): Promise<void> {
 export function StudySessionRoom({
   joinData,
   userName,
+  userId,
   onLeave,
 }: StudySessionRoomProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const zegoRef = useRef<any>(null);
   const initTimerRef = useRef<number | null>(null);
   const leftRef = useRef(false);
+  const leaveApiCalledRef = useRef(false);
   const [leaving, setLeaving] = useState(false);
+
+  const notifyLeave = useCallback(async () => {
+    if (leaveApiCalledRef.current) return;
+    leaveApiCalledRef.current = true;
+    if (!Number.isFinite(userId) || userId <= 0) return;
+
+    try {
+      await leaveStudySession(joinData.sessionId, userId);
+    } catch {}
+  }, [joinData.sessionId, userId]);
+
+  const finishLeave = useCallback(async () => {
+    await notifyLeave();
+    onLeave(joinData.sessionId);
+  }, [joinData.sessionId, notifyLeave, onLeave]);
 
   useEffect(() => {
     if (!containerRef.current) return;
     leftRef.current = false;
+    leaveApiCalledRef.current = false;
 
     initTimerRef.current = window.setTimeout(() => {
       if (!containerRef.current || zegoRef.current || leftRef.current) return;
@@ -79,12 +102,25 @@ export function StudySessionRoom({
         onLeaveRoom: () => {
           leftRef.current = true;
           zegoRef.current = null;
-          setTimeout(() => onLeave(), 300);
+          setTimeout(() => {
+            finishLeave();
+          }, 300);
         },
       });
     }, 0);
 
+    const handlePageHide = () => {
+      if (leaveApiCalledRef.current) return;
+      leaveApiCalledRef.current = true;
+      if (!Number.isFinite(userId) || userId <= 0) return;
+      leaveStudySessionOnUnload(joinData.sessionId, userId);
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+
     return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+
       if (initTimerRef.current !== null) {
         window.clearTimeout(initTimerRef.current);
         initTimerRef.current = null;
@@ -94,10 +130,11 @@ export function StudySessionRoom({
         const z = zegoRef.current;
         zegoRef.current = null;
         leftRef.current = true;
+        notifyLeave();
         safeDestroyZego(z);
       }
     };
-  }, [joinData, userName]);
+  }, [finishLeave, joinData, notifyLeave, userId, userName]);
 
   const handleLeave = () => {
     if (leaving || leftRef.current) return;
@@ -108,7 +145,7 @@ export function StudySessionRoom({
     zegoRef.current = null;
 
     safeDestroyZego(z).finally(() => {
-      onLeave();
+      finishLeave();
     });
   };
 
