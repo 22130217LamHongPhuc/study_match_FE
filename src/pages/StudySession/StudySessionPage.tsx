@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { HeaderCard } from "./components/HeaderCard";
 import { QuickStats } from "./components/QuickStats";
 import { FilterTabs } from "./components/FilterTabs";
@@ -185,7 +185,7 @@ export default function StudySessionPage() {
     setSelectedSession(null);
   };
 
-  const handleLeaveRoom = async (sessionId: number) => {
+  const handleLeaveRoom = useCallback(async (sessionId: number) => {
     setJoinedRoom(null);
     const fallback =
       joinedSession ??
@@ -215,7 +215,7 @@ export default function StudySessionPage() {
     } finally {
       setJoinedSession(null);
     }
-  };
+  }, [currentUserId, joinedSession, sessions]);
 
   if (loadingSessions) {
     return (

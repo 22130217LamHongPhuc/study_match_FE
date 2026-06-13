@@ -47,14 +47,19 @@ export function StudySessionRoom({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const zegoRef = useRef<any>(null);
   const initTimerRef = useRef<number | null>(null);
-  const leftRef = useRef(false);
   const leaveApiCalledRef = useRef(false);
+  const finishCalledRef = useRef(false);
+  const requestedLeaveRef = useRef(false);
+  const roomJoinedRef = useRef(false);
+  const destroyingRef = useRef(false);
+  const [roomError, setRoomError] = useState("");
   const [leaving, setLeaving] = useState(false);
 
   const notifyLeave = useCallback(async () => {
     if (leaveApiCalledRef.current) return;
-    leaveApiCalledRef.current = true;
     if (!Number.isFinite(userId) || userId <= 0) return;
+
+    leaveApiCalledRef.current = true;
 
     try {
       await leaveStudySession(joinData.sessionId, userId);
@@ -62,26 +67,37 @@ export function StudySessionRoom({
   }, [joinData.sessionId, userId]);
 
   const finishLeave = useCallback(async () => {
+    if (finishCalledRef.current) return;
+    finishCalledRef.current = true;
     await notifyLeave();
     onLeave(joinData.sessionId);
   }, [joinData.sessionId, notifyLeave, onLeave]);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    leftRef.current = false;
     leaveApiCalledRef.current = false;
+    finishCalledRef.current = false;
+    requestedLeaveRef.current = false;
+    roomJoinedRef.current = false;
+    destroyingRef.current = false;
+    setRoomError("");
 
     initTimerRef.current = window.setTimeout(() => {
-      if (!containerRef.current || zegoRef.current || leftRef.current) return;
+      if (!containerRef.current || zegoRef.current) return;
 
       const appId = Number(process.env.REACT_APP_ZEGO_APP_ID);
-      const userId = String(localStorage.getItem("userId") || Date.now());
+      const zegoUserId = String(userId || localStorage.getItem("userId") || Date.now());
+
+      if (!Number.isFinite(appId) || appId <= 0 || !joinData.token || !joinData.roomId) {
+        setRoomError("Không thể tạo phòng học. Vui lòng thử lại sau.");
+        return;
+      }
 
       const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(
         appId,
         joinData.token,
         joinData.roomId,
-        userId,
+        zegoUserId,
         userName,
       );
 
@@ -99,8 +115,13 @@ export function StudySessionRoom({
         showScreenSharingButton: true,
         showMyCameraToggleButton: true,
         showAudioVideoSettingsButton: true,
+        onJoinRoom: () => {
+          roomJoinedRef.current = true;
+        },
         onLeaveRoom: () => {
-          leftRef.current = true;
+          if (destroyingRef.current) return;
+          if (!roomJoinedRef.current && !requestedLeaveRef.current) return;
+          requestedLeaveRef.current = true;
           zegoRef.current = null;
           setTimeout(() => {
             finishLeave();
@@ -111,8 +132,9 @@ export function StudySessionRoom({
 
     const handlePageHide = () => {
       if (leaveApiCalledRef.current) return;
-      leaveApiCalledRef.current = true;
       if (!Number.isFinite(userId) || userId <= 0) return;
+      if (!zegoRef.current && !roomJoinedRef.current) return;
+      leaveApiCalledRef.current = true;
       leaveStudySessionOnUnload(joinData.sessionId, userId);
     };
 
@@ -126,20 +148,20 @@ export function StudySessionRoom({
         initTimerRef.current = null;
       }
 
-      if (!leftRef.current && zegoRef.current) {
+      if (zegoRef.current) {
         const z = zegoRef.current;
         zegoRef.current = null;
-        leftRef.current = true;
-        notifyLeave();
+        destroyingRef.current = true;
         safeDestroyZego(z);
       }
     };
   }, [finishLeave, joinData, notifyLeave, userId, userName]);
 
   const handleLeave = () => {
-    if (leaving || leftRef.current) return;
+    if (leaving || finishCalledRef.current) return;
     setLeaving(true);
-    leftRef.current = true;
+    requestedLeaveRef.current = true;
+    destroyingRef.current = true;
 
     const z = zegoRef.current;
     zegoRef.current = null;
@@ -167,7 +189,22 @@ export function StudySessionRoom({
           {leaving ? "Đang rời..." : "Rời phòng"}
         </button>
       </div>
-      <div ref={containerRef} className="flex-1" />
+      {roomError ? (
+        <div className="flex flex-1 items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-xl border border-red-500/30 bg-white/10 p-5 text-center">
+            <div className="text-sm font-semibold text-white">{roomError}</div>
+            <button
+              type="button"
+              onClick={() => onLeave(joinData.sessionId)}
+              className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-bold text-gray-800 transition-colors hover:bg-gray-100"
+            >
+              Quay lại lịch học
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div ref={containerRef} className="flex-1" />
+      )}
     </div>
   );
 }

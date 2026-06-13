@@ -1,39 +1,40 @@
+import { type FormEvent, useState } from "react";
+import { CheckCircle2, MessageSquareText, Star, X } from "lucide-react";
+import { toast } from "react-toastify";
+
+import { submitStudyFeedback } from "../../../services/StudySessionService";
 import type {
   FeedbackEligibilityResponse,
   FeedbackType,
   SubmitStudyFeedbackRequest,
 } from "../types";
 
-import { submitStudyFeedback } from "../../../services/StudySessionService";
-
-import { type FormEvent, useState } from "react";
-
 function getFeedbackTitle(type: FeedbackType) {
   if (type === "SESSION_FEEDBACK") return "Đánh giá buổi học";
   if (type === "REPORT_PROBLEM") return "Báo sự cố";
   if (type === "EARLY_LEAVE_REASON") return "Lý do rời sớm";
-  return "Phản hồi ngắn";
+  return "Phản hồi buổi học";
 }
 
 function getFeedbackHint(type: FeedbackType) {
   if (type === "SESSION_FEEDBACK") {
-    return "Chia sẻ cảm nhận của bạn để cải thiện chất lượng ghép học.";
+    return "Chia sẻ cảm nhận của bạn để lần ghép học tiếp theo phù hợp hơn.";
   }
 
   if (type === "REPORT_PROBLEM") {
-    return "Ghi nhận vấn đề khiến bạn không thể tham gia buổi học.";
+    return "Ghi lại vấn đề khiến bạn không thể tham gia buổi học trọn vẹn.";
   }
 
   if (type === "EARLY_LEAVE_REASON") {
-    return "Cho biết lý do bạn rời sớm để hệ thống xử lý attendance chính xác hơn.";
+    return "Cho biết lý do rời sớm để trạng thái tham gia được ghi nhận chính xác.";
   }
 
-  return "Gửi phản hồi ngắn cho phần thời gian bạn đã tham gia.";
+  return "Gửi phản hồi nhanh cho phần thời gian bạn đã tham gia.";
 }
 
 function getFeedbackPlaceholder(type: FeedbackType) {
   if (type === "SESSION_FEEDBACK") {
-    return "Bạn học cùng đúng giờ, trao đổi rõ ràng, phần học hiệu quả...";
+    return "Buổi học diễn ra thế nào, bạn học trao đổi ra sao, phần nào hiệu quả nhất...";
   }
 
   if (type === "REPORT_PROBLEM") {
@@ -55,10 +56,12 @@ function getReasonLabel(reason: string) {
   return "";
 }
 
-export default function FeedbackSubmitPanel({
+export default function FeedbackSubmitSheet({
   eligibility,
+  onClose,
 }: {
   eligibility: FeedbackEligibilityResponse;
+  onClose: () => void;
 }) {
   const type = eligibility.feedbackType;
   const [rating, setRating] = useState(5);
@@ -137,187 +140,223 @@ export default function FeedbackSubmitPanel({
       setSubmitError("");
       await submitStudyFeedback(payload);
       setSubmitted(true);
+      toast.success("Đã gửi đánh giá buổi học");
     } catch {
-      setSubmitError("Không thể gửi feedback. Vui lòng thử lại.");
+      setSubmitError("Không thể gửi phản hồi. Vui lòng thử lại.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-xl border border-orange-200 bg-orange-50/70 p-4"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-sm font-bold text-gray-800">
-            {getFeedbackTitle(type)}
-          </div>
-          <div className="mt-1 text-xs font-medium leading-5 text-gray-500">
-            {getFeedbackHint(type)}
-          </div>
-        </div>
-        {eligibility.eligibleForModel && (
-          <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
-            AI model
-          </span>
-        )}
-      </div>
+    <div className="fixed inset-0 z-[60] flex justify-end bg-gray-900/35">
+      <button
+        type="button"
+        aria-label="Đóng đánh giá"
+        onClick={onClose}
+        className="hidden flex-1 cursor-default sm:block"
+      />
 
-      <div className="mt-4 rounded-lg bg-white/70 px-3 py-2 text-xs font-semibold text-gray-500">
-        Thời lượng tham gia: {durationMinutes} / {requiredMinutes} phút
-      </div>
-
-      {!eligibility.canSubmitFeedback ? (
-        <div className="mt-4 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-500">
-          Hiện tại bạn chưa thể gửi feedback cho buổi học này.
-        </div>
-      ) : submitted ? (
-        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-          Feedback của bạn đã được gửi thành công.
-        </div>
-      ) : (
-        <div className="mt-4 space-y-4">
-          {canRate && (
-            <RatingPicker
-              label={
-                isFullFeedback
-                  ? "Mức độ hài lòng chung"
-                  : "Đánh giá phần đã tham gia"
-              }
-              value={rating}
-              onChange={setRating}
-            />
-          )}
-
-          {isFullFeedback && (
-            <div className="grid grid-cols-1 gap-3">
-              <ScoreRow
-                label="Chất lượng ghép học"
-                value={matchedQualityScore}
-                onChange={setMatchedQualityScore}
-              />
-              <ScoreRow
-                label="Giao tiếp"
-                value={communicationScore}
-                onChange={setCommunicationScore}
-              />
-              <ScoreRow
-                label="Hiệu quả học"
-                value={studyEffectivenessScore}
-                onChange={setStudyEffectivenessScore}
-              />
+      <section className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl sm:rounded-l-2xl">
+        <div className="border-b border-gray-100 px-5 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <MessageSquareText size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {getFeedbackTitle(type)}
+                </h3>
+                <p className="mt-1 text-sm leading-5 text-gray-500">
+                  {getFeedbackHint(type)}
+                </p>
+              </div>
             </div>
-          )}
 
-          {isPartialFeedback && (
-            <ScoreRow
-              label="Hiệu quả phần đã học"
-              value={studyEffectivenessScore}
-              onChange={setStudyEffectivenessScore}
-            />
-          )}
-
-          {type === "EARLY_LEAVE_REASON" && (
-            <select
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              className="w-full rounded-lg border border-orange-100 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none transition-colors focus:border-orange-400"
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Đóng"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
             >
-              <option value="">Chọn lý do rời sớm</option>
-              <option value="network">Mất kết nối</option>
-              <option value="schedule">Có việc đột xuất</option>
-              <option value="technical">Lỗi kỹ thuật</option>
-              <option value="other">Lý do khác</option>
-            </select>
-          )}
+              <X size={18} />
+            </button>
+          </div>
 
-          <textarea
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            rows={isFullFeedback ? 4 : 3}
-            className="w-full resize-none rounded-lg border border-orange-100 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-orange-400"
-            placeholder={getFeedbackPlaceholder(type)}
-          />
-
-          {submitError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
-              {submitError}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Đang gửi..." : "Gửi feedback"}
-          </button>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <InfoPill label="Tham gia" value={`${durationMinutes} phút`} />
+            <InfoPill label="Yêu cầu" value={`${requiredMinutes} phút`} />
+          </div>
         </div>
-      )}
-    </form>
-  );
-}
 
-function RatingPicker({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <div>
-      <div className="mb-2 text-xs font-bold text-gray-500">{label}</div>
-      <div className="grid grid-cols-5 gap-2">
-        {[1, 2, 3, 4, 5].map((score) => (
-          <button
-            key={score}
-            type="button"
-            onClick={() => onChange(score)}
-            className={`h-9 rounded-lg border text-sm font-bold transition-colors ${
-              value === score
-                ? "border-orange-500 bg-orange-500 text-white"
-                : "border-orange-100 bg-white text-gray-600 hover:border-orange-300"
-            }`}
-          >
-            {score}
-          </button>
-        ))}
-      </div>
+        <div className="flex-1 overflow-y-auto px-5 py-5">
+          {!eligibility.canSubmitFeedback ? (
+            <EmptyState text="Hiện tại bạn chưa thể gửi phản hồi cho buổi học này." />
+          ) : submitted ? (
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-5 text-center">
+              <CheckCircle2 className="mx-auto text-emerald-600" size={34} />
+              <div className="mt-3 text-sm font-bold text-emerald-800">
+                Cảm ơn bạn đã gửi đánh giá
+              </div>
+              <p className="mt-1 text-sm leading-5 text-emerald-700">
+                Phản hồi của bạn sẽ giúp buổi học sau phù hợp hơn.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {canRate && (
+                <StarRating
+                  label={
+                    isFullFeedback
+                      ? "Mức độ hài lòng chung"
+                      : "Đánh giá phần đã tham gia"
+                  }
+                  value={rating}
+                  onChange={setRating}
+                />
+              )}
+
+              {isFullFeedback && (
+                <div className="space-y-3">
+                  <StarRating
+                    label="Chất lượng ghép học"
+                    value={matchedQualityScore}
+                    onChange={setMatchedQualityScore}
+                    compact
+                  />
+                  <StarRating
+                    label="Giao tiếp"
+                    value={communicationScore}
+                    onChange={setCommunicationScore}
+                    compact
+                  />
+                  <StarRating
+                    label="Hiệu quả học"
+                    value={studyEffectivenessScore}
+                    onChange={setStudyEffectivenessScore}
+                    compact
+                  />
+                </div>
+              )}
+
+              {isPartialFeedback && (
+                <StarRating
+                  label="Hiệu quả phần đã học"
+                  value={studyEffectivenessScore}
+                  onChange={setStudyEffectivenessScore}
+                  compact
+                />
+              )}
+
+              {type === "EARLY_LEAVE_REASON" && (
+                <select
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                >
+                  <option value="">Chọn lý do rời sớm</option>
+                  <option value="network">Mất kết nối</option>
+                  <option value="schedule">Có việc đột xuất</option>
+                  <option value="technical">Lỗi kỹ thuật</option>
+                  <option value="other">Lý do khác</option>
+                </select>
+              )}
+
+              <textarea
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                rows={isFullFeedback ? 5 : 4}
+                className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm leading-6 text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                placeholder={getFeedbackPlaceholder(type)}
+              />
+
+              {submitError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+                  {submitError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? "Đang gửi..." : "Gửi đánh giá"}
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
 
-function ScoreRow({
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
+      <div className="text-xs font-semibold text-gray-500">{label}</div>
+      <div className="mt-0.5 text-sm font-bold text-gray-800">{value}</div>
+    </div>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-5 text-sm font-semibold text-gray-500">
+      {text}
+    </div>
+  );
+}
+
+function StarRating({
   label,
   value,
   onChange,
+  compact = false,
 }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  compact?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-orange-100 bg-white px-3 py-3">
+    <div
+      className={
+        compact
+          ? "rounded-xl border border-gray-100 bg-white px-3 py-3"
+          : "rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-4"
+      }
+    >
       <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="text-xs font-bold text-gray-500">{label}</span>
-        <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-700">
-          {value}/5
-        </span>
+        <span className="text-sm font-bold text-gray-700">{label}</span>
+        <span className="text-xs font-bold text-gray-500">{value}/5</span>
       </div>
-      <input
-        type="range"
-        min={1}
-        max={5}
-        step={1}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="h-2 w-full accent-orange-500"
-      />
+      <div className="flex items-center gap-1.5">
+        {[1, 2, 3, 4, 5].map((score) => {
+          const active = score <= value;
+
+          return (
+            <button
+              key={score}
+              type="button"
+              onClick={() => onChange(score)}
+              aria-label={`${score} sao`}
+              className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
+                active
+                  ? "bg-amber-100 text-amber-500"
+                  : "bg-gray-100 text-gray-300 hover:bg-amber-50 hover:text-amber-400"
+              }`}
+            >
+              <Star
+                size={20}
+                fill={active ? "currentColor" : "none"}
+                strokeWidth={2}
+              />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
