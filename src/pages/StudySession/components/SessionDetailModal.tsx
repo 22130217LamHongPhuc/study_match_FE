@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   SessionConfirmationStatsResponse,
   StudySessionVm,
@@ -36,6 +36,8 @@ function getParticipantStatusLabel(status: string) {
   if (status === "JOINED") return "Đã tham gia";
   if (status === "DECLINED") return "Đã từ chối";
   if (status === "ABSENT") return "Vắng mặt";
+  if (status === "PARTIAL") return "Tham gia một phần";
+  if (status === "COMPLETED") return "Hoàn thành";
   return status;
 }
 
@@ -113,6 +115,14 @@ function getStatusBadgeClass(status?: string | null) {
   return "bg-gray-100 text-gray-600";
 }
 
+function hasSessionEnded(session: StudySessionVm | null) {
+  if (!session) return false;
+  const now = new Date();
+  const endTime = new Date(session.endTime);
+  return now > endTime;
+}
+
+
 export function SessionDetailModal({
   session,
   onClose,
@@ -129,6 +139,7 @@ export function SessionDetailModal({
     null,
   );
   const [joining, setJoining] = useState(false);
+
 
   useEffect(() => {
     let mounted = true;
@@ -229,28 +240,30 @@ export function SessionDetailModal({
     };
   }, [session?.id, session?.sessionType, session?.createdByUserId]);
 
-  const currentSession = detail
-    ? {
-        ...session,
-        sessionType: detail.sessionType,
-        groupId: detail.groupId,
-        title: detail.title,
-        description: detail.description ?? undefined,
-        startTime: detail.startTime,
-        endTime: detail.endTime,
-        studyMode: detail.studyMode,
-        location: detail.location ?? undefined,
-        meetingUrl: detail.meetingUrl ?? undefined,
-        createdByUserId: detail.createdByUserId,
-        status: detail.status,
-        participantStatus: detail.participantStatus,
-        partnerName:
-          detail.partnerUserName ?? detail.partnerName ?? session?.partnerName,
-        groupName: detail.groupName ?? undefined,
-        membersCount: detail.membersCount ?? undefined,
-        subjectName: detail.subjectName ?? undefined,
-      }
-    : session;
+  const currentSession = useMemo<StudySessionVm | null>(() => {
+    if (!detail || !session) return session;
+
+    return {
+      ...session,
+      sessionType: detail.sessionType,
+      groupId: detail.groupId,
+      title: detail.title,
+      description: detail.description ?? undefined,
+      startTime: detail.startTime,
+      endTime: detail.endTime,
+      studyMode: detail.studyMode,
+      location: detail.location ?? undefined,
+      meetingUrl: detail.meetingUrl ?? undefined,
+      createdByUserId: detail.createdByUserId,
+      status: detail.status,
+      participantStatus: detail.participantStatus,
+      partnerName:
+        detail.partnerUserName ?? detail.partnerName ?? session.partnerName,
+      groupName: detail.groupName ?? undefined,
+      membersCount: detail.membersCount ?? undefined,
+      subjectName: detail.subjectName ?? undefined,
+    };
+  }, [detail, session]);
 
   const handleRespond = async (status: "ACCEPTED" | "DECLINED") => {
     if (!session) return;
@@ -535,64 +548,59 @@ export function SessionDetailModal({
             </div>
           )}
 
-          {(currentSession?.participantStatus || session.participantStatus) ===
-            "PENDING" && (
-            <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => handleRespond("ACCEPTED")}
-                disabled={responding !== null}
-                className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
-              >
-                {responding === "ACCEPTED"
-                  ? "Đang xử lý..."
-                  : "Xác nhận tham gia"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRespond("DECLINED")}
-                disabled={responding !== null}
-                className="flex-1 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
-              </button>
-            </div>
-          )}
+{!hasSessionEnded(currentSession) && currentSession?.participantStatus === "PENDING" && (
+  <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row">
+    <button
+      type="button"
+      onClick={() => handleRespond("ACCEPTED")}
+      disabled={responding !== null}
+      className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+    >
+      {responding === "ACCEPTED" ? "Đang xử lý..." : "Xác nhận tham gia"}
+    </button>
 
-          {["ACCEPTED", "JOINED"].includes(
-            currentSession?.participantStatus ||
-              session.participantStatus ||
-              "",
-          ) &&
-            (currentSession?.studyMode || session.studyMode) !== "OFFLINE" && (
-              <div className="border-t border-gray-100 pt-5">
-                <button
-                  type="button"
-                  onClick={handleJoinSession}
-                  disabled={joining}
-                  className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50"
-                >
-                  {joining ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Đang kết nối...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-5 w-5"
-                      >
-                        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
-                      </svg>
-                      Tham gia phòng học
-                    </span>
-                  )}
-                </button>
-              </div>
-            )}
+    <button
+      type="button"
+      onClick={() => handleRespond("DECLINED")}
+      disabled={responding !== null}
+      className="flex-1 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+    >
+      {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
+    </button>
+  </div>
+)}
+
+{!hasSessionEnded(currentSession) &&
+  ["ACCEPTED", "JOINED"].includes(currentSession?.participantStatus || "") &&
+  currentSession?.studyMode !== "OFFLINE" && (
+    <div className="border-t border-gray-100 pt-5">
+      <button
+        type="button"
+        onClick={handleJoinSession}
+        disabled={joining}
+        className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50"
+      >
+        {joining ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            Đang kết nối...
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5"
+            >
+              <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
+            </svg>
+            Tham gia phòng học
+          </span>
+        )}
+      </button>
+    </div>
+  )}
         </div>
       </div>
     </div>

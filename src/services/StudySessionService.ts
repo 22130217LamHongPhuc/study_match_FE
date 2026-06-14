@@ -4,6 +4,10 @@ import {
   CreateStudySessionRequest,
   StudySessionResponse,
   JoinStudySessionResponse,
+  LeaveStudySessionResponse,
+  FeedbackEligibilityResponse,
+  SubmitStudyFeedbackRequest,
+  SubmitStudyFeedbackResponse,
 } from "../pages/StudySession/types";
 import type { SessionConfirmationStatsResponse } from "../pages/StudySession/types";
 import type {
@@ -128,6 +132,73 @@ export async function joinStudySession(
     `/api/study-sessions/${sessionId}/join?userId=${userId}`,
     {
       method: "POST",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export async function leaveStudySession(
+  sessionId: number,
+  userId: number,
+): Promise<APIResponseData<LeaveStudySessionResponse>> {
+  const response = await apiFetch<LeaveStudySessionResponse>(
+    `/api/study-sessions/${sessionId}/leave`,
+    {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export function leaveStudySessionOnUnload(sessionId: number, userId: number) {
+  const endpoint = `${API_BASE_URL}/api/study-sessions/${sessionId}/leave`;
+  const body = JSON.stringify({ userId });
+  const accessToken = localStorage.getItem("accessToken");
+
+  try {
+    fetch(endpoint, {
+      method: "POST",
+      keepalive: true,
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      body,
+    });
+  } catch {
+    const blob = new Blob([body], { type: "application/json" });
+    navigator.sendBeacon?.(endpoint, blob);
+  }
+}
+
+export async function getFeedbackEligibility(
+  sessionId: number,
+  userId: number,
+): Promise<APIResponseData<FeedbackEligibilityResponse>> {
+  const response = await apiFetch<FeedbackEligibilityResponse>(
+    `/api/study-sessions/${sessionId}/feedback-eligibility?userId=${userId}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export async function submitStudyFeedback(
+  payload: SubmitStudyFeedbackRequest,
+): Promise<APIResponseData<SubmitStudyFeedbackResponse>> {
+  const response = await apiFetch<SubmitStudyFeedbackResponse>(
+    "/api/study-feedbacks",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
     },
     API_BASE_URL,
   );

@@ -70,41 +70,53 @@ export default function MainLayout() {
           console.log("[VideoCall][FE][socket][message]", parsed);
           dispatch(updateNewMess(parsed));
 
-          if (parsed.event === SocketEvent.VIDEO_CALL_INVITE && isVideoCallInvite(parsed.data)) {
-            console.log("[VideoCall][FE][socket][invite]", parsed.data)
-            const currentUserId = Number(localStorage.getItem("userId"))
-            if (parsed.data.callerId === currentUserId) return
-            const isGroupCall = Boolean(parsed.data.isGroupCall || parsed.data.groupId || parsed.data.conversationType === 0)
+          if (
+            parsed.event === SocketEvent.VIDEO_CALL_INVITE &&
+            isVideoCallInvite(parsed.data)
+          ) {
+            console.log("[VideoCall][FE][socket][invite]", parsed.data);
+            const currentUserId = Number(localStorage.getItem("userId"));
+            if (parsed.data.callerId === currentUserId) return;
+            const isGroupCall = Boolean(
+              parsed.data.isGroupCall ||
+              parsed.data.groupId ||
+              parsed.data.conversationType === 0,
+            );
             const peerName = isGroupCall
-              ? (parsed.data.groupName || "Nhóm học")
-              : (parsed.data.callerName || `User ${parsed.data.callerId}`)
+              ? parsed.data.groupName || "Nhóm học"
+              : parsed.data.callerName || `User ${parsed.data.callerId}`;
             const peerAvatar = isGroupCall
-              ? (parsed.data.groupAvatar || null)
-              : (parsed.data.callerAvatar || null)
+              ? parsed.data.groupAvatar || null
+              : parsed.data.callerAvatar || null;
 
             setIncomingPeer({
               userId: isGroupCall ? null : parsed.data.callerId,
               fullName: peerName,
               avatar: peerAvatar,
               isGroupCall,
-            })
-            localStorage.setItem(`videoCallPeer:${parsed.data.sessionId}`, JSON.stringify({
-              userId: isGroupCall ? null : parsed.data.callerId,
-              fullName: peerName,
-              avatar: peerAvatar,
-              isGroupCall,
-            }))
-            setIncomingVideoCall(parsed.data)
-            return
+            });
+            localStorage.setItem(
+              `videoCallPeer:${parsed.data.sessionId}`,
+              JSON.stringify({
+                userId: isGroupCall ? null : parsed.data.callerId,
+                fullName: peerName,
+                avatar: peerAvatar,
+                isGroupCall,
+              }),
+            );
+            setIncomingVideoCall(parsed.data);
+            return;
           }
 
           if (
             parsed.event === SocketEvent.NEW_MESSAGE &&
             isNewMessageData(parsed.data)
           ) {
-            const currentUserId = Number(localStorage.getItem("userId"))
+            const currentUserId = Number(localStorage.getItem("userId"));
             if (parsed.data.message.senderId !== currentUserId) {
-              sendDelivered(parsed.data.conversationId, [parsed.data.message.messageId])
+              sendDelivered(parsed.data.conversationId, [
+                parsed.data.message.messageId,
+              ]);
             }
 
             if (
@@ -112,20 +124,42 @@ export default function MainLayout() {
               isNewMessageData(parsed.data) &&
               parsed.data.conversationId !== Number(currentConverIdRef.current)
             ) {
-              dispatch(increaseUnread({ conversationId: parsed.data.conversationId }))
-              toast(<ToastCustom message={parsed.data.message.content || ""} userName={parsed.data.message.senderId.toString() || ""}></ToastCustom>, {
-                position: "bottom-right",
-                autoClose: 4000,
-              })
+              dispatch(
+                increaseUnread({ conversationId: parsed.data.conversationId }),
+              );
+              toast(
+                <ToastCustom
+                  message={parsed.data.message.content || ""}
+                  userName={parsed.data.message.senderId.toString() || ""}
+                ></ToastCustom>,
+                {
+                  position: "bottom-right",
+                  autoClose: 4000,
+                },
+              );
             }
           }
-        })
-        ws.onMessage("/topic/presence", (msg: any) => {
-          const parsed: SocketResponse = JSON.parse(msg)
-          if (parsed.event === SocketEvent.USER_PRESENCE) {
-            dispatch(updateNewMess(parsed))
+
+          if (
+            parsed.event === SocketEvent.STUDY_SESSION_REMINDER &&
+            isStudySessionReminder(parsed.data)
+          ) {
+            const normalizedData = normalizeStudySessionReminder(parsed.data);
+            if (normalizedData) {
+              toast(<StudySessionReminderToast {...normalizedData} />, {
+                position: "top-right",
+                autoClose: 10000,
+                toastId: normalizedData.toastId,
+              });
+            }
           }
-        })
+        });
+        ws.onMessage("/topic/presence", (msg: any) => {
+          const parsed: SocketResponse = JSON.parse(msg);
+          if (parsed.event === SocketEvent.USER_PRESENCE) {
+            dispatch(updateNewMess(parsed));
+          }
+        });
       })
       .catch((err) => {
         console.error("Loi connect:", err);
@@ -252,15 +286,22 @@ export default function MainLayout() {
     };
   };
 
-  const isNewMessageData = (data: unknown): data is { conversationId: number; message: { messageId: number; senderId: number; content?: string | null } } => {
-    return !!data &&
+  const isNewMessageData = (
+    data: unknown,
+  ): data is {
+    conversationId: number;
+    message: { messageId: number; senderId: number; content?: string | null };
+  } => {
+    return (
+      !!data &&
       typeof data === "object" &&
       "conversationId" in data &&
       "message" in data &&
       !!(data as any).message &&
       typeof (data as any).message.messageId === "number" &&
       typeof (data as any).message.senderId === "number"
-  }
+    );
+  };
 
   const acceptIncomingCall = () => {
     if (!incomingVideoCall || callActionLoading) return;
@@ -275,16 +316,21 @@ export default function MainLayout() {
           sessionId: call.sessionId,
           roomId: call.roomId,
           hasToken: !!call.token,
-        })
-        setIncomingVideoCall(null)
+        });
+        setIncomingVideoCall(null);
         setActiveVideoCall({
           ...call,
-          isGroupCall: Boolean(incomingVideoCall.isGroupCall || incomingVideoCall.groupId || incomingVideoCall.conversationType === 0),
+          isGroupCall: Boolean(
+            incomingVideoCall.isGroupCall ||
+            incomingVideoCall.groupId ||
+            incomingVideoCall.conversationType === 0,
+          ),
           groupId: incomingVideoCall.groupId ?? call.groupId,
           groupName: incomingVideoCall.groupName ?? call.groupName,
           groupAvatar: incomingVideoCall.groupAvatar ?? call.groupAvatar,
-          conversationType: incomingVideoCall.conversationType ?? call.conversationType,
-        })
+          conversationType:
+            incomingVideoCall.conversationType ?? call.conversationType,
+        });
       })
       .catch((error) => {
         console.error("Cannot join video call", error);

@@ -9,7 +9,9 @@ export type ParticipantStatus =
   | "ACCEPTED"
   | "DECLINED"
   | "JOINED"
-  | "ABSENT";
+  | "ABSENT"
+  | "PARTIAL"
+  | "COMPLETED";
 
 export type ScheduleFilter = "ALL" | "USER_PAIR" | "GROUP" | "PENDING";
 
@@ -108,4 +110,60 @@ export interface JoinStudySessionResponse {
   roomId: string;
   token: string;
   joinedAt: string;
+}
+
+export type AttendanceStatus = "COMPLETED" | "PARTIAL" | "ABSENT";
+
+export interface LeaveStudySessionResponse {
+  sessionId: number;
+  userId: number;
+  leaveTime: string;
+  durationSeconds: number;
+  totalDurationSeconds: number;
+  attendanceStatus: AttendanceStatus;
+}
+
+export type FeedbackType =
+  | "SESSION_FEEDBACK"
+  | "REPORT_PROBLEM"
+  | "EARLY_LEAVE_REASON"
+  | "PARTIAL_FEEDBACK";
+
+export interface FeedbackEligibilityResponse {
+  sessionId: number;
+  userId: number;
+  sessionType: StudySessionType;
+  targetUserId: number | null;
+  groupId: number | null;
+  sessionEnded: boolean;
+  canSubmitFeedback: boolean;
+  feedbackType: FeedbackType | null;
+  totalDurationSeconds: number;
+  minRequiredDurationSeconds: number;
+  attendanceStatus: AttendanceStatus;
+  eligibleForModel: boolean;
+}
+
+export interface SubmitStudyFeedbackRequest {
+  sessionId: number;
+  userId: number;
+  targetUserId: number | null;
+  groupId: number | null;
+  sessionType: StudySessionType;
+  feedbackType: FeedbackType;
+  rating?: number;
+  content: string;
+  matchedQualityScore?: number;
+  communicationScore?: number;
+  studyEffectivenessScore?: number;
+  eligibleForModel: boolean;
+}
+
+export interface SubmitStudyFeedbackResponse {
+  feedbackId: number;
+  sessionId: number;
+  userId: number;
+  feedbackType: FeedbackType;
+  eligibleForModel: boolean;
+  createdAt: string;
 }
