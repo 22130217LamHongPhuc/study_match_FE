@@ -20,6 +20,8 @@ export interface RecommendationApiItem {
   n_shared_subjects: number;
   shared_subject_ids: string[];
   final_score: number;
+  reason_text?: string;
+  reasonText?: string;
   match_percentage: number;
   friend_request?: RecommendationFriendRequestApiItem | null;
 }
@@ -62,6 +64,8 @@ export interface RecommendationCardVm {
   similarityScore: number;
   sharedSubjectScore: number;
   sharedSubjectCount: number;
+  finalScore?: number;
+  reasonText?: string;
   matchPercentage: number;
   friendRequest?: FriendRequestVm | null;
 }

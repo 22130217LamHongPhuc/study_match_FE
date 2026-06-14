@@ -1,10 +1,11 @@
-import { UserPlus, Check, Clock, Ban, Send } from "lucide-react";
-import { RecommendationCardVm } from "../types";
+import { UserPlus, Check, Clock, Ban, Send, Eye } from "lucide-react";
+import { FriendRequestVm, RecommendationCardVm } from "../types";
 
 interface RecommendationCardProps {
   recommendation: RecommendationCardVm;
+  onViewProfile?: (recommendation: RecommendationCardVm) => void;
   onConnect?: (id: number) => void;
-  onAccept?: (requestId: number) => void;
+  onAccept?: (request: FriendRequestVm) => void;
   isConnecting?: boolean;
   isAccepting?: boolean;
   currentUserId?: number;
@@ -42,6 +43,7 @@ function getMatchColor(match: number) {
 
 export default function RecommendationCard({
   recommendation,
+  onViewProfile,
   onConnect,
   onAccept,
   isConnecting = false,
@@ -169,12 +171,20 @@ export default function RecommendationCard({
         </span>
       </div>
 
-      <div className="mt-auto">
+      <div className="mt-auto space-y-2">
+        <button
+          type="button"
+          onClick={() => onViewProfile?.(recommendation)}
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+        >
+          <Eye size={15} />
+          Xem hồ sơ
+        </button>
         <button
           type="button"
           onClick={() => {
             if (canAcceptFriendRequest && friendRequest?.id) {
-              onAccept?.(friendRequest.id);
+              onAccept?.(friendRequest);
               return;
             }
             onConnect?.(recommendation.userId);
