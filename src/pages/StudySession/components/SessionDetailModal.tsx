@@ -4,16 +4,13 @@ import type {
   StudySessionVm,
   StudySessionResponse,
   JoinStudySessionResponse,
-  FeedbackEligibilityResponse,
 } from "../types";
 import {
   getStudySessionById,
   getConfirmationStats,
   respondToStudySession,
   joinStudySession,
-  getFeedbackEligibility,
 } from "../../../services/StudySessionService";
-import FeedbackSubmitPanel from "./FeedbackModal";
 
 interface SessionDetailModalProps {
   session: StudySessionVm | null;
@@ -118,20 +115,13 @@ function getStatusBadgeClass(status?: string | null) {
   return "bg-gray-100 text-gray-600";
 }
 
-function hasSessionEnded(
-  session?: {
-    status?: string | null;
-    endTime?: string | null;
-  } | null,
-) {
+function hasSessionEnded(session: StudySessionVm | null) {
   if (!session) return false;
-  if (session.status === "COMPLETED") return true;
-  if (!session.endTime) return false;
-
-  const endTime = new Date(session.endTime).getTime();
-
-  return Number.isFinite(endTime) && endTime <= Date.now();
+  const now = new Date();
+  const endTime = new Date(session.endTime);
+  return now > endTime;
 }
+
 
 export function SessionDetailModal({
   session,
@@ -149,11 +139,7 @@ export function SessionDetailModal({
     null,
   );
   const [joining, setJoining] = useState(false);
-  const [feedbackEligibility, setFeedbackEligibility] =
-    useState<FeedbackEligibilityResponse | null>(null);
-  const [loadingFeedbackEligibility, setLoadingFeedbackEligibility] =
-    useState(false);
-  const [feedbackSheetOpen, setFeedbackSheetOpen] = useState(false);
+
 
   useEffect(() => {
     let mounted = true;
@@ -201,10 +187,6 @@ export function SessionDetailModal({
     return () => {
       mounted = false;
     };
-  }, [session?.id]);
-
-  useEffect(() => {
-    setFeedbackSheetOpen(false);
   }, [session?.id]);
 
   useEffect(() => {
@@ -282,50 +264,6 @@ export function SessionDetailModal({
       subjectName: detail.subjectName ?? undefined,
     };
   }, [detail, session]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadFeedbackEligibility() {
-      if (!currentSession || !hasSessionEnded(currentSession)) {
-        setFeedbackEligibility(null);
-        setLoadingFeedbackEligibility(false);
-        return;
-      }
-
-      const userId = Number(localStorage.getItem("userId"));
-
-      if (!Number.isFinite(userId) || userId <= 0) {
-        setFeedbackEligibility(null);
-        return;
-      }
-
-      try {
-        setLoadingFeedbackEligibility(true);
-        const response = await getFeedbackEligibility(
-          currentSession.id,
-          userId,
-        );
-
-        if (!mounted) return;
-
-        setFeedbackEligibility(response.data ?? null);
-      } catch {
-        if (!mounted) return;
-        setFeedbackEligibility(null);
-      } finally {
-        if (mounted) {
-          setLoadingFeedbackEligibility(false);
-        }
-      }
-    }
-
-    loadFeedbackEligibility();
-
-    return () => {
-      mounted = false;
-    };
-  }, [currentSession]);
 
   const handleRespond = async (status: "ACCEPTED" | "DECLINED") => {
     if (!session) return;
@@ -610,101 +548,61 @@ export function SessionDetailModal({
             </div>
           )}
 
-          {loadingFeedbackEligibility && hasSessionEnded(currentSession) && (
-            <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-500">
-              Đang kiểm tra phản hồi...
-            </div>
-          )}
+{!hasSessionEnded(currentSession) && currentSession?.participantStatus === "PENDING" && (
+  <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row">
+    <button
+      type="button"
+      onClick={() => handleRespond("ACCEPTED")}
+      disabled={responding !== null}
+      className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+    >
+      {responding === "ACCEPTED" ? "Đang xử lý..." : "Xác nhận tham gia"}
+    </button>
 
-          {feedbackEligibility?.sessionEnded &&
-            feedbackEligibility.feedbackType && (
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="text-sm font-bold text-gray-800">
-                      Phản hồi sau buổi học
-                    </div>
-                    <p className="mt-1 text-sm leading-5 text-gray-500">
-                      Chia sẻ ngắn gọn để hệ thống gợi ý bạn học phù hợp hơn.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setFeedbackSheetOpen(true)}
-                    className="shrink-0 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-700"
-                  >
-                    Mở đánh giá
-                  </button>
-                </div>
-              </div>
-            )}
+    <button
+      type="button"
+      onClick={() => handleRespond("DECLINED")}
+      disabled={responding !== null}
+      className="flex-1 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+    >
+      {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
+    </button>
+  </div>
+)}
 
-          {(currentSession?.participantStatus || session.participantStatus) ===
-            "PENDING" && (
-            <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => handleRespond("ACCEPTED")}
-                disabled={responding !== null}
-                className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
-              >
-                {responding === "ACCEPTED"
-                  ? "Đang xử lý..."
-                  : "Xác nhận tham gia"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRespond("DECLINED")}
-                disabled={responding !== null}
-                className="flex-1 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
-              </button>
-            </div>
-          )}
-
-          {["ACCEPTED", "JOINED"].includes(
-            currentSession?.participantStatus ||
-              session.participantStatus ||
-              "",
-          ) &&
-            (currentSession?.studyMode || session.studyMode) !== "OFFLINE" && (
-              <div className="border-t border-gray-100 pt-5">
-                <button
-                  type="button"
-                  onClick={handleJoinSession}
-                  disabled={joining}
-                  className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50"
-                >
-                  {joining ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Đang kết nối...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-5 w-5"
-                      >
-                        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
-                      </svg>
-                      Tham gia phòng học
-                    </span>
-                  )}
-                </button>
-              </div>
-            )}
+{!hasSessionEnded(currentSession) &&
+  ["ACCEPTED", "JOINED"].includes(currentSession?.participantStatus || "") &&
+  currentSession?.studyMode !== "OFFLINE" && (
+    <div className="border-t border-gray-100 pt-5">
+      <button
+        type="button"
+        onClick={handleJoinSession}
+        disabled={joining}
+        className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50"
+      >
+        {joining ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            Đang kết nối...
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5"
+            >
+              <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
+            </svg>
+            Tham gia phòng học
+          </span>
+        )}
+      </button>
+    </div>
+  )}
         </div>
       </div>
-      {feedbackSheetOpen && feedbackEligibility && (
-        <FeedbackSubmitPanel
-          eligibility={feedbackEligibility}
-          onClose={() => setFeedbackSheetOpen(false)}
-        />
-      )}
     </div>
   );
 }

@@ -8,8 +8,10 @@ import { AllSessionList } from "./components/AllSessionList";
 import { CreateSessionModal } from "./components/CreateSessionModal";
 import { SessionDetailModal } from "./components/SessionDetailModal";
 import { StudySessionRoom } from "./components/StudySessionRoom";
+import FeedbackSubmitPanel from "./components/FeedbackModal";
 import type { ScheduleFilter, StudySessionVm } from "./types";
 import {
+  getFeedbackEligibility,
   getStudySessionById,
   getUserStudySessions,
 } from "../../services/StudySessionService";
@@ -17,7 +19,11 @@ import {
   getFriendsListService,
   type FriendListItem,
 } from "../../services/FriendService";
-import type { JoinStudySessionResponse, StudySessionResponse } from "./types";
+import type {
+  FeedbackEligibilityResponse,
+  JoinStudySessionResponse,
+  StudySessionResponse,
+} from "./types";
 
 function resolvePartnerName(
   session: StudySessionResponse,
@@ -78,6 +84,8 @@ export default function StudySessionPage() {
   const [joinedSession, setJoinedSession] = useState<StudySessionVm | null>(
     null,
   );
+  const [feedbackEligibility, setFeedbackEligibility] =
+    useState<FeedbackEligibilityResponse | null>(null);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionError, setSessionError] = useState("");
 
@@ -180,6 +188,7 @@ export default function StudySessionPage() {
   };
 
   const handleJoinSession = (joinData: JoinStudySessionResponse) => {
+    setFeedbackEligibility(null);
     setJoinedSession(selectedSession);
     setJoinedRoom(joinData);
     setSelectedSession(null);
@@ -187,6 +196,7 @@ export default function StudySessionPage() {
 
   const handleLeaveRoom = useCallback(async (sessionId: number) => {
     setJoinedRoom(null);
+    setFeedbackEligibility(null);
     const fallback =
       joinedSession ??
       sessions.find((session) => session.id === sessionId) ??
@@ -211,6 +221,15 @@ export default function StudySessionPage() {
         ),
       );
       setSelectedSession(updatedSession);
+    } catch {
+    }
+
+    try {
+      const eligibilityResponse = await getFeedbackEligibility(
+        sessionId,
+        currentUserId,
+      );
+      setFeedbackEligibility(eligibilityResponse.data ?? null);
     } catch {
     } finally {
       setJoinedSession(null);
@@ -281,6 +300,13 @@ export default function StudySessionPage() {
         }}
         onJoinSession={handleJoinSession}
       />
+
+      {feedbackEligibility?.sessionEnded && (
+        <FeedbackSubmitPanel
+          eligibility={feedbackEligibility}
+          onClose={() => setFeedbackEligibility(null)}
+        />
+      )}
 
       {joinedRoom && (
         <StudySessionRoom

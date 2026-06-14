@@ -9,14 +9,19 @@ import type {
   SubmitStudyFeedbackRequest,
 } from "../types";
 
-function getFeedbackTitle(type: FeedbackType) {
+function getFeedbackTitle(type: FeedbackType | null) {
+  if (!type) return "Kết quả buổi học";
   if (type === "SESSION_FEEDBACK") return "Đánh giá buổi học";
   if (type === "REPORT_PROBLEM") return "Báo sự cố";
   if (type === "EARLY_LEAVE_REASON") return "Lý do rời sớm";
   return "Phản hồi buổi học";
 }
 
-function getFeedbackHint(type: FeedbackType) {
+function getFeedbackHint(type: FeedbackType | null) {
+  if (!type) {
+    return "Server đã kiểm tra buổi học này và hiện tại bạn không cần gửi đánh giá.";
+  }
+
   if (type === "SESSION_FEEDBACK") {
     return "Chia sẻ cảm nhận của bạn để lần ghép học tiếp theo phù hợp hơn.";
   }
@@ -74,11 +79,10 @@ export default function FeedbackSubmitSheet({
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  if (!type) return null;
-
   const isFullFeedback = type === "SESSION_FEEDBACK";
   const isPartialFeedback = type === "PARTIAL_FEEDBACK";
   const canRate = isFullFeedback || isPartialFeedback;
+  const canSubmit = eligibility.canSubmitFeedback && !!type;
   const durationMinutes = Math.round(eligibility.totalDurationSeconds / 60);
   const requiredMinutes = Math.round(
     eligibility.minRequiredDurationSeconds / 60,
@@ -101,7 +105,7 @@ export default function FeedbackSubmitSheet({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!eligibility.canSubmitFeedback || submitted) return;
+    if (!canSubmit || submitted || !type) return;
 
     const feedbackContent = buildContent();
 
@@ -149,15 +153,8 @@ export default function FeedbackSubmitSheet({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end bg-gray-900/35">
-      <button
-        type="button"
-        aria-label="Đóng đánh giá"
-        onClick={onClose}
-        className="hidden flex-1 cursor-default sm:block"
-      />
-
-      <section className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl sm:rounded-l-2xl">
+    <div className="fixed inset-0 z-[60] flex justify-center bg-gray-900/35 py-2">
+      <section className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl rounded-xl">
         <div className="border-b border-gray-100 px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -191,7 +188,7 @@ export default function FeedbackSubmitSheet({
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          {!eligibility.canSubmitFeedback ? (
+          {!canSubmit ? (
             <EmptyState text="Hiện tại bạn chưa thể gửi phản hồi cho buổi học này." />
           ) : submitted ? (
             <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-5 text-center">
@@ -268,7 +265,7 @@ export default function FeedbackSubmitSheet({
                 onChange={(event) => setContent(event.target.value)}
                 rows={isFullFeedback ? 5 : 4}
                 className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm leading-6 text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-                placeholder={getFeedbackPlaceholder(type)}
+                placeholder={type ? getFeedbackPlaceholder(type) : ""}
               />
 
               {submitError && (
