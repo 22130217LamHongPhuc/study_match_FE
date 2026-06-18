@@ -1,30 +1,46 @@
 import CallIcon from "@mui/icons-material/Call";
+import PaletteIcon from "@mui/icons-material/Palette";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import MicIcon from "@mui/icons-material/Mic";
 import ImageIcon from "@mui/icons-material/Image";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import SendIcon from "@mui/icons-material/Send";
 import CancelPresentationIcon from "@mui/icons-material/CancelPresentation";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import PushPinIcon from "@mui/icons-material/PushPin";
+import InfoIcon from "@mui/icons-material/Info";
 import {
   Avatar,
   Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   InputBase,
   Paper,
   Typography,
 } from "@mui/material";
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { useDispatch, useSelector } from "react-redux";
 import WelcomeConversation from "../../components/conversation/WelcomeConversion";
 import ListFriends from "../../components/conversation/ListFriends";
 import ListMess from "../../components/conversation/ListMess";
+import ForwardMessageModal from "../../components/conversation/ForwardMessageModal";
 import ReplyMessage from "../../components/conversation/ReplyMessage";
 import VideoCallModal from "../../components/conversation/VideoCallModal";
 import { MessageInterface } from "../../model/Conversation";
 import { APIResponse } from "../../model/APIResponse";
 import { MessageStatusData, SocketData } from "../../model/SocketResponse";
+import ColorPickerModal from "./components/ColorPickerModal";
+import { getThemeById } from "../../theme/ConversationThemes";
 import { ReactionData, ReactionDTO } from "../../model/Reaction";
 import { VideoCallInfo } from "../../model/VideoCall";
 import {
@@ -35,11 +51,15 @@ import {
   replyText,
   sendSeen,
   sendText,
+  setMessagePinned,
   uploadMedia,
+  updateConversationColor,
 } from "../../services/ChatService";
 import { getActiveGroupMemberIds } from "../../services/GroupService";
-import { loadFriendProfilesService } from "../../services/FriendService";
+import { FriendUser, loadFriendProfilesService } from "../../services/FriendService";
+import { getGroupStudySessions } from "../../services/StudySessionService";
 import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
+import { StudySessionResponse } from "../StudySession/types";
 import { SocketEvent } from "../../enum/SocketEvent";
 import { RootState } from "../../redux/store";
 import {
@@ -48,7 +68,7 @@ import {
   updateCurrentConverId,
   upsertGroupMemberProfiles,
 } from "../../redux/ChatReducer";
-
+import { badWords } from "@vnphu/vn-badwords";
 const MESSAGE_PAGE_SIZE = 25;
 const MESSAGE_LOADING_MIN_MS = 250;
 
@@ -59,6 +79,41 @@ const waitForMinLoading = async (startedAt: number) => {
   }
 };
 
+const ConversationLoading = () => (
+  <Box
+    sx={{
+      flex: 1,
+      minHeight: 0,
+      width: "100%",
+      position: "relative",
+      overflow: "hidden",
+      background: "transparent",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <Box
+      sx={{
+        width: 48,
+        height: 48,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <CircularProgress
+        size={48}
+        thickness={4}
+        sx={{
+          color: "#b30000",
+        }}
+      />
+    </Box>
+
+  </Box>
+);
+
 type RouteState = {
   conversationKind?: "PRIVATE" | "GROUP";
   conversationType?: number;
@@ -67,6 +122,7 @@ type RouteState = {
   avatar?: string | null;
   fullName?: string | null;
   groupName?: string | null;
+  conversationKey?: string | null;
 } | null;
 
 const isSocketData = (data: unknown): data is SocketData => {
@@ -80,6 +136,9 @@ const isMessageStatusData = (data: unknown): data is MessageStatusData => {
 const isReactionData = (data: unknown): data is ReactionData => {
   return !!data && typeof data === "object" && "conversationId" in data && "message" in data;
 };
+function hasBadWords(text: string) {
+  return badWords(text, { validate: true });
+}
 
 const shouldApplyStatus = (
   currentStatus: MessageInterface["status"],
@@ -93,6 +152,69 @@ const shouldApplyStatus = (
     SEEN: 3,
   };
   return (order[nextStatus] ?? 0) >= (currentStatus ? order[currentStatus] : -1);
+};
+
+type GroupInfoTab = "schedule" | "pinned";
+
+const getProfileDisplayName = (
+  profile?: {
+    fullName?: string | null;
+    full_name?: string | null;
+    name?: string | null;
+    username?: string | null;
+  },
+) => {
+  return profile?.fullName || profile?.full_name || profile?.name || profile?.username || null;
+};
+
+const sessionStatusLabel: Record<string, string> = {
+  SCHEDULED: "Đã lên lịch",
+  ONGOING: "Đang diễn ra",
+  COMPLETED: "Đã hoàn thành",
+  CANCELLED: "Đã hủy",
+};
+
+const studyModeLabel: Record<string, string> = {
+  ONLINE: "Online",
+  OFFLINE: "Trực tiếp",
+  HYBRID: "Kết hợp",
+};
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("vi-VN", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const getMessagePreview = (message: any) => {
+  if (message.moderationStatus === "HATE" || message.moderation_status === "HATE" || message.moderationStatus === "OFFENSIVE" || message.moderation_status === "OFFENSIVE") return "Tin nhắn bị vi phạm chính sách";
+  if (message.isDeleted) return "Tin nhắn đã được thu hồi";
+  if (message.content?.trim()) return message.content;
+  if (message.fileName) return message.fileName;
+  if (message.mediaURL) return message.type?.startsWith("video/") ? "Video" : "Hình ảnh";
+  return "Tin nhắn";
+};
+
+const isMessagePinned = (message: MessageInterface) => {
+  const pinned = message.isPinned ?? message.pinned;
+  return pinned === true || pinned === "Y";
+};
+
+const isPolicyViolationMessage = (message: any) => {
+  return message.moderationStatus === "HATE" || message.moderation_status === "HATE" || message.moderationStatus === "OFFENSIVE" || message.moderation_status === "OFFENSIVE";
+};
+
+const formatFileSize = (size: number) => {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
 
 export default function ConversationPage() {
@@ -117,17 +239,15 @@ export default function ConversationPage() {
     Number(routeState?.conversationType) === 0 ||
     groupId !== null;
   const fallbackConversationId = !targetUserId && !isGroupConversation ? currentConversationId : null;
-  const avatar = routeState?.avatar || null;
+  const routeAvatar = routeState?.avatar || null;
   const groupName = routeState?.groupName || null;
-  const fullName = isGroupConversation
+  const baseFullName = isGroupConversation
     ? groupName || "Nhom hoc"
     : routeState?.fullName || "Nguoi dung";
-  const callTargetName = isGroupConversation ? groupName || "Nhom hoc" : fullName;
-  const callTargetAvatar = isGroupConversation ? null : avatar;
   const selectedConversationKey = isGroupConversation
-    ? groupId ? `group:${groupId}` : "none"
+    ? routeState?.conversationKey || (groupId ? `group:${groupId}` : "none")
     : targetUserId
-      ? `private:${targetUserId}`
+      ? routeState?.conversationKey || `private:${targetUserId}`
       : fallbackConversationId
         ? `conversation:${fallbackConversationId}`
         : "none";
@@ -136,19 +256,29 @@ export default function ConversationPage() {
   const [messageText, setMessageText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [replymess, setReplyMess] = useState<MessageInterface | null>(null);
+  const [forwardmess, setForwardMess] = useState<MessageInterface | null>(null);
+  const [privateSenderProfiles, setPrivateSenderProfiles] = useState<Record<number, FriendUser>>({});
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileLoading, setFileLoading] = useState(false);
+  const [loadingConversation, setLoadingConversation] = useState(false);
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [waitingVideoCall, setWaitingVideoCall] = useState<VideoCallInfo | null>(null);
   const [rejectedVideoCall, setRejectedVideoCall] = useState(false);
   const [cancelCallLoading, setCancelCallLoading] = useState(false);
   const [videoCallLoading, setVideoCallLoading] = useState(false);
+  const [badWordsWarningOpen, setBadWordsWarningOpen] = useState(false);
+  const [groupInfoOpen, setGroupInfoOpen] = useState(false);
+  const [groupInfoTab, setGroupInfoTab] = useState<GroupInfoTab>("schedule");
+  const [groupSessions, setGroupSessions] = useState<StudySessionResponse[]>([]);
+  const [groupSessionsLoading, setGroupSessionsLoading] = useState(false);
+  const [groupSessionsError, setGroupSessionsError] = useState("");
   const [visibleMessageStatus, setVisibleMessageStatus] = useState<{
     messageId: number;
     status: MessageInterface["status"];
   } | null>(null);
+  const [themeId, setThemeId] = useState<string>("default");
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   const conversationId = useRef<number | null>(null);
   const pendingTempMessageIds = useRef<number[]>([]);
@@ -160,6 +290,42 @@ export default function ConversationPage() {
   const activeConversationKeyRef = useRef("none");
   const emojiPickerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const documentInputRef = useRef<HTMLInputElement | null>(null);
+  const loadedPrivateProfileIdsRef = useRef<Set<number>>(new Set());
+  const conversationRef = useRef<MessageInterface[]>([]);
+
+  useLayoutEffect(() => {
+    conversationRef.current = conversation;
+  }, [conversation]);
+
+  const privatePeerProfile = targetUserId
+    ? privateSenderProfiles[targetUserId]
+    : Object.values(privateSenderProfiles).find((profile) => profile.userId !== currentUserId);
+  const fullName = isGroupConversation
+    ? baseFullName
+    : privatePeerProfile?.fullName || baseFullName;
+  const avatar = isGroupConversation
+    ? routeAvatar
+    : privatePeerProfile?.avatarUrl || routeAvatar;
+  const callTargetName = isGroupConversation ? groupName || "Nhóm hoc" : fullName;
+  const callTargetAvatar = isGroupConversation ? null : avatar;
+  const pinnedMessages = useMemo(
+    () => conversation.filter(isMessagePinned),
+    [conversation],
+  );
+  const getPinnedSenderName = useCallback((message: MessageInterface) => {
+    if (message.senderId === currentUserId) {
+      return currentUser.username || "Bạn";
+    }
+
+    if (isGroupConversation) {
+      const profile = groupMemberProfiles[message.senderId];
+      return getProfileDisplayName(profile) || `User ${message.senderId}`;
+    }
+
+    const profile = privateSenderProfiles[message.senderId];
+    return getProfileDisplayName(profile) || fullName || `User ${message.senderId}`;
+  }, [currentUser.username, currentUserId, fullName, groupMemberProfiles, isGroupConversation, privateSenderProfiles]);
 
   const setVisibleStatusIfNewer = useCallback((
     messageId: number,
@@ -214,6 +380,38 @@ export default function ConversationPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showEmojiPicker]);
 
+  useEffect(() => {
+    if (!groupInfoOpen || !isGroupConversation || !groupId) return;
+
+    let cancelled = false;
+    setGroupSessionsLoading(true);
+    setGroupSessionsError("");
+
+    getGroupStudySessions(groupId, currentUserId)
+      .then((response) => {
+        if (cancelled) return;
+        if (response.success && Array.isArray(response.data)) {
+          setGroupSessions(response.data);
+          return;
+        }
+        setGroupSessions([]);
+        setGroupSessionsError(response.message || "Không thể tải lịch học nhóm");
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("[Conversation][load-group-sessions-error]", error);
+        setGroupSessions([]);
+        setGroupSessionsError("Không thể tải lịch học nhóm");
+      })
+      .finally(() => {
+        if (!cancelled) setGroupSessionsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId, groupId, groupInfoOpen, isGroupConversation]);
+
   useLayoutEffect(() => {
     const loadMess = async () => {
       const loadKey = selectedConversationKey;
@@ -222,22 +420,31 @@ export default function ConversationPage() {
       if (!isGroupConversation && !targetUserId && !fallbackConversationId) {
         setConversation([]);
         conversationId.current = null;
+        setLoadingConversation(false);
         return;
       }
       if (isGroupConversation && !groupId) {
         setConversation([]);
         conversationId.current = null;
+        setLoadingConversation(false);
         return;
       }
 
+      const loadingStartedAt = Date.now();
       nextMessagePageRef.current = 1;
       hasMoreMessagesRef.current = true;
       loadingOlderMessagesRef.current = false;
       lastSeenMessageIdRef.current = null;
+      conversationId.current = null;
+      pendingTempMessageIds.current = [];
       setHasMoreMessages(true);
       setLoadingOlderMessages(false);
       setVisibleMessageStatus(null);
+      setReplyMess(null);
+      setForwardMess(null);
+      setGroupInfoOpen(false);
       setConversation([]);
+      setLoadingConversation(true);
 
       try {
         const result: APIResponse = isGroupConversation
@@ -272,11 +479,23 @@ export default function ConversationPage() {
         markLatestIncomingSeen(loadedMessages, result.data.conversationId);
       } catch (error) {
         console.error("[Conversation][load-first-error]", error);
+      } finally {
+        await waitForMinLoading(loadingStartedAt);
+        if (activeConversationKeyRef.current === loadKey) {
+          setLoadingConversation(false);
+        }
       }
     };
 
     loadMess();
   }, [selectedConversationKey, targetUserId, groupId, isGroupConversation, fallbackConversationId, currentUserId, dispatch, markLatestIncomingSeen]);
+
+  useEffect(() => {
+    loadedPrivateProfileIdsRef.current.clear();
+    if (!isGroupConversation) {
+      setPrivateSenderProfiles({});
+    }
+  }, [isGroupConversation, selectedConversationKey]);
 
   useEffect(() => {
     if (!isGroupConversation || !groupId) return;
@@ -331,7 +550,73 @@ export default function ConversationPage() {
     };
   }, [conversation, currentUserId, dispatch, groupId, groupMemberProfiles, isGroupConversation]);
 
-  const loadOlderMessages = async () => {
+  useEffect(() => {
+    if (isGroupConversation) {
+      setPrivateSenderProfiles({});
+      return;
+    }
+
+    const routeProfileId = targetUserId || null;
+    if (!routeProfileId || (!routeState?.fullName && !routeAvatar)) return;
+
+    setPrivateSenderProfiles((prev) => ({
+      ...prev,
+      [routeProfileId]: {
+        userId: routeProfileId,
+        fullName: routeState?.fullName || prev[routeProfileId]?.fullName || `User ${routeProfileId}`,
+        avatarUrl: routeAvatar || prev[routeProfileId]?.avatarUrl || null,
+      },
+    }));
+  }, [isGroupConversation, routeAvatar, routeState?.fullName, targetUserId]);
+
+  useEffect(() => {
+    if (isGroupConversation) return;
+
+    const senderIds = Array.from(new Set([
+      ...(targetUserId ? [targetUserId] : []),
+      ...conversation
+        .map((message) => message.senderId)
+        .filter((senderId) => senderId !== currentUserId)
+        .filter((senderId) => Number.isFinite(senderId) && senderId > 0),
+    ]));
+
+    const missingSenderIds = senderIds.filter((senderId) => {
+      const profile = privateSenderProfiles[senderId];
+      return !loadedPrivateProfileIdsRef.current.has(senderId)
+        && (!profile || !profile.fullName || !profile.avatarUrl);
+    });
+    if (missingSenderIds.length === 0) return;
+
+    let cancelled = false;
+    const loadPrivateSenderProfiles = async () => {
+      try {
+        const profiles = await loadFriendProfilesService(missingSenderIds);
+        missingSenderIds.forEach((senderId) => loadedPrivateProfileIdsRef.current.add(senderId));
+        if (cancelled || profiles.length === 0) return;
+        setPrivateSenderProfiles((prev) => {
+          const next = { ...prev };
+          profiles.forEach((profile) => {
+            next[profile.userId] = {
+              ...next[profile.userId],
+              ...profile,
+              avatarUrl: profile.avatarUrl || next[profile.userId]?.avatarUrl || null,
+              fullName: profile.fullName || next[profile.userId]?.fullName || `User ${profile.userId}`,
+            };
+          });
+          return next;
+        });
+      } catch (error) {
+        console.error("[Conversation][load-private-sender-profiles-error]", error);
+      }
+    };
+
+    void loadPrivateSenderProfiles();
+    return () => {
+      cancelled = true;
+    };
+  }, [conversation, currentUserId, isGroupConversation, privateSenderProfiles, targetUserId]);
+
+  const loadOlderMessages = useCallback(async () => {
     if (
       (!targetUserId && !fallbackConversationId && !isGroupConversation) ||
       (isGroupConversation && !groupId) ||
@@ -373,7 +658,14 @@ export default function ConversationPage() {
       loadingOlderMessagesRef.current = false;
       setLoadingOlderMessages(false);
     }
-  };
+  }, [
+    currentUserId,
+    fallbackConversationId,
+    groupId,
+    isGroupConversation,
+    selectedConversationKey,
+    targetUserId,
+  ]);
 
   const updateOutgoingMessageStatus = useCallback((
     messageIds: number[],
@@ -480,11 +772,21 @@ export default function ConversationPage() {
   }, [conversation, currentUserId, setVisibleStatusIfNewer]);
 
   useEffect(() => {
-    if (!storeNewMess?.data || conversationId.current !== storeNewMess.data.conversationId) return;
+    if (!storeNewMess?.data) return;
+
+    // Allow processing socket events when either the event's conversationId matches
+    // the current conversation, OR the payload's message belongs to the current
+    // conversation (covers cases where the server may send null/incorrect conversationId).
+    const socketConvoId = Number((storeNewMess.data as any).conversationId);
+    const socketMessage = (storeNewMess.data as any).message;
+    const socketMessageId = Number(socketMessage?.messageId ?? socketMessage?.messageID ?? NaN);
+    const belongsToCurrentConversation =
+      socketConvoId === conversationId.current ||
+      (Number.isFinite(socketMessageId) && conversationRef.current.some((m) => m.messageId === socketMessageId));
+    if (!belongsToCurrentConversation) return;
 
     if (storeEvent === SocketEvent.MESSAGE_ACK && isSocketData(storeNewMess.data)) {
       applyMessageAck(storeNewMess.data.message);
-      setFileLoading(false);
       setMessageText("");
     }
 
@@ -496,18 +798,71 @@ export default function ConversationPage() {
         ),
       );
     }
+
+    if (storeEvent === SocketEvent.MESSAGE_MODERATED && isSocketData(storeNewMess.data)) {
+      const moderatedMessage = storeNewMess.data.message as any;
+      const moderatedMessageId = Number(moderatedMessage?.messageId ?? moderatedMessage?.messageID ?? NaN);
+      console.debug('[Conversation][MESSAGE_MODERATED][recv]', { moderatedMessage, moderatedMessageId, conversationId: conversationId.current });
+      setConversation((prev) => {
+        let found = false;
+        const next = prev.map((item) => {
+          if (item.messageId === moderatedMessageId) {
+            found = true;
+            return {
+              ...item,
+              ...moderatedMessage,
+              moderationStatus: moderatedMessage.moderationStatus,
+            };
+          }
+          return item;
+        });
+        if (!found) {
+          console.debug('[Conversation][MESSAGE_MODERATED][not-found] message not in current conversation', { moderatedMessageId });
+        }
+        return next;
+      });
+    }
+
+    if (
+      (storeEvent === SocketEvent.MESSAGE_PIN || storeEvent === SocketEvent.MESSAGE_UNPIN) &&
+      isSocketData(storeNewMess.data)
+    ) {
+      const updatedMessage = storeNewMess.data.message;
+      setConversation((prev) =>
+        prev.map((item) =>
+          item.messageId === updatedMessage.messageId
+            ? {
+              ...item,
+              ...updatedMessage,
+              isPinned: isMessagePinned(updatedMessage),
+              pinned: isMessagePinned(updatedMessage),
+            }
+            : item,
+        ),
+      );
+    }
   }, [storeNewMess, storeEvent, applyMessageAck]);
 
   useEffect(() => {
-    if (!storeNewMess?.data || conversationId.current !== storeNewMess.data.conversationId) return;
+    if (!storeNewMess?.data) return;
+
+    const socketConvoId = Number((storeNewMess.data as any).conversationId);
+    const socketMessage = (storeNewMess.data as any).message;
+    const socketMessageId = Number(socketMessage?.messageId ?? socketMessage?.messageID ?? NaN);
+    const belongsToCurrentConversation =
+      socketConvoId === conversationId.current ||
+      (Number.isFinite(socketMessageId) && conversationRef.current.some((m) => m.messageId === socketMessageId));
+    if (!belongsToCurrentConversation) return;
 
     if (storeEvent === SocketEvent.NEW_MESSAGE && isSocketData(storeNewMess.data)) {
-      const incomingMessage = storeNewMess.data.message;
+      const incomingMessage = storeNewMess.data.message as any;
+      const incomingMessageId = Number(incomingMessage?.messageId ?? incomingMessage?.messageID ?? NaN);
+      const normalizedIncoming = { ...incomingMessage, messageId: incomingMessageId } as MessageInterface;
       setConversation((prev) => {
-        if (prev.some((item) => item.messageId === incomingMessage.messageId)) {
+        if (prev.some((item) => item.messageId === incomingMessageId)) {
           return prev;
         }
-        return [incomingMessage, ...prev];
+        return [normalizedIncoming, ...prev];
       });
 
       if (incomingMessage.senderId !== currentUserId) {
@@ -532,7 +887,6 @@ export default function ConversationPage() {
         storeNewMess.data.status,
         storeEvent === SocketEvent.MESSAGE_SENT,
       );
-      setFileLoading(false);
       if (storeEvent === SocketEvent.MESSAGE_SEEN) {
         dispatch(clearUnread({ conversationId: storeNewMess.data.conversationId }));
       }
@@ -563,6 +917,13 @@ export default function ConversationPage() {
                 : [...reactions, reaction];
           return { ...message, reactions: nextReactions };
         }));
+      }
+    }
+
+    if (storeEvent === SocketEvent.CONVERSATION_COLOR_CHANGED) {
+      const data = storeNewMess.data as any;
+      if (data && data.conversationId === conversationId.current && data.color) {
+        setThemeId(data.color);
       }
     }
 
@@ -609,6 +970,13 @@ export default function ConversationPage() {
 
       conversationId.current = Number(loadedConversationId);
       dispatch(updateCurrentConverId({ currentConversationId: Number(loadedConversationId) }));
+      
+      if (result.data?.color) {
+        setThemeId(result.data.color);
+      } else {
+        setThemeId("default");
+      }
+
       if (Array.isArray(result.data.listMess)) {
         setConversation(result.data.listMess as MessageInterface[]);
       }
@@ -620,7 +988,7 @@ export default function ConversationPage() {
     }
   };
 
-  const markMessageDeletedLocally = (messageId: number) => {
+  const markMessageDeletedLocally = useCallback((messageId: number) => {
     setConversation((prev) => prev.map((message) => {
       if (message.messageId !== messageId) {
         return message;
@@ -634,9 +1002,9 @@ export default function ConversationPage() {
         reactions: [],
       };
     }));
-  };
+  }, []);
 
-  const handleRecallMessage = (messageId: number) => {
+  const handleRecallMessage = useCallback((messageId: number) => {
     if (!conversationId.current) return;
 
     markMessageDeletedLocally(messageId);
@@ -646,10 +1014,53 @@ export default function ConversationPage() {
     }
 
     recallMess(conversationId.current, messageId);
-  };
+  }, [markMessageDeletedLocally]);
+
+  const updateMessagePinnedLocally = useCallback((messageId: number, pinned: boolean) => {
+    setConversation((prev) => prev.map((message) => {
+      if (message.messageId !== messageId) {
+        return message;
+      }
+      return {
+        ...message,
+        isPinned: pinned,
+        pinned,
+      };
+    }));
+  }, []);
+
+  const handlePinMessage = useCallback((message: MessageInterface, pinned: boolean) => {
+    if (!conversationId.current || message.messageId <= 0) return;
+
+    const previousPinned = isMessagePinned(message);
+    updateMessagePinnedLocally(message.messageId, pinned);
+
+    setMessagePinned(conversationId.current, message.messageId, pinned)
+      .then((updatedMessage: any) => {
+        if (!updatedMessage || typeof updatedMessage !== "object") return;
+        setConversation((prev) => prev.map((item) =>
+          item.messageId === message.messageId
+            ? { 
+              ...item, 
+              pinned: updatedMessage.pinned ?? pinned, 
+              isPinned: updatedMessage.pinned ?? pinned 
+            }
+            : item
+        ));
+      })
+      .catch((error: any) => {
+        console.error("[Conversation][pin-message-error]", error);
+        updateMessagePinnedLocally(message.messageId, previousPinned);
+        alert(pinned ? "Không thể ghim tin nhắn" : "Không thể bỏ ghim tin nhắn");
+      });
+  }, [updateMessagePinnedLocally]);
 
   const handleOpenFile = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleOpenDocument = () => {
+    documentInputRef.current?.click();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -670,8 +1081,38 @@ export default function ConversationPage() {
     event.target.value = "";
   };
 
+  const handleDocumentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      alert("File không được vượt quá 25MB");
+      event.target.value = "";
+      return;
+    }
+
+    setPreview(URL.createObjectURL(file));
+    setSelectedFile(file);
+    event.target.value = "";
+  };
+
+  const getReplyBarText = (message: MessageInterface) => {
+    if (isPolicyViolationMessage(message)) return "Tin nhắn bị vi phạm chính sách";
+    if (message.isDeleted) return "Tin nhắn đã được thu hồi";
+    if (message.content) return message.content;
+    if (message.fileName) return message.fileName;
+    if (message.mediaURL) return message.type?.startsWith("video/") ? "Video" : "Hình ảnh";
+    return "Tin nhắn";
+  };
+
   const sendMessage = async () => {
     if (messageText.trim().length === 0 && !preview && !selectedFile) return;
+
+    // if (messageText.trim().length > 0 && hasBadWords(messageText)) {
+    // if (messageText.trim().length > 0) {
+    //   setBadWordsWarningOpen(true);
+    //   return;
+    // }
 
     const activeConversationId = await ensureConversationIdBeforeSend();
     if (!activeConversationId) return;
@@ -690,11 +1131,18 @@ export default function ConversationPage() {
         fileName: null,
         createdAt: new Date().toISOString(),
         status: "SENDING",
+        replyToMessageId: replymess?.messageId ?? null,
+        replyToSenderId: replymess?.senderId ?? null,
+        replyToType: replymess?.type ?? null,
+        replyToContent: replymess?.content ?? null,
+        replyToMediaURL: replymess?.mediaURL ?? null,
+        replyToFileName: replymess?.fileName ?? null,
+        replyToDeleted: replymess?.isDeleted ?? null,
       }, ...prev]);
       setMessageText("");
 
       if (replymess) {
-        replyText(content, replymess.messageId, "text");
+        replyText(content, replymess.messageId, "text", activeConversationId);
         setReplyMess(null);
       } else {
         sendText(content, activeConversationId);
@@ -710,7 +1158,7 @@ export default function ConversationPage() {
     setConversation((prev) => [{
       messageId: tempMessageId,
       senderId: currentUserId,
-      type: selectedFile.type,
+      type: selectedFile.type || "application/octet-stream",
       content: messageText,
       mediaURL: preview,
       fileName: selectedFile.name,
@@ -718,13 +1166,22 @@ export default function ConversationPage() {
       status: "SENDING",
     }, ...prev]);
     setPreview(null);
-    setFileLoading(true);
     setSelectedFile(null);
     setMessageText("");
     uploadMedia(String(activeConversationId), selectedFile, messageText);
   };
 
-  const handleStartCall = async (callType: "AUDIO" | "VIDEO" = "AUDIO") => {
+  const handleSelectTheme = async (newThemeId: string) => {
+    if (!conversationId.current) return;
+    try {
+      await updateConversationColor(conversationId.current, newThemeId);
+      setThemeId(newThemeId);
+    } catch (error) {
+      console.error("Failed to update theme", error);
+    }
+  };
+
+  const handleStartCall = useCallback(async (callType: "AUDIO" | "VIDEO" = "AUDIO") => {
     if (!conversationId.current || videoCallLoading) return;
 
     setVideoCallLoading(true);
@@ -755,7 +1212,17 @@ export default function ConversationPage() {
     } finally {
       setVideoCallLoading(false);
     }
-  };
+  }, [
+    callTargetAvatar,
+    callTargetName,
+    currentUser.avatar,
+    currentUser.username,
+    currentUserId,
+    groupId,
+    isGroupConversation,
+    targetUserId,
+    videoCallLoading,
+  ]);
 
   const handleCancelWaitingCall = async () => {
     if (!waitingVideoCall || cancelCallLoading) return;
@@ -771,6 +1238,8 @@ export default function ConversationPage() {
       setCancelCallLoading(false);
     }
   };
+
+  const currentTheme = getThemeById(themeId);
 
   return (
     <Box
@@ -788,16 +1257,16 @@ export default function ConversationPage() {
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
-          bgcolor: "#eef1f8",
+          bgcolor: currentTheme.background || "#eef1f8",
           overflow: "hidden",
         }}
       >
         <Box
           sx={{
-            height: 78,
+            height: 64,
             flexShrink: 0,
             width: "100%",
-            px: 2,
+            px: 2.25,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -805,30 +1274,100 @@ export default function ConversationPage() {
             bgcolor: "#fff",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <Avatar src={avatar || undefined} sx={{ width: 52, height: 52 }} />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
+            <Avatar src={avatar || undefined} sx={{ width: 44, height: 44, flexShrink: 0 }} />
             <Box>
-              <Typography sx={{ fontWeight: 700, fontSize: 18, color: "#1f1f1f" }}>
+              <Typography sx={{ fontWeight: 750, fontSize: 16.5, color: "#111827", lineHeight: 1.25 }} noWrap>
                 {fullName}
               </Typography>
-              <Typography sx={{ fontSize: 14, color: "#7f735e" }}>
+              <Typography sx={{ fontSize: 13, color: "#7f735e", lineHeight: 1.3 }}>
                 Dang hoat dong
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("AUDIO")} sx={{ color: "rgb(55, 145, 250)" }}>
-              <CallIcon />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("AUDIO")} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
+              <CallIcon sx={{ fontSize: 22 }} />
             </IconButton>
-            <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("VIDEO")} sx={{ color: "rgb(55, 145, 250)" }}>
-              <VideocamIcon />
+            <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("VIDEO")} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
+              <VideocamIcon sx={{ fontSize: 23 }} />
+            </IconButton>
+            <IconButton onClick={() => setIsColorPickerOpen(true)} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
+              <PaletteIcon sx={{ fontSize: 22 }} />
+            </IconButton>
+            <IconButton onClick={() => isGroupConversation ? setGroupInfoOpen(true) : {}} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
+              <InfoIcon sx={{ fontSize: 23 }} />
             </IconButton>
           </Box>
         </Box>
 
-        {conversation.length > 0 ? (
+        {(
+          <Box
+            component="button"
+            type="button"
+            onClick={() => {
+              setGroupInfoTab(isGroupConversation ? "schedule" : "pinned");
+              setGroupInfoOpen(true);
+            }}
+            sx={{
+              height: 44,
+              flexShrink: 0,
+              width: "100%",
+              px: 2.25,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1.5,
+              border: 0,
+              borderBottom: "1px solid rgba(15,23,42,0.08)",
+              bgcolor: "#fbfcff",
+              cursor: "pointer",
+              textAlign: "left",
+              transition: "background-color 120ms ease, box-shadow 120ms ease",
+              "&:hover": {
+                bgcolor: "#f3f7ff",
+                boxShadow: "inset 3px 0 0 #3b82f6",
+              },
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", minWidth: 0, gap: 1 }}>
+              <Box
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 1.5,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: isGroupConversation ? "#eff6ff" : "#fff7ed",
+                  color: isGroupConversation ? "#2563eb" : "#f97316",
+                  flexShrink: 0,
+                }}
+              >
+                {isGroupConversation ? <CalendarMonthIcon sx={{ fontSize: 17 }} /> : <PushPinIcon sx={{ fontSize: 17 }} />}
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 750, color: "#1e293b", lineHeight: 1.15 }}>
+                  {isGroupConversation ? "Lịch học nhóm" : "Tin nhắn đã ghim"}
+                </Typography>
+                <Typography sx={{ fontSize: 12.5, color: "#64748b", lineHeight: 1.25 }} noWrap>
+                  {isGroupConversation
+                    ? groupSessions.length > 0
+                      ? `${groupSessions.length} lịch học - ${pinnedMessages.length} tin ghim`
+                      : `Xem lịch học và ${pinnedMessages.length} tin nhắn đã ghim`
+                    : `${pinnedMessages.length} tin nhắn đã ghim`}
+                </Typography>
+              </Box>
+            </Box>
+            <MoreHorizIcon sx={{ color: "#475569", fontSize: 22, flexShrink: 0 }} />
+          </Box>
+        )}
+
+        {loadingConversation ? (
+          <ConversationLoading />
+        ) : conversation.length > 0 ? (
           <ListMess
-            fileLoading={fileLoading}
+            theme={currentTheme}
             conversation={conversation}
             setReplyMess={setReplyMess}
             visibleMessageStatus={visibleMessageStatus}
@@ -837,8 +1376,10 @@ export default function ConversationPage() {
             loadingOlderMessages={loadingOlderMessages}
             hasMoreMessages={hasMoreMessages}
             onRecallMessage={handleRecallMessage}
+            onForwardMessage={setForwardMess}
+            onPinMessage={handlePinMessage}
             isGroupConversation={isGroupConversation}
-            senderProfiles={groupMemberProfiles}
+            senderProfiles={isGroupConversation ? groupMemberProfiles : privateSenderProfiles}
           />
         ) : (
           <WelcomeConversation />
@@ -846,8 +1387,8 @@ export default function ConversationPage() {
 
         {replymess && (
           <ReplyMessage
-            fullName={replymess.senderId === currentUserId ? "chinh minh" : fullName}
-            mess={replymess.content || ""}
+            fullName={replymess.senderId === currentUserId ? "chính mình" : fullName}
+            mess={getReplyBarText(replymess)}
             setReplyMess={setReplyMess}
           />
         )}
@@ -858,13 +1399,15 @@ export default function ConversationPage() {
               <Box
                 sx={{
                   position: "relative",
-                  width: 60,
-                  height: 60,
-                  borderRadius: 3,
+                  width: selectedFile?.type.startsWith("image/") || selectedFile?.type.startsWith("video/") ? 60 : "min(320px, 100%)",
+                  height: selectedFile?.type.startsWith("image/") || selectedFile?.type.startsWith("video/") ? 60 : 56,
+                  borderRadius: 2,
                   overflow: "hidden",
-                  bgcolor: "#f3f3f3",
+                  bgcolor: "#f8fafc",
                   border: "1px solid rgba(0,0,0,0.12)",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  display: "flex",
+                  alignItems: "center",
                 }}
               >
                 {selectedFile?.type.startsWith("video/") ? (
@@ -875,14 +1418,40 @@ export default function ConversationPage() {
                     preload="metadata"
                     muted
                   />
-                ) : (
+                ) : selectedFile?.type.startsWith("image/") ? (
                   <Box
                     component="img"
                     src={preview}
                     alt="preview"
                     sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                   />
-                )}
+                ) : selectedFile ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0, px: 1.25, pr: 4.5 }}>
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 1.5,
+                        bgcolor: "#fee2e2",
+                        color: "#a40000",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <InsertDriveFileIcon sx={{ fontSize: 20 }} />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#111827" }} noWrap>
+                        {selectedFile.name}
+                      </Typography>
+                      <Typography sx={{ fontSize: 12, color: "#64748b" }}>
+                        {formatFileSize(selectedFile.size)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ) : null}
                 <IconButton
                   sx={{
                     position: "absolute",
@@ -926,12 +1495,23 @@ export default function ConversationPage() {
               <ImageIcon />
             </IconButton>
 
+            <IconButton sx={{ color: "#a40000", p: 0.5 }} onClick={handleOpenDocument}>
+              <AttachFileIcon />
+            </IconButton>
+
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*,video/*"
               style={{ display: "none" }}
               onChange={handleFileChange}
+            />
+
+            <input
+              ref={documentInputRef}
+              type="file"
+              style={{ display: "none" }}
+              onChange={handleDocumentChange}
             />
 
             <Paper
@@ -950,6 +1530,12 @@ export default function ConversationPage() {
                 placeholder="Aa"
                 value={messageText}
                 onChange={(event) => setMessageText(event.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
                 sx={{ flex: 1, fontSize: 16, color: "#6b6b6b" }}
               />
 
@@ -993,6 +1579,12 @@ export default function ConversationPage() {
       </Box>
 
       <ListFriends />
+      <ForwardMessageModal
+        open={!!forwardmess}
+        message={forwardmess}
+        currentUserId={currentUserId}
+        onClose={() => setForwardMess(null)}
+      />
       <VideoCallModal
         open={!!waitingVideoCall}
         mode="outgoing"
@@ -1010,6 +1602,251 @@ export default function ConversationPage() {
         callType="AUDIO"
         onReject={() => setRejectedVideoCall(false)}
       />
+      <Dialog
+        open={groupInfoOpen}
+        onClose={() => setGroupInfoOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle sx={{ px: 3, py: 2, borderBottom: "1px solid #e2e8f0" }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
+            {fullName}
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25 }}>
+            {isGroupConversation ? "Lịch học nhóm và tin nhắn đã ghim" : "Tin nhắn đã ghim trong cuộc trò chuyện"}
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <Box sx={{ display: "flex", borderBottom: "1px solid #e2e8f0", bgcolor: "#f8fafc" }}>
+            {(isGroupConversation ? [
+              { id: "schedule" as const, label: "Lịch học", icon: <CalendarMonthIcon sx={{ fontSize: 18 }} /> },
+              { id: "pinned" as const, label: "Tin ghim", icon: <PushPinIcon sx={{ fontSize: 18 }} /> },
+            ] : [
+              { id: "pinned" as const, label: "Tin ghim", icon: <PushPinIcon sx={{ fontSize: 18 }} /> },
+            ]).map((tab) => {
+              const active = groupInfoTab === tab.id;
+              return (
+                <Button
+                  key={tab.id}
+                  startIcon={tab.icon}
+                  onClick={() => setGroupInfoTab(tab.id)}
+                  sx={{
+                    flex: 1,
+                    py: 1.35,
+                    borderRadius: 0,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    color: active ? "#1d4ed8" : "#475569",
+                    bgcolor: active ? "#fff" : "transparent",
+                    borderBottom: active ? "2px solid #2563eb" : "2px solid transparent",
+                    "&:hover": { bgcolor: active ? "#fff" : "#eef2ff" },
+                  }}
+                >
+                  {tab.label}
+                </Button>
+              );
+            })}
+          </Box>
+
+          <Box sx={{ maxHeight: "min(560px, calc(100vh - 220px))", overflowY: "auto", p: 2.5, bgcolor: "#fff" }}>
+            {isGroupConversation && groupInfoTab === "schedule" && (
+              <Box sx={{ display: "grid", gap: 1.5 }}>
+                {groupSessionsLoading && (
+                  <Box sx={{ py: 5, display: "flex", justifyContent: "center" }}>
+                    <CircularProgress size={30} />
+                  </Box>
+                )}
+
+                {!groupSessionsLoading && groupSessionsError && (
+                  <Box sx={{ border: "1px solid #fecaca", bgcolor: "#fef2f2", color: "#b91c1c", borderRadius: 2, p: 2, fontSize: 14 }}>
+                    {groupSessionsError}
+                  </Box>
+                )}
+
+                {!groupSessionsLoading && !groupSessionsError && groupSessions.length === 0 && (
+                  <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
+                    Nhóm chưa có lịch học nào.
+                  </Box>
+                )}
+
+                {!groupSessionsLoading && groupSessions.map((session) => (
+                  <Box
+                    key={session.id}
+                    sx={{
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 2,
+                      p: 2,
+                      bgcolor: "#fff",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, alignItems: "flex-start" }}>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>
+                          {session.title}
+                        </Typography>
+                        <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.5 }}>
+                          {formatDateTime(session.startTime)} - {formatDateTime(session.endTime)}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        sx={{
+                          px: 1,
+                          py: 0.4,
+                          borderRadius: 1,
+                          bgcolor: session.status === "CANCELLED" ? "#fef2f2" : "#eff6ff",
+                          color: session.status === "CANCELLED" ? "#b91c1c" : "#1d4ed8",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {sessionStatusLabel[session.status] || session.status}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.5 }}>
+                      <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#f1f5f9", color: "#334155", fontSize: 12, fontWeight: 700 }}>
+                        {studyModeLabel[session.studyMode] || session.studyMode}
+                      </Typography>
+                      {session.subjectName && (
+                        <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#fff7ed", color: "#c2410c", fontSize: 12, fontWeight: 700 }}>
+                          {session.subjectName}
+                        </Typography>
+                      )}
+                      {session.membersCount !== null && session.membersCount !== undefined && (
+                        <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#ecfdf5", color: "#047857", fontSize: 12, fontWeight: 700 }}>
+                          {session.membersCount} thành viên
+                        </Typography>
+                      )}
+                    </Box>
+
+                    {(session.location || session.meetingUrl || session.description) && (
+                      <Box sx={{ mt: 1.5, color: "#475569", fontSize: 13, lineHeight: 1.6 }}>
+                        {session.location && <Typography sx={{ fontSize: 13 }}>Địa điểm: {session.location}</Typography>}
+                        {session.meetingUrl && <Typography sx={{ fontSize: 13 }}>Link học: {session.meetingUrl}</Typography>}
+                        {session.description && <Typography sx={{ fontSize: 13 }}>Ghi chú: {session.description}</Typography>}
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            )}
+
+            {groupInfoTab === "pinned" && (
+              <Box sx={{ display: "grid", gap: 1.25 }}>
+                {pinnedMessages.length === 0 ? (
+                  <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
+                    Chưa có tin nhắn nào được ghim.
+                  </Box>
+                ) : (
+                  pinnedMessages.map((message) => (
+                    <Box
+                      key={message.messageId}
+                      sx={{
+                        border: "1px solid #e2e8f0",
+                        borderRadius: 2,
+                        p: 1.5,
+                        display: "flex",
+                        gap: 1.25,
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <PushPinIcon sx={{ color: "#f97316", fontSize: 19, mt: 0.25 }} />
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography sx={{ color: "#0f172a", fontSize: 14, fontWeight: 700 }}>
+                          {getMessagePreview(message)}
+                        </Typography>
+                        <Typography sx={{ color: "#334155", fontSize: 12.5, mt: 0.35, fontWeight: 700 }}>
+                          {getPinnedSenderName(message)}
+                        </Typography>
+                        <Typography sx={{ color: "#64748b", fontSize: 12, mt: 0.35 }}>
+                          {message.createdAt ? formatDateTime(message.createdAt) : "Tin nhắn"}
+                        </Typography>
+                      </Box>
+                      <Button
+                        size="small"
+                        onClick={() => handlePinMessage(message, false)}
+                        sx={{
+                          alignSelf: "center",
+                          flexShrink: 0,
+                          color: "#b91c1c",
+                          borderColor: "#fecaca",
+                          bgcolor: "#fff",
+                          textTransform: "none",
+                          fontWeight: 700,
+                          "&:hover": {
+                            borderColor: "#fca5a5",
+                            bgcolor: "#fef2f2",
+                          },
+                        }}
+                        variant="outlined"
+                      >
+                        Bỏ ghim
+                      </Button>
+                    </Box>
+                  ))
+                )}
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #e2e8f0" }}>
+          <Button
+            onClick={() => setGroupInfoOpen(false)}
+            sx={{ textTransform: "none", fontWeight: 700, color: "#475569" }}
+          >
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={badWordsWarningOpen}
+        onClose={() => setBadWordsWarningOpen(false)}
+        PaperProps={{
+          sx: {
+            width: "min(420px, calc(100vw - 32px))",
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: "#a40000" }}>
+          Nội dung không phù hợp
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ color: "#333", lineHeight: 1.6 }}>
+            Tin nhắn của bạn có chứa từ ngữ xúc phạm. Vui lòng chỉnh sửa nội dung trước khi gửi.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => setBadWordsWarningOpen(false)}
+            sx={{
+              bgcolor: "#a40000",
+              "&:hover": { bgcolor: "#8a0000" },
+              textTransform: "none",
+              fontWeight: 700,
+            }}
+          >
+            Đã hiểu
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {isColorPickerOpen && (
+        <ColorPickerModal
+          open={isColorPickerOpen}
+          onClose={() => setIsColorPickerOpen(false)}
+          currentThemeId={themeId}
+          onSelectTheme={handleSelectTheme}
+        />
+      )}
     </Box>
   );
 }
+

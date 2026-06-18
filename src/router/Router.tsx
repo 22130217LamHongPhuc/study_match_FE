@@ -22,11 +22,11 @@ import CheckVerifyEmailPage from "../pages/Auth/ResetPassword/CheckVerifyPage";
 import ProfilePage from "../pages/ProfilePage/ProfilePage";
 import MyProfilePage from "../pages/MyProfile/MyProfilePage";
 import StudyMatchAdminLayout from "../layouts/admin/StudyMatchAdminLayout";
-import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
 import AdminGroupsPage from "../pages/admin/AdminGroupsPage/AdminGroupsPage";
 import AdminUsersPage from "../pages/admin/AdminUsersPage/AdminUsersPage";
 import AdminSchedulesPage from "../pages/admin/AdminSchedulesPage/AdminSchedulesPage";
 import StudySessionPage from "../pages/StudySession/StudySessionPage";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
@@ -98,7 +98,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="dashboard" replace />,
+        element: <Navigate to="/admin/dashboard" replace />,
       },
       {
         path: "dashboard",
@@ -118,4 +118,5 @@ export const router = createBrowserRouter([
       },
     ],
   },
+
 ]);

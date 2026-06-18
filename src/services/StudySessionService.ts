@@ -58,6 +58,24 @@ export async function getUserStudySessions(
   return response;
 }
 
+export async function getGroupStudySessions(
+  groupId: number,
+  userId?: number,
+): Promise<APIResponseData<StudySessionResponse[]>> {
+  const query = typeof userId === "number" && Number.isFinite(userId)
+    ? `?userId=${userId}`
+    : "";
+  const response = await apiFetch<StudySessionResponse[]>(
+    `/api/study-sessions/group/${groupId}${query}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
 export async function createPairStudySession(
   payload: CreateStudySessionRequest,
 ): Promise<APIResponseData<StudySessionResponse>> {

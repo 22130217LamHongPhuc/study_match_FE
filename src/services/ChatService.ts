@@ -37,12 +37,13 @@ export const sendText = (content: string, conversationId: number) => {
 }
 
 
-export const replyText = (content: string, messageID: number, type: string) => {
+export const replyText = (content: string, messageID: number, type: string, conversationId?: number) => {
     let ws = WebSocketManager.getInstance()
     ws.connect().then(() => {
         ws.sendMessage(SOCKET_SEND_MESSAGE, {
             event: SocketEvent.SEND_REPLY_MESSAGE,
             data: {
+                conversationId: conversationId,
                 type: type,
                 messageID: messageID,
                 content: content,
@@ -216,3 +217,70 @@ export const sendDelivered = (conversationId: number, messageIds: number[]) => {
         console.error("Loi connect:", err);
     });
 }
+
+export const updateConversationColor = async (conversationId: number, color: string) => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/${conversationId}/color?color=${encodeURIComponent(color)}`;
+    const res = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error('Failed to update conversation color');
+    }
+    const data = await res.json();
+    return data;
+}
+
+export const forwardMessage = async (messageId: number, targetConversationId: number) => {
+    let ws = WebSocketManager.getInstance();
+    await ws.connect();
+    ws.sendMessage(SOCKET_SEND_MESSAGE, {
+        event: SocketEvent.FORWARD_MESSAGE,
+        data: {
+            messageId: messageId,
+            targetConversationId: targetConversationId
+        }
+    });
+};
+
+export const loadGroupConversationPins = async (currentUserId: number, groupIds: number[]): Promise<any[]> => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/group/pins?currentUser=${currentUserId}&groupIds=${groupIds.join(',')}`;
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!res.ok) return [];
+    const payload = await res.json();
+    return payload?.data || [];
+};
+
+export const setGroupConversationPinned = async (userId: number, groupId: number, pinned: boolean) => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/group/pin`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId, groupId, pinned })
+    });
+    if (!res.ok) throw new Error('Cannot pin group conversation');
+    return res.json();
+};
+
+export const setMessagePinned = async (conversationId: number, messageId: number, pinned: boolean) => {
+    const url = `${BASE_CHAT_SERVICE}/message/${messageId}/pin?conversationId=${conversationId}&pinned=${pinned}`;
+    const res = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    if (!res.ok) throw new Error('Cannot pin message');
+    return res.json();
+};
