@@ -8,6 +8,7 @@ import VideocamIcon from '@mui/icons-material/Videocam'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ReplyIcon from '@mui/icons-material/Reply'
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt'
+import PushPinIcon from '@mui/icons-material/PushPin'
 import { Avatar, Box, CircularProgress, Dialog, IconButton, Tooltip } from '@mui/material'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MessageInterface } from '../../model/Conversation'
@@ -23,10 +24,26 @@ type VisibleMessageStatus = {
     status: MessageInterface["status"]
 }
 
-const appFontFamily = '"Noto Sans", "Noto Sans JP", "Noto Sans SC", "Inter", "Roboto", "Arial", sans-serif'
+const getFontFamilyValue = (fontId: string | null | undefined): string => {
+    switch (fontId) {
+        case "inter":
+            return '"Inter", sans-serif';
+        case "roboto":
+            return '"Roboto", sans-serif';
+        case "playfair":
+            return '"Playfair Display", "Georgia", serif';
+        case "montserrat":
+            return '"Montserrat", sans-serif';
+        case "courier":
+            return '"Courier New", monospace';
+        default:
+            return '"Noto Sans", "Noto Sans JP", "Noto Sans SC", "Inter", "Roboto", "Arial", sans-serif';
+    }
+};
 
 type ListMessProps = {
     theme?: ConversationTheme
+    fontFamily?: string
     conversation: MessageInterface[]
     setReplyMess: React.Dispatch<React.SetStateAction<MessageInterface | null>>
     visibleMessageStatus: VisibleMessageStatus | null
@@ -52,7 +69,8 @@ type ListMessProps = {
     }>
 }
 
-function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false, onRecallMessage, onForwardMessage, onPinMessage, isGroupConversation = false, senderProfiles = {} }: ListMessProps) {
+function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false, onRecallMessage, onForwardMessage, onPinMessage, isGroupConversation = false, senderProfiles = {} }: ListMessProps) {
+    const appFontFamily = getFontFamilyValue(fontFamily)
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
     const [messageReactions, setMessageReactions] = useState<Record<number, ReactionDTO[]>>({})
@@ -1088,7 +1106,7 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                     py: 2,
                     position: "relative",
                     overflowAnchor: "none",
-                    background: "linear-gradient(180deg, #f7e19a, #f6885d)",
+                    background: theme?.background || "linear-gradient(180deg, #f4f6fb, #eef1f8)",
                     fontFamily: appFontFamily,
                 }}
             >
@@ -1244,7 +1262,7 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                             (mess.type === 'text' && mess.content) ?
 
                                                 (<>
-                                                    <Box
+                                                                                    <Box
                                                         sx={{
                                                             position: "relative",
                                                             bgcolor: "#fff",
@@ -1254,6 +1272,22 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                             maxWidth: "70%",
                                                         }}
                                                     >
+                                                        {isMessagePinned(mess) && (
+                                                            <PushPinIcon
+                                                                sx={{
+                                                                    position: "absolute",
+                                                                    top: -6,
+                                                                    right: -6,
+                                                                    fontSize: 14,
+                                                                    color: "#f97316",
+                                                                    bgcolor: "#fff",
+                                                                    borderRadius: "50%",
+                                                                    p: 0.2,
+                                                                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                    zIndex: 1,
+                                                                }}
+                                                            />
+                                                        )}
                                                         {renderReplyPreview(mess, false)}
                                                         {mess.content ? renderMessageContent(mess, mess.content, "#334155") : 'Tin nhắn đã được thu hồi'}
                                                         {renderReactionBadge(mess.messageId, "right")}
@@ -1266,9 +1300,14 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                     <Box
                                                         sx={{
                                                             display: "flex",
-
+                                                            alignItems: "flex-end",
+                                                            gap: 1,
                                                             mb: 1,
                                                             width: "100%",
+                                                            "&:hover .message-actions": {
+                                                                opacity: 1,
+                                                                pointerEvents: "auto",
+                                                            },
                                                         }}
                                                     >
                                                         <Box
@@ -1278,9 +1317,25 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                                 borderRadius: "18px 18px 4px 18px",
                                                                 background: theme?.gradient || "#b30000",
                                                                 color: "#fff",
+                                                                position: "relative",
                                                             }}
                                                         >
-
+                                                            {isMessagePinned(mess) && (
+                                                                <PushPinIcon
+                                                                    sx={{
+                                                                        position: "absolute",
+                                                                        top: 6,
+                                                                        right: 6,
+                                                                        fontSize: 14,
+                                                                        color: "#f97316",
+                                                                        bgcolor: "#fff",
+                                                                        borderRadius: "50%",
+                                                                        p: 0.2,
+                                                                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                        zIndex: 1,
+                                                                    }}
+                                                                />
+                                                            )}
                                                             {renderReplyPreview(mess, false)}
                                                             {renderAttachmentBody(mess, false)}
 
@@ -1302,8 +1357,9 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                                 )
                                                             }
 
-
+                                                            {renderReactionBadge(mess.messageId, "right")}
                                                         </Box>
+                                                        {renderMessageActions(mess, "right")}
                                                     </Box>
 
                                                 </>)
@@ -1384,6 +1440,22 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                                 maxWidth: "100%",
                                                             }}
                                                         >
+                                                            {isMessagePinned(mess) && (
+                                                                <PushPinIcon
+                                                                    sx={{
+                                                                        position: "absolute",
+                                                                        top: -6,
+                                                                        right: -6,
+                                                                        fontSize: 14,
+                                                                        color: "#f97316",
+                                                                        bgcolor: "#fff",
+                                                                        borderRadius: "50%",
+                                                                        p: 0.2,
+                                                                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                        zIndex: 1,
+                                                                    }}
+                                                                />
+                                                            )}
                                                             {renderReplyPreview(mess, false)}
                                                             {mess.content ? renderMessageContent(mess, mess.content, "#334155") : 'Tin nhắn đã được thu hồi'}
                                                             {renderReactionBadge(mess.messageId, "right")}
@@ -1397,9 +1469,14 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                     <Box
                                                         sx={{
                                                             display: "flex",
-
+                                                            alignItems: "flex-end",
+                                                            gap: 1,
                                                             mb: 1,
                                                             width: "100%",
+                                                            "&:hover .message-actions": {
+                                                                opacity: 1,
+                                                                pointerEvents: "auto",
+                                                            },
                                                         }}
                                                     >
                                                         <Box
@@ -1409,9 +1486,25 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                                 borderRadius: "18px 18px 4px 18px",
                                                                 background: theme?.gradient || "#b30000",
                                                                 color: "#fff",
+                                                                position: "relative",
                                                             }}
                                                         >
-
+                                                            {isMessagePinned(mess) && (
+                                                                <PushPinIcon
+                                                                    sx={{
+                                                                        position: "absolute",
+                                                                        top: 6,
+                                                                        right: 6,
+                                                                        fontSize: 14,
+                                                                        color: "#f97316",
+                                                                        bgcolor: "#fff",
+                                                                        borderRadius: "50%",
+                                                                        p: 0.2,
+                                                                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                        zIndex: 1,
+                                                                    }}
+                                                                />
+                                                            )}
                                                             {renderReplyPreview(mess, false)}
                                                             {renderAttachmentBody(mess, false)}
 
@@ -1433,8 +1526,9 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                                 )
                                                             }
 
-
+                                                            {renderReactionBadge(mess.messageId, "right")}
                                                         </Box>
+                                                        {renderMessageActions(mess, "right")}
                                                     </Box>
 
                                                 </>)
@@ -1490,6 +1584,22 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                         maxWidth: "70%",
                                                     }}
                                                 >
+                                                    {isMessagePinned(mess) && (
+                                                        <PushPinIcon
+                                                            sx={{
+                                                                position: "absolute",
+                                                                top: -6,
+                                                                left: -6,
+                                                                fontSize: 14,
+                                                                color: "#f97316",
+                                                                bgcolor: "#fff",
+                                                                borderRadius: "50%",
+                                                                p: 0.2,
+                                                                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                zIndex: 1,
+                                                            }}
+                                                        />
+                                                    )}
                                                     {renderReplyPreview(mess, true)}
                                                     {mess.content ? renderMessageContent(mess, mess.content, "#fff") : 'Bạn đã thu hồi tin nhắn'}
                                                     {renderReactionBadge(mess.messageId, "left")}
@@ -1514,9 +1624,16 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                 sx={{
                                                     display: "flex",
                                                     justifyContent: "flex-end",
+                                                    alignItems: "flex-end",
+                                                    gap: 1,
                                                     width: "100%",
+                                                    "&:hover .message-actions": {
+                                                        opacity: 1,
+                                                        pointerEvents: "auto",
+                                                    },
                                                 }}
                                             >
+                                                {renderMessageActions(mess, "left")}
                                                 <Box
                                                     sx={{
                                                         width: 240,
@@ -1524,9 +1641,25 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                         borderRadius: "18px 18px 4px 18px",
                                                         background: theme?.gradient || "#b30000",
                                                         color: "#fff",
+                                                        position: "relative",
                                                     }}
                                                 >
-
+                                                    {isMessagePinned(mess) && (
+                                                        <PushPinIcon
+                                                            sx={{
+                                                                position: "absolute",
+                                                                top: 6,
+                                                                left: 6,
+                                                                fontSize: 14,
+                                                                color: "#f97316",
+                                                                bgcolor: "#fff",
+                                                                borderRadius: "50%",
+                                                                p: 0.2,
+                                                                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                zIndex: 1,
+                                                            }}
+                                                        />
+                                                    )}
                                                     {renderReplyPreview(mess, true)}
                                                     {renderAttachmentBody(mess, true)}
 
@@ -1548,7 +1681,7 @@ function ListMess({ theme, conversation, setReplyMess, visibleMessageStatus, onC
                                                         )
                                                     }
 
-
+                                                    {renderReactionBadge(mess.messageId, "left")}
                                                 </Box>
                                             </Box>
                                             {renderOutgoingStatus(mess)}

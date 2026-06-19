@@ -234,13 +234,29 @@ export const updateConversationColor = async (conversationId: number, color: str
     return data;
 }
 
+export const updateConversationFont = async (conversationId: number, font: string) => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/${conversationId}/font?font=${encodeURIComponent(font)}`;
+    const res = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error('Failed to update conversation font');
+    }
+    const data = await res.json();
+    return data;
+}
+
 export const forwardMessage = async (messageId: number, targetConversationId: number) => {
     let ws = WebSocketManager.getInstance();
     await ws.connect();
     ws.sendMessage(SOCKET_SEND_MESSAGE, {
         event: SocketEvent.FORWARD_MESSAGE,
         data: {
-            messageId: messageId,
+            sourceMessageId: messageId,
             targetConversationId: targetConversationId
         }
     });
@@ -274,7 +290,7 @@ export const setGroupConversationPinned = async (userId: number, groupId: number
 };
 
 export const setMessagePinned = async (conversationId: number, messageId: number, pinned: boolean) => {
-    const url = `${BASE_CHAT_SERVICE}/message/${messageId}/pin?conversationId=${conversationId}&pinned=${pinned}`;
+    const url = `${BASE_CHAT_SERVICE}/messages/${messageId}/pin?conversationId=${conversationId}&pinned=${pinned}`;
     const res = await fetch(url, {
         method: 'PATCH',
         headers: {
@@ -283,4 +299,17 @@ export const setMessagePinned = async (conversationId: number, messageId: number
     });
     if (!res.ok) throw new Error('Cannot pin message');
     return res.json();
+};
+
+export const loadMediaAndFiles = async (conversationId: number, currentUserId: number) => {
+    const url = `${BASE_CHAT_SERVICE}/conversation/${conversationId}/media-files?currentUser=${currentUserId}`;
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    if (!res.ok) throw new Error('Cannot load media and files');
+    const payload = await res.json();
+    return payload?.data || [];
 };

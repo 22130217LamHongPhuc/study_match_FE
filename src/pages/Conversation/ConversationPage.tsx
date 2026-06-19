@@ -40,6 +40,7 @@ import { MessageInterface } from "../../model/Conversation";
 import { APIResponse } from "../../model/APIResponse";
 import { MessageStatusData, SocketData } from "../../model/SocketResponse";
 import ColorPickerModal from "./components/ColorPickerModal";
+import MediaFilesModal from "./components/MediaFilesModal";
 import { getThemeById } from "../../theme/ConversationThemes";
 import { ReactionData, ReactionDTO } from "../../model/Reaction";
 import { VideoCallInfo } from "../../model/VideoCall";
@@ -54,6 +55,7 @@ import {
   setMessagePinned,
   uploadMedia,
   updateConversationColor,
+  updateConversationFont,
 } from "../../services/ChatService";
 import { getActiveGroupMemberIds } from "../../services/GroupService";
 import { FriendUser, loadFriendProfilesService } from "../../services/FriendService";
@@ -278,7 +280,9 @@ export default function ConversationPage() {
     status: MessageInterface["status"];
   } | null>(null);
   const [themeId, setThemeId] = useState<string>("default");
+  const [fontFamily, setFontFamily] = useState<string>("default");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [mediaFilesOpen, setMediaFilesOpen] = useState(false);
 
   const conversationId = useRef<number | null>(null);
   const pendingTempMessageIds = useRef<number[]>([]);
@@ -310,7 +314,7 @@ export default function ConversationPage() {
   const callTargetName = isGroupConversation ? groupName || "Nhóm hoc" : fullName;
   const callTargetAvatar = isGroupConversation ? null : avatar;
   const pinnedMessages = useMemo(
-    () => conversation.filter(isMessagePinned),
+    () => conversation.filter((message) => isMessagePinned(message) && !message.isDeleted),
     [conversation],
   );
   const getPinnedSenderName = useCallback((message: MessageInterface) => {
@@ -462,6 +466,18 @@ export default function ConversationPage() {
 
         conversationId.current = result.data.conversationId;
         dispatch(updateCurrentConverId({ currentConversationId: result.data.conversationId }));
+
+        if (result.data?.color) {
+          setThemeId(result.data.color);
+        } else {
+          setThemeId("default");
+        }
+
+        if (result.data?.font) {
+          setFontFamily(result.data.font);
+        } else {
+          setFontFamily("default");
+        }
 
         const loadedMessages = (result.data.listMess || []) as MessageInterface[];
         setConversation(loadedMessages);
@@ -756,7 +772,7 @@ export default function ConversationPage() {
           : message);
       }
 
-      return savedMessage.senderId === currentUserId ? prev : [savedMessage, ...prev];
+      return [savedMessage, ...prev];
     });
   }, [currentUserId, setVisibleStatusIfNewer]);
 
@@ -927,6 +943,13 @@ export default function ConversationPage() {
       }
     }
 
+    if (storeEvent === SocketEvent.CONVERSATION_FONT_CHANGED) {
+      const data = storeNewMess.data as any;
+      if (data && data.conversationId === conversationId.current && data.font) {
+        setFontFamily(data.font);
+      }
+    }
+
     if (storeEvent === SocketEvent.VIDEO_CALL_ENDED) {
       setWaitingVideoCall(null);
     }
@@ -975,6 +998,12 @@ export default function ConversationPage() {
         setThemeId(result.data.color);
       } else {
         setThemeId("default");
+      }
+
+      if (result.data?.font) {
+        setFontFamily(result.data.font);
+      } else {
+        setFontFamily("default");
       }
 
       if (Array.isArray(result.data.listMess)) {
@@ -1038,12 +1067,13 @@ export default function ConversationPage() {
     setMessagePinned(conversationId.current, message.messageId, pinned)
       .then((updatedMessage: any) => {
         if (!updatedMessage || typeof updatedMessage !== "object") return;
+        const resDto = updatedMessage.data;
         setConversation((prev) => prev.map((item) =>
           item.messageId === message.messageId
             ? { 
               ...item, 
-              pinned: updatedMessage.pinned ?? pinned, 
-              isPinned: updatedMessage.pinned ?? pinned 
+              pinned: resDto?.pinned ?? pinned, 
+              isPinned: resDto?.pinned ?? pinned 
             }
             : item
         ));
@@ -1181,6 +1211,16 @@ export default function ConversationPage() {
     }
   };
 
+  const handleSelectFont = async (newFont: string) => {
+    if (!conversationId.current) return;
+    try {
+      await updateConversationFont(conversationId.current, newFont);
+      setFontFamily(newFont);
+    } catch (error) {
+      console.error("Failed to update font", error);
+    }
+  };
+
   const handleStartCall = useCallback(async (callType: "AUDIO" | "VIDEO" = "AUDIO") => {
     if (!conversationId.current || videoCallLoading) return;
 
@@ -1257,7 +1297,7 @@ export default function ConversationPage() {
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
-          bgcolor: currentTheme.background || "#eef1f8",
+          background: currentTheme.background || "#eef1f8",
           overflow: "hidden",
         }}
       >
@@ -1295,13 +1335,16 @@ export default function ConversationPage() {
             <IconButton onClick={() => setIsColorPickerOpen(true)} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
               <PaletteIcon sx={{ fontSize: 22 }} />
             </IconButton>
-            <IconButton onClick={() => isGroupConversation ? setGroupInfoOpen(true) : {}} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
+            <IconButton
+              onClick={() => setMediaFilesOpen(true)}
+              sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}
+            >
               <InfoIcon sx={{ fontSize: 23 }} />
             </IconButton>
           </Box>
         </Box>
 
-        {(
+        {(isGroupConversation || pinnedMessages.length > 0) && (
           <Box
             component="button"
             type="button"
@@ -1368,6 +1411,7 @@ export default function ConversationPage() {
         ) : conversation.length > 0 ? (
           <ListMess
             theme={currentTheme}
+            fontFamily={fontFamily}
             conversation={conversation}
             setReplyMess={setReplyMess}
             visibleMessageStatus={visibleMessageStatus}
@@ -1843,7 +1887,20 @@ export default function ConversationPage() {
           open={isColorPickerOpen}
           onClose={() => setIsColorPickerOpen(false)}
           currentThemeId={themeId}
+          currentFontId={fontFamily}
           onSelectTheme={handleSelectTheme}
+          onSelectFont={handleSelectFont}
+        />
+      )}
+      {mediaFilesOpen && (
+        <MediaFilesModal
+          open={mediaFilesOpen}
+          onClose={() => setMediaFilesOpen(false)}
+          fullName={fullName}
+          conversationId={conversationId.current}
+          currentUserId={currentUserId}
+          getPinnedSenderName={getPinnedSenderName}
+          formatDateTime={formatDateTime}
         />
       )}
     </Box>
