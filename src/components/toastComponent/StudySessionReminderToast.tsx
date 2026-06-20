@@ -43,151 +43,162 @@ export default function StudySessionReminderToast({
   const hanldeViewSchedule = () => {
     navigate("/schedule");
   };
-  console.log("StudySessionReminderToast rendered with: ", {
-    title,
-    startTime,
-    groupName,
-    subjectName,
-    studyMode,
-    location,
-    minutesBefore,
-  });
+
   const reminderText =
     minutesBefore && minutesBefore > 0
-      ? `Sắp bắt đầu trong ${minutesBefore} phút`
-      : "Sắp bắt đầu";
+      ? `trong ${minutesBefore} phút`
+      : "ngay bây giờ";
 
   return (
     <Box
       sx={{
-        width: 360,
-        borderRadius: 3,
+        width: 350,
+        borderRadius: "12px",
         overflow: "hidden",
-        background:
-          "linear-gradient(135deg, rgba(255,247,237,0.98) 0%, rgba(255,255,255,0.98) 60%, rgba(255,237,213,0.98) 100%)",
-        border: "1px solid rgba(249, 115, 22, 0.18)",
-        boxShadow: "0 18px 40px rgba(194, 65, 12, 0.14)",
+        bgcolor: "#ffffff",
+        border: "1px solid rgba(0, 0, 0, 0.08)",
+        borderLeft: "4px solid #f97316",
+        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08)",
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        gap: 1.5,
       }}
     >
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          display: "flex",
-          alignItems: "center",
-          gap: 1.25,
-          background:
-            "linear-gradient(135deg, rgba(249,115,22,0.14) 0%, rgba(251,191,36,0.1) 100%)",
-          borderBottom: "1px solid rgba(249, 115, 22, 0.1)",
-        }}
-      >
+      {/* Top Header Row with Icon & Reminder Meta */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
         <Box
           sx={{
-            width: 42,
-            height: 42,
-            borderRadius: 2,
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            bgcolor: "#fff",
-            color: "#c2410c",
-            border: "1px solid rgba(249, 115, 22, 0.18)",
+            bgcolor: "#fff7ed",
+            color: "#f97316",
+            flexShrink: 0,
           }}
         >
-          <SchoolOutlinedIcon sx={{ fontSize: 24 }} />
+          <SchoolOutlinedIcon sx={{ fontSize: 20 }} />
         </Box>
 
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography
-            sx={{
-              fontSize: 12,
-              fontWeight: 800,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: "#c2410c",
-            }}
-          >
-            Nhắc lịch học
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: 0.8,
+                textTransform: "uppercase",
+                color: "#f97316",
+              }}
+            >
+              Nhắc lịch học
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontWeight: 500,
+                color: "#64748b",
+              }}
+            >
+              • Bắt đầu {reminderText}
+            </Typography>
+          </Box>
           <Typography
             sx={{
               fontSize: 14,
               fontWeight: 700,
-              color: "#1f2937",
-              lineHeight: 1.25,
-              mt: 0.15,
+              color: "#1e293b",
+              lineHeight: 1.3,
+              mt: 0.25,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
-            {reminderText}
+            {title}
           </Typography>
         </Box>
       </Box>
 
-      <Box sx={{ px: 2, py: 1.75 }}>
+      {/* Mid Section - Clean Information Grid */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          pl: 0.5,
+        }}
+      >
+        <Row
+          icon={<AccessTimeOutlinedIcon sx={{ fontSize: 16 }} />}
+          label={formatReminderTime(startTime)}
+        />
+
+        {subjectName || groupName ? (
+          <Row
+            icon={<MenuBookOutlinedIcon sx={{ fontSize: 16 }} />}
+            label={[subjectName, groupName].filter(Boolean).join(" - ")}
+          />
+        ) : null}
+
+        {studyMode || location ? (
+          <Row
+            icon={<RoomOutlinedIcon sx={{ fontSize: 16 }} />}
+            label={[studyMode, location].filter(Boolean).join(" • ")}
+          />
+        ) : null}
+      </Box>
+
+      {/* Bottom Row - Tiny reminder text and action button */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 1.5,
+          mt: 0.5,
+        }}
+      >
         <Typography
           sx={{
-            fontSize: 15,
-            fontWeight: 800,
-            color: "#111827",
+            fontSize: 11,
+            color: "#64748b",
+            fontWeight: 500,
             lineHeight: 1.3,
-            mb: 1,
+            flex: 1,
           }}
         >
-          {title}
+          Hãy chuẩn bị tài liệu để buổi học đạt hiệu quả tốt nhất.
         </Typography>
 
-        <Box sx={{ display: "grid", gap: 0.75 }}>
-          <Row
-            icon={<AccessTimeOutlinedIcon />}
-            label={formatReminderTime(startTime)}
-          />
-          {groupName ? (
-            <Row icon={<MenuBookOutlinedIcon />} label={groupName} />
-          ) : null}
-          {subjectName ? (
-            <Row icon={<SchoolOutlinedIcon />} label={subjectName} />
-          ) : null}
-          {studyMode ? (
-            <Row icon={<RoomOutlinedIcon />} label={studyMode} />
-          ) : null}
-          {location ? (
-            <Row icon={<RoomOutlinedIcon />} label={location} />
-          ) : null}
-        </Box>
-
-        <Box
+        <Button
+          onClick={hanldeViewSchedule}
+          size="small"
+          variant="contained"
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 1,
-            mt: 1.5,
-            flexWrap: "wrap",
+            textTransform: "none",
+            borderRadius: "8px",
+            px: 2,
+            py: 0.75,
+            fontSize: 12,
+            fontWeight: 600,
+            bgcolor: "#fff7ed",
+            color: "#ea580c",
+            border: "1px solid rgba(249, 115, 22, 0.15)",
+            boxShadow: "none",
+            whiteSpace: "nowrap",
+            "&:hover": {
+              bgcolor: "#ffedd5",
+              boxShadow: "none",
+              border: "1px solid rgba(249, 115, 22, 0.25)",
+            },
           }}
         >
-          <Typography sx={{ fontSize: 12, color: "#6b7280", fontWeight: 600 }}>
-            Chuẩn bị tài liệu và vào đúng giờ để buổi học hiệu quả hơn.
-          </Typography>
-
-          <Button
-            onClick={hanldeViewSchedule}
-            size="small"
-            variant="contained"
-            sx={{
-              textTransform: "none",
-              borderRadius: 999,
-              px: 1.6,
-              py: 0.7,
-              fontSize: 12,
-              fontWeight: 700,
-              bgcolor: "#f97316",
-              boxShadow: "none",
-              "&:hover": { bgcolor: "#ea580c", boxShadow: "none" },
-            }}
-          >
-            Xem lịch
-          </Button>
-        </Box>
+          Xem lịch
+        </Button>
       </Box>
     </Box>
   );
@@ -196,14 +207,14 @@ export default function StudySessionReminderToast({
 function Row({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
-      <Box sx={{ color: "#f97316", display: "flex", alignItems: "center" }}>
+      <Box sx={{ color: "#94a3b8", display: "flex", alignItems: "center" }}>
         {icon}
       </Box>
       <Typography
         sx={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: "#374151",
+          fontSize: 12,
+          fontWeight: 500,
+          color: "#475569",
           lineHeight: 1.35,
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -215,3 +226,4 @@ function Row({ icon, label }: { icon: React.ReactNode; label: string }) {
     </Box>
   );
 }
+
