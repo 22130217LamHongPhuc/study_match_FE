@@ -34,11 +34,15 @@ async function request<T>(
 ): Promise<APIResponseData<T>> {
   const accessToken = localStorage.getItem("accessToken");
 
-  console.log("Making API request to:", `${api_base_url}${endpoint}`);
-  console.log("Request options:", options);
-  console.log("Access token:", accessToken);
+  const url = `${api_base_url}${endpoint}`;
+  const method = options.method || "GET";
 
-  const res = await fetch(`${api_base_url}${endpoint}`, {
+  console.log("URL:", url);
+  console.log("Method:", method);
+  console.log("Options:", options);
+  console.log("Has access token:", !!accessToken);
+
+  const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -46,8 +50,30 @@ async function request<T>(
       ...options.headers,
     },
   });
-  const data = await res.json();
-  console.log("API Response:", data);
+
+  let data: APIResponseData<T>;
+
+  try {
+    data = await res.json();
+  } catch (error) {
+    console.error("URL:", url);
+    console.error("Method:", method);
+    console.error("HTTP Status:", res.status);
+    console.error("Cannot parse response JSON:", error);
+
+    return {
+      success: false,
+      code: StatusCode.INTERNAL_SERVER_ERROR,
+      message: "Cannot parse response JSON",
+      data: null as T,
+    };
+  }
+
+  console.log("URL:", url);
+  console.log("Method:", method);
+  console.log("HTTP Status:", res.status);
+  console.log("Response:", data);
+
   return data;
 }
 
