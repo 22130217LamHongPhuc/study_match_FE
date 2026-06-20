@@ -170,6 +170,7 @@ export default function RecommendationPage() {
               userId: currentUserId,
               recommendedUserId: targetUserId,
               actionStatus: "FRIEND_REQUEST_SENT",
+              finalScore: items.find((item) => item.userId === targetUserId)?.finalScore,
             });
           } catch (error) {
             console.error("Track matching FRIEND_REQUEST_SENT failed", error);
@@ -217,6 +218,7 @@ export default function RecommendationPage() {
               userId: currentUserId,
               recommendedUserId: senderId,
               actionStatus: "ACCEPTED",
+              finalScore: items.find((item) => item.userId === senderId)?.finalScore,
             });
           } catch (error) {
             console.error("Track matching ACCEPTED failed", error);

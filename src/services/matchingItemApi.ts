@@ -20,6 +20,7 @@ export interface UpdateMatchingStatusRequest {
   userId: number;
   recommendedUserId: number;
   actionStatus: Exclude<MatchingActionStatus, "VIEWED">;
+  finalScore?: number;
 }
 
 export const matchingItemApi = {
