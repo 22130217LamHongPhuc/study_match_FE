@@ -150,6 +150,11 @@ export default function MainLayout() {
                 position: "top-right",
                 autoClose: 10000,
                 toastId: normalizedData.toastId,
+                style: {
+                  padding: 0,
+                  background: "transparent",
+                  boxShadow: "none",
+                },
               });
             }
           }

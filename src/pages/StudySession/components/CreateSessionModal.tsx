@@ -11,6 +11,7 @@ import {
   type FriendListItem,
 } from "../../../services/FriendService";
 import { toast } from "sonner";
+import { ChevronRight, Users, BookOpen } from "lucide-react";
 
 interface CreateSessionModalProps {
   open: boolean;
@@ -44,6 +45,10 @@ export function CreateSessionModal({
   const [friends, setFriends] = useState<FriendListItem[]>([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
   const [friendError, setFriendError] = useState("");
+  const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
+  const [groupSearchQuery, setGroupSearchQuery] = useState("");
+  const [isFriendDropdownOpen, setIsFriendDropdownOpen] = useState(false);
+  const [friendSearchQuery, setFriendSearchQuery] = useState("");
 
   const currentUserId = Number(localStorage.getItem("userId") ?? "1");
 
@@ -59,6 +64,23 @@ export function CreateSessionModal({
       null
     );
   }, [friends, selectedFriendId]);
+
+  const filteredGroups = useMemo(() => {
+    if (!groupSearchQuery.trim()) return groups;
+    return groups.filter(
+      (g) =>
+        g.name.toLowerCase().includes(groupSearchQuery.toLowerCase()) ||
+        (g.subjectName &&
+          g.subjectName.toLowerCase().includes(groupSearchQuery.toLowerCase())),
+    );
+  }, [groups, groupSearchQuery]);
+
+  const filteredFriends = useMemo(() => {
+    if (!friendSearchQuery.trim()) return friends;
+    return friends.filter((f) =>
+      f.full_name.toLowerCase().includes(friendSearchQuery.toLowerCase()),
+    );
+  }, [friends, friendSearchQuery]);
 
   const needSystemRoom = studyMode === "ONLINE" || studyMode === "HYBRID";
 
@@ -201,6 +223,10 @@ export function CreateSessionModal({
     setGroupError("");
     setFriends([]);
     setFriendError("");
+    setIsGroupDropdownOpen(false);
+    setGroupSearchQuery("");
+    setIsFriendDropdownOpen(false);
+    setFriendSearchQuery("");
   };
 
   const handleSubmit = async () => {
@@ -213,6 +239,11 @@ export function CreateSessionModal({
       setFriendError("Vui lòng chọn bạn học");
       return;
     }
+    if (startTime >= endTime) {
+      toast.error("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc");
+      return;
+    }
+
 
     try {
       if (sessionType === "USER_PAIR") {
@@ -376,7 +407,6 @@ export function CreateSessionModal({
               >
                 <option value="ONLINE">Online</option>
                 <option value="OFFLINE">Trực tiếp</option>
-                <option value="HYBRID">Kết hợp</option>
               </select>
             </label>
           </div>
@@ -397,106 +427,192 @@ export function CreateSessionModal({
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {sessionType === "GROUP" ? (
-              <label className="space-y-2">
+              <div className="relative space-y-2">
                 <span className="text-sm font-semibold text-gray-700">
                   Nhóm học
                 </span>
 
-                <select
-                  value={selectedGroupId}
-                  onChange={(event) => {
-                    const value = event.target.value
-                      ? Number(event.target.value)
-                      : "";
-                    const group = groups.find((item) => item.id === value);
-
-                    setSelectedGroupId(value);
-                    setTargetName(group?.name ?? "");
-                    setSubjectName(
-                      (current) => current || group?.subjectName || "",
-                    );
-                  }}
-                  required
+                <button
+                  type="button"
+                  onClick={() => setIsGroupDropdownOpen(!isGroupDropdownOpen)}
                   disabled={loadingGroups}
-                  className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-400`}
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 transition-all disabled:bg-gray-50 disabled:text-gray-400"
                 >
-                  {loadingGroups && <option value="">Đang tải nhóm...</option>}
-                  {!loadingGroups && groups.length === 0 && (
-                    <option value="">Bạn chưa có nhóm nào</option>
+                  {selectedGroup ? (
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded bg-orange-100 text-orange-600 font-bold text-xs shrink-0">
+                        {selectedGroup.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-800 truncate">{selectedGroup.name}</div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {selectedGroup.subjectName || "Không môn học"} • Tối đa {selectedGroup.maxMembers} thành viên
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Chọn nhóm học...</span>
                   )}
-                  {!loadingGroups &&
-                    groups.map((group) => (
-                      <option key={group.id} value={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
-                </select>
+                  <ChevronRight size={16} className={`text-gray-400 transition-transform shrink-0 ${isGroupDropdownOpen ? "rotate-90" : ""}`} />
+                </button>
+
+                {isGroupDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsGroupDropdownOpen(false)} />
+                    <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                      <input
+                        type="text"
+                        placeholder="Tìm kiếm nhóm..."
+                        value={groupSearchQuery}
+                        onChange={(e) => setGroupSearchQuery(e.target.value)}
+                        className="mb-2 w-full rounded border border-gray-200 px-3 py-2 text-xs outline-none focus:border-orange-400"
+                      />
+                      {loadingGroups && (
+                        <div className="py-2 text-center text-xs text-gray-400">Đang tải nhóm...</div>
+                      )}
+                      {!loadingGroups && groups.length === 0 && (
+                        <div className="py-2 text-center text-xs text-gray-400">Bạn chưa có nhóm nào</div>
+                      )}
+                      {!loadingGroups && filteredGroups.length === 0 && groups.length > 0 && (
+                        <div className="py-2 text-center text-xs text-gray-400">Không tìm thấy nhóm</div>
+                      )}
+                      {!loadingGroups &&
+                        filteredGroups.map((group) => (
+                          <button
+                            key={group.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedGroupId(group.id);
+                              setTargetName(group.name);
+                              setSubjectName(
+                                (current) => current || group.subjectName || "",
+                              );
+                              setIsGroupDropdownOpen(false);
+                              setGroupSearchQuery("");
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-orange-50/50 ${selectedGroupId === group.id ? "bg-orange-50 font-semibold" : ""
+                              }`}
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-orange-100 text-orange-600 font-bold">
+                              {group.name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-gray-800 font-semibold">{group.name}</div>
+                              <div className="truncate text-gray-400 mt-0.5">
+                                {group.subjectName || "Không môn học"} • Tối đa {group.maxMembers} thành viên
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                  </>
+                )}
 
                 {groupError && (
                   <p className="text-xs font-medium text-red-500">
                     {groupError}
                   </p>
                 )}
-              </label>
+              </div>
             ) : (
-              <label className="space-y-2">
+              <div className="relative space-y-2">
                 <span className="text-sm font-semibold text-gray-700">
                   Bạn học
                 </span>
 
-                <select
-                  value={selectedFriendId}
-                  onChange={(event) => {
-                    const value = event.target.value
-                      ? Number(event.target.value)
-                      : "";
-                    const friend = friends.find(
-                      (item) => item.user_id === value,
-                    );
-
-                    setSelectedFriendId(value);
-                    setTargetName(friend?.full_name ?? "");
-                  }}
-                  required
+                <button
+                  type="button"
+                  onClick={() => setIsFriendDropdownOpen(!isFriendDropdownOpen)}
                   disabled={loadingFriends}
-                  className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-400`}
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 transition-all disabled:bg-gray-50 disabled:text-gray-400"
                 >
-                  {loadingFriends && (
-                    <option value="">Đang tải bạn bè...</option>
+                  {selectedFriend ? (
+                    <div className="flex items-center gap-3">
+                      {selectedFriend.avatar_url ? (
+                        <img
+                          src={selectedFriend.avatar_url}
+                          alt=""
+                          className="h-8 w-8 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold text-xs shrink-0">
+                          {selectedFriend.full_name.substring(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-800 truncate">{selectedFriend.full_name}</div>
+
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Chọn bạn học...</span>
                   )}
-                  {!loadingFriends && friends.length === 0 && (
-                    <option value="">Bạn chưa có bạn bè nào</option>
-                  )}
-                  {!loadingFriends &&
-                    friends.map((friend) => (
-                      <option key={friend.user_id} value={friend.user_id}>
-                        {friend.full_name}
-                      </option>
-                    ))}
-                </select>
+                  <ChevronRight size={16} className={`text-gray-400 transition-transform shrink-0 ${isFriendDropdownOpen ? "rotate-90" : ""}`} />
+                </button>
+
+                {isFriendDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsFriendDropdownOpen(false)} />
+                    <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                      <input
+                        type="text"
+                        placeholder="Tìm kiếm bạn học..."
+                        value={friendSearchQuery}
+                        onChange={(e) => setFriendSearchQuery(e.target.value)}
+                        className="mb-2 w-full rounded border border-gray-200 px-3 py-2 text-xs outline-none focus:border-orange-400"
+                      />
+                      {loadingFriends && (
+                        <div className="py-2 text-center text-xs text-gray-400">Đang tải bạn bè...</div>
+                      )}
+                      {!loadingFriends && friends.length === 0 && (
+                        <div className="py-2 text-center text-xs text-gray-400">Bạn chưa có bạn bè nào</div>
+                      )}
+                      {!loadingFriends && filteredFriends.length === 0 && friends.length > 0 && (
+                        <div className="py-2 text-center text-xs text-gray-400">Không tìm thấy bạn học</div>
+                      )}
+                      {!loadingFriends &&
+                        filteredFriends.map((friend) => (
+                          <button
+                            key={friend.user_id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedFriendId(friend.user_id);
+                              setTargetName(friend.full_name);
+                              setIsFriendDropdownOpen(false);
+                              setFriendSearchQuery("");
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-orange-50/50 ${selectedFriendId === friend.user_id ? "bg-orange-50 font-semibold" : ""
+                              }`}
+                          >
+                            {friend.avatar_url ? (
+                              <img
+                                src={friend.avatar_url}
+                                alt=""
+                                className="h-8 w-8 rounded-full object-cover shrink-0"
+                              />
+                            ) : (
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold">
+                                {friend.full_name.substring(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-gray-800 font-semibold">{friend.full_name}</div>
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                  </>
+                )}
 
                 {friendError && (
                   <p className="text-xs font-medium text-red-500">
                     {friendError}
                   </p>
                 )}
-              </label>
+              </div>
             )}
           </div>
 
-          {sessionType === "GROUP" && selectedGroup && (
-            <div className="rounded-xl border border-orange-100 bg-orange-50 px-4 py-3">
-              <p className="text-sm font-bold text-orange-700">
-                {selectedGroup.name}
-              </p>
-              <div className="mt-2 grid grid-cols-1 gap-2 text-xs text-orange-700 sm:grid-cols-2">
-                <p>Môn học: {selectedGroup.subjectName || "Chưa cập nhật"}</p>
-                <p>Số thành viên tối đa: {selectedGroup.maxMembers}</p>
-                <p>Hình thức nhóm: {selectedGroup.studyMode}</p>
-                <p>Trạng thái: {selectedGroup.status}</p>
-              </div>
-            </div>
-          )}
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-2">

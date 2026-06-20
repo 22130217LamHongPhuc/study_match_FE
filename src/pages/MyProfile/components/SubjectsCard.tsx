@@ -10,33 +10,34 @@ export default function SubjectsCard({ profile }: SubjectsCardProps) {
     <Card
       sx={{
         borderRadius: 3,
-        border: "1px solid #E3EAF8",
-        boxShadow: "0 8px 20px rgba(20, 38, 70, 0.06)",
+        border: "1px solid #e5e7eb",
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+        background: "#ffffff",
       }}
     >
-      <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-        <Stack spacing={2}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+        <Stack spacing={2.5}>
           <Typography
             variant="subtitle1"
-            sx={{ fontWeight: 700, color: "#1F2A44" }}
+            sx={{ fontWeight: 700, color: "#1f2937" }}
           >
             Môn học
           </Typography>
 
           <Stack spacing={0.5}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: "#6b7280", fontWeight: 500 }}>
               Môn chính
             </Typography>
             <Typography
               variant="body1"
-              sx={{ fontWeight: 600, color: "#1F2A44" }}
+              sx={{ fontWeight: 600, color: "#1f2937" }}
             >
               {profile.mainSubjectName}
             </Typography>
           </Stack>
 
           <Stack spacing={1}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: "#6b7280", fontWeight: 500 }}>
               Môn đang học
             </Typography>
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
@@ -46,9 +47,13 @@ export default function SubjectsCard({ profile }: SubjectsCardProps) {
                   label={`${subject.subjectCode} - ${subject.subjectName}`}
                   variant="outlined"
                   sx={{
-                    borderColor: "#D6E2F7",
-                    bgcolor: "#F8FBFF",
-                    borderRadius: 1.75,
+                    borderColor: "#e5e7eb",
+                    bgcolor: "#f9fafb",
+                    borderRadius: 2,
+                    color: "#4b5563",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    px: 0.5,
                   }}
                 />
               ))}

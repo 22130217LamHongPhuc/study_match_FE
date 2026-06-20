@@ -9,7 +9,12 @@ import {
   SubmitStudyFeedbackRequest,
   SubmitStudyFeedbackResponse,
 } from "../pages/StudySession/types";
-import type { SessionConfirmationStatsResponse } from "../pages/StudySession/types";
+import type {
+  GroupStudySessionStatus,
+  ParticipantStatus,
+  SessionConfirmationStatsResponse,
+  StudySessionType,
+} from "../pages/StudySession/types";
 import type {
   AdminSessionRowResponse,
   AdminSessionStatsResponse,
@@ -32,6 +37,16 @@ export interface PageResponse<T> {
   totalPages: number;
 }
 
+export interface UserStudySessionParams {
+  sessionType?: StudySessionType | null;
+  participantStatus?: ParticipantStatus | null;
+  sessionStatus?: GroupStudySessionStatus | null;
+  startFrom?: string | null;
+  startTo?: string | null;
+  page?: number;
+  size?: number;
+}
+
 export async function createGroupStudySession(
   groupId: number,
   payload: CreateStudySessionRequest,
@@ -50,9 +65,21 @@ export async function createGroupStudySession(
 
 export async function getUserStudySessions(
   userId: number,
+  params: UserStudySessionParams = {},
 ): Promise<APIResponseData<PageResponse<StudySessionResponse>>> {
+  const query = new URLSearchParams();
+
+  if (params.sessionType) query.set("sessionType", params.sessionType);
+  if (params.participantStatus)
+    query.set("participantStatus", params.participantStatus);
+  if (params.sessionStatus) query.set("sessionStatus", params.sessionStatus);
+  if (params.startFrom) query.set("startFrom", params.startFrom);
+  if (params.startTo) query.set("startTo", params.startTo);
+  query.set("page", String(params.page ?? 0));
+  query.set("size", String(params.size ?? 20));
+
   const response = await apiFetch<PageResponse<StudySessionResponse>>(
-    `/api/study-sessions/user/${userId}`,
+    `/api/study-sessions/user/${userId}?${query.toString()}`,
     {
       method: "GET",
     },

@@ -26,6 +26,7 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboard
 import AdminGroupsPage from "../pages/admin/AdminGroupsPage/AdminGroupsPage";
 import AdminUsersPage from "../pages/admin/AdminUsersPage/AdminUsersPage";
 import AdminSchedulesPage from "../pages/admin/AdminSchedulesPage/AdminSchedulesPage";
+import AdminAIMatchingPage from "../pages/admin/AdminAIMatchingPage/AdminAIMatchingPage";
 import StudySessionPage from "../pages/StudySession/StudySessionPage";
 
 const ProtectedRoute = () => {
@@ -115,6 +116,10 @@ export const router = createBrowserRouter([
       {
         path: "schedules",
         element: <AdminSchedulesPage />,
+      },
+      {
+        path: "matching",
+        element: <AdminAIMatchingPage />,
       },
     ],
   },
