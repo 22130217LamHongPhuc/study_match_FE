@@ -5,14 +5,13 @@ import {
 } from "../pages/Recommendation/types";
 
 export async function getRecommendedUsers(
-  payload: RecommendUserRequest,
+  userId: number,
 ): Promise<RecommendUsersApiResponse> {
-  const response = await fetch(RECOMMEND_USERS_URL, {
-    method: "POST",
+  const response = await fetch(`${RECOMMEND_USERS_URL}?user_id=${userId}`, {
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {

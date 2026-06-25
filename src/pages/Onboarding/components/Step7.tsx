@@ -1,6 +1,6 @@
 import { Sunrise, Sun, MoonStar } from "lucide-react";
 import { FormData, SlotId, StudyMode, StudyPlan } from "./types";
-import { DAYS, GOALS, MODES, SLOTS, getSubjectLabel } from "./constants";
+import { DAYS, LEARNING_LEVELS, MODES, SLOTS, getSubjectLabel } from "./constants";
 
 interface Step7Props {
   data: FormData;
@@ -8,7 +8,7 @@ interface Step7Props {
 }
 
 export function Step7({ data, studyPlan }: Step7Props) {
-  const goalObj = GOALS.find((g) => g.key === data.studyGoal);
+  const goalObj = LEARNING_LEVELS.find((g) => g.key === data.studyGoal);
   const modeObj = data.studyMode ? MODES[data.studyMode as StudyMode] : null;
   const allMods = [data.mainModule, ...data.enrolledModules].filter(Boolean);
 
@@ -33,7 +33,7 @@ export function Step7({ data, studyPlan }: Step7Props) {
     gender_M: data.gender === "M" ? 1 : 0,
     age_encoded:
       ({ "0-35": 1, "35-55": 2, "55<=": 3 } as Record<string, number>)[
-        data.ageGroup
+      data.ageGroup
       ] || 0,
     num_of_prev_attempts: data.prevAttempts,
     avg_score: data.avgScore,

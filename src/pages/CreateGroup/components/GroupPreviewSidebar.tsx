@@ -12,6 +12,31 @@ type FriendPreviewItem = FriendListItem & {
   invited: boolean;
 };
 
+const AVATAR_COLORS = [
+  "bg-orange-400",
+  "bg-rose-400",
+  "bg-amber-500",
+  "bg-lime-500",
+  "bg-pink-400",
+  "bg-red-400",
+  "bg-yellow-500",
+  "bg-emerald-500",
+];
+
+function getAvatarColor(userId: number) {
+  const safeId = Number.isFinite(userId) ? userId : 0;
+  return AVATAR_COLORS[safeId % AVATAR_COLORS.length];
+}
+
+function getInitials(name: string | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0][0]?.toUpperCase() ?? "?";
+}
+
 interface CreateGroupDraft {
   groupName: string;
   goalDescription: string;
@@ -244,17 +269,26 @@ function MemberCard({
   invited: boolean;
   onInvite: () => void;
 }) {
+  const initials = getInitials(member.full_name);
+  const avatarBg = getAvatarColor(member.user_id);
+
   return (
     <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-3">
       <div className="flex min-w-0 items-center gap-3">
-        <div
-          className="size-10 shrink-0 rounded-full bg-slate-200 bg-cover bg-center"
-          style={{
-            backgroundImage: member.avatar_url
-              ? `url('${member.avatar_url}')`
-              : undefined,
-          }}
-        />
+        {member.avatar_url ? (
+          <div
+            className="size-10 shrink-0 rounded-full bg-slate-200 bg-cover bg-center"
+            style={{
+              backgroundImage: `url('${member.avatar_url}')`,
+            }}
+          />
+        ) : (
+          <div
+            className={`flex size-10 shrink-0 items-center justify-center rounded-full ${avatarBg} text-xs font-bold text-white`}
+          >
+            {initials}
+          </div>
+        )}
 
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-slate-900">

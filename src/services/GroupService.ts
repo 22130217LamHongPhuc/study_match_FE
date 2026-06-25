@@ -88,6 +88,7 @@ export interface BrowseGroupResponse {
   createdAt: string;
   updatedAt: string;
   memberCount?: number | null;
+  member?: boolean;
 }
 
 export type AdminGroupType = "COMMUNITY" | "STUDY";
@@ -214,14 +215,16 @@ export async function browseGroups(
   page: number = 0,
   limit: number = 10,
 ): Promise<APIResponseData<PageResponse<BrowseGroupResponse>>> {
+
+  const userId = localStorage.getItem("userId");
   const params = new URLSearchParams();
-  if (type) params.set("type", type);
+  // if (type) params.set("type", type);
   if (typeof subject === "number") params.set("subject", String(subject));
   params.set("page", String(page));
   params.set("limit", String(limit));
 
   const response = await apiFetch<PageResponse<BrowseGroupResponse>>(
-    `/api/groups/browse?${params.toString()}`,
+    `/api/groups/browse/${userId}?${params.toString()}`,
     {
       method: "GET",
     },
@@ -239,8 +242,7 @@ export async function getAdminGroups(
   keyword: string | null,
 ): Promise<APIResponseData<PageResponse<AdminGroupRowResponse>>> {
   const response = await apiFetch<PageResponse<AdminGroupRowResponse>>(
-    `/api/admin/groups?page=${page}&size=${size}${
-      type ? `&type=${type}` : ""
+    `/api/admin/groups?page=${page}&size=${size}${type ? `&type=${type}` : ""
     }${status ? `&status=${status}` : ""}${keyword ? `&keyword=${keyword}` : ""}`,
     {
       method: "GET",
