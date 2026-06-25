@@ -325,9 +325,9 @@ export default function OnboardingFlow() {
         if (key === "enrolledModules") {
           const normalizedEnrolledModules = Array.isArray(value)
             ? value.filter(
-                (moduleCode): moduleCode is string =>
-                  typeof moduleCode === "string",
-              )
+              (moduleCode): moduleCode is string =>
+                typeof moduleCode === "string",
+            )
             : [];
 
           const nextSelectedModules = [
@@ -354,7 +354,6 @@ export default function OnboardingFlow() {
   const canProceed = (): boolean => {
     if (step === 1) {
       return !!(
-        data.fullName.trim() &&
         data.studentId.trim() &&
         data.cohortCode
       );
@@ -589,13 +588,12 @@ export default function OnboardingFlow() {
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all ${active ? "bg-blue-600 bg-opacity-20" : "hover:bg-gray-800"}`}
               >
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
-                    s.id < step
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${s.id < step
                       ? "bg-green-500 text-white"
                       : active
                         ? "bg-blue-500 text-white ring-2 ring-blue-400 ring-opacity-40"
                         : "bg-gray-800 text-gray-500"
-                  }`}
+                    }`}
                 >
                   {s.id < step ? (
                     <Check className="w-4 h-4" strokeWidth={3} />
@@ -604,13 +602,12 @@ export default function OnboardingFlow() {
                   )}
                 </div>
                 <span
-                  className={`text-xs font-medium transition-colors ${
-                    active
+                  className={`text-xs font-medium transition-colors ${active
                       ? "text-white"
                       : s.id < step
                         ? "text-gray-400"
                         : "text-gray-600"
-                  }`}
+                    }`}
                 >
                   {s.label}
                 </span>
@@ -675,11 +672,10 @@ export default function OnboardingFlow() {
             <button
               onClick={handleNext}
               disabled={!canProceed() || submissionLoading}
-              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-                !canProceed() || submissionLoading
+              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!canProceed() || submissionLoading
                   ? "bg-blue-100 text-blue-300 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-              }`}
+                }`}
             >
               {submissionLoading ? (
                 <span className="flex items-center justify-center gap-2">

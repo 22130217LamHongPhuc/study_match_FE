@@ -1,5 +1,5 @@
 import { FormData } from "./types";
-import { GOALS } from "./constants";
+import { LEARNING_LEVELS } from "./constants";
 
 interface Step3GoalProps {
   data: FormData;
@@ -13,7 +13,7 @@ export function Step3Goal({ data, update }: Step3GoalProps) {
         Chọn trình độ học tập phù hợp nhất với bạn hiện tại. Điều này quyết định
         cách hệ thống ghép bạn học.
       </p>
-      {GOALS.map((g) => {
+      {LEARNING_LEVELS.map((g) => {
         const active = data.studyGoal === g.key;
         const Icon = g.icon;
         return (

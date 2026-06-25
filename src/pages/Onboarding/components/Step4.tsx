@@ -295,8 +295,9 @@ export function Step4CurrentPlan({
       </div>
 
       <p className="text-sm text-gray-500">
-        Hệ thống tự tải chương trình học hiện tại của khóa bạn đã chọn. Chọn môn
-        chính trước, sau đó có thể chọn thêm các môn khác đang học.
+        Hệ thống tự tải chương trình học hiện tại của khóa bạn đã chọn. Chọn môn bạn
+        muốn học tập trên StudyMatch trước, sau đó có thể chọn thêm các môn học trong
+        học kỳ.
       </p>
 
       {!studyPlanLoading && !studyPlanError && studyPlan && (
@@ -306,7 +307,7 @@ export function Step4CurrentPlan({
               Tùy chọn học kỳ
             </p>
             <p className="text-xs text-amber-600 mt-1">
-              Bạn có thể chọn học kỳ riêng cho môn chính và môn phụ.
+              Bạn có thể chọn học kỳ riêng cho môn muốn học tập và các môn học trong học kỳ.
             </p>
           </div>
 
@@ -321,7 +322,8 @@ export function Step4CurrentPlan({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="rounded-xl border border-amber-200 bg-white p-3 space-y-2">
-                <p className="text-xs font-semibold text-gray-600">Môn chính</p>
+                <p className="text-xs font-semibold text-gray-600">Môn muốn học tập
+                </p>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -357,7 +359,7 @@ export function Step4CurrentPlan({
               </div>
 
               <div className="rounded-xl border border-amber-200 bg-white p-3 space-y-2">
-                <p className="text-xs font-semibold text-gray-600">Môn phụ</p>
+                <p className="text-xs font-semibold text-gray-600">Môn học trong học kỳ</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -429,7 +431,7 @@ export function Step4CurrentPlan({
 
           <div className="space-y-2">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-              Chọn môn chính
+              Chọn môn muốn học tập
             </p>
             {mainTermStudyPlanLoading && mainTermSelection && (
               <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
@@ -476,12 +478,11 @@ export function Step4CurrentPlan({
 
           <div className="space-y-2">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-              Môn khác đang học
+              Môn học trong học kỳ
             </p>
             {enrolledTermStudyPlanLoading && enrolledTermSelection && (
               <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
-                Đang tải môn phụ theo học kỳ đã chọn...
-              </div>
+                Đang tải môn học trong học kỳ đã chọn...              </div>
             )}
             {enrolledTermStudyPlanError && enrolledTermSelection && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
@@ -573,9 +574,12 @@ export function Step4CurrentPlan({
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span
-                              className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${moduleCode === data.mainModule ? "bg-blue-600 text-white" : "bg-emerald-100 text-emerald-700"}`}
+                              className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${moduleCode === data.mainModule
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-emerald-100 text-emerald-700"
+                                }`}
                             >
-                              {moduleCode}
+                              {moduleCode === data.mainModule ? "Môn muốn học" : "Môn trong kỳ"} · {moduleCode}
                             </span>
                             <span className="text-xs text-gray-700 truncate">
                               {moduleInfo?.subjectName || "Môn đã chọn"}

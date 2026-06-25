@@ -30,17 +30,6 @@ export function Step1({
     <div className="space-y-5">
       <div>
         <FieldLabel className="flex items-center gap-2">
-          <User size={16} /> Họ và tên
-        </FieldLabel>
-        <TInput
-          value={data.fullName}
-          onChange={(v) => update("fullName", v)}
-          placeholder="Nguyễn Văn A"
-        />
-      </div>
-
-      <div>
-        <FieldLabel className="flex items-center gap-2">
           <IdCard size={16} /> Mã số sinh viên
         </FieldLabel>
         <TInput

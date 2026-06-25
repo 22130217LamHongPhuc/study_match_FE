@@ -32,12 +32,12 @@ import {
   StudyPlan,
 } from "./types";
 
-export const GOALS: GoalConfig[] = [
+export const LEARNING_LEVELS: GoalConfig[] = [
   {
     key: "Survivor",
     icon: Shield,
-    title: "Sinh tồn",
-    desc: "Mục tiêu qua môn, không bị trượt. Cần bạn học cùng vực dậy.",
+    title: "Cần củng cố nền tảng",
+    desc: "Hiện tại bạn đang gặp khó khăn với môn học, cần nắm lại kiến thức cơ bản và tìm bạn học có thể hỗ trợ, giải thích khi cần.",
     ring: "ring-red-400",
     bg: "bg-red-50",
     border: "border-red-300",
@@ -47,8 +47,8 @@ export const GOALS: GoalConfig[] = [
   {
     key: "Passive Learner",
     icon: BookOpen,
-    title: "Học bị động",
-    desc: "Học theo lịch, không đặt mục tiêu cao. Cần người nhắc nhở.",
+    title: "Học ở mức cơ bản",
+    desc: "Hiện tại bạn học theo lịch, chưa chủ động nhiều và cần bạn học cùng để nhắc nhở, tạo động lực, duy trì thói quen học tập.",
     ring: "ring-yellow-400",
     bg: "bg-yellow-50",
     border: "border-yellow-300",
@@ -58,8 +58,8 @@ export const GOALS: GoalConfig[] = [
   {
     key: "Standard Learner",
     icon: NotebookPen,
-    title: "Học chuẩn",
-    desc: "Học đều đặn, muốn hiểu sâu. Tìm bạn để thảo luận và tiến bộ cùng.",
+    title: "Học ổn định",
+    desc: "Hiện tại bạn có nền tảng khá ổn, học đều đặn và muốn tìm bạn để cùng thảo luận, ôn tập, chia sẻ tài liệu và tiến bộ hơn.",
     ring: "ring-blue-400",
     bg: "bg-blue-50",
     border: "border-blue-300",
@@ -69,8 +69,8 @@ export const GOALS: GoalConfig[] = [
   {
     key: "High Achiever",
     icon: Rocket,
-    title: "Vươn tới đỉnh",
-    desc: "Luôn phấn đấu điểm cao. Tìm nhóm elite để cạnh tranh.",
+    title: "Học tốt / định hướng điểm cao",
+    desc: "Hiện tại bạn có năng lực học tập tốt, chủ động đặt mục tiêu cao và muốn kết nối với những bạn có cùng tinh thần phấn đấu.",
     ring: "ring-green-400",
     bg: "bg-green-50",
     border: "border-green-300",
@@ -89,32 +89,35 @@ export const VALID_MODES: Record<StudyGoal, StudyMode[]> = {
 export const MODES: Record<StudyMode, ModeConfig> = {
   mutual_support: {
     icon: Handshake,
-    label: "Học cùng người tương đồng",
-    desc: "Kết nối với sinh viên có trình độ và mục tiêu tương đương để cùng tiến bộ.",
+    label: "Học cùng bạn ngang trình độ",
+    desc: "Ghép với những bạn có mức học tập gần giống bạn để dễ trao đổi, cùng ôn bài và tiến bộ từng bước.",
     bg: "bg-blue-50",
     border: "border-blue-300",
     text: "text-blue-700",
   },
+
   peer_support: {
     icon: TrendingUp,
-    label: "Tìm người nhỉnh hơn một chút",
-    desc: "Học cùng người có điểm cao hơn 5–15 điểm để được kéo lên.",
+    label: "Học cùng bạn khá hơn",
+    desc: "Ghép với những bạn học tốt hơn một chút để bạn có thêm định hướng, được hỗ trợ và cải thiện kết quả học tập.",
     bg: "bg-violet-50",
     border: "border-violet-300",
     text: "text-violet-700",
   },
+
   challenge: {
     icon: Zap,
-    label: "Tìm thử thách bản thân",
-    desc: "Kết nối với High Achiever để được thách thức và phát triển mạnh mẽ.",
+    label: "Học cùng bạn học tốt",
+    desc: "Ghép với những bạn có năng lực học tập nổi bật để tạo động lực, đặt mục tiêu cao hơn và phát triển bản thân.",
     bg: "bg-orange-50",
     border: "border-orange-300",
     text: "text-orange-700",
   },
+
   support: {
     icon: Sprout,
-    label: "Hỗ trợ người khác",
-    desc: "Chia sẻ kiến thức, giúp người học yếu hơn để củng cố bản thân.",
+    label: "Hỗ trợ bạn khác",
+    desc: "Ghép với những bạn cần hỗ trợ hơn bạn, giúp bạn chia sẻ kiến thức, ôn lại bài và học chắc hơn.",
     bg: "bg-teal-50",
     border: "border-teal-300",
     text: "text-teal-700",

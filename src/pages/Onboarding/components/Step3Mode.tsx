@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 import { FormData, StudyGoal, StudyMode } from "./types";
-import { GOALS, MODES, VALID_MODES } from "./constants";
+import { LEARNING_LEVELS, MODES, VALID_MODES } from "./constants";
 
 interface Step3ModeProps {
   data: FormData;
@@ -8,7 +8,7 @@ interface Step3ModeProps {
 }
 
 export function Step3Mode({ data, update }: Step3ModeProps) {
-  const goalObj = GOALS.find((g) => g.key === data.studyGoal);
+  const goalObj = LEARNING_LEVELS.find((g) => g.key === data.studyGoal);
   const availModes: StudyMode[] = data.studyGoal
     ? (VALID_MODES[data.studyGoal as StudyGoal] ?? [])
     : [];

@@ -18,9 +18,19 @@ export default function RegisterForm() {
   const [errorConfirmPassword, setErrorConfirmPassword] = useState<
     string | null
   >(null);
+  const [errorFullName, setErrorFullName] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string>("");
+
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    if (!validateFullName(fullName)) {
+      setErrorFullName("Vui lòng nhập họ tên");
+      return;
+    } else {
+      setErrorFullName(null);
+    }
+
     if (!validateEmail(email)) {
       setErrorEmail(
         "Vui lòng nhập email hợp lệ (định dạng: 22130xxx@st.hcmuaf.edu.vn)",
@@ -47,6 +57,7 @@ export default function RegisterForm() {
     setLoading(true);
 
     const responese: APIResponseData<AuthResponse> = await register(
+      fullName,
       email,
       password,
     );
@@ -72,6 +83,9 @@ export default function RegisterForm() {
   ) => {
     return password === confirmPassword;
   };
+  const validateFullName = (fullName: string) => {
+    return fullName.trim() !== "";
+  };
 
   return (
     <div className="rounded-[28px] bg-white p-8">
@@ -86,6 +100,16 @@ export default function RegisterForm() {
       ) : (
         <>
           <div className="flex flex-col gap-5 mb-5">
+
+            <InputField
+              id="fullName"
+              label="Họ tên sinh viên"
+              type="text"
+              placeholder="Nhập họ tên"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+            {errorFullName && <p className="text-sm text-red-500">{errorFullName}</p>}
             <InputField
               id="email"
               label="Email sinh viên"

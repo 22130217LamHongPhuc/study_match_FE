@@ -27,6 +27,7 @@ import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import { logout } from "../../services/AuthService";
 import { useNavigate } from "react-router-dom";
 import WebSocketManager from "../../socket/WebSocketManager";
+import { toast } from "react-toastify";
 export default function Header() {
   const [modalSignIn, setModalSignIn] = useState<boolean>(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -35,14 +36,15 @@ export default function Header() {
 
   const handleLogout = async () => {
     WebSocketManager.getInstance().disconnect();
+    const response = await logout();
+
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");
-    const response = await logout();
     if (response.success) {
       navigate("/login");
     } else {
-      alert("Đăng xuất thất bại. Vui lòng thử lại");
+      toast.error("Đăng xuất thất bại. Vui lòng thử lại");
     }
   };
 

@@ -33,12 +33,13 @@ export async function loginWithGoogle(
 }
 
 export async function register(
+  fullName: string,
   email: string,
   password: string,
 ): Promise<APIResponseData<AuthResponse>> {
   const response = await apiFetch<AuthResponse>("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ fullName, email, password }),
   });
   return response;
 }
