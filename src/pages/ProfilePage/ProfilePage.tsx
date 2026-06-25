@@ -19,13 +19,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EditProfileModal from "../../components/modal/user/EditProfileModal";
 import { ProfileStatus } from "../../enum/Profile";
 import { UserProfile } from "../../model/UserModel";
-import { loadProfileService, requestFriendService, unfriendService } from "../../services/FriendService";
 
+import { loadProfileService, requestFriendService, unfriendService } from "../../services/FriendService";
+import { matchingItemApi } from "../../services/matchingItemApi";
 import {
   Achievement,
   createPost,
@@ -52,8 +53,18 @@ type SelectedMediaItem = {
   file: File;
   preview: string;
 };
+type RecommendationState = {
+  fromRecommendation?: boolean;
+  finalScore?: number;
+  reasonText?: string;
+};
+
+
 
 export default function ProfilePage() {
+  const location = useLocation();
+  const recommendation = location.state as RecommendationState | null;
+
   const [profile, setProfile] = useState<UserProfile | undefined>();
   const [modalEdit, setModalEdit] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -70,10 +81,14 @@ export default function ProfilePage() {
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const trackedViewKeyRef = useRef<string | null>(null);
+
   const currentUserId = Number(localStorage.getItem("userId"));
   const profileUserId = Number(id);
   const isOwnProfile = currentUserId === profileUserId;
-  const selectedVisibility = visibilityOptions.find((option) => option.value === postVisibility) || visibilityOptions[0];
+
+  const selectedVisibility =
+    visibilityOptions.find((option) => option.value === postVisibility) || visibilityOptions[0];
 
   useEffect(() => {
     if (!profileUserId) return;
@@ -82,6 +97,38 @@ export default function ProfilePage() {
       .catch((error) => console.error("Cannot load profile", error));
   }, [profileUserId]);
 
+useEffect(() => {
+  if (!currentUserId || !profileUserId) return;
+  if (currentUserId === profileUserId) return;
+  if (!recommendation?.fromRecommendation) return;
+  if(!recommendation.finalScore || recommendation.finalScore <= 0) return;
+
+  const viewKey = `${currentUserId}:${profileUserId}`;
+  if (trackedViewKeyRef.current === viewKey) return;
+  trackedViewKeyRef.current = viewKey;
+
+  const trackProfileViewed = async () => {
+    try {
+      await matchingItemApi.recordAction({
+        userId: currentUserId,
+        recommendedUserId: profileUserId,
+        actionStatus: "VIEWED",
+        finalScore: recommendation.finalScore,
+        reasonText: recommendation.reasonText,
+      });
+    } catch (error) {
+      console.error("Track matching VIEWED failed", error);
+    }
+  };
+
+  void trackProfileViewed();
+}, [
+  currentUserId,
+  profileUserId,
+  recommendation?.fromRecommendation,
+  recommendation?.finalScore,
+  recommendation?.reasonText,
+]);
   useEffect(() => {
     if (!profileUserId) return;
     Promise.all([
@@ -123,11 +170,25 @@ export default function ProfilePage() {
 
 
   const requestFriend = async () => {
+    if (!currentUserId || !profileUserId) return;
+    if (currentUserId === profileUserId) return;
+
     const response = await requestFriendService(profileUserId);
     if (response.code !== "201" && response.code !== 201) {
       alert("Gửi lời mời thất bại");
       return;
     }
+
+    try {
+      await matchingItemApi.updateStatus({
+        userId: currentUserId,
+        recommendedUserId: profileUserId,
+        actionStatus: "FRIEND_REQUEST_SENT",
+      });
+    } catch (error) {
+      console.error("Track matching FRIEND_REQUEST_SENT failed", error);
+    }
+
     setProfile((prev) => (prev ? { ...prev, statusFriend: ProfileStatus.PENDING } : prev));
   };
 

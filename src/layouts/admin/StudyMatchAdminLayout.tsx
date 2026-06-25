@@ -145,7 +145,6 @@ function MobileDrawer({
 }) {
   return (
     <>
-      {/* Overlay */}
       <div
         className={`fixed inset-0 z-40 bg-black/30 transition-opacity lg:hidden ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
@@ -153,13 +152,11 @@ function MobileDrawer({
         onClick={onClose}
       />
 
-      {/* Drawer */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sand-100 transition-transform duration-200 ease-in-out lg:hidden ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-md text-sand-500 hover:bg-sand-200 hover:text-sand-700"

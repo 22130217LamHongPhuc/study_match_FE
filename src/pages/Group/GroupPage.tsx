@@ -1,59 +1,52 @@
-import { CalendarDays, ChevronRight, Plus, UsersRound } from "lucide-react";
+import { BookOpen, ChevronRight, Globe, Lock, Plus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   getGroupsByUserId,
   StudyGroupDetailResponse,
 } from "../../services/GroupService";
-import { use, useEffect, useState } from "react";
-import { LoadingSkeleton } from "../../components/modal/basic/LoadingSkeleton";
+import { useEffect, useState } from "react";
 
 function GroupPreviewCard({ group }: { group: StudyGroupDetailResponse }) {
+  const isGroupActive = group.status === "ACTIVE" || group.status === "active";
+  const isPrivate = group.visibility?.toLowerCase() === "private";
+
+
+
   return (
-    <article className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+    <article className="group relative flex flex-col justify-between rounded-xl border border-gray-200 bg-white p-6 transition-all duration-200 hover:border-orange-200 hover:shadow-[0_4px_20px_rgba(249,115,22,0.04)]">
+      <div>
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <span className="text-xs font-semibold tracking-wider text-orange-500 uppercase">
             {group.subjectName}
-          </p>
-
-          <h2 className="line-clamp-1 text-lg font-semibold text-slate-900">
-            {group.name}
-          </h2>
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+            <span className={`h-1.5 w-1.5 rounded-full ${isGroupActive ? "bg-emerald-500" : "bg-gray-400"}`} />
+            {isGroupActive ? "Đang mở" : "Đã đóng"}
+          </span>
         </div>
 
-        <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-          Đang mở
-        </span>
+        <h3 className="text-base font-bold text-gray-900 group-hover:text-orange-500 transition-colors mb-2">
+          {group.name}
+        </h3>
+
+        <p className="text-sm text-gray-600 line-clamp-2 mb-6">
+          {group.description || "Không có mô tả cho nhóm học này."}
+        </p>
       </div>
 
-      <p className="line-clamp-2 min-h-[44px] text-sm leading-6 text-slate-600">
-        {group.description}
-      </p>
+      <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-500">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5">
+            <Users size={14} className="text-gray-400" />
+            Tối đa {group.maxMembers}
+          </span>
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
-          <UsersRound size={14} />
-          Tối đa {group.maxMembers}
-        </span>
-
-        <span className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
-          Công khai
-        </span>
-      </div>
-
-      <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-        <div>
-          <p className="text-xs text-slate-400">Kiểu học</p>
-          <p className="text-sm font-medium text-slate-700">Hỗ trợ lẫn nhau</p>
         </div>
 
-        <button className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
-          Xem chi tiết
-          <ChevronRight
-            size={16}
-            className="transition group-hover:translate-x-0.5"
-          />
-        </button>
+        <span className="text-xs font-semibold text-orange-500 group-hover:underline inline-flex items-center gap-0.5">
+          Chi tiết
+          <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+        </span>
       </div>
     </article>
   );
@@ -84,51 +77,61 @@ export default function GroupPage() {
   };
 
   return (
-    <main
-      className="min-h-screen px-5 py-6 text-slate-900"
-      style={{
-        background:
-          "radial-gradient(circle at 10% 0%, #EAF3FF 0%, #F5F8FF 38%, #F8FAFF 100%)",
-      }}
-    >
-      {" "}
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+    <main className="px-6 py-8 sm:px-8 lg:px-10">
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-5 mb-8">
           <div>
-            <p className="mb-1 text-sm font-medium text-slate-500">
-              StudyMatch
-            </p>
-
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-              Nhóm học phù hợp
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+              Nhóm học của tôi
             </h1>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Chọn nhóm theo môn học, mục tiêu và lịch rảnh của bạn.
+            <p className="mt-1 text-sm text-gray-500">
+              Quản lý và chọn nhóm học tập phù hợp với lịch trình của bạn.
             </p>
           </div>
 
           <button
             onClick={goToCreateGroup}
-            className="inline-flex w-fit items-center gap-2 rounded-xl bg-blue-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700"
+            className="inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600 transition-colors shrink-0"
           >
-            <Plus size={17} />
-            Tạo nhóm
+            <Plus size={16} />
+            Tạo nhóm mới
           </button>
-        </header>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {loading ? (
-            <LoadingSkeleton />
-          ) : groupList.length === 0 ? (
-            <p className="col-span-full text-center text-slate-500">
-              Không tìm thấy nhóm nào. Hãy tạo nhóm đầu tiên của bạn!
-            </p>
-          ) : (
-            groupList.map((group) => (
-              <GroupPreviewCard key={group.id} group={group} />
-            ))
-          )}
         </div>
+
+        {loading ? (
+          <div className="flex min-h-[240px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white p-8">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+              <p className="text-sm text-gray-500">Đang tải danh sách nhóm học...</p>
+            </div>
+          </div>
+        ) : groupList.length === 0 ? (
+          <div className="flex min-h-[350px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white p-8 text-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-500">
+              <BookOpen size={24} />
+            </div>
+
+            <h3 className="text-lg font-bold text-gray-900">Bạn chưa tham gia nhóm nào</h3>
+
+            <p className="mt-1 max-w-sm text-sm text-gray-500">
+              Tạo nhóm học mới để trao đổi tài liệu, giải bài tập và đồng hành cùng các bạn học khác.
+            </p>
+
+            <button
+              onClick={goToCreateGroup}
+              className="mt-6 inline-flex items-center gap-2 h-10 rounded-lg bg-orange-500 px-5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+            >
+              <Plus size={16} />
+              Tạo nhóm mới
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {groupList.map((group) => (
+              <GroupPreviewCard key={group.id} group={group} />
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );

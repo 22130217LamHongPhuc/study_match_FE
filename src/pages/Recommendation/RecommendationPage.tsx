@@ -6,6 +6,9 @@ import { useRecommendations } from "./hooks/useRecommendations";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { FriendRequestVm, RecommendationCardVm } from "./types";
+import { matchingItemApi } from "../../services/matchingItemApi";
 import {
   browseGroups,
   BrowseGroupResponse,
@@ -50,8 +53,14 @@ function mapBrowseGroupToCommunityGroup(
   };
 }
 
+function isSuccessCode(code: number | string | undefined) {
+  const responseCode = Number(code);
+  return responseCode >= 200 && responseCode < 300;
+}
+
 export default function RecommendationPage() {
   const profileVm = useSelector((state: RootState) => state.profile.profileVm);
+  const navigate = useNavigate();
 
   const userId = Number(localStorage.getItem("userId") ?? 0);
 
@@ -89,6 +98,19 @@ export default function RecommendationPage() {
   const [connectingUserId, setConnectingUserId] = useState<number | null>(null);
   const [acceptingRequestId, setAcceptingRequestId] = useState<number | null>(
     null,
+  );
+
+  const handleViewProfile = useCallback(
+    (recommendation: RecommendationCardVm) => {
+      navigate(`/profile/${recommendation.userId}`, {
+        state: {
+          fromRecommendation: true,
+          finalScore: recommendation.finalScore,
+          reasonText: recommendation.reasonText,
+        },
+      });
+    },
+    [navigate],
   );
 
   const handleJoinGroup = useCallback(
@@ -143,9 +165,19 @@ export default function RecommendationPage() {
 
       try {
         const response = await requestFriendService(targetUserId);
-        const responseCode = Number(response.code);
 
-        if (responseCode >= 200 && responseCode < 300) {
+        if (isSuccessCode(response.code)) {
+          try {
+            await matchingItemApi.updateStatus({
+              userId: currentUserId,
+              recommendedUserId: targetUserId,
+              actionStatus: "FRIEND_REQUEST_SENT",
+              finalScore: items.find((item) => item.userId === targetUserId)?.finalScore,
+            });
+          } catch (error) {
+            console.error("Track matching FRIEND_REQUEST_SENT failed", error);
+          }
+
           toast.success("Đã gửi lời mời kết bạn.");
           await fetchRecommendations(userId);
           return;
@@ -164,7 +196,14 @@ export default function RecommendationPage() {
   );
 
   const handleAcceptFriendRequest = useCallback(
-    async (requestId: number) => {
+    async (request: FriendRequestVm) => {
+      const currentUserId =
+        profileVm?.userId ?? Number(localStorage.getItem("userId"));
+      const requestId = request.id;
+      const senderId = request.senderId;
+
+      if (!currentUserId || !senderId) return;
+      if (currentUserId === senderId) return;
       if (acceptingRequestId === requestId) return;
 
       setAcceptingRequestId(requestId);
@@ -174,9 +213,19 @@ export default function RecommendationPage() {
           requestId,
           "APPROVED",
         );
-        const responseCode = Number(response.code);
 
-        if (responseCode >= 200 && responseCode < 300) {
+        if (isSuccessCode(response.code)) {
+          try {
+            await matchingItemApi.updateStatus({
+              userId: currentUserId,
+              recommendedUserId: senderId,
+              actionStatus: "ACCEPTED",
+              finalScore: items.find((item) => item.userId === senderId)?.finalScore,
+            });
+          } catch (error) {
+            console.error("Track matching ACCEPTED failed", error);
+          }
+
           toast.success("Đã chấp nhận lời mời kết bạn.");
           
           const item = items.find((it) => it.friendRequest?.id === requestId);
@@ -207,7 +256,7 @@ export default function RecommendationPage() {
         setAcceptingRequestId((prev) => (prev === requestId ? null : prev));
       }
     },
-    [acceptingRequestId, fetchRecommendations, userId, items],
+    [acceptingRequestId, fetchRecommendations, profileVm?.userId, userId],
   );
 
 
@@ -407,6 +456,7 @@ export default function RecommendationPage() {
                 <RecommendationCard
                   key={item.userId}
                   recommendation={item}
+                  onViewProfile={handleViewProfile}
                   onConnect={handleConnect}
                   onAccept={handleAcceptFriendRequest}
                   isConnecting={connectingUserId === item.userId}

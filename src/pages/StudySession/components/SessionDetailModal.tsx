@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   SessionConfirmationStatsResponse,
   StudySessionVm,
@@ -11,6 +11,7 @@ import {
   respondToStudySession,
   joinStudySession,
 } from "../../../services/StudySessionService";
+import { toast } from "react-toastify";
 
 interface SessionDetailModalProps {
   session: StudySessionVm | null;
@@ -36,6 +37,8 @@ function getParticipantStatusLabel(status: string) {
   if (status === "JOINED") return "Đã tham gia";
   if (status === "DECLINED") return "Đã từ chối";
   if (status === "ABSENT") return "Vắng mặt";
+  if (status === "PARTIAL") return "Tham gia một phần";
+  if (status === "COMPLETED") return "Hoàn thành";
   return status;
 }
 
@@ -113,6 +116,14 @@ function getStatusBadgeClass(status?: string | null) {
   return "bg-gray-100 text-gray-600";
 }
 
+function hasSessionEnded(session: StudySessionVm | null) {
+  if (!session) return false;
+  const now = new Date();
+  const endTime = new Date(session.endTime);
+  return now > endTime;
+}
+
+
 export function SessionDetailModal({
   session,
   onClose,
@@ -129,6 +140,7 @@ export function SessionDetailModal({
     null,
   );
   const [joining, setJoining] = useState(false);
+
 
   useEffect(() => {
     let mounted = true;
@@ -229,28 +241,30 @@ export function SessionDetailModal({
     };
   }, [session?.id, session?.sessionType, session?.createdByUserId]);
 
-  const currentSession = detail
-    ? {
-        ...session,
-        sessionType: detail.sessionType,
-        groupId: detail.groupId,
-        title: detail.title,
-        description: detail.description ?? undefined,
-        startTime: detail.startTime,
-        endTime: detail.endTime,
-        studyMode: detail.studyMode,
-        location: detail.location ?? undefined,
-        meetingUrl: detail.meetingUrl ?? undefined,
-        createdByUserId: detail.createdByUserId,
-        status: detail.status,
-        participantStatus: detail.participantStatus,
-        partnerName:
-          detail.partnerUserName ?? detail.partnerName ?? session?.partnerName,
-        groupName: detail.groupName ?? undefined,
-        membersCount: detail.membersCount ?? undefined,
-        subjectName: detail.subjectName ?? undefined,
-      }
-    : session;
+  const currentSession = useMemo<StudySessionVm | null>(() => {
+    if (!detail || !session) return session;
+
+    return {
+      ...session,
+      sessionType: detail.sessionType,
+      groupId: detail.groupId,
+      title: detail.title,
+      description: detail.description ?? undefined,
+      startTime: detail.startTime,
+      endTime: detail.endTime,
+      studyMode: detail.studyMode,
+      location: detail.location ?? undefined,
+      meetingUrl: detail.meetingUrl ?? undefined,
+      createdByUserId: detail.createdByUserId,
+      status: detail.status,
+      participantStatus: detail.participantStatus,
+      partnerName:
+        detail.partnerUserName ?? detail.partnerName ?? session.partnerName,
+      groupName: detail.groupName ?? undefined,
+      membersCount: detail.membersCount ?? undefined,
+      subjectName: detail.subjectName ?? undefined,
+    };
+  }, [detail, session]);
 
   const handleRespond = async (status: "ACCEPTED" | "DECLINED") => {
     if (!session) return;
@@ -300,7 +314,20 @@ export function SessionDetailModal({
       return;
     }
 
+
+    const startTime = new Date(session.startTime).getTime();
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+
+    if (startTime - now > fiveMinutes) {
+      toast.warning("Chỉ được tham gia trước giờ học 5 phút hoặc khi buổi học đang diễn ra."); return;
+    }
+
+
+
     try {
+
+
       setJoining(true);
       setError("");
       const response = await joinStudySession(session.id, userId);
@@ -322,11 +349,10 @@ export function SessionDetailModal({
         <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
           <div>
             <div
-              className={`mb-2 inline-flex rounded-md px-3 py-1 text-xs font-bold ${
-                session.sessionType === "GROUP"
-                  ? "bg-rose-50 text-rose-600"
-                  : "bg-emerald-50 text-emerald-600"
-              }`}
+              className={`mb-2 inline-flex rounded-md px-3 py-1 text-xs font-bold ${session.sessionType === "GROUP"
+                ? "bg-rose-50 text-rose-600"
+                : "bg-emerald-50 text-emerald-600"
+                }`}
             >
               {session.sessionType === "GROUP"
                 ? "Lịch học nhóm"
@@ -386,7 +412,7 @@ export function SessionDetailModal({
               <div className="mt-1 font-bold text-gray-800">
                 {getParticipantStatusLabel(
                   currentSession?.participantStatus ||
-                    session.participantStatus,
+                  session.participantStatus,
                 )}
               </div>
             </div>
@@ -395,7 +421,7 @@ export function SessionDetailModal({
           <div className="rounded-xl bg-gray-50 p-4">
             <div className="text-sm font-semibold text-gray-500">
               {currentSession?.sessionType === "GROUP" ||
-              session.sessionType === "GROUP"
+                session.sessionType === "GROUP"
                 ? "Nhóm học"
                 : "Bạn học"}
             </div>
@@ -403,43 +429,43 @@ export function SessionDetailModal({
               {(currentSession?.sessionType || session.sessionType) === "GROUP"
                 ? currentSession?.groupName || session.groupName || "Nhóm học"
                 : currentSession?.partnerName ||
-                  session.partnerName ||
-                  "Bạn học"}
+                session.partnerName ||
+                "Bạn học"}
             </div>
             {(currentSession?.sessionType || session.sessionType) ===
               "GROUP" && (
-              <div className="mt-1 text-sm text-gray-500">
-                {currentSession?.membersCount || session.membersCount || 0}{" "}
-                thành viên
-              </div>
-            )}
+                <div className="mt-1 text-sm text-gray-500">
+                  {currentSession?.membersCount || session.membersCount || 0}{" "}
+                  thành viên
+                </div>
+              )}
           </div>
 
           {(currentSession?.location ||
             currentSession?.meetingUrl ||
             session.location ||
             session.meetingUrl) && (
-            <div className="rounded-xl bg-gray-50 p-4">
-              <div className="text-sm font-semibold text-gray-500">
-                Địa điểm / Link học
-              </div>
-              {(currentSession?.location || session.location) && (
-                <div className="mt-1 font-medium text-gray-800">
-                  {currentSession?.location || session.location}
+              <div className="rounded-xl bg-gray-50 p-4">
+                <div className="text-sm font-semibold text-gray-500">
+                  Địa điểm / Link học
                 </div>
-              )}
-              {(currentSession?.meetingUrl || session.meetingUrl) && (
-                <a
-                  href={currentSession?.meetingUrl || session.meetingUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 inline-flex text-sm font-semibold text-orange-600 hover:text-orange-700"
-                >
-                  Mở phòng học online
-                </a>
-              )}
-            </div>
-          )}
+                {(currentSession?.location || session.location) && (
+                  <div className="mt-1 font-medium text-gray-800">
+                    {currentSession?.location || session.location}
+                  </div>
+                )}
+                {(currentSession?.meetingUrl || session.meetingUrl) && (
+                  <a
+                    href={currentSession?.meetingUrl || session.meetingUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex text-sm font-semibold text-orange-600 hover:text-orange-700"
+                  >
+                    Mở phòng học online
+                  </a>
+                )}
+              </div>
+            )}
 
           {(currentSession?.description || session.description) && (
             <div className="rounded-xl bg-gray-50 p-4">
@@ -535,8 +561,7 @@ export function SessionDetailModal({
             </div>
           )}
 
-          {(currentSession?.participantStatus || session.participantStatus) ===
-            "PENDING" && (
+          {!hasSessionEnded(currentSession) && currentSession?.participantStatus === "PENDING" && (
             <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row">
               <button
                 type="button"
@@ -544,10 +569,9 @@ export function SessionDetailModal({
                 disabled={responding !== null}
                 className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
               >
-                {responding === "ACCEPTED"
-                  ? "Đang xử lý..."
-                  : "Xác nhận tham gia"}
+                {responding === "ACCEPTED" ? "Đang xử lý..." : "Xác nhận tham gia"}
               </button>
+
               <button
                 type="button"
                 onClick={() => handleRespond("DECLINED")}
@@ -559,12 +583,9 @@ export function SessionDetailModal({
             </div>
           )}
 
-          {["ACCEPTED", "JOINED"].includes(
-            currentSession?.participantStatus ||
-              session.participantStatus ||
-              "",
-          ) &&
-            (currentSession?.studyMode || session.studyMode) !== "OFFLINE" && (
+          {!hasSessionEnded(currentSession) &&
+            ["ACCEPTED", "JOINED"].includes(currentSession?.participantStatus || "") &&
+            currentSession?.studyMode !== "OFFLINE" && (
               <div className="border-t border-gray-100 pt-5">
                 <button
                   type="button"
