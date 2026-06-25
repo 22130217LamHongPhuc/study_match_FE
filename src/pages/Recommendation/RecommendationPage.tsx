@@ -20,6 +20,8 @@ import {
   requestFriendService,
   updateFriendRequestStatusService,
 } from "../../services/FriendService";
+import WebSocketManager from "../../socket/WebSocketManager";
+
 
 type CommunityGroupStatus = "ACTIVE" | "INACTIVE";
 type CommunityGroupType = "COMMUNITY" | "PRIVATE";
@@ -225,6 +227,22 @@ export default function RecommendationPage() {
           }
 
           toast.success("Đã chấp nhận lời mời kết bạn.");
+          
+          const item = items.find((it) => it.friendRequest?.id === requestId);
+          if (item) {
+            try {
+              WebSocketManager.getInstance().sendMessage("/chat/send", {
+                event: "FRIEND_REQUEST_ACCEPT",
+                data: {
+                  senderId: userId,
+                  receiverId: item.userId
+                }
+              });
+            } catch (err) {
+              console.error("Failed to emit FRIEND_REQUEST_ACCEPT socket event", err);
+            }
+          }
+
           await fetchRecommendations(userId);
           return;
         }
@@ -240,6 +258,7 @@ export default function RecommendationPage() {
     },
     [acceptingRequestId, fetchRecommendations, profileVm?.userId, userId],
   );
+
 
   const otherSubjects = useMemo(() => {
     if (subjects.length === 0) return [];
@@ -299,6 +318,16 @@ export default function RecommendationPage() {
   useEffect(() => {
     fetchSubjects();
   }, [fetchSubjects]);
+
+  useEffect(() => {
+    const handleStatusUpdate = () => {
+      fetchRecommendations(userId);
+    };
+
+    window.addEventListener("friend_status_updated", handleStatusUpdate);
+    return () => window.removeEventListener("friend_status_updated", handleStatusUpdate);
+  }, [fetchRecommendations, userId]);
+
 
   useEffect(() => {
     if (!suggestedSubjectId) {

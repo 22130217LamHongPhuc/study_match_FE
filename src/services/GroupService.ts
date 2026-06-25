@@ -101,6 +101,7 @@ export interface AdminGroupRowResponse {
   status: AdminGroupStatus;
   subjectName: string;
   type: AdminGroupType;
+  visibility?: AdminGroupVisibility;
 }
 export interface GroupStatsResponse {
   totalGroup: number;

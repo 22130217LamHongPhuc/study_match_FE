@@ -2,16 +2,23 @@ import SearchIcon from "@mui/icons-material/Search";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import MarkEmailUnreadRoundedIcon from "@mui/icons-material/MarkEmailUnreadRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
-import { Avatar, Badge, Box, Button, CircularProgress, InputAdornment, TextField, Typography } from "@mui/material";
+import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
+import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
+import { Avatar, Badge, Box, Button, CircularProgress, IconButton, InputAdornment, TextField, Tooltip, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { SocketEvent } from "../../enum/SocketEvent";
 import { RootState } from "../../redux/store";
 import { updateCurrentConverId } from "../../redux/ChatReducer";
-import { loadAcceptedDirectConversations, loadConversation, loadGroupConversation, loadMessageRequests, MessageRequestItem } from "../../services/ChatService";
+import { loadAcceptedDirectConversations, loadConversation, loadGroupConversation, loadGroupConversationPins, loadMessageRequests, MessageRequestItem, setGroupConversationPinned } from "../../services/ChatService";
 import { FriendUser, loadAllFriendsService, loadFriendOnlineStatusesService, loadFriendProfilesService } from "../../services/FriendService";
 import { getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
+
+type GroupConversationItem = StudyGroupDetailResponse & {
+    conversationId?: number | null;
+    isPinned?: boolean;
+};
 
 const getLastMessageTime = (conversation: MessageRequestItem) => {
     const time = conversation.lastMessage?.createdAt
@@ -28,7 +35,7 @@ export default function ListFriends() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [friends, setFriends] = useState<FriendUser[]>([]);
-    const [groups, setGroups] = useState<StudyGroupDetailResponse[]>([]);
+    const [groups, setGroups] = useState<GroupConversationItem[]>([]);
     const [searchText, setSearchText] = useState("");
     const [loading, setLoading] = useState(true);
     const [messageRequests, setMessageRequests] = useState<MessageRequestItem[]>([]);
@@ -121,7 +128,26 @@ export default function ListFriends() {
 
                 if (groupResult.status === "fulfilled") {
                     const groupResponse = groupResult.value;
-                    setGroups(groupResponse.success && Array.isArray(groupResponse.data) ? groupResponse.data : []);
+                    const loadedGroups = groupResponse.success && Array.isArray(groupResponse.data)
+                        ? groupResponse.data
+                        : [];
+                    if (loadedGroups.length > 0 && shouldLoadGroups) {
+                        const pins = await loadGroupConversationPins(
+                            currentUserId,
+                            loadedGroups.map((group) => group.id),
+                        );
+                        const pinByGroupId = new Map<number, any>(pins.map((pin: any) => [pin.groupId, pin]));
+                        setGroups(loadedGroups.map((group) => {
+                            const pin = pinByGroupId.get(group.id);
+                            return {
+                                ...group,
+                                conversationId: pin?.conversationId ?? null,
+                                isPinned: Boolean(pin?.pinned),
+                            };
+                        }));
+                    } else {
+                        setGroups(loadedGroups);
+                    }
                 } else {
                     console.warn("Cannot load groups for conversation sidebar", groupResult.reason);
                     setGroups([]);
@@ -259,10 +285,17 @@ export default function ListFriends() {
 
     const visibleGroups = useMemo(() => {
         const keyword = searchText.trim().toLowerCase();
-        if (!keyword) return groups;
-        return groups.filter((group) =>
-            `${group.name ?? ""} ${group.subjectName ?? ""}`.toLowerCase().includes(keyword)
-        );
+        const filteredGroups = keyword
+            ? groups.filter((group) =>
+                `${group.name ?? ""} ${group.subjectName ?? ""}`.toLowerCase().includes(keyword)
+            )
+            : groups;
+        return [...filteredGroups].sort((a, b) => {
+            if (Boolean(a.isPinned) !== Boolean(b.isPinned)) {
+                return a.isPinned ? -1 : 1;
+            }
+            return (a.name || "").localeCompare(b.name || "", "vi");
+        });
     }, [groups, searchText]);
 
     const visibleMessageRequests = useMemo(() => {
@@ -303,6 +336,17 @@ export default function ListFriends() {
 
     const openConversation = (friend: FriendUser) => {
         const currentUserId = Number(localStorage.getItem("userId"));
+        const conversationKey = `private:${friend.userId}:${Date.now()}`;
+        navigate("/conversation", {
+            state: {
+                conversationKind: "PRIVATE",
+                targetUserId: friend.userId,
+                fullName: friend.fullName,
+                avatar: friend.avatarUrl,
+                conversationKey,
+            },
+        });
+
         if (Number.isFinite(currentUserId)) {
             void loadConversation(currentUserId, friend.userId, 0)
                 .then((response) => {
@@ -313,32 +357,26 @@ export default function ListFriends() {
                 })
                 .catch((error) => {
                     console.error(error);
-                })
-                .finally(() => {
-                    navigate("/conversation", {
-                        state: {
-                            conversationKind: "PRIVATE",
-                            targetUserId: friend.userId,
-                            fullName: friend.fullName,
-                            avatar: friend.avatarUrl,
-                        },
-                    });
                 });
-            return;
         }
-
-        navigate("/conversation", {
-            state: {
-                conversationKind: "PRIVATE",
-                targetUserId: friend.userId,
-                fullName: friend.fullName,
-                avatar: friend.avatarUrl,
-            },
-        });
     };
 
     const openGroupConversation = async (group: StudyGroupDetailResponse) => {
         const currentUserId = Number(localStorage.getItem("userId"));
+        const conversationKey = `group:${group.id}:${Date.now()}`;
+        navigate("/conversation", {
+            state: {
+                conversationKind: "GROUP",
+                groupId: group.id,
+                groupName: group.name,
+                conversationType: 0,
+                targetUserId: null,
+                fullName: null,
+                avatar: null,
+                conversationKey,
+            },
+        });
+
         try {
             if (Number.isFinite(currentUserId)) {
                 const response = await loadGroupConversation(currentUserId, group.id, 0);
@@ -350,22 +388,49 @@ export default function ListFriends() {
         } catch (error) {
             console.error(error);
         }
+    };
 
-        navigate("/conversation", {
-            state: {
-                conversationKind: "GROUP",
-                groupId: group.id,
-                groupName: group.name,
-                conversationType: 0,
-                targetUserId: null,
-                fullName: null,
-                avatar: null,
-            },
-        });
+    const toggleGroupPin = async (
+        event: React.MouseEvent<HTMLButtonElement>,
+        group: GroupConversationItem,
+    ) => {
+        event.stopPropagation();
+        const currentUserId = Number(localStorage.getItem("userId"));
+        if (!Number.isFinite(currentUserId)) return;
+
+        const nextPinned = !group.isPinned;
+        setGroups((prev) =>
+            prev.map((item) =>
+                item.id === group.id ? { ...item, isPinned: nextPinned } : item
+            )
+        );
+
+        try {
+            const pin = await setGroupConversationPinned(currentUserId, group.id, nextPinned);
+            setGroups((prev) =>
+                prev.map((item) =>
+                    item.id === group.id
+                        ? {
+                            ...item,
+                            isPinned: Boolean(pin.pinned),
+                            conversationId: pin.conversationId ?? item.conversationId ?? null,
+                        }
+                        : item
+                )
+            );
+        } catch (error) {
+            console.error(error);
+            setGroups((prev) =>
+                prev.map((item) =>
+                    item.id === group.id ? { ...item, isPinned: Boolean(group.isPinned) } : item
+                )
+            );
+        }
     };
 
     const openMessageRequest = (request: MessageRequestItem) => {
         const profile = requestProfiles[request.otherUserId];
+        const conversationKey = `private:${request.otherUserId}:${request.conversationId}:${Date.now()}`;
         dispatch(updateCurrentConverId({ currentConversationId: Number(request.conversationId) }));
         navigate("/conversation", {
             state: {
@@ -373,12 +438,14 @@ export default function ListFriends() {
                 targetUserId: request.otherUserId,
                 fullName: profile?.fullName || `User ${request.otherUserId}`,
                 avatar: profile?.avatarUrl || null,
+                conversationKey,
             },
         });
     };
 
     const openAcceptedDirectConversation = (conversation: MessageRequestItem) => {
         const profile = directProfiles[conversation.otherUserId];
+        const conversationKey = `private:${conversation.otherUserId}:${conversation.conversationId}:${Date.now()}`;
         dispatch(updateCurrentConverId({ currentConversationId: Number(conversation.conversationId) }));
         navigate("/conversation", {
             state: {
@@ -386,6 +453,7 @@ export default function ListFriends() {
                 targetUserId: conversation.otherUserId,
                 fullName: profile?.fullName || `User ${conversation.otherUserId}`,
                 avatar: profile?.avatarUrl || null,
+                conversationKey,
             },
         });
     };
@@ -608,9 +676,6 @@ export default function ListFriends() {
                                 <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                     {friend.fullName || friend.email || `User ${friend.userId}`}
                                 </Typography>
-                                <Typography sx={{ fontSize: 13, color: friend.online ? "#2fa84f" : "#8d8fa3", mt: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                    {friend.online ? "Đang online" : "Offline"}
-                                </Typography>
                             </Box>
                         </Box>
                     </Box>
@@ -649,6 +714,28 @@ export default function ListFriends() {
                                 </Typography>
                             </Box>
                         </Box>
+                        <Tooltip title={group.isPinned ? "Bỏ ghim nhóm" : "Ghim nhóm lên đầu"}>
+                            <IconButton
+                                aria-label={group.isPinned ? "Bỏ ghim nhóm" : "Ghim nhóm lên đầu"}
+                                onClick={(event) => void toggleGroupPin(event, group)}
+                                sx={{
+                                    width: 34,
+                                    height: 34,
+                                    color: group.isPinned ? "#f97316" : "#9aa3b2",
+                                    flexShrink: 0,
+                                    "&:hover": {
+                                        bgcolor: group.isPinned ? "#fff7ed" : "#eef2f7",
+                                        color: group.isPinned ? "#ea580c" : "#475569",
+                                    },
+                                }}
+                            >
+                                {group.isPinned ? (
+                                    <PushPinRoundedIcon sx={{ fontSize: 18 }} />
+                                ) : (
+                                    <PushPinOutlinedIcon sx={{ fontSize: 18 }} />
+                                )}
+                            </IconButton>
+                        </Tooltip>
                     </Box>
                 ))}
             </Box>

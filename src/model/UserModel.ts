@@ -23,6 +23,6 @@ export interface UserProfile {
     bio: string,
     mutualFriend: number,
     numberFriend: number,
-    statusFriend: string,
+    statusFriend?: string,
     friend: boolean
-}
+}

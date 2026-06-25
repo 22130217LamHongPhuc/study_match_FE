@@ -1,12 +1,17 @@
-
+import CancelPresentationIcon from '@mui/icons-material/CancelPresentation'
 import { IconButton, Typography } from '@mui/material'
 import { Box } from '@mui/system'
 import React from 'react'
-import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
 
-
-export default function ReplyMessage({ fullName, mess, setReplyMess }: { fullName: string; mess: string; setReplyMess: React.Dispatch<React.SetStateAction<any>> }) {
-    console.log(mess, 'mess trong reply mess')
+export default function ReplyMessage({
+    fullName,
+    mess,
+    setReplyMess,
+}: {
+    fullName: string
+    mess: string
+    setReplyMess: React.Dispatch<React.SetStateAction<any>>
+}) {
     return (
         <Box
             sx={{
@@ -49,7 +54,6 @@ export default function ReplyMessage({ fullName, mess, setReplyMess }: { fullNam
                         textOverflow: "ellipsis",
                         maxWidth: "calc(100vw - 80px)",
                     }}
-
                 >
                     {mess}
                 </Typography>
@@ -71,7 +75,3 @@ export default function ReplyMessage({ fullName, mess, setReplyMess }: { fullNam
         </Box>
     )
 }
-
-
-
-
