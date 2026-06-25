@@ -565,12 +565,12 @@ export default function RecommendationPage() {
 
   useEffect(() => {
     const handleStatusUpdate = () => {
-      fetchRecommendations(userId);
+      fetchRecommendations(currentUserId);
     };
 
     window.addEventListener("friend_status_updated", handleStatusUpdate);
     return () => window.removeEventListener("friend_status_updated", handleStatusUpdate);
-  }, [fetchRecommendations, userId]);
+  }, [fetchRecommendations, currentUserId]);
 
 
   useEffect(() => {

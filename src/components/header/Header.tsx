@@ -37,7 +37,6 @@ import {
   FriendUser,
   FriendRequestDto
 } from "../../services/FriendService";
-import { toast } from "sonner";
 import { toast } from "react-toastify";
 
 export default function Header() {
@@ -55,15 +54,15 @@ export default function Header() {
     try {
       const data = await loadFriendRequestsService();
       const pendingReceived = data.received.filter((req) => req.status === "PENDING");
-      
+
       if (pendingReceived.length === 0) {
         setPendingRequests([]);
         return;
       }
-      
+
       const senderIds = Array.from(new Set(pendingReceived.map((req) => req.senderId)));
       const profiles = await loadFriendProfilesService(senderIds);
-      
+
       const requestsWithProfiles = pendingReceived.map((req) => {
         const senderProfile = profiles.find((p) => p.userId === req.senderId);
         return {
@@ -71,7 +70,7 @@ export default function Header() {
           sender: senderProfile
         };
       });
-      
+
       setPendingRequests(requestsWithProfiles);
     } catch (error) {
       console.error("Lỗi khi tải danh sách kết bạn:", error);
@@ -83,13 +82,13 @@ export default function Header() {
       setPendingRequests([]);
       return;
     }
-    
+
     fetchPendingRequests();
-    
+
     const interval = setInterval(() => {
       fetchPendingRequests();
     }, 10000);
-    
+
     return () => clearInterval(interval);
   }, [isLoggedIn]);
 
@@ -120,7 +119,7 @@ export default function Header() {
       const responseCode = Number(response.code);
       if (responseCode >= 200 && responseCode < 300) {
         toast.success("Đã chấp nhận lời mời kết bạn!");
-        
+
         const req = pendingRequests.find((r) => r.id === requestId);
         const currentUserId = Number(localStorage.getItem("userId"));
         if (req && currentUserId) {
