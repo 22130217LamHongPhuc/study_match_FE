@@ -1,5 +1,6 @@
 import { BASE_CHAT_SERVICE, BASE_SOCIAL_SERVICE, BASE_USER_SERVICE, BASE_URL } from "../config/BaseConfig";
 import { FriendRequestStatus } from "../pages/Recommendation/types";
+import WebSocketManager from "../socket/WebSocketManager";
 
 export interface FriendUser {
     userId: number;
@@ -124,6 +125,20 @@ export const requestFriendService = async (
     const data = await res.json().catch(() => null);
 
     console.log("Friend request response:", { status: res.status, data });
+    if (res.status === 201 || (data && (data.code === 201 || data.code === "CREATED"))) {
+        try {
+            WebSocketManager.getInstance().sendMessage("/chat/send", {
+                event: "FRIEND_REQUEST",
+                data: {
+                    senderId: senderId,
+                    receiverId: targetUserId
+                }
+            });
+        } catch (err) {
+            console.error("Failed to send real-time socket friend request notification", err);
+        }
+    }
+
     if (data) {
         return data as FriendRequestResponse;
     }
@@ -331,3 +346,70 @@ export const loadAllFriendsService = async (): Promise<FriendUser[]> => {
         online: Boolean(onlineStatuses[String(friend.userId)])
     }));
 }
+
+export interface FriendRequestDto {
+    id: number;
+    senderId: number;
+    receiverId: number;
+    status: "PENDING" | "APPROVED" | "REJECTED" | "BLOCKED";
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface AllFriendRequestsDto {
+    sent: FriendRequestDto[];
+    received: FriendRequestDto[];
+}
+
+export const loadFriendRequestsService = async (
+    userId?: number,
+): Promise<AllFriendRequestsDto> => {
+    const currentUserId = userId ?? Number(localStorage.getItem('userId'));
+    if (!currentUserId) return { sent: [], received: [] };
+
+    const res = await fetch(`${BASE_URL}/social/friend-requests/${currentUserId}?size=100`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error(`Cannot load friend requests. HTTP ${res.status}`);
+    }
+
+    const payload = unwrapPayload(await readJson(res));
+    return {
+        sent: Array.isArray(payload?.sent) ? payload.sent : [],
+        received: Array.isArray(payload?.received) ? payload.received : [],
+    };
+}
+
+export const unfriendService = async (
+    userId: number,
+    friendId: number,
+): Promise<FriendRequestResponse> => {
+    const url = `${BASE_URL}/social/friends/unfriend?userId=${userId}&friendId=${friendId}`;
+    const res = await fetch(url, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (data) {
+        return data as FriendRequestResponse;
+    }
+
+    return {
+        code: res.status,
+        message: res.statusText,
+        data: null,
+        timestamp: new Date().toISOString(),
+    };
+};
+
+
+

@@ -19,9 +19,38 @@ const formatDuration = (seconds: number) => {
     return `${minutes.toString().padStart(2, "0")}:${rest.toString().padStart(2, "0")}`
 }
 
+const isZegoCreateSpanError = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error || "")
+    return message.includes("createSpan")
+}
+
+async function safeDestroyZego(zego: any): Promise<void> {
+    if (!zego) return
+
+    try {
+        if (typeof zego.hangUp === "function") {
+            await zego.hangUp()
+        }
+    } catch {}
+
+    await new Promise((resolve) => window.setTimeout(resolve, 200))
+
+    try {
+        zego.destroy?.()
+    } catch (error) {
+        if (isZegoCreateSpanError(error)) {
+            console.warn("[VideoCallRoom] Suppressed known ZegoCloud tracer error on destroy")
+            return
+        }
+        console.warn("[VideoCallRoom] Cannot destroy ZEGO room", error)
+    }
+}
+
 export default function VideoCallRoom({ call, peer, onClose }: VideoCallRoomProps) {
     const containerRef = useRef<HTMLDivElement | null>(null)
     const zegoRef = useRef<any>(null)
+    const initTimerRef = useRef<number | null>(null)
+    const leftRef = useRef(false)
     const [duration, setDuration] = useState(0)
     const [ending, setEnding] = useState(false)
 
@@ -44,51 +73,106 @@ export default function VideoCallRoom({ call, peer, onClose }: VideoCallRoomProp
     }, [])
 
     useEffect(() => {
+        const handleWindowError = (event: ErrorEvent) => {
+            if (isZegoCreateSpanError(event.error || event.message)) {
+                event.preventDefault()
+                event.stopImmediatePropagation()
+                console.warn("[VideoCallRoom] Suppressed known ZegoCloud tracer runtime error")
+            }
+        }
+
+        const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+            if (isZegoCreateSpanError(event.reason)) {
+                event.preventDefault()
+                event.stopImmediatePropagation()
+                console.warn("[VideoCallRoom] Suppressed known ZegoCloud tracer promise rejection")
+            }
+        }
+
+        window.addEventListener("error", handleWindowError, true)
+        window.addEventListener("unhandledrejection", handleUnhandledRejection, true)
+
+        return () => {
+            window.removeEventListener("error", handleWindowError, true)
+            window.removeEventListener("unhandledrejection", handleUnhandledRejection, true)
+        }
+    }, [])
+
+    useEffect(() => {
+        leftRef.current = false
         if (!containerRef.current) {
             return
         }
 
-        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(
-            call.appId,
-            call.token,
-            call.roomId,
-            String(call.userId),
-            call.userName || `user_${call.userId}`
-        )
-        const zego = ZegoUIKitPrebuilt.create(kitToken)
-        zegoRef.current = zego
+        initTimerRef.current = window.setTimeout(() => {
+            if (!containerRef.current || zegoRef.current || leftRef.current) return
 
-        const isGroupCall = Boolean(call.isGroupCall || displayPeer?.isGroupCall || call.conversationType === 0 || call.groupId)
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(
+                call.appId,
+                call.token,
+                call.roomId,
+                String(call.userId),
+                call.userName || `user_${call.userId}`
+            )
+            const zego = ZegoUIKitPrebuilt.create(kitToken)
+            zegoRef.current = zego
 
-        zego.joinRoom({
-            container: containerRef.current,
-            scenario: {
-                mode: isGroupCall ? ZegoUIKitPrebuilt.GroupCall : ZegoUIKitPrebuilt.OneONoneCall,
-            },
-            showPreJoinView: false,
-            turnOnMicrophoneWhenJoining: true,
-            turnOnCameraWhenJoining: call.callType === "VIDEO",
-            showScreenSharingButton: false,
-            showMyCameraToggleButton: call.callType === "VIDEO",
-            showAudioVideoSettingsButton: call.callType === "VIDEO",
-            onLeaveRoom: () => {
-                endVideoCall(call.sessionId).finally(onClose)
-            },
-        })
+            const isGroupCall = Boolean(call.isGroupCall || displayPeer?.isGroupCall || call.conversationType === 0 || call.groupId)
+
+            try {
+                zego.joinRoom({
+                    container: containerRef.current,
+                    scenario: {
+                        mode: isGroupCall ? ZegoUIKitPrebuilt.GroupCall : ZegoUIKitPrebuilt.OneONoneCall,
+                    },
+                    showPreJoinView: false,
+                    turnOnMicrophoneWhenJoining: true,
+                    turnOnCameraWhenJoining: call.callType === "VIDEO",
+                    showScreenSharingButton: false,
+                    showMyCameraToggleButton: call.callType === "VIDEO",
+                    showAudioVideoSettingsButton: call.callType === "VIDEO",
+                    onLeaveRoom: () => {
+                        if (leftRef.current) return
+                        leftRef.current = true
+                        zegoRef.current = null
+                        endVideoCall(call.sessionId).finally(onClose)
+                    },
+                })
+            } catch (error) {
+                if (isZegoCreateSpanError(error)) {
+                    console.warn("[VideoCallRoom] Suppressed known ZegoCloud tracer error on join")
+                    return
+                }
+                throw error
+            }
+        }, 0)
 
         return () => {
-            try {
-                zegoRef.current?.destroy?.()
-            } catch (error) {
-                console.error("Cannot destroy ZEGO audio room", error)
+            if (initTimerRef.current !== null) {
+                window.clearTimeout(initTimerRef.current)
+                initTimerRef.current = null
+            }
+
+            if (!leftRef.current && zegoRef.current) {
+                const zego = zegoRef.current
+                zegoRef.current = null
+                leftRef.current = true
+                safeDestroyZego(zego)
             }
         }
     }, [call, displayPeer, onClose])
 
     const closeCall = () => {
-        if (ending) return
+        if (ending || leftRef.current) return
         setEnding(true)
-        endVideoCall(call.sessionId).finally(onClose)
+        leftRef.current = true
+
+        const zego = zegoRef.current
+        zegoRef.current = null
+
+        safeDestroyZego(zego).finally(() => {
+            endVideoCall(call.sessionId).finally(onClose)
+        })
     }
 
     if (call.callType === "VIDEO") {

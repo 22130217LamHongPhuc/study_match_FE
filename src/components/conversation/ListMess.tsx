@@ -1,12 +1,15 @@
 
-import AddIcon from '@mui/icons-material/Add'
 import CallIcon from '@mui/icons-material/Call'
+import CloseIcon from '@mui/icons-material/Close'
+import DownloadIcon from '@mui/icons-material/Download'
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import PhoneMissedIcon from '@mui/icons-material/PhoneMissed'
 import VideocamIcon from '@mui/icons-material/Videocam'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ReplyIcon from '@mui/icons-material/Reply'
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt'
-import { Avatar, Box, CircularProgress, IconButton, Tooltip } from '@mui/material'
+import PushPinIcon from '@mui/icons-material/PushPin'
+import { Avatar, Box, CircularProgress, Dialog, IconButton, Tooltip } from '@mui/material'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MessageInterface } from '../../model/Conversation'
 import { submitReaction } from '../../services/ReactionService'
@@ -14,22 +17,43 @@ import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
 import { SocketEvent } from '../../enum/SocketEvent'
 import { ReactionData, ReactionDTO } from '../../model/Reaction'
+import { ConversationTheme } from '../../theme/ConversationThemes'
 
 type VisibleMessageStatus = {
     messageId: number
     status: MessageInterface["status"]
 }
 
+const getFontFamilyValue = (fontId: string | null | undefined): string => {
+    switch (fontId) {
+        case "inter":
+            return '"Inter", sans-serif';
+        case "roboto":
+            return '"Roboto", sans-serif';
+        case "playfair":
+            return '"Playfair Display", "Georgia", serif';
+        case "montserrat":
+            return '"Montserrat", sans-serif';
+        case "courier":
+            return '"Courier New", monospace';
+        default:
+            return '"Noto Sans", "Noto Sans JP", "Noto Sans SC", "Inter", "Roboto", "Arial", sans-serif';
+    }
+};
+
 type ListMessProps = {
+    theme?: ConversationTheme
+    fontFamily?: string
     conversation: MessageInterface[]
     setReplyMess: React.Dispatch<React.SetStateAction<MessageInterface | null>>
-    fileLoading: boolean
     visibleMessageStatus: VisibleMessageStatus | null
     onCallAgain?: (callType: "AUDIO" | "VIDEO") => void
     onLoadOlderMessages?: () => void
     loadingOlderMessages?: boolean
     hasMoreMessages?: boolean
     onRecallMessage?: (messageId: number) => void
+    onForwardMessage?: (message: MessageInterface) => void
+    onPinMessage?: (message: MessageInterface, pinned: boolean) => void
     isGroupConversation?: boolean
     senderProfiles?: Record<number, {
         userId?: number
@@ -45,10 +69,13 @@ type ListMessProps = {
     }>
 }
 
-export default function ListMess({ conversation, setReplyMess, fileLoading, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false, onRecallMessage, isGroupConversation = false, senderProfiles = {} }: ListMessProps) {
+function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false, onRecallMessage, onForwardMessage, onPinMessage, isGroupConversation = false, senderProfiles = {} }: ListMessProps) {
+    const appFontFamily = getFontFamilyValue(fontFamily)
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
     const [messageReactions, setMessageReactions] = useState<Record<number, ReactionDTO[]>>({})
+    const [previewImage, setPreviewImage] = useState<{ url: string; fileName?: string | null } | null>(null)
+    const [revealedOffensiveMessageIds, setRevealedOffensiveMessageIds] = useState<Set<number>>(new Set())
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
     const currentUserId = Number(localStorage.getItem("userId"))
     const currentUser = useSelector((state: RootState) => state.user)
@@ -94,6 +121,11 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
     const getSenderAvatar = (senderId: number) => {
         const profile = getSenderProfile(senderId)
         return profile?.avatarUrl || profile?.avatar_url || profile?.avatar || undefined
+    }
+
+    const isMessagePinned = (message: MessageInterface) => {
+        const pinned = message.isPinned ?? message.pinned
+        return pinned === true || pinned === "Y"
     }
 
     const getReactionSenderName = (senderId?: number) => {
@@ -297,11 +329,18 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
         }
 
     }, [store, currentConversationId, storeData, storeEvent])
-    const clickMoreButton = (action: string, messageId: number) => {
-        console.log('nhan vao more nè', action, messageId)
+    const clickMoreButton = (action: string, message: MessageInterface) => {
+        const messageId = message.messageId
+        console.log('nhan vao more ne', action, messageId)
         if (!currentConversationId) return
         if (action === 'Gỡ') {
             onRecallMessage?.(messageId)
+        }
+        if (action === 'Chuyển tiếp') {
+            onForwardMessage?.(message)
+        }
+        if (action === 'Ghim' || action === 'Bỏ ghim') {
+            onPinMessage?.(message, !isMessagePinned(message))
         }
 
     }
@@ -337,6 +376,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                     fontSize: 12,
                     lineHeight: 1.2,
                     fontWeight: 600,
+                    fontFamily: appFontFamily,
                 }}
             >
                 <Box component="span">{statusText}</Box>
@@ -455,22 +495,25 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                             position: "absolute",
                             left: menuPlacement === "right" ? "calc(100% + 6px)" : "auto",
                             right: menuPlacement === "left" ? "calc(100% + 6px)" : "auto",
-                            top: 0,
-                            width: 120,
+                            top: "auto",
+                            bottom: "calc(100% + 6px)",
+                            width: 136,
                             py: 0.25,
                             bgcolor: "#fff",
                             borderRadius: "8px",
                             boxShadow: "0 3px 10px rgba(0,0,0,0.18)",
-                            zIndex: 6,
+                            zIndex: 100,
                             overflow: "hidden",
+                            fontFamily: appFontFamily,
                         }}
                     >
                         {moreActions.map((action) => {
+                            const actionLabel = action === "Ghim" && isMessagePinned(mess) ? "Bỏ ghim" : action
                             if (menuPlacement === 'right' && action === 'Gỡ') {
-                                return <></>
+                                return null
                             }
                             if (!mess.content && action === 'Gỡ' && mess.type === 'text') {
-                                return <></>
+                                return null
                             }
                             return (
 
@@ -480,7 +523,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                                     type="button"
                                     onClick={() => {
                                         setActiveMoreMessageId(null)
-                                        clickMoreButton(action, mess.messageId)
+                                        clickMoreButton(actionLabel, mess)
 
                                     }}
                                     sx={{
@@ -505,7 +548,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                                         },
                                     }}
                                 >
-                                    {action}
+                                    {actionLabel}
                                 </Box>)
                         })}
                     </Box>
@@ -516,37 +559,150 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
 
     const isCallMessage = (mess: MessageInterface) => mess.type === "CALL_AUDIO" || mess.type === "CALL_VIDEO"
 
-    const isDeletedMessage = (mess: MessageInterface) => mess.isDeleted || (!mess.content && !mess.mediaURL)
+    const isImageMessage = (mess: MessageInterface) => mess.type?.startsWith("image/")
+    const isVideoMessage = (mess: MessageInterface) => mess.type?.startsWith("video/")
+    const isFileMessage = (mess: MessageInterface) => !!mess.mediaURL && !isImageMessage(mess) && !isVideoMessage(mess)
+
+    const isPolicyViolationMessage = (mess: any) => mess.moderationStatus === "HATE" || mess.moderation_status === "HATE"
+    const isOffensiveMessage = (mess: any) => mess.moderationStatus === "OFFENSIVE" || mess.moderation_status === "OFFENSIVE"
+    const getHiddenMessageText = (mess: MessageInterface, isMine: boolean) => {
+        if (isPolicyViolationMessage(mess)) {
+            return "Tin nhắn bị vi phạm chính sách"
+        }
+        return isMine ? "Bạn đã thu hồi tin nhắn" : "Tin nhắn đã được thu hồi"
+    }
+    const isDeletedMessage = (mess: MessageInterface) =>
+        isPolicyViolationMessage(mess) || mess.isDeleted || (!mess.content && !mess.mediaURL)
+
+    const revealOffensiveMessage = (messageId: number) => {
+        setRevealedOffensiveMessageIds((prev) => {
+            const next = new Set(prev)
+            next.add(messageId)
+            return next
+        })
+    }
+
+    const renderMessageContent = (mess: MessageInterface, content: string, textColor: string = "inherit") => {
+        if (!isOffensiveMessage(mess) || revealedOffensiveMessageIds.has(mess.messageId)) {
+            return <Box component="span">{content}</Box>
+        }
+
+        return (
+            <Box sx={{ display: "grid", gap: 0.75 }}>
+                <Box sx={{ color: textColor, fontSize: 13, fontWeight: 700, opacity: 0.9 }}>
+                    Nội dung có thể gây khó chịu
+                </Box>
+                <Box
+                    sx={{
+                        filter: "blur(4px)",
+                        userSelect: "none",
+                        pointerEvents: "none",
+                    }}
+                >
+                    {content}
+                </Box>
+                <Box
+                    component="button"
+                    type="button"
+                    onClick={() => revealOffensiveMessage(mess.messageId)}
+                    sx={{
+                        justifySelf: "start",
+                        border: "1px solid rgba(148,163,184,0.45)",
+                        borderRadius: "999px",
+                        bgcolor: "rgba(255,255,255,0.85)",
+                        color: "#991b1b",
+                        cursor: "pointer",
+                        fontSize: 12,
+                        fontWeight: 800,
+                        px: 1.1,
+                        py: 0.35,
+                        "&:hover": {
+                            bgcolor: "#fff",
+                        },
+                    }}
+                >
+                    Xem
+                </Box>
+            </Box>
+        )
+    }
 
     const renderDeletedMessage = (mess: MessageInterface) => {
         const isMine = mess.senderId === currentUserId
+        const senderName = getSenderName(mess.senderId)
+        const senderAvatar = getSenderAvatar(mess.senderId)
+        const bubble = (
+            <Box
+                sx={{
+                    maxWidth: "70%",
+                    px: 2,
+                    py: 1,
+                    borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                    background: isMine ? (theme?.gradient || "#b30000") : "#fff",
+                    color: isMine ? "#fff" : "#5f6368",
+                    fontSize: 15,
+                    fontStyle: "italic",
+                    lineHeight: 1.4,
+                    wordBreak: "break-word",
+                }}
+            >
+                {getHiddenMessageText(mess, isMine)}
+            </Box>
+        )
+
+        if (!isMine) {
+            return (
+                <Box
+                    key={mess.messageId}
+                    sx={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        alignItems: "flex-start",
+                        gap: 1,
+                        mb: 1,
+                    }}
+                >
+                    <Avatar
+                        src={senderAvatar || undefined}
+                        sx={{ width: 30, height: 30, mt: isGroupConversation ? "18px" : 0 }}
+                    >
+                        {senderName.charAt(0).toUpperCase()}
+                    </Avatar>
+
+                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", maxWidth: "70%" }}>
+                        {isGroupConversation && (
+                            <Box
+                                sx={{
+                                    ml: 1,
+                                    mb: 0.3,
+                                    color: "#5f4638",
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    lineHeight: "16px",
+                                    minHeight: 16,
+                                }}
+                            >
+                                {senderName}
+                            </Box>
+                        )}
+                        {bubble}
+                    </Box>
+                </Box>
+            )
+        }
+
         return (
             <Box
                 key={mess.messageId}
                 sx={{
                     width: "100%",
                     display: "flex",
-                    justifyContent: isMine ? "flex-end" : "flex-start",
+                    justifyContent: "flex-end",
                     mb: 1,
-                    pl: isMine ? 0 : 4.75,
                 }}
             >
-                <Box
-                    sx={{
-                        maxWidth: "70%",
-                        px: 2,
-                        py: 1,
-                        borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                        bgcolor: isMine ? "#b30000" : "#fff",
-                        color: isMine ? "#fff" : "#5f6368",
-                        fontSize: 15,
-                        fontStyle: "italic",
-                        lineHeight: 1.4,
-                        wordBreak: "break-word",
-                    }}
-                >
-                    Đã gỡ tin nhắn
-                </Box>
+                {bubble}
             </Box>
         )
     }
@@ -659,6 +815,252 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
         )
     }
 
+    const downloadFile = async (url: string, fileName?: string | null) => {
+        const safeFileName = fileName || `file-${Date.now()}`
+        try {
+            const response = await fetch(url)
+            const blob = await response.blob()
+            const objectUrl = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = objectUrl
+            link.download = safeFileName
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(objectUrl)
+        } catch {
+            const link = document.createElement("a")
+            link.href = url
+            link.download = safeFileName
+            link.target = "_blank"
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        }
+    }
+
+    const renderFileMessage = (mess: MessageInterface, isMine: boolean) => {
+        const fileUrl = mess.mediaURL || ""
+        const fileName = mess.fileName || "Tệp đính kèm"
+
+        return (
+            <Box
+                component="button"
+                type="button"
+                onClick={() => fileUrl && downloadFile(fileUrl, fileName)}
+                sx={{
+                    width: "100%",
+                    minHeight: 66,
+                    border: 0,
+                    p: 1.25,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.2,
+                    bgcolor: isMine ? "rgba(255,255,255,0.12)" : "#fff",
+                    color: isMine ? "#fff" : "#0f172a",
+                    cursor: fileUrl ? "pointer" : "default",
+                    textAlign: "left",
+                    fontFamily: appFontFamily,
+                    "&:hover": {
+                        bgcolor: isMine ? "rgba(255,255,255,0.18)" : "#f8fafc",
+                    },
+                }}
+            >
+                <Box
+                    sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        bgcolor: isMine ? "rgba(255,255,255,0.18)" : "#fee2e2",
+                        color: isMine ? "#fff" : "#a40000",
+                        flexShrink: 0,
+                    }}
+                >
+                    <InsertDriveFileIcon sx={{ fontSize: 22 }} />
+                </Box>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Box
+                        sx={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            lineHeight: 1.25,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                        }}
+                    >
+                        {fileName}
+                    </Box>
+                    <Box sx={{ mt: 0.35, fontSize: 12, opacity: 0.78 }}>
+                        Nhấn để tải xuống
+                    </Box>
+                </Box>
+                <DownloadIcon sx={{ fontSize: 20, opacity: 0.82, flexShrink: 0 }} />
+            </Box>
+        )
+    }
+
+    const renderImageMessage = (mess: MessageInterface) => {
+        const imageUrl = mess.mediaURL || ""
+
+        return (
+            <>
+                <Box
+                    component="button"
+                    type="button"
+                    onClick={() => imageUrl && setPreviewImage({ url: imageUrl, fileName: mess.fileName })}
+                    sx={{
+                        width: "100%",
+                        height: "100%",
+                        p: 0,
+                        m: 0,
+                        border: 0,
+                        bgcolor: "transparent",
+                        cursor: imageUrl ? "zoom-in" : "default",
+                        display: "block",
+                    }}
+                >
+                    <Box
+                        component="img"
+                        src={imageUrl}
+                        alt={mess.fileName || "image message"}
+                        sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                            fontFamily: appFontFamily,
+                        }}
+                    />
+                </Box>
+
+                {imageUrl && (
+                    <Tooltip title="Tải ảnh">
+                        <IconButton
+                            aria-label="Tải ảnh"
+                            onClick={(event) => {
+                                event.stopPropagation()
+                                downloadFile(imageUrl, mess.fileName)
+                            }}
+                            sx={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                width: 36,
+                                height: 36,
+                                bgcolor: "#fff",
+                                color: "#111",
+                                boxShadow: "0 3px 10px rgba(15,23,42,0.18)",
+                                "&:hover": {
+                                    bgcolor: "#f5f5f5",
+                                },
+                            }}
+                        >
+                            <DownloadIcon sx={{ fontSize: 21 }} />
+                        </IconButton>
+                    </Tooltip>
+                )}
+            </>
+        )
+    }
+
+    const renderAttachmentBody = (mess: MessageInterface, isMine: boolean) => {
+        if (isFileMessage(mess)) {
+            return renderFileMessage(mess, isMine)
+        }
+
+        return (
+            <Box
+                sx={{
+                    width: "100%",
+                    height: 170,
+                    overflow: "hidden",
+                    position: "relative",
+                    bgcolor: "black",
+                }}
+            >
+                {isVideoMessage(mess) ? (
+                    <Box
+                        component="video"
+                        controls
+                        src={mess.mediaURL ? mess.mediaURL : ''}
+                        sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                        }}
+                    />
+                ) : (
+                    renderImageMessage(mess)
+                )}
+            </Box>
+        )
+    }
+
+    const getReplyPreviewText = (mess: MessageInterface) => {
+        if (mess.replyToDeleted) return "Tin nhắn đã được thu hồi"
+        if (mess.replyToContent) return mess.replyToContent
+        if (mess.replyToFileName) return mess.replyToFileName
+        if (mess.replyToMediaURL) return mess.replyToType?.startsWith("video/") ? "Video" : "Hình ảnh"
+        return "Tin nhắn"
+    }
+    const renderReplyPreview = (mess: MessageInterface, isMine: boolean) => {
+        if (!mess.replyToMessageId) return null
+        const isReplyMine = mess.replyToSenderId === currentUserId
+        const author = isReplyMine ? "Bạn" : getSenderName(mess.replyToSenderId || 0)
+
+        return (
+            <Box
+                sx={{
+                    mb: 0.75,
+                    px: 1,
+                    py: 0.75,
+                    borderLeft: "3px solid",
+                    borderColor: isMine ? "rgba(255,255,255,0.72)" : "#b30000",
+                    borderRadius: "7px",
+                    bgcolor: isMine ? "rgba(255,255,255,0.18)" : "rgba(179,0,0,0.08)",
+                    color: isMine ? "#fff" : "#202124",
+                    boxSizing: "border-box",
+                    width: "100%",
+                    minWidth: "min(184px, 56vw)",
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                }}
+            >
+                <Box
+                    sx={{
+                        fontSize: 12,
+                        lineHeight: 1.2,
+                        fontWeight: 700,
+                        mb: 0.25,
+                        opacity: 0.95,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                >
+                    {author}
+                </Box>
+                <Box
+                    sx={{
+                        fontSize: 13,
+                        lineHeight: 1.25,
+                        opacity: 0.92,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                >
+                    {getReplyPreviewText(mess)}
+                </Box>
+            </Box>
+        )
+    }
+
     const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
         if (!hasMoreMessages || loadingOlderMessages) return
 
@@ -690,186 +1092,293 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
     }
 
     return (
-        <Box
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            sx={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column-reverse",
-                overflowY: "auto",
-                width: "100%",
-                px: 2,
-                py: 2,
-                position: "relative",
-                overflowAnchor: "none",
-                background: "linear-gradient(180deg, #f7e19a, #f6885d)",
-            }}
-        >
-
-            {/* loading của người gửi */}
-            {loadingOlderMessages && (
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: 10,
-                        left: 16,
-                        right: 16,
-                        zIndex: 50,
-                        px: 1.25,
-                        py: 0.85,
-                        borderRadius: "999px",
-                        bgcolor: "rgba(255,255,255,0.92)",
-                        boxShadow: "0 6px 18px rgba(15,23,42,0.14)",
-                        pointerEvents: "none",
-                    }}
-                >
-                    <CircularProgress
-                        sx={{
-                            height: 4,
-                            borderRadius: 999,
-                            bgcolor: "rgba(255,255,255,0.45)",
-                            "& .MuiLinearProgress-bar": {
-                                bgcolor: "#b30000",
-                            },
-                        }}
-                    />
-                    <Box
-                        sx={{
-                            mt: 0.45,
-                            color: "#5b1111",
-                            fontSize: 12,
-                            fontWeight: 700,
-                            textAlign: "center",
-                        }}
-                    >
-                        Đang tải tin nhắn cũ...
-                    </Box>
-                </Box>
-            )}
-
-            {fileLoading && (<Box
+        <>
+            <Box
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
                 sx={{
+                    flex: 1,
                     display: "flex",
-                    justifyContent: "flex-end",
-                    mb: 1,
-                    alignItems: "flex-end",
+                    flexDirection: "column-reverse",
+                    overflowY: "auto",
                     width: "100%",
+                    px: 2,
+                    py: 2,
+                    position: "relative",
+                    overflowAnchor: "none",
+                    background: theme?.background || "linear-gradient(180deg, #f4f6fb, #eef1f8)",
+                    fontFamily: appFontFamily,
                 }}
             >
-                <Box
-                    sx={{
-                        width: 200,
-                        height: 150,
-                        borderRadius: "18px 18px 4px 18px",
-                        position: "relative",
-                        overflow: "hidden",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
 
-                    }}
-                >
+                {/* loading của người gửi */}
+                {loadingOlderMessages && (
                     <Box
                         sx={{
                             position: "absolute",
-                            inset: 0,
-                            bgcolor: "rgba(0,0,0,0.25)",
+                            top: 10,
+                            left: 16,
+                            right: 16,
+                            zIndex: 50,
+                            px: 1.25,
+                            py: 0.85,
+                            borderRadius: "999px",
+                            bgcolor: "rgba(255,255,255,0.92)",
+                            boxShadow: "0 6px 18px rgba(15,23,42,0.14)",
+                            pointerEvents: "none",
                         }}
-                    />
+                    >
+                        <CircularProgress
+                            sx={{
+                                height: 4,
+                                borderRadius: 999,
+                                bgcolor: "rgba(255,255,255,0.45)",
+                                "& .MuiLinearProgress-bar": {
+                                    background: theme?.gradient || "#b30000",
+                                },
+                            }}
+                        />
+                        <Box
+                            sx={{
+                                mt: 0.45,
+                                color: "#5b1111",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                textAlign: "center",
+                            }}
+                        >
+                            Đang tải tin nhắn cũ...
+                        </Box>
+                    </Box>
+                )}
 
-                    <CircularProgress
-                        size={34}
-                        thickness={4}
-                        sx={{
-                            color: "#fff",
-                            zIndex: 1,
-                        }}
-                    />
-                </Box>
-            </Box>)}
+                {false && (<>
+                    {/* mess reply */}
 
-            {false && (<>
-            {/* mess reply */}
-
-            <Box
-                sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    mb: 1,
-                    width: "100%",
-                }}
-            >
-                <Box
-                    sx={{
-                        maxWidth: "70%",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-end",
-                    }}
-                >
                     <Box
                         sx={{
-                            mb: 0.35,
                             display: "flex",
-                            flexDirection: "column",
-                            alignItems: "flex-end",
+                            justifyContent: "flex-end",
+                            mb: 1,
+                            width: "100%",
                         }}
                     >
                         <Box
                             sx={{
-                                fontSize: 13,
-                                color: "#5f6368",
-                                mb: 0.35,
+                                maxWidth: "70%",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-end",
                             }}
                         >
-                            {"↩ Bạn đã trả lời Nguyen"}
-                        </Box>
+                            <Box
+                                sx={{
+                                    mb: 0.35,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-end",
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        fontSize: 13,
+                                        color: "#5f6368",
+                                        mb: 0.35,
+                                    }}
+                                >
+                                    {"↩ Bạn đã trả lời Nguyen"}
+                                </Box>
 
-                        <Box
-                            sx={{
-                                px: 1.5,
-                                py: 0.75,
-                                borderRadius: "16px",
-                                bgcolor: "#f1f1f1",
-                                color: "#5f6368",
-                                fontSize: 14,
-                                lineHeight: 1.35,
-                                wordBreak: "break-word",
-                            }}
-                        >
-                            {"Phòng 5 e"}
+                                <Box
+                                    sx={{
+                                        px: 1.5,
+                                        py: 0.75,
+                                        borderRadius: "16px",
+                                        bgcolor: "#f1f1f1",
+                                        color: "#5f6368",
+                                        fontSize: 14,
+                                        lineHeight: 1.35,
+                                        wordBreak: "break-word",
+                                    }}
+                                >
+                                    {"Phòng 5 e"}
+                                </Box>
+                            </Box>
+
+                            <Box
+                                sx={{
+                                    bgcolor: "rgb(179, 0, 0)",
+                                    color: "#fff",
+                                    px: 2,
+                                    py: 1,
+                                    borderRadius: "18px 18px 4px 18px",
+                                    fontSize: 15,
+                                    lineHeight: 1.4,
+                                    wordBreak: "break-word",
+                                }}
+                            >
+                                {"helo"}
+                            </Box>
                         </Box>
                     </Box>
 
-                    <Box
-                        sx={{
-                            bgcolor: "rgb(179, 0, 0)",
-                            color: "#fff",
-                            px: 2,
-                            py: 1,
-                            borderRadius: "18px 18px 4px 18px",
-                            fontSize: 15,
-                            lineHeight: 1.4,
-                            wordBreak: "break-word",
-                        }}
-                    >
-                        {"helo"}
-                    </Box>
-                </Box>
-            </Box>
+                </>)}
 
-            </>)}
+                {conversation.map((mess: MessageInterface) => {
+                    if (isCallMessage(mess)) {
+                        return renderCallHistory(mess)
+                    }
+                    if (isDeletedMessage(mess)) {
+                        return renderDeletedMessage(mess)
+                    }
+                    if (mess.senderId !== currentUserId) {
+                        if (!isGroupConversation) {
+                            const senderName = getSenderName(mess.senderId)
+                            const senderAvatar = getSenderAvatar(mess.senderId)
+                            return (
+                                <>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "flex-start",
+                                            mb: 1,
+                                            alignItems: "flex-end",
+                                            gap: 1,
+                                            width: "100%",
+                                            "&:hover .message-actions": {
+                                                opacity: 1,
+                                                pointerEvents: "auto",
+                                            },
+                                        }} key={mess.messageId}
+                                    >
 
-            {conversation.map((mess: MessageInterface) => {
-                if (isCallMessage(mess)) {
-                    return renderCallHistory(mess)
-                }
-                if (isDeletedMessage(mess)) {
-                    return renderDeletedMessage(mess)
-                }
-                if (mess.senderId !== currentUserId) {
-                    if (!isGroupConversation) {
+                                        <Avatar
+                                            src={senderAvatar || undefined}
+                                            sx={{ width: 30, height: 30 }}
+                                        >
+                                            {senderName.charAt(0).toUpperCase()}
+                                        </Avatar>
+                                        {
+                                            (mess.type === 'text' && mess.content) ?
+
+                                                (<>
+                                                                                    <Box
+                                                        sx={{
+                                                            position: "relative",
+                                                            bgcolor: "#fff",
+                                                            px: 2,
+                                                            py: 1,
+                                                            borderRadius: "18px 18px 18px 4px",
+                                                            maxWidth: "70%",
+                                                        }}
+                                                    >
+                                                        {isMessagePinned(mess) && (
+                                                            <PushPinIcon
+                                                                sx={{
+                                                                    position: "absolute",
+                                                                    top: -6,
+                                                                    right: -6,
+                                                                    fontSize: 14,
+                                                                    color: "#f97316",
+                                                                    bgcolor: "#fff",
+                                                                    borderRadius: "50%",
+                                                                    p: 0.2,
+                                                                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                    zIndex: 1,
+                                                                }}
+                                                            />
+                                                        )}
+                                                        {renderReplyPreview(mess, false)}
+                                                        {mess.content ? renderMessageContent(mess, mess.content, "#334155") : 'Tin nhắn đã được thu hồi'}
+                                                        {renderReactionBadge(mess.messageId, "right")}
+                                                    </Box>
+                                                    {renderMessageActions(mess, "right")}
+                                                </>) :
+
+
+                                                (<>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "flex-end",
+                                                            gap: 1,
+                                                            mb: 1,
+                                                            width: "100%",
+                                                            "&:hover .message-actions": {
+                                                                opacity: 1,
+                                                                pointerEvents: "auto",
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: 240,
+                                                                overflow: "hidden",
+                                                                borderRadius: "18px 18px 4px 18px",
+                                                                background: theme?.gradient || "#b30000",
+                                                                color: "#fff",
+                                                                position: "relative",
+                                                            }}
+                                                        >
+                                                            {isMessagePinned(mess) && (
+                                                                <PushPinIcon
+                                                                    sx={{
+                                                                        position: "absolute",
+                                                                        top: 6,
+                                                                        right: 6,
+                                                                        fontSize: 14,
+                                                                        color: "#f97316",
+                                                                        bgcolor: "#fff",
+                                                                        borderRadius: "50%",
+                                                                        p: 0.2,
+                                                                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                        zIndex: 1,
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            {renderReplyPreview(mess, false)}
+                                                            {renderAttachmentBody(mess, false)}
+
+                                                            {
+                                                                mess.content && (
+                                                                    <>
+                                                                        <Box
+                                                                            sx={{
+                                                                                px: 1.5,
+                                                                                py: 1,
+                                                                                fontSize: 14,
+                                                                                lineHeight: 1.4,
+                                                                                wordBreak: "break-word",
+                                                                            }}
+                                                                        >
+                                                                            {renderMessageContent(mess, mess.content, "#fff")}
+                                                                        </Box>
+                                                                    </>
+                                                                )
+                                                            }
+
+                                                            {renderReactionBadge(mess.messageId, "right")}
+                                                        </Box>
+                                                        {renderMessageActions(mess, "right")}
+                                                    </Box>
+
+                                                </>)
+                                        }
+
+                                    </Box>
+
+                                </>
+                            )
+                        }
+
+                        const senderName = getSenderName(mess.senderId)
+                        const senderAvatar = getSenderAvatar(mess.senderId)
+                        console.log("[GroupMessage][FE][render-sender-profile]", {
+                            senderId: mess.senderId,
+                            profile: getSenderProfile(mess.senderId),
+                            senderName,
+                            senderAvatar,
+                        })
                         return (
                             <>
                                 <Box
@@ -877,7 +1386,7 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                                         display: "flex",
                                         justifyContent: "flex-start",
                                         mb: 1,
-                                        alignItems: "flex-end",
+                                        alignItems: "flex-start",
                                         gap: 1,
                                         width: "100%",
                                         "&:hover .message-actions": {
@@ -888,315 +1397,271 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                                 >
 
                                     <Avatar
-                                        src="https://i.pravatar.cc/100?img=12"
-                                        sx={{ width: 30, height: 30 }}
-                                    />
-                                    {
-                                        (mess.type === 'text' && mess.content) ?
+                                        src={senderAvatar || undefined}
+                                        sx={{ width: 30, height: 30, mt: "18px" }}
+                                    >
+                                        {senderName.charAt(0).toUpperCase()}
+                                    </Avatar>
+                                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", maxWidth: "70%" }}>
+                                        {isGroupConversation && (
+                                            <Box
+                                                sx={{
+                                                    ml: 1,
+                                                    mb: 0.3,
+                                                    color: "#5f4638",
+                                                    fontSize: 13,
+                                                    fontWeight: 600,
+                                                    lineHeight: "16px",
+                                                    minHeight: 16,
+                                                }}
+                                            >
+                                                {senderName}
+                                            </Box>
+                                        )}
+                                        {
+                                            (mess.type === 'text' && mess.content) ?
 
-                                            (<>
-                                                <Box
-                                                    sx={{
-                                                        position: "relative",
-                                                        bgcolor: "#fff",
-                                                        px: 2,
-                                                        py: 1,
-                                                        borderRadius: "18px 18px 18px 4px",
-                                                        maxWidth: "70%",
-                                                    }}
-                                                >
-                                                    {mess.content ? mess.content : 'Tin nháº¯n Ä‘Ã£ Ä‘Æ°á»£c thu há»“i'}
-                                                    {renderReactionBadge(mess.messageId, "right")}
-                                                </Box>
-                                                {renderMessageActions(mess, "right")}
-                                            </>) :
-
-
-                                            (<>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-
-                                                        mb: 1,
-                                                        width: "100%",
-                                                    }}
-                                                >
+                                                (<>
                                                     <Box
                                                         sx={{
-                                                            width: 240,
-                                                            overflow: "hidden",
-                                                            borderRadius: "18px 18px 4px 18px",
-                                                            bgcolor: "#b30000",
-                                                            color: "#fff",
+                                                            display: "flex",
+                                                            alignItems: "flex-end",
+                                                            gap: 1,
+                                                            width: "100%",
                                                         }}
                                                     >
                                                         <Box
                                                             sx={{
-                                                                width: "100%",
-                                                                height: 170,
-                                                                overflow: "hidden",
                                                                 position: "relative",
-                                                                bgcolor: "black",
+                                                                bgcolor: "#fff",
+                                                                px: 2,
+                                                                py: 1,
+                                                                borderRadius: "18px 18px 18px 4px",
+                                                                maxWidth: "100%",
                                                             }}
                                                         >
+                                                            {isMessagePinned(mess) && (
+                                                                <PushPinIcon
+                                                                    sx={{
+                                                                        position: "absolute",
+                                                                        top: -6,
+                                                                        right: -6,
+                                                                        fontSize: 14,
+                                                                        color: "#f97316",
+                                                                        bgcolor: "#fff",
+                                                                        borderRadius: "50%",
+                                                                        p: 0.2,
+                                                                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                        zIndex: 1,
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            {renderReplyPreview(mess, false)}
+                                                            {mess.content ? renderMessageContent(mess, mess.content, "#334155") : 'Tin nhắn đã được thu hồi'}
+                                                            {renderReactionBadge(mess.messageId, "right")}
+                                                        </Box>
+                                                        {renderMessageActions(mess, "right")}
+                                                    </Box>
+                                                </>) :
+
+
+                                                (<>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "flex-end",
+                                                            gap: 1,
+                                                            mb: 1,
+                                                            width: "100%",
+                                                            "&:hover .message-actions": {
+                                                                opacity: 1,
+                                                                pointerEvents: "auto",
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: 240,
+                                                                overflow: "hidden",
+                                                                borderRadius: "18px 18px 4px 18px",
+                                                                background: theme?.gradient || "#b30000",
+                                                                color: "#fff",
+                                                                position: "relative",
+                                                            }}
+                                                        >
+                                                            {isMessagePinned(mess) && (
+                                                                <PushPinIcon
+                                                                    sx={{
+                                                                        position: "absolute",
+                                                                        top: 6,
+                                                                        right: 6,
+                                                                        fontSize: 14,
+                                                                        color: "#f97316",
+                                                                        bgcolor: "#fff",
+                                                                        borderRadius: "50%",
+                                                                        p: 0.2,
+                                                                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                        zIndex: 1,
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            {renderReplyPreview(mess, false)}
+                                                            {renderAttachmentBody(mess, false)}
+
                                                             {
-                                                                (mess.type === 'video/mp4') ?
-
-                                                                    (<><Box
-                                                                        component="video"
-                                                                        controls
-                                                                        src={mess.mediaURL ? mess.mediaURL : ''}
-
-                                                                        sx={{
-                                                                            width: "100%",
-                                                                            height: "100%",
-                                                                            objectFit: "cover",
-                                                                            display: "block",
-                                                                        }}
-                                                                    /></>) :
-
-
-                                                                    (<><Box
-                                                                        component="img"
-                                                                        src={mess.mediaURL ? mess.mediaURL : ''}
-                                                                        alt="image message"
-                                                                        sx={{
-                                                                            width: "100%",
-                                                                            height: "100%",
-                                                                            objectFit: "cover",
-                                                                            display: "block",
-                                                                        }}
-                                                                    />
-
+                                                                mess.content && (
+                                                                    <>
                                                                         <Box
-                                                                            component="a"
-                                                                            href={mess.mediaURL ? mess.mediaURL : ''}
-                                                                            target='_blank'
-                                                                            download={mess.fileName}
                                                                             sx={{
-                                                                                position: "absolute",
-                                                                                top: 8,
-                                                                                right: 8,
-                                                                                width: 34,
-                                                                                height: 34,
-                                                                                borderRadius: "50%",
-                                                                                bgcolor: "#fff",
-                                                                                color: "black",
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
-                                                                                textDecoration: "none",
-                                                                                fontSize: 18,
-                                                                                fontWeight: 700,
-                                                                                cursor: "pointer",
+                                                                                px: 1.5,
+                                                                                py: 1,
+                                                                                fontSize: 14,
+                                                                                lineHeight: 1.4,
+                                                                                wordBreak: "break-word",
                                                                             }}
                                                                         >
-                                                                            â†“
+                                                                            {renderMessageContent(mess, mess.content, "#fff")}
                                                                         </Box>
-                                                                    </>)
+                                                                    </>
+                                                                )
                                                             }
 
-
-
-
+                                                            {renderReactionBadge(mess.messageId, "right")}
                                                         </Box>
-
-                                                        {
-                                                            mess.content && (
-                                                                <>
-                                                                    <Box
-                                                                        sx={{
-                                                                            px: 1.5,
-                                                                            py: 1,
-                                                                            fontSize: 14,
-                                                                            lineHeight: 1.4,
-                                                                            wordBreak: "break-word",
-                                                                        }}
-                                                                    >
-                                                                        {mess.content}
-                                                                    </Box>
-                                                                </>
-                                                            )
-                                                        }
-
-
+                                                        {renderMessageActions(mess, "right")}
                                                     </Box>
-                                                </Box>
 
-                                            </>)
-                                    }
+                                                </>)
+                                        }
+                                    </Box>
 
                                 </Box>
 
                             </>
                         )
                     }
+                    else {
+                        return (
+                            <>
 
-                    const senderName = getSenderName(mess.senderId)
-                    const senderAvatar = getSenderAvatar(mess.senderId)
-                    console.log("[GroupMessage][FE][render-sender-profile]", {
-                        senderId: mess.senderId,
-                        profile: getSenderProfile(mess.senderId),
-                        senderName,
-                        senderAvatar,
-                    })
-                    return (
-                        <>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "flex-start",
-                                    mb: 1,
-                                    alignItems: "flex-start",
-                                    gap: 1,
-                                    width: "100%",
-                                    "&:hover .message-actions": {
-                                        opacity: 1,
-                                        pointerEvents: "auto",
-                                    },
-                                }} key={mess.messageId}
-                            >
+                                {
+                                    (mess.type === 'text' && mess.content) ? (
 
-                                <Avatar
-                                    src={isGroupConversation ? senderAvatar : "https://i.pravatar.cc/100?img=12"}
-                                    sx={{ width: 30, height: 30, mt: "18px" }}
-                                >
-                                    {isGroupConversation ? senderName.charAt(0).toUpperCase() : undefined}
-                                </Avatar>
-                                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", maxWidth: "70%" }}>
-                                    {isGroupConversation && (
+                                        // mess reply 
+
                                         <Box
+                                            key={mess.messageId}
                                             sx={{
-                                                ml: 1,
-                                                mb: 0.3,
-                                                color: "#5f4638",
-                                                fontSize: 13,
-                                                fontWeight: 600,
-                                                lineHeight: "16px",
-                                                minHeight: 16,
+                                                width: "100%",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "flex-end",
+                                                mb: 1,
                                             }}
                                         >
-                                            {senderName}
-                                        </Box>
-                                    )}
-                                {
-                                    (mess.type === 'text' && mess.content) ?
-
-                                        (<>
                                             <Box
                                                 sx={{
                                                     display: "flex",
+                                                    justifyContent: "flex-end",
                                                     alignItems: "flex-end",
                                                     gap: 1,
                                                     width: "100%",
+                                                    "&:hover .message-actions": {
+                                                        opacity: 1,
+                                                        pointerEvents: "auto",
+                                                    },
                                                 }}
                                             >
-                                            <Box
-                                                sx={{
-                                                    position: "relative",
-                                                    bgcolor: "#fff",
-                                                    px: 2,
-                                                    py: 1,
-                                                    borderRadius: "18px 18px 18px 4px",
-                                                    maxWidth: "100%",
-                                                }}
-                                            >
-                                                {mess.content ? mess.content : 'Tin nhắn đã được thu hồi'}
-                                                {renderReactionBadge(mess.messageId, "right")}
+                                                {renderMessageActions(mess, "left")}
+                                                <Box
+                                                    sx={{
+                                                        position: "relative",
+                                                        background: theme?.gradient || "#b30000",
+                                                        color: "#fff",
+                                                        px: 2,
+                                                        py: 1,
+                                                        borderRadius: "18px 18px 4px 18px",
+                                                        maxWidth: "70%",
+                                                    }}
+                                                >
+                                                    {isMessagePinned(mess) && (
+                                                        <PushPinIcon
+                                                            sx={{
+                                                                position: "absolute",
+                                                                top: -6,
+                                                                left: -6,
+                                                                fontSize: 14,
+                                                                color: "#f97316",
+                                                                bgcolor: "#fff",
+                                                                borderRadius: "50%",
+                                                                p: 0.2,
+                                                                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                zIndex: 1,
+                                                            }}
+                                                        />
+                                                    )}
+                                                    {renderReplyPreview(mess, true)}
+                                                    {mess.content ? renderMessageContent(mess, mess.content, "#fff") : 'Bạn đã thu hồi tin nhắn'}
+                                                    {renderReactionBadge(mess.messageId, "left")}
+                                                </Box>
                                             </Box>
-                                            {renderMessageActions(mess, "right")}
-                                            </Box>
-                                        </>) :
+                                            {renderOutgoingStatus(mess)}
+
+                                        </Box>) :
 
 
-                                        (<>
+                                        (<Box
+                                            key={mess.messageId}
+                                            sx={{
+                                                width: "100%",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "flex-end",
+                                                mb: 1,
+                                            }}
+                                        >
                                             <Box
                                                 sx={{
                                                     display: "flex",
-
-                                                    mb: 1,
+                                                    justifyContent: "flex-end",
+                                                    alignItems: "flex-end",
+                                                    gap: 1,
                                                     width: "100%",
+                                                    "&:hover .message-actions": {
+                                                        opacity: 1,
+                                                        pointerEvents: "auto",
+                                                    },
                                                 }}
                                             >
+                                                {renderMessageActions(mess, "left")}
                                                 <Box
                                                     sx={{
                                                         width: 240,
                                                         overflow: "hidden",
                                                         borderRadius: "18px 18px 4px 18px",
-                                                        bgcolor: "#b30000",
+                                                        background: theme?.gradient || "#b30000",
                                                         color: "#fff",
+                                                        position: "relative",
                                                     }}
                                                 >
-                                                    <Box
-                                                        sx={{
-                                                            width: "100%",
-                                                            height: 170,
-                                                            overflow: "hidden",
-                                                            position: "relative",
-                                                            bgcolor: "black",
-                                                        }}
-                                                    >
-                                                        {
-                                                            (mess.type === 'video/mp4') ?
-
-                                                                (<><Box
-                                                                    component="video"
-                                                                    controls
-                                                                    src={mess.mediaURL ? mess.mediaURL : ''}
-
-                                                                    sx={{
-                                                                        width: "100%",
-                                                                        height: "100%",
-                                                                        objectFit: "cover",
-                                                                        display: "block",
-                                                                    }}
-                                                                /></>) :
-
-
-                                                                (<><Box
-                                                                    component="img"
-                                                                    src={mess.mediaURL ? mess.mediaURL : ''}
-                                                                    alt="image message"
-                                                                    sx={{
-                                                                        width: "100%",
-                                                                        height: "100%",
-                                                                        objectFit: "cover",
-                                                                        display: "block",
-                                                                    }}
-                                                                />
-
-                                                                    <Box
-                                                                        component="a"
-                                                                        href={mess.mediaURL ? mess.mediaURL : ''}
-                                                                        target='_blank'
-                                                                        download={mess.fileName}
-                                                                        sx={{
-                                                                            position: "absolute",
-                                                                            top: 8,
-                                                                            right: 8,
-                                                                            width: 34,
-                                                                            height: 34,
-                                                                            borderRadius: "50%",
-                                                                            bgcolor: "#fff",
-                                                                            color: "black",
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent: "center",
-                                                                            textDecoration: "none",
-                                                                            fontSize: 18,
-                                                                            fontWeight: 700,
-                                                                            cursor: "pointer",
-                                                                        }}
-                                                                    >
-                                                                        ↓
-                                                                    </Box>
-                                                                </>)
-                                                        }
-
-
-
-
-                                                    </Box>
+                                                    {isMessagePinned(mess) && (
+                                                        <PushPinIcon
+                                                            sx={{
+                                                                position: "absolute",
+                                                                top: 6,
+                                                                left: 6,
+                                                                fontSize: 14,
+                                                                color: "#f97316",
+                                                                bgcolor: "#fff",
+                                                                borderRadius: "50%",
+                                                                p: 0.2,
+                                                                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                                                                zIndex: 1,
+                                                            }}
+                                                        />
+                                                    )}
+                                                    {renderReplyPreview(mess, true)}
+                                                    {renderAttachmentBody(mess, true)}
 
                                                     {
                                                         mess.content && (
@@ -1210,222 +1675,123 @@ export default function ListMess({ conversation, setReplyMess, fileLoading, visi
                                                                         wordBreak: "break-word",
                                                                     }}
                                                                 >
-                                                                    {mess.content}
+                                                                    {renderMessageContent(mess, mess.content, "#fff")}
                                                                 </Box>
                                                             </>
                                                         )
                                                     }
 
-
+                                                    {renderReactionBadge(mess.messageId, "left")}
                                                 </Box>
                                             </Box>
-
-                                        </>)
+                                            {renderOutgoingStatus(mess)}
+                                        </Box>)
                                 }
-                                </Box>
-
-                            </Box>
-
-                        </>
-                    )
-                }
-                else {
-                    return (
-                        <>
-
-                            {
-                                (mess.type === 'text' && mess.content) ? (
-
-                                    // mess reply 
-
-                                    <Box
-                                        key={mess.messageId}
-                                        sx={{
-                                            width: "100%",
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "flex-end",
-                                            mb: 1,
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                justifyContent: "flex-end",
-                                                alignItems: "flex-end",
-                                                gap: 1,
-                                                width: "100%",
-                                                "&:hover .message-actions": {
-                                                    opacity: 1,
-                                                    pointerEvents: "auto",
-                                                },
-                                            }}
-                                        >
-                                            {renderMessageActions(mess, "left")}
-                                            <Box
-                                                sx={{
-                                                    position: "relative",
-                                                    bgcolor: "#b30000",
-                                                    color: "#fff",
-                                                    px: 2,
-                                                    py: 1,
-                                                    borderRadius: "18px 18px 4px 18px",
-                                                    maxWidth: "70%",
-                                                }}
-                                            >
-                                                {mess.content ? mess.content : 'Bạn đã thu hồi tin nhắn'}
-                                                {renderReactionBadge(mess.messageId, "left")}
-                                            </Box>
-                                        </Box>
-                                        {renderOutgoingStatus(mess)}
-
-                                    </Box>) :
 
 
-                                    (<Box
-                                        key={mess.messageId}
-                                        sx={{
-                                            width: "100%",
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "flex-end",
-                                            mb: 1,
-                                        }}
-                                    >
-                                        <Box
-                                        sx={{
-                                            display: "flex",
-                                            justifyContent: "flex-end",
-                                            width: "100%",
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                width: 240,
-                                                overflow: "hidden",
-                                                borderRadius: "18px 18px 4px 18px",
-                                                bgcolor: "#b30000",
-                                                color: "#fff",
-                                            }}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    width: "100%",
-                                                    height: 170,
-                                                    overflow: "hidden",
-                                                    position: "relative",
-                                                    bgcolor: "black",
-                                                }}
-                                            >
-                                                {
-                                                    (mess.type === 'video/mp4') ?
+                            </>
+                        )
+                    }
+                })}
 
-                                                        (<><Box
-                                                            component="video"
-                                                            controls
-                                                            src={mess.mediaURL ? mess.mediaURL : ''}
+                {false && loadingOlderMessages && (
+                    <Box
+                        sx={{
+                            width: "100%",
+                            minHeight: 56,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                        }}
+                    >
+                        <CircularProgress aria-label="Loading..." size={28} thickness={4} />
+                    </Box>
+                )}
 
-                                                            sx={{
-                                                                width: "100%",
-                                                                height: "100%",
-                                                                objectFit: "cover",
-                                                                display: "block",
-                                                            }}
-                                                        /></>) :
+            </Box >
 
-
-                                                        (<><Box
-                                                            component="img"
-                                                            src={mess.mediaURL ? mess.mediaURL : ''}
-                                                            alt="image message"
-                                                            sx={{
-                                                                width: "100%",
-                                                                height: "100%",
-                                                                objectFit: "cover",
-                                                                display: "block",
-                                                            }}
-                                                        />
-
-                                                            <Box
-                                                                component="a"
-                                                                href={mess.mediaURL ? mess.mediaURL : ''}
-                                                                target='_blank'
-                                                                download={mess.fileName}
-                                                                sx={{
-                                                                    position: "absolute",
-                                                                    top: 8,
-                                                                    right: 8,
-                                                                    width: 34,
-                                                                    height: 34,
-                                                                    borderRadius: "50%",
-                                                                    bgcolor: "#fff",
-                                                                    color: "black",
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "center",
-                                                                    textDecoration: "none",
-                                                                    fontSize: 18,
-                                                                    fontWeight: 700,
-                                                                    cursor: "pointer",
-                                                                }}
-                                                            >
-                                                                ↓
-                                                            </Box>
-                                                        </>)
-                                                }
-
-
-
-
-                                            </Box>
-
-                                            {
-                                                mess.content && (
-                                                    <>
-                                                        <Box
-                                                            sx={{
-                                                                px: 1.5,
-                                                                py: 1,
-                                                                fontSize: 14,
-                                                                lineHeight: 1.4,
-                                                                wordBreak: "break-word",
-                                                            }}
-                                                        >
-                                                            {mess.content}
-                                                        </Box>
-                                                    </>
-                                                )
-                                            }
-
-
-                                        </Box>
-                                    </Box>
-                                        {renderOutgoingStatus(mess)}
-                                    </Box>)
-                            }
-
-
-                        </>
-                    )
-                }
-            })}
-
-            {false && loadingOlderMessages && (
+            <Dialog
+                open={!!previewImage}
+                onClose={() => setPreviewImage(null)}
+                maxWidth={false}
+                PaperProps={{
+                    sx: {
+                        m: 2,
+                        maxWidth: "calc(100vw - 32px)",
+                        maxHeight: "calc(100vh - 32px)",
+                        bgcolor: "rgba(10,10,10,0.96)",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                    },
+                }}
+            >
                 <Box
                     sx={{
-                        width: "100%",
-                        minHeight: 56,
+                        position: "relative",
+                        width: "min(1100px, calc(100vw - 32px))",
+                        height: "min(760px, calc(100vh - 32px))",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        flexShrink: 0,
+                        bgcolor: "#050505",
                     }}
                 >
-                    <CircularProgress aria-label="Loading…" size={28} thickness={4} />
-                </Box>
-            )}
+                    {previewImage && (
+                        <Box
+                            component="img"
+                            src={previewImage.url}
+                            alt={previewImage.fileName || "image preview"}
+                            sx={{
+                                maxWidth: "100%",
+                                maxHeight: "100%",
+                                objectFit: "contain",
+                                display: "block",
+                            }}
+                        />
+                    )}
 
-        </Box >
+                    <Tooltip title="Đóng">
+                        <IconButton
+                            aria-label="Đóng"
+                            onClick={() => setPreviewImage(null)}
+                            sx={{
+                                position: "absolute",
+                                top: 12,
+                                right: 12,
+                                bgcolor: "rgba(255,255,255,0.92)",
+                                color: "#111",
+                                "&:hover": { bgcolor: "#fff" },
+                            }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </Tooltip>
+
+                    {previewImage && (
+                        <Tooltip title="Tải ảnh">
+                            <IconButton
+                                aria-label="Tải ảnh"
+                                onClick={() => downloadFile(previewImage.url, previewImage.fileName)}
+                                sx={{
+                                    position: "absolute",
+                                    top: 12,
+                                    right: 64,
+                                    bgcolor: "rgba(255,255,255,0.92)",
+                                    color: "#111",
+                                    "&:hover": { bgcolor: "#fff" },
+                                }}
+                            >
+                                <DownloadIcon />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                </Box>
+            </Dialog>
+        </>
 
     )
 }
+
+export default React.memo(ListMess)
+

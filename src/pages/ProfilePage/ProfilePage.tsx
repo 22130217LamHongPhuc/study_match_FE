@@ -24,7 +24,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EditProfileModal from "../../components/modal/user/EditProfileModal";
 import { ProfileStatus } from "../../enum/Profile";
 import { UserProfile } from "../../model/UserModel";
-import { loadProfileService, requestFriendService } from "../../services/FriendService";
+
+import { loadProfileService, requestFriendService, unfriendService } from "../../services/FriendService";
 import { matchingItemApi } from "../../services/matchingItemApi";
 import {
   Achievement,
@@ -76,6 +77,7 @@ export default function ProfilePage() {
   const [visibilityAnchorEl, setVisibilityAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedMediaItem[]>([]);
   const [posting, setPosting] = useState(false);
+  const [unfriendConfirmOpen, setUnfriendConfirmOpen] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -142,6 +144,31 @@ useEffect(() => {
       .catch((error) => console.error("Cannot load profile social data", error));
   }, [profileUserId, currentUserId]);
 
+  useEffect(() => {
+    const handleStatusUpdate = () => {
+      if (!profileUserId) return;
+      loadProfileService(profileUserId)
+        .then((response: UserProfile) => setProfile(response))
+        .catch((error) => console.error("Cannot load profile", error));
+      
+      Promise.all([
+        loadProfilePosts(profileUserId, currentUserId),
+        loadProfileSocialStats(profileUserId),
+        loadAchievements(profileUserId),
+      ])
+        .then(([postList, statData, achievementList]) => {
+          setPosts(postList);
+          setStats(statData);
+          setAchievements(achievementList);
+        })
+        .catch((error) => console.error("Cannot load profile social data", error));
+    };
+
+    window.addEventListener("friend_status_updated", handleStatusUpdate);
+    return () => window.removeEventListener("friend_status_updated", handleStatusUpdate);
+  }, [profileUserId, currentUserId]);
+
+
   const requestFriend = async () => {
     if (!currentUserId || !profileUserId) return;
     if (currentUserId === profileUserId) return;
@@ -164,6 +191,25 @@ useEffect(() => {
 
     setProfile((prev) => (prev ? { ...prev, statusFriend: ProfileStatus.PENDING } : prev));
   };
+
+  const handleUnfriend = async () => {
+    if (!profileUserId || !currentUserId) return;
+    try {
+      const response = await unfriendService(currentUserId, profileUserId);
+      if (response.code === 200 || response.code === "200") {
+        setProfile((prev) => prev ? { ...prev, friend: false, statusFriend: undefined } : prev);
+        setUnfriendConfirmOpen(false);
+        const statData = await loadProfileSocialStats(profileUserId);
+        setStats(statData);
+      } else {
+        alert("Hủy kết bạn thất bại: " + (response.message || "Lỗi không xác định"));
+      }
+    } catch (error) {
+      console.error("Failed to unfriend", error);
+      alert("Đã xảy ra lỗi khi hủy kết bạn.");
+    }
+  };
+
 
   const sendMess = () => {
     navigate("/conversation", {
@@ -401,6 +447,29 @@ useEffect(() => {
             </Button>
           ) : (
             <Box display="flex" mt="20px">
+              {profile?.friend && (
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  sx={{
+                    borderRadius: "20px",
+                    py: 1.5,
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    width: "50%",
+                    mr: 2,
+                    borderColor: "error.main",
+                    "&:hover": {
+                      backgroundColor: "rgba(211, 47, 47, 0.04)",
+                      borderColor: "error.dark",
+                    }
+                  }}
+                  onClick={() => setUnfriendConfirmOpen(true)}
+                >
+                  Hủy kết bạn
+                </Button>
+              )}
               {!profile?.friend && profile?.statusFriend !== ProfileStatus.PENDING && (
                 <Button
                   sx={{
@@ -425,12 +494,13 @@ useEffect(() => {
               )}
               <Button
                 variant="outlined"
-                sx={{ borderRadius: "20px", py: 1.5, textTransform: "none", fontWeight: "bold", width: profile?.friend ? "100%" : "50%" }}
+                sx={{ borderRadius: "20px", py: 1.5, textTransform: "none", fontWeight: "bold", width: "50%" }}
                 onClick={sendMess}
               >
                 Nhắn tin
               </Button>
             </Box>
+
           )}
         </Box>
 
@@ -592,6 +662,44 @@ useEffect(() => {
           );
         }}
       />
+
+      <Dialog
+        open={unfriendConfirmOpen}
+        onClose={() => setUnfriendConfirmOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: "15px",
+            padding: "10px",
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: "bold", textAlign: "center" }}>
+          Hủy kết bạn
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ textAlign: "center", mb: 2 }}>
+            Bạn có chắc chắn muốn hủy kết bạn với <strong>{profile?.fullName}</strong> không?
+          </Typography>
+          <Box display="flex" justifyContent="center" gap={2} mt={2}>
+            <Button
+              variant="outlined"
+              onClick={() => setUnfriendConfirmOpen(false)}
+              sx={{ borderRadius: "20px", px: 4, textTransform: "none" }}
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleUnfriend}
+              sx={{ borderRadius: "20px", px: 4, textTransform: "none" }}
+            >
+              Đồng ý
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
+

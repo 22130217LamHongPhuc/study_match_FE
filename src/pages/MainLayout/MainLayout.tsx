@@ -1,6 +1,6 @@
 import { Box } from "@mui/system";
-import React, { useLayoutEffect, useRef, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useLayoutEffect, useRef, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import SideBar from "../../components/sidebar/SideBar";
 import Header from "../../components/header/Header";
 import WebSocketManager from "../../socket/WebSocketManager";
@@ -13,10 +13,8 @@ import { SocketResponse } from "../../model/SocketResponse";
 import { SocketEvent } from "../../enum/SocketEvent";
 import { RootState } from "../../redux/store";
 import { sendDelivered } from "../../services/ChatService";
-import {
-  joinVideoCall,
-  rejectVideoCall,
-} from "../../services/VideoCallService";
+import { loadFriendProfilesService } from "../../services/FriendService";
+import { joinVideoCall, rejectVideoCall } from "../../services/VideoCallService";
 import VideoCallRoom from "../../components/conversation/VideoCallRoom";
 import VideoCallModal from "../../components/conversation/VideoCallModal";
 import {
@@ -24,16 +22,68 @@ import {
   VideoCallInviteData,
   VideoCallPeerInfo,
 } from "../../model/VideoCall";
-import StudySessionReminderToast from "../../components/toastComponent/StudySessionReminderToast";
+
+
+type NewMessageData = {
+  conversationId: number;
+  message: {
+    messageId: number;
+    senderId: number;
+    content?: string | null;
+  };
+};
+
+const isVideoCallInvite = (data: unknown): data is VideoCallInviteData => {
+  return (
+    !!data &&
+    typeof data === "object" &&
+    "sessionId" in data &&
+    "roomId" in data
+  );
+};
+
+const isVideoCallInfo = (data: unknown): data is VideoCallInfo => {
+  return (
+    !!data &&
+    typeof data === "object" &&
+    "sessionId" in data &&
+    "roomId" in data &&
+    "token" in data &&
+    "appId" in data &&
+    "userId" in data
+  );
+};
+
+const isNewMessageData = (data: unknown): data is NewMessageData => {
+  if (!data || typeof data !== "object") return false;
+
+  const value = data as Partial<NewMessageData>;
+
+  return (
+    typeof value.conversationId === "number" &&
+    !!value.message &&
+    typeof value.message.messageId === "number" &&
+    typeof value.message.senderId === "number"
+  );
+};
+
+const isZegoCreateSpanError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error || "");
+  return message.includes("createSpan");
+};
+
 
 export default function MainLayout() {
+
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const currentConverId = useSelector(
     (state: RootState) => state.chat.currentConversationId,
   );
 
   const currentConverIdRef = useRef<number | null>(null);
+  const isConversationPageRef = useRef(false);
 
   const [activeVideoCall, setActiveVideoCall] = useState<VideoCallInfo | null>(
     null,
@@ -53,7 +103,41 @@ export default function MainLayout() {
   }, [currentConverId]);
 
   useLayoutEffect(() => {
+    isConversationPageRef.current = location.pathname === "/conversation";
+  }, [location.pathname]);
+
+  useLayoutEffect(() => {
+    const handleWindowError = (event: ErrorEvent) => {
+      if (isZegoCreateSpanError(event.error || event.message)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        console.warn("[VideoCall][FE] Suppressed known ZegoCloud tracer runtime error");
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (isZegoCreateSpanError(event.reason)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        console.warn("[VideoCall][FE] Suppressed known ZegoCloud tracer promise rejection");
+      }
+    };
+
+    window.addEventListener("error", handleWindowError, true);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection, true);
+
+    return () => {
+      window.removeEventListener("error", handleWindowError, true);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection, true);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
     const ws = WebSocketManager.getInstance();
+
+    let isMounted = true;
+    let unsubscribeChat: (() => void) | undefined;
+    let unsubscribePresence: (() => void) | undefined;
 
     const unsubscribeOnConnected = ws.onConnected(() => {
       ws.sendMessage("/chat/send", {
@@ -64,10 +148,13 @@ export default function MainLayout() {
 
     ws.connect()
       .then(() => {
-        ws.onMessage("/user/queue/chat", (msg: any) => {
+        if (!isMounted) return;
+
+        const chatSubscription = ws.onMessage("/user/queue/chat", (msg: any) => {
           const parsed: SocketResponse = JSON.parse(msg);
 
           console.log("[VideoCall][FE][socket][message]", parsed);
+
           dispatch(updateNewMess(parsed));
 
           if (
@@ -75,36 +162,117 @@ export default function MainLayout() {
             isVideoCallInvite(parsed.data)
           ) {
             console.log("[VideoCall][FE][socket][invite]", parsed.data);
+
+
             const currentUserId = Number(localStorage.getItem("userId"));
+
             if (parsed.data.callerId === currentUserId) return;
+
+
             const isGroupCall = Boolean(
               parsed.data.isGroupCall ||
               parsed.data.groupId ||
               parsed.data.conversationType === 0,
             );
+
             const peerName = isGroupCall
               ? parsed.data.groupName || "Nhóm học"
               : parsed.data.callerName || `User ${parsed.data.callerId}`;
+
             const peerAvatar = isGroupCall
               ? parsed.data.groupAvatar || null
               : parsed.data.callerAvatar || null;
 
-            setIncomingPeer({
+            const peer: VideoCallPeerInfo = {
               userId: isGroupCall ? null : parsed.data.callerId,
               fullName: peerName,
               avatar: peerAvatar,
               isGroupCall,
-            });
+            };
+
+            setIncomingPeer(peer);
+
             localStorage.setItem(
               `videoCallPeer:${parsed.data.sessionId}`,
-              JSON.stringify({
-                userId: isGroupCall ? null : parsed.data.callerId,
-                fullName: peerName,
-                avatar: peerAvatar,
-                isGroupCall,
-              }),
+              JSON.stringify(peer),
             );
+
             setIncomingVideoCall(parsed.data);
+
+            if (!isGroupCall && parsed.data.callerId) {
+              const callerId = Number(parsed.data.callerId);
+              const sessionId = parsed.data.sessionId;
+              void loadFriendProfilesService([callerId])
+                .then((profiles) => {
+                  const profile = profiles.find((item) => item.userId === callerId);
+                  if (!profile) return;
+
+                  const enrichedPeer: VideoCallPeerInfo = {
+                    userId: callerId,
+                    fullName: profile.fullName || peer.fullName,
+                    avatar: profile.avatarUrl || peer.avatar || null,
+                    isGroupCall: false,
+                  };
+
+                  setIncomingPeer((current) =>
+                    current?.userId === callerId ? enrichedPeer : current,
+                  );
+                  localStorage.setItem(
+                    `videoCallPeer:${sessionId}`,
+                    JSON.stringify(enrichedPeer),
+                  );
+                })
+                .catch((error) => {
+                  console.error("[VideoCall][FE][caller-profile-error]", error);
+                });
+            }
+
+            return;
+          }
+
+          if (
+            parsed.event === SocketEvent.VIDEO_CALL_ACCEPTED &&
+            isVideoCallInfo(parsed.data)
+          ) {
+            const acceptedCall = parsed.data;
+            console.log("[VideoCall][FE][socket][accepted]", {
+              sessionId: acceptedCall.sessionId,
+              roomId: acceptedCall.roomId,
+              userId: acceptedCall.userId,
+              hasToken: !!acceptedCall.token,
+            });
+
+            setIncomingVideoCall(null);
+            setCallActionLoading(false);
+            setActiveVideoCall((current) => {
+              if (current?.sessionId === acceptedCall.sessionId) {
+                return current;
+              }
+              return acceptedCall;
+            });
+
+            return;
+          }
+
+          if (
+            (parsed.event === SocketEvent.VIDEO_CALL_REJECTED ||
+              parsed.event === SocketEvent.VIDEO_CALL_ENDED) &&
+            isVideoCallInvite(parsed.data)
+          ) {
+            const closedSessionId = parsed.data.sessionId;
+            console.log("[VideoCall][FE][socket][closed]", {
+              event: parsed.event,
+              sessionId: closedSessionId,
+            });
+
+            setIncomingVideoCall((current) =>
+              current?.sessionId === closedSessionId ? null : current,
+            );
+            setActiveVideoCall((current) =>
+              current?.sessionId === closedSessionId ? null : current,
+            );
+            setCallActionLoading(false);
+
             return;
           }
 
@@ -113,65 +281,68 @@ export default function MainLayout() {
             isNewMessageData(parsed.data)
           ) {
             const currentUserId = Number(localStorage.getItem("userId"));
+
             if (parsed.data.message.senderId !== currentUserId) {
-              sendDelivered(parsed.data.conversationId, [
-                parsed.data.message.messageId,
-              ]);
-            }
-
-            if (
-              parsed.event === SocketEvent.NEW_MESSAGE &&
-              isNewMessageData(parsed.data) &&
-              parsed.data.conversationId !== Number(currentConverIdRef.current)
-            ) {
-              dispatch(
-                increaseUnread({ conversationId: parsed.data.conversationId }),
-              );
-              toast(
-                <ToastCustom
-                  message={parsed.data.message.content || ""}
-                  userName={parsed.data.message.senderId.toString() || ""}
-                ></ToastCustom>,
-                {
-                  position: "bottom-right",
-                  autoClose: 4000,
-                },
-              );
-            }
-          }
-
-          if (
-            parsed.event === SocketEvent.STUDY_SESSION_REMINDER &&
-            isStudySessionReminder(parsed.data)
-          ) {
-            const normalizedData = normalizeStudySessionReminder(parsed.data);
-            if (normalizedData) {
-              toast(<StudySessionReminderToast {...normalizedData} />, {
-                position: "top-right",
-                autoClose: 10000,
-                toastId: normalizedData.toastId,
-                style: {
-                  padding: 0,
-                  background: "transparent",
-                  boxShadow: "none",
-                },
+              Promise.resolve(
+                sendDelivered(parsed.data.conversationId, [
+                  parsed.data.message.messageId,
+                ]),
+              ).catch((error) => {
+                console.error("Cannot send delivered message", error);
               });
             }
+
+            if (parsed.data.conversationId !== currentConverIdRef.current) {
+              dispatch(
+                increaseUnread({
+                  conversationId: parsed.data.conversationId,
+                }),
+              );
+
+              if (!isConversationPageRef.current) {
+                toast(
+                  <ToastCustom
+                    message={parsed.data.message.content || ""}
+                    userName={parsed.data.message.senderId.toString()}
+                  />,
+                  {
+                    position: "bottom-right",
+                    autoClose: 4000,
+                  },
+                );
+              }
+            }
           }
         });
-        ws.onMessage("/topic/presence", (msg: any) => {
-          const parsed: SocketResponse = JSON.parse(msg);
-          if (parsed.event === SocketEvent.USER_PRESENCE) {
-            dispatch(updateNewMess(parsed));
-          }
-        });
+
+        if (typeof chatSubscription === "function") {
+          unsubscribeChat = chatSubscription;
+        }
+
+        const presenceSubscription = ws.onMessage(
+          "/topic/presence",
+          (msg: any) => {
+            const parsed: SocketResponse = JSON.parse(msg);
+
+            if (parsed.event === SocketEvent.USER_PRESENCE) {
+              dispatch(updateNewMess(parsed));
+            }
+          },
+        );
+
+        if (typeof presenceSubscription === "function") {
+          unsubscribePresence = presenceSubscription;
+        }
       })
       .catch((err) => {
         console.error("Loi connect:", err);
       });
 
     return () => {
-      unsubscribeOnConnected();
+      isMounted = false;
+      unsubscribeOnConnected?.();
+      unsubscribeChat?.();
+      unsubscribePresence?.();
     };
   }, [dispatch]);
 
@@ -322,7 +493,9 @@ export default function MainLayout() {
           roomId: call.roomId,
           hasToken: !!call.token,
         });
+
         setIncomingVideoCall(null);
+
         setActiveVideoCall({
           ...call,
           isGroupCall: Boolean(
@@ -346,7 +519,9 @@ export default function MainLayout() {
             : "Không thể tham gia cuộc gọi video",
         );
       })
-      .finally(() => setCallActionLoading(false));
+      .finally(() => {
+        setCallActionLoading(false);
+      });
   };
 
   const rejectIncomingCall = () => {
@@ -362,6 +537,7 @@ export default function MainLayout() {
       })
       .finally(() => {
         setIncomingVideoCall(null);
+        setIncomingPeer(null);
         setCallActionLoading(false);
       });
   };
@@ -369,6 +545,7 @@ export default function MainLayout() {
   return (
     <div>
       <ToastContainer />
+
       <Box sx={{ display: "flex", minHeight: "100vh", background: "#fafaf8" }}>
         <Box sx={{ flexShrink: 0 }}>
           <SideBar />
@@ -376,6 +553,7 @@ export default function MainLayout() {
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Header />
+
           <Box>
             <Outlet />
           </Box>

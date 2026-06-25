@@ -34,6 +34,8 @@ import {
   requestFriendService,
   updateFriendRequestStatusBySenderAndReceiverService,
 } from "../../services/FriendService";
+import WebSocketManager from "../../socket/WebSocketManager";
+
 
 type CommunityGroupStatus = "ACTIVE" | "INACTIVE";
 type CommunityGroupType = "COMMUNITY" | "PRIVATE";
@@ -499,6 +501,7 @@ export default function RecommendationPage() {
     ],
   );
 
+
   const otherSubjects = useMemo(() => {
     if (subjects.length === 0) return [];
 
@@ -559,6 +562,16 @@ export default function RecommendationPage() {
   useEffect(() => {
     fetchSubjects();
   }, [fetchSubjects]);
+
+  useEffect(() => {
+    const handleStatusUpdate = () => {
+      fetchRecommendations(userId);
+    };
+
+    window.addEventListener("friend_status_updated", handleStatusUpdate);
+    return () => window.removeEventListener("friend_status_updated", handleStatusUpdate);
+  }, [fetchRecommendations, userId]);
+
 
   useEffect(() => {
     if (!suggestedSubjectId) {
