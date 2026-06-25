@@ -6,7 +6,8 @@ export type MatchingActionStatus =
   | "VIEWED"
   | "FRIEND_REQUEST_SENT"
   | "ACCEPTED"
-  | "REJECTED";
+  | "REJECTED"
+  | "SKIPPED";
 
 export interface RecordMatchingActionRequest {
   userId: number;
@@ -21,6 +22,7 @@ export interface UpdateMatchingStatusRequest {
   recommendedUserId: number;
   actionStatus: Exclude<MatchingActionStatus, "VIEWED">;
   finalScore?: number;
+  reasonText?: string;
 }
 
 export const matchingItemApi = {

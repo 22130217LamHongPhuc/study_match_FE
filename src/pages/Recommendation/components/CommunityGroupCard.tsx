@@ -11,6 +11,7 @@ export interface CommunityGroup {
   status: CommunityGroupStatus;
   type: CommunityGroupType;
   createdAt: string;
+  isMember?: boolean;
 }
 
 interface CommunityGroupCardProps {
@@ -61,10 +62,11 @@ export default function CommunityGroupCard({
           <button
             type="button"
             onClick={() => onJoin?.(group.id)}
-            className="flex w-full items-center justify-center gap-1.5 h-10 rounded-lg bg-orange-500 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+            disabled={group.isMember}
+            className="flex w-full items-center justify-center gap-1.5 h-10 rounded-lg bg-orange-500 text-sm font-semibold text-white hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
           >
-            Tham gia
-            <ArrowRight size={14} />
+            {group.isMember ? "Đã tham gia" : "Tham gia"}
+            {!group.isMember && <ArrowRight size={14} />}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { BASE_CHAT_SERVICE, BASE_SOCIAL_SERVICE, BASE_USER_SERVICE, BASE_URL } from "../config/BaseConfig";
+import { FriendRequestStatus } from "../pages/Recommendation/types";
 
 export interface FriendUser {
     userId: number;
@@ -137,9 +138,41 @@ export const requestFriendService = async (
 
 export const updateFriendRequestStatusService = async (
     requestId: number,
-    status: "APPROVED" | "REJECTED" | "BLOCKED",
+    status: FriendRequestStatus,
 ): Promise<UpdateFriendRequestStatusResponse> => {
     const url = `${BASE_URL}/social/friend-requests/${requestId}/status`;
+    const res = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (data) {
+        return data as UpdateFriendRequestStatusResponse;
+    }
+
+    return {
+        code: res.status,
+        message: res.statusText,
+        data: null,
+        timestamp: new Date().toISOString(),
+    };
+};
+
+
+
+
+
+export const updateFriendRequestStatusBySenderAndReceiverService = async (
+    sender_id: number,
+    receiver_id: number,
+    status: FriendRequestStatus,
+): Promise<UpdateFriendRequestStatusResponse> => {
+    const url = `${BASE_URL}/social/friend-requests/sender/${sender_id}/receiver/${receiver_id}/status`;
     const res = await fetch(url, {
         method: "PATCH",
         headers: {

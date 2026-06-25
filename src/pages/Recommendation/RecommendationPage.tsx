@@ -1,13 +1,27 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BookOpen, RefreshCw, GraduationCap, Users, Search } from "lucide-react";
+import {
+  BookOpen,
+  GraduationCap,
+  RefreshCw,
+  Search,
+  Users,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
+
 import RecommendationCard from "./components/RecommendationCard";
 import CommunityGroupCard from "./components/CommunityGroupCard";
+import RejectRecommendationModal, {
+  RejectRecommendationSubmitValue,
+} from "./components/RejectRecommendationModal";
 import { useRecommendations } from "./hooks/useRecommendations";
-import { useSelector } from "react-redux";
+import {
+  FriendRequestVm,
+  RecommendationCardVm,
+  RecommendationSecondaryAction,
+} from "./types";
 import { RootState } from "../../redux/store";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { FriendRequestVm, RecommendationCardVm } from "./types";
 import { matchingItemApi } from "../../services/matchingItemApi";
 import {
   browseGroups,
@@ -18,7 +32,7 @@ import {
 } from "../../services/GroupService";
 import {
   requestFriendService,
-  updateFriendRequestStatusService,
+  updateFriendRequestStatusBySenderAndReceiverService,
 } from "../../services/FriendService";
 
 type CommunityGroupStatus = "ACTIVE" | "INACTIVE";
@@ -32,6 +46,7 @@ export interface CommunityGroup {
   status: CommunityGroupStatus;
   type: CommunityGroupType;
   createdAt: string;
+  isMember: boolean;
 }
 
 function mapBrowseGroupToCommunityGroup(
@@ -48,6 +63,7 @@ function mapBrowseGroupToCommunityGroup(
     status: normalizedStatus,
     type: "COMMUNITY",
     createdAt: item.createdAt,
+    isMember: item.member || false,
   };
 }
 
@@ -56,21 +72,38 @@ function isSuccessCode(code: number | string | undefined) {
   return responseCode >= 200 && responseCode < 300;
 }
 
+function buildRejectReasonText({
+  selectedReasons,
+  note,
+}: RejectRecommendationSubmitValue) {
+  const lines = ["Lý do từ chối:"];
+
+  selectedReasons.forEach((reason) => {
+    lines.push(`- ${reason}`);
+  });
+
+  if (note.trim()) {
+    lines.push(`Ghi chú thêm: ${note.trim()}`);
+  }
+
+  return lines.join("\n");
+}
+
 export default function RecommendationPage() {
   const profileVm = useSelector((state: RootState) => state.profile.profileVm);
   const navigate = useNavigate();
 
-  const userId = Number(localStorage.getItem("userId") ?? 0);
+  const currentUserId =
+    profileVm?.userId ?? Number(localStorage.getItem("userId") ?? 0);
 
   const { loading, error, items, fetchRecommendations } =
-    useRecommendations(userId);
+    useRecommendations(currentUserId);
 
   const suggestedSubjectId = profileVm?.mainSubjectId ?? 0;
   const suggestedSubjectName = profileVm?.mainSubjectName ?? "-";
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [subjectsError, setSubjectsError] = useState<string | null>(null);
-
   const [recommendedGroups, setRecommendedGroups] = useState<CommunityGroup[]>(
     [],
   );
@@ -79,7 +112,6 @@ export default function RecommendationPage() {
   const [recommendedGroupsError, setRecommendedGroupsError] = useState<
     string | null
   >(null);
-
   const [selectedOtherSubjectId, setSelectedOtherSubjectId] = useState<
     number | ""
   >("");
@@ -91,11 +123,27 @@ export default function RecommendationPage() {
   const [selectedOtherGroupsError, setSelectedOtherGroupsError] = useState<
     string | null
   >(null);
-
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
   const [connectingUserId, setConnectingUserId] = useState<number | null>(null);
   const [acceptingRequestId, setAcceptingRequestId] = useState<number | null>(
     null,
+  );
+  const [rejectingUserId, setRejectingUserId] = useState<number | null>(null);
+  const [rejectTarget, setRejectTarget] =
+    useState<RecommendationCardVm | null>(null);
+  const [rejectActionStatus, setRejectActionStatus] = useState<
+    "REJECTED" | "SKIPPED"
+  >("REJECTED");
+  const [dismissedRecommendationIds, setDismissedRecommendationIds] = useState<
+    number[]
+  >([]);
+
+  const visibleItems = useMemo(
+    () =>
+      items.filter(
+        (item) => !dismissedRecommendationIds.includes(item.userId),
+      ),
+    [dismissedRecommendationIds, items],
   );
 
   const handleViewProfile = useCallback(
@@ -111,9 +159,13 @@ export default function RecommendationPage() {
     [navigate],
   );
 
+  const handleCloseRejectModal = useCallback(() => {
+    if (rejectingUserId !== null) return;
+    setRejectTarget(null);
+  }, [rejectingUserId]);
+
   const handleJoinGroup = useCallback(
     async (groupId: number) => {
-      const currentUserId = profileVm?.userId;
       if (!currentUserId) {
         toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
         return;
@@ -122,6 +174,7 @@ export default function RecommendationPage() {
       if (joiningGroupId === groupId) return;
 
       setJoiningGroupId(groupId);
+
       try {
         const response = await joinMemberIntoGroup(groupId, currentUserId);
 
@@ -131,6 +184,22 @@ export default function RecommendationPage() {
         }
 
         toast.success("Tham gia nhóm thành công!");
+
+        setRecommendedGroups((prev) =>
+          prev.map((g) =>
+            g.id === groupId
+              ? { ...g, isMember: true, memberCount: g.memberCount + 1 }
+              : g,
+          ),
+        );
+
+        setSelectedOtherGroups((prev) =>
+          prev.map((g) =>
+            g.id === groupId
+              ? { ...g, isMember: true, memberCount: g.memberCount + 1 }
+              : g,
+          ),
+        );
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
@@ -139,14 +208,11 @@ export default function RecommendationPage() {
         setJoiningGroupId((prev) => (prev === groupId ? null : prev));
       }
     },
-    [joiningGroupId, profileVm?.userId],
+    [currentUserId, joiningGroupId],
   );
 
   const handleConnect = useCallback(
     async (targetUserId: number) => {
-      const currentUserId =
-        profileVm?.userId ?? Number(localStorage.getItem("userId"));
-
       if (!currentUserId) {
         toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
         return;
@@ -170,14 +236,24 @@ export default function RecommendationPage() {
               userId: currentUserId,
               recommendedUserId: targetUserId,
               actionStatus: "FRIEND_REQUEST_SENT",
-              finalScore: items.find((item) => item.userId === targetUserId)?.finalScore,
+              finalScore: items.find((item) => item.userId === targetUserId)
+                ?.finalScore,
             });
-          } catch (error) {
-            console.error("Track matching FRIEND_REQUEST_SENT failed", error);
+          } catch (trackingError) {
+            console.error(
+              "Track matching FRIEND_REQUEST_SENT failed",
+              trackingError,
+            );
           }
 
           toast.success("Đã gửi lời mời kết bạn.");
-          await fetchRecommendations(userId);
+
+          try {
+            await fetchRecommendations(currentUserId);
+          } catch (refreshError) {
+            console.error("Cannot refresh recommendations", refreshError);
+          }
+
           return;
         }
 
@@ -190,25 +266,25 @@ export default function RecommendationPage() {
         setConnectingUserId((prev) => (prev === targetUserId ? null : prev));
       }
     },
-    [connectingUserId, fetchRecommendations, profileVm?.userId, userId],
+    [connectingUserId, currentUserId, fetchRecommendations, items],
   );
 
   const handleAcceptFriendRequest = useCallback(
     async (request: FriendRequestVm) => {
-      const currentUserId =
-        profileVm?.userId ?? Number(localStorage.getItem("userId"));
       const requestId = request.id;
       const senderId = request.senderId;
+      const receiverId = request.receiverId;
 
-      if (!currentUserId || !senderId) return;
+      if (!currentUserId || !senderId || !receiverId) return;
       if (currentUserId === senderId) return;
       if (acceptingRequestId === requestId) return;
 
       setAcceptingRequestId(requestId);
 
       try {
-        const response = await updateFriendRequestStatusService(
-          requestId,
+        const response = await updateFriendRequestStatusBySenderAndReceiverService(
+          senderId,
+          receiverId,
           "APPROVED",
         );
 
@@ -218,14 +294,21 @@ export default function RecommendationPage() {
               userId: currentUserId,
               recommendedUserId: senderId,
               actionStatus: "ACCEPTED",
-              finalScore: items.find((item) => item.userId === senderId)?.finalScore,
+              finalScore: items.find((item) => item.userId === senderId)
+                ?.finalScore,
             });
-          } catch (error) {
-            console.error("Track matching ACCEPTED failed", error);
+          } catch (trackingError) {
+            console.error("Track matching ACCEPTED failed", trackingError);
           }
 
           toast.success("Đã chấp nhận lời mời kết bạn.");
-          await fetchRecommendations(userId);
+
+          try {
+            await fetchRecommendations(currentUserId);
+          } catch (refreshError) {
+            console.error("Cannot refresh recommendations", refreshError);
+          }
+
           return;
         }
 
@@ -238,11 +321,187 @@ export default function RecommendationPage() {
         setAcceptingRequestId((prev) => (prev === requestId ? null : prev));
       }
     },
-    [acceptingRequestId, fetchRecommendations, profileVm?.userId, userId],
+    [acceptingRequestId, currentUserId, fetchRecommendations, items],
+  );
+
+  const handleCancelFriendRequest = useCallback(
+    async (recommendation: RecommendationCardVm) => {
+      const friendRequest = recommendation.friendRequest;
+      const targetUserId = recommendation.userId;
+
+      if (!currentUserId) {
+        toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+        return;
+      }
+
+      if (
+        !friendRequest?.senderId ||
+        !friendRequest?.receiverId ||
+        friendRequest.status !== "FRIEND_REQUEST_SENT" ||
+        friendRequest.senderId !== currentUserId
+      ) {
+        return;
+      }
+
+      if (rejectingUserId === targetUserId) return;
+
+      setRejectingUserId(targetUserId);
+
+      try {
+        const response = await updateFriendRequestStatusBySenderAndReceiverService(
+          friendRequest.senderId,
+          friendRequest.receiverId,
+          "REJECTED",
+        );
+
+        if (!isSuccessCode(response.code)) {
+          throw new Error(
+            response.message || "Không thể hủy lời mời kết bạn.",
+          );
+        }
+
+        toast.success("Đã hủy lời mời kết bạn.");
+
+        try {
+          await fetchRecommendations(currentUserId);
+        } catch (refreshError) {
+          console.error("Cannot refresh recommendations", refreshError);
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        toast.error(message);
+      } finally {
+        setRejectingUserId((prev) => (prev === targetUserId ? null : prev));
+      }
+    },
+    [currentUserId, fetchRecommendations, rejectingUserId],
+  );
+
+  const handleSecondaryAction = useCallback(
+    (
+      recommendation: RecommendationCardVm,
+      action: RecommendationSecondaryAction,
+    ) => {
+      if (action === "CANCEL_REQUEST") {
+        void handleCancelFriendRequest(recommendation);
+        return;
+      }
+
+      setRejectTarget(recommendation);
+      setRejectActionStatus(action);
+    },
+    [handleCancelFriendRequest],
+  );
+
+  const handleRejectRecommendation = useCallback(
+    async ({ selectedReasons, note }: RejectRecommendationSubmitValue) => {
+      if (!rejectTarget) return;
+
+      if (!currentUserId) {
+        toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+        return;
+      }
+
+      const targetUserId = rejectTarget.userId;
+
+      if (rejectingUserId === targetUserId) return;
+
+      setRejectingUserId(targetUserId);
+
+      const reasonText = buildRejectReasonText({ selectedReasons, note });
+      const friendRequest = rejectTarget.friendRequest;
+      const isPendingReceivedRequest =
+        friendRequest?.status === "FRIEND_REQUEST_SENT" &&
+        friendRequest.receiverId === currentUserId;
+
+      try {
+        if (rejectActionStatus === "SKIPPED") {
+          const matchingResponse = await matchingItemApi.updateStatus({
+            userId: currentUserId,
+            recommendedUserId: targetUserId,
+            actionStatus: "SKIPPED",
+            finalScore: rejectTarget.finalScore,
+            reasonText,
+          });
+
+          if (!matchingResponse.success) {
+            throw new Error(
+              matchingResponse.message ||
+              "Không thể gửi phản hồi cho gợi ý này.",
+            );
+          }
+
+          toast.success("Đã bỏ qua gợi ý.");
+        } else {
+          if (isPendingReceivedRequest && friendRequest?.senderId && friendRequest?.receiverId) {
+            const friendResponse = await updateFriendRequestStatusBySenderAndReceiverService(
+              friendRequest.senderId,
+              friendRequest.receiverId,
+              "REJECTED",
+            );
+
+            if (!isSuccessCode(friendResponse.code)) {
+              throw new Error(
+                friendResponse.message || "Không thể từ chối lời mời kết bạn.",
+              );
+            }
+          }
+
+          const matchingResponse = await matchingItemApi.updateStatus({
+            userId: currentUserId,
+            recommendedUserId: targetUserId,
+            actionStatus: "REJECTED",
+            finalScore: rejectTarget.finalScore,
+            reasonText,
+          });
+
+          if (!matchingResponse.success && !isPendingReceivedRequest) {
+            throw new Error(
+              matchingResponse.message ||
+              "Không thể gửi phản hồi cho gợi ý này.",
+            );
+          }
+
+          if (!matchingResponse.success && isPendingReceivedRequest) {
+            toast.success(
+              "Đã từ chối kết nối, nhưng phản hồi gợi ý chưa được lưu.",
+            );
+          } else {
+            toast.success("Đã gửi phản hồi từ chối.");
+          }
+        }
+
+        setDismissedRecommendationIds((prev) =>
+          prev.includes(targetUserId) ? prev : [...prev, targetUserId],
+        );
+        setRejectTarget(null);
+
+        try {
+          await fetchRecommendations(currentUserId);
+        } catch (refreshError) {
+          console.error("Cannot refresh recommendations", refreshError);
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        toast.error(message);
+      } finally {
+        setRejectingUserId((prev) => (prev === targetUserId ? null : prev));
+      }
+    },
+    [
+      currentUserId,
+      fetchRecommendations,
+      rejectTarget,
+      rejectingUserId,
+      rejectActionStatus,
+    ],
   );
 
   const otherSubjects = useMemo(() => {
     if (subjects.length === 0) return [];
+
     return subjects.filter(
       (subject) => subject.subjectId !== suggestedSubjectId,
     );
@@ -253,6 +512,7 @@ export default function RecommendationPage() {
 
     try {
       const response = await getAllSubjects();
+
       if (!response.success) {
         throw new Error(response.message || "Không thể tải danh sách môn học.");
       }
@@ -347,8 +607,7 @@ export default function RecommendationPage() {
   return (
     <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-5">
-
-        <section className="rounded-xl bg-white p-5 border border-gray-200">
+        <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500 text-white">
               <GraduationCap size={22} />
@@ -376,8 +635,8 @@ export default function RecommendationPage() {
 
               <button
                 type="button"
-                onClick={() => fetchRecommendations(userId)}
-                className="h-9 rounded-lg border border-red-200 bg-white px-4 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                onClick={() => fetchRecommendations(currentUserId)}
+                className="h-9 rounded-lg border border-red-200 bg-white px-4 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
               >
                 Thử lại
               </button>
@@ -385,7 +644,7 @@ export default function RecommendationPage() {
           </div>
         )}
 
-        <section className="rounded-xl bg-white p-5 border border-gray-200">
+        <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100">
@@ -396,16 +655,16 @@ export default function RecommendationPage() {
                   Bạn học phù hợp
                 </h2>
                 <p className="text-xs text-gray-500">
-                  {items.length} bạn học được gợi ý
+                  {visibleItems.length} bạn học được gợi ý
                 </p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() => fetchRecommendations(userId)}
+              onClick={() => fetchRecommendations(currentUserId)}
               disabled={loading}
-              className="inline-flex items-center gap-2 h-9 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2 sm:mt-0"
+              className="mt-2 inline-flex h-9 items-center gap-2 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-0"
             >
               <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
               {loading ? "Đang tải..." : "Tải lại"}
@@ -414,34 +673,42 @@ export default function RecommendationPage() {
 
           {loading ? (
             <LoadingState label="Đang tìm bạn học phù hợp..." />
-          ) : items.length === 0 ? (
+          ) : visibleItems.length === 0 ? (
             <EmptyState
-              title="Chưa có bạn học phù hợp"
-              description="Hệ thống chưa tìm thấy bạn học phù hợp với bạn."
+              title={
+                items.length === 0
+                  ? "Chưa có bạn học phù hợp"
+                  : "Bạn đã xử lý hết gợi ý hiện tại"
+              }
+              description={
+                items.length === 0
+                  ? "Hệ thống chưa tìm thấy bạn học phù hợp với bạn."
+                  : "Hãy tải lại để nhận thêm gợi ý bạn học mới."
+              }
               actionLabel="Tải lại"
-              onAction={() => fetchRecommendations(userId)}
+              onAction={() => fetchRecommendations(currentUserId)}
             />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <RecommendationCard
                   key={item.userId}
                   recommendation={item}
                   onViewProfile={handleViewProfile}
                   onConnect={handleConnect}
                   onAccept={handleAcceptFriendRequest}
+                  onSecondaryAction={handleSecondaryAction}
                   isConnecting={connectingUserId === item.userId}
                   isAccepting={acceptingRequestId === item.friendRequest?.id}
-                  currentUserId={
-                    profileVm?.userId ?? Number(localStorage.getItem("userId"))
-                  }
+                  isRejecting={rejectingUserId === item.userId}
+                  currentUserId={currentUserId}
                 />
               ))}
             </div>
           )}
         </section>
 
-        <section className="rounded-xl bg-white p-5 border border-gray-200">
+        <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100">
@@ -506,16 +773,18 @@ export default function RecommendationPage() {
                 value={selectedOtherSubjectId}
                 onChange={(event) => {
                   const value = event.target.value;
+
                   if (!value) {
                     setSelectedOtherSubjectId("");
                     return;
                   }
+
                   const parsed = Number(value);
                   setSelectedOtherSubjectId(
                     Number.isFinite(parsed) ? parsed : "",
                   );
                 }}
-                className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-600 outline-none focus:border-orange-300 focus:ring-1 focus:ring-orange-100 transition-all"
+                className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-600 outline-none transition-all focus:border-orange-300 focus:ring-1 focus:ring-orange-100"
               >
                 <option value="">Chọn môn học</option>
                 {otherSubjects.map((subject) => (
@@ -576,6 +845,14 @@ export default function RecommendationPage() {
           </div>
         </section>
       </div>
+
+      <RejectRecommendationModal
+        open={!!rejectTarget}
+        recommendationName={rejectTarget?.fullName}
+        submitting={rejectingUserId === rejectTarget?.userId}
+        onClose={handleCloseRejectModal}
+        onSubmit={handleRejectRecommendation}
+      />
     </main>
   );
 }
@@ -611,15 +888,13 @@ function EmptyState({
 
         <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
 
-        <p className="mt-1 max-w-sm text-sm text-gray-500">
-          {description}
-        </p>
+        <p className="mt-1 max-w-sm text-sm text-gray-500">{description}</p>
 
         {actionLabel && onAction && (
           <button
             type="button"
             onClick={onAction}
-            className="mt-3 h-9 rounded-lg bg-orange-500 px-5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+            className="mt-3 h-9 rounded-lg bg-orange-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
           >
             {actionLabel}
           </button>

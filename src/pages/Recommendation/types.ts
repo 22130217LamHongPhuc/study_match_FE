@@ -28,23 +28,39 @@ export interface RecommendationApiItem {
 
 export interface RecommendationFriendRequestApiItem {
   id: number;
-  senderId: number;
-  receiverId: number;
-  status: FriendRequestStatus;
+  senderId?: number | null;
+  sender_id?: number | null;
+  receiverId?: number | null;
+  receiver_id?: number | null;
+  status: MatchingActionStatus;
 }
+
+export type MatchingActionStatus =
+  | "FRIEND_REQUEST_SENT"
+  | "NONE"
+  | "REJECTED"
+  | "VIEWED"
+  | "ACCEPTED"
+  | "SKIPPED";
 
 export type FriendRequestStatus =
   | "APPROVED"
   | "PENDING"
   | "REJECTED"
-  | "BLOCKED";
+  | "BLOCKED"
+  | "CANCELLED";
 
 export interface FriendRequestVm {
   id: number;
-  senderId: number;
-  receiverId: number;
-  status: FriendRequestStatus;
+  senderId: number | null;
+  receiverId: number | null;
+  status: MatchingActionStatus;
 }
+
+export type RecommendationSecondaryAction =
+  | "SKIPPED"
+  | "REJECTED"
+  | "CANCEL_REQUEST";
 
 export interface RecommendUsersApiResponse {
   success: boolean;

@@ -3,7 +3,14 @@ import { STUDY_MODE_LABELS } from "../constants";
 import { getRecommendedUsers } from "../../../services/RecommendationService";
 import { RecommendationApiItem, RecommendationCardVm } from "../types";
 
+function normalizeOptionalUserId(value: unknown): number | null {
+  const normalized = Number(value);
+  return Number.isFinite(normalized) && normalized > 0 ? normalized : null;
+}
+
 function mapToViewModel(item: RecommendationApiItem): RecommendationCardVm {
+  const friendRequest = item.friend_request;
+
   return {
     userId: item.user_id,
     fullName: item.full_name ?? "Không xác định",
@@ -19,13 +26,17 @@ function mapToViewModel(item: RecommendationApiItem): RecommendationCardVm {
     finalScore: item.final_score,
     reasonText: item.reason_text ?? item.reasonText,
     matchPercentage: item.match_percentage,
-    friendRequest: item.friend_request
+    friendRequest: friendRequest
       ? {
-        id: item.friend_request.id,
-        senderId: item.friend_request.senderId,
-        receiverId: item.friend_request.receiverId,
-        status: item.friend_request.status,
-      }
+          id: friendRequest.id,
+          senderId: normalizeOptionalUserId(
+            friendRequest.senderId ?? friendRequest.sender_id,
+          ),
+          receiverId: normalizeOptionalUserId(
+            friendRequest.receiverId ?? friendRequest.receiver_id,
+          ),
+          status: friendRequest.status,
+        }
       : null,
   };
 }
@@ -41,12 +52,14 @@ export function useRecommendations(initialUserId: number) {
 
   const fetchRecommendations = useCallback(
     async (targetUserId?: number) => {
-      const nextUserId = targetUserId ?? userId;
+      if (targetUserId == null) {
+        return;
+      }
       setLoading(true);
       setError(null);
 
       try {
-        const response = await getRecommendedUsers({ user_id: nextUserId });
+        const response = await getRecommendedUsers(targetUserId);
 
         if (!response.success) {
           throw new Error(response.message || "Không thể tạo danh sách gợi ý.");
@@ -55,9 +68,11 @@ export function useRecommendations(initialUserId: number) {
         const mapped = response.recommendations.map(mapToViewModel);
         mapped.sort((a, b) => b.matchPercentage - a.matchPercentage);
 
+
+        console.log("Recommendations mapped: ", mapped);
         setItems(mapped);
         setMessage(response.message);
-        setUserId(nextUserId);
+        setUserId(targetUserId);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Đã có lỗi xảy ra.";

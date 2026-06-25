@@ -3,7 +3,7 @@ import MainLayout from "../pages/MainLayout/MainLayout";
 import HomePage from "../pages/HomePage";
 import FriendsPage from "../pages/FriendsLayout/FriendsPage";
 import SchedulePage from "../pages/SchedulePage/SchedulePage";
-import RecommendationPage from "../pages/Recommendation";
+import RecommendationPage from "../pages/Recommendation/RecommendationPage";
 import { AuthLayout } from "../pages/MainLayout/AuthLayout";
 import LoginPage from "../pages/Auth/LoginPage";
 import RegisterPage from "../pages/Auth/RegisterPage";
