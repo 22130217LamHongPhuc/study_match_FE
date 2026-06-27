@@ -9,6 +9,8 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ReplyIcon from '@mui/icons-material/Reply'
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt'
 import PushPinIcon from '@mui/icons-material/PushPin'
+import PauseIcon from '@mui/icons-material/Pause'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { Avatar, Box, CircularProgress, Dialog, IconButton, Tooltip } from '@mui/material'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MessageInterface } from '../../model/Conversation'
@@ -18,6 +20,7 @@ import { RootState } from '../../redux/store'
 import { SocketEvent } from '../../enum/SocketEvent'
 import { ReactionData, ReactionDTO } from '../../model/Reaction'
 import { ConversationTheme } from '../../theme/ConversationThemes'
+import { normalizeAvatarUrl } from '../../services/FriendService'
 
 type VisibleMessageStatus = {
     messageId: number
@@ -77,6 +80,10 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
     const [previewImage, setPreviewImage] = useState<{ url: string; fileName?: string | null } | null>(null)
     const [revealedOffensiveMessageIds, setRevealedOffensiveMessageIds] = useState<Set<number>>(new Set())
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
+    const audioRefs = useRef<Record<number, HTMLAudioElement | null>>({})
+    const [playingAudioMessageId, setPlayingAudioMessageId] = useState<number | null>(null)
+    const [audioDurations, setAudioDurations] = useState<Record<number, number>>({})
+    const [audioCurrentTimes, setAudioCurrentTimes] = useState<Record<number, number>>({})
     const currentUserId = Number(localStorage.getItem("userId"))
     const currentUser = useSelector((state: RootState) => state.user)
     const currentConversationId = useSelector((state: RootState) => state.chat.currentConversationId)
@@ -120,12 +127,75 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
 
     const getSenderAvatar = (senderId: number) => {
         const profile = getSenderProfile(senderId)
-        return profile?.avatarUrl || profile?.avatar_url || profile?.avatar || undefined
+        return normalizeAvatarUrl(profile?.avatarUrl || profile?.avatar_url || profile?.avatar || null) || undefined
     }
 
     const isMessagePinned = (message: MessageInterface) => {
         const pinned = message.isPinned ?? message.pinned
         return pinned === true || pinned === "Y"
+    }
+
+    const getFiniteAudioTime = (value?: number) => {
+        return Number.isFinite(value) && (value || 0) > 0 ? Math.floor(value || 0) : 0
+    }
+
+    const formatAudioTime = (value?: number) => {
+        if (!Number.isFinite(value) || !value) return "0:00"
+        const totalSeconds = Math.max(0, getFiniteAudioTime(value))
+        const minutes = Math.floor(totalSeconds / 60)
+        const seconds = totalSeconds % 60
+        return `${minutes}:${String(seconds).padStart(2, "0")}`
+    }
+
+    const getAudioDurationFromMessage = (mess: MessageInterface) => {
+        const duration = Number(mess.audioDurationSeconds ?? mess.durationSeconds ?? 0)
+        return Number.isFinite(duration) && duration > 0 ? duration : 0
+    }
+
+    const updateAudioDuration = (messageId: number, duration?: number) => {
+        const nextDuration = getFiniteAudioTime(duration)
+        if (!nextDuration) return
+
+        setAudioDurations((prev) => {
+            if (prev[messageId] === nextDuration) return prev
+            return {
+                ...prev,
+                [messageId]: nextDuration,
+            }
+        })
+    }
+
+    const syncAudioDuration = (messageId: number) => {
+        const audio = audioRefs.current[messageId]
+        if (!audio) return
+
+        updateAudioDuration(messageId, audio.duration)
+    }
+
+    const toggleAudioPlayback = (messageId: number) => {
+        const audio = audioRefs.current[messageId]
+        if (!audio) return
+
+        if (playingAudioMessageId === messageId) {
+            audio.pause()
+            setPlayingAudioMessageId(null)
+            return
+        }
+
+        if (playingAudioMessageId !== null) {
+            audioRefs.current[playingAudioMessageId]?.pause()
+        }
+
+        syncAudioDuration(messageId)
+
+        audio.play()
+            .then(() => {
+                syncAudioDuration(messageId)
+                setPlayingAudioMessageId(messageId)
+            })
+            .catch((error) => {
+                console.error("[Conversation][audio-play-error]", error)
+            })
     }
 
     const getReactionSenderName = (senderId?: number) => {
@@ -561,7 +631,8 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
 
     const isImageMessage = (mess: MessageInterface) => mess.type?.startsWith("image/")
     const isVideoMessage = (mess: MessageInterface) => mess.type?.startsWith("video/")
-    const isFileMessage = (mess: MessageInterface) => !!mess.mediaURL && !isImageMessage(mess) && !isVideoMessage(mess)
+    const isAudioMessage = (mess: MessageInterface) => mess.type?.startsWith("audio/")
+    const isFileMessage = (mess: MessageInterface) => !!mess.mediaURL && !isImageMessage(mess) && !isVideoMessage(mess) && !isAudioMessage(mess)
 
     const isPolicyViolationMessage = (mess: any) => mess.moderationStatus === "HATE" || mess.moderation_status === "HATE"
     const isOffensiveMessage = (mess: any) => mess.moderationStatus === "OFFENSIVE" || mess.moderation_status === "OFFENSIVE"
@@ -631,10 +702,11 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
         const isMine = mess.senderId === currentUserId
         const senderName = getSenderName(mess.senderId)
         const senderAvatar = getSenderAvatar(mess.senderId)
+        const hiddenMessageText = getHiddenMessageText(mess, isMine)
         const bubble = (
             <Box
                 sx={{
-                    maxWidth: "70%",
+                    maxWidth: "100%",
                     px: 2,
                     py: 1,
                     borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
@@ -643,10 +715,11 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                     fontSize: 15,
                     fontStyle: "italic",
                     lineHeight: 1.4,
-                    wordBreak: "break-word",
+                    whiteSpace: "nowrap",
+                    wordBreak: "normal",
                 }}
             >
-                {getHiddenMessageText(mess, isMine)}
+                {hiddenMessageText}
             </Box>
         )
 
@@ -670,7 +743,12 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                         {senderName.charAt(0).toUpperCase()}
                     </Avatar>
 
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", maxWidth: "70%" }}>
+                    <Box sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        maxWidth: "calc(100% - 38px)",
+                    }}>
                         {isGroupConversation && (
                             <Box
                                 sx={{
@@ -972,6 +1050,112 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
             return renderFileMessage(mess, isMine)
         }
 
+        if (isAudioMessage(mess)) {
+            const isPlaying = playingAudioMessageId === mess.messageId
+            const currentTime = audioCurrentTimes[mess.messageId] || 0
+            const duration = audioDurations[mess.messageId] || getAudioDurationFromMessage(mess)
+
+            return (
+                <Box
+                    sx={{
+                        width: "100%",
+                        minWidth: 240,
+                        px: 1,
+                        py: 0.75,
+                        bgcolor: "#fff",
+                        color: "#0f172a",
+                        borderRadius: isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                        boxSizing: "border-box",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                    }}
+                >
+                    <IconButton
+                        aria-label={isPlaying ? "Tạm dừng âm thanh" : "Nghe âm thanh"}
+                        onClick={() => toggleAudioPlayback(mess.messageId)}
+                        sx={{
+                            width: 36,
+                            height: 36,
+                            bgcolor: isMine ? "#2563eb" : "#a40000",
+                            color: "#fff",
+                            flexShrink: 0,
+                            "&:hover": {
+                                bgcolor: isMine ? "#1d4ed8" : "#8a0000",
+                            },
+                        }}
+                    >
+                        {isPlaying ? <PauseIcon sx={{ fontSize: 21 }} /> : <PlayArrowIcon sx={{ fontSize: 24 }} />}
+                    </IconButton>
+                    <Box
+                        sx={{
+                            minWidth: 0,
+                            flex: 1,
+                            color: "#1e293b",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                fontSize: 14,
+                                fontWeight: 800,
+                                lineHeight: 1.2,
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}
+                        >
+                            Tin nhắn thoại
+                        </Box>
+                        <Box
+                            sx={{
+                                mt: 0.35,
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "#64748b",
+                                lineHeight: 1,
+                            }}
+                        >
+                            {formatAudioTime(currentTime)} / {formatAudioTime(duration)}
+                        </Box>
+                    </Box>
+                    <audio
+                        ref={(element) => {
+                            audioRefs.current[mess.messageId] = element
+                        }}
+                        src={mess.mediaURL || ""}
+                        preload="metadata"
+                        onLoadedMetadata={(event) => {
+                            updateAudioDuration(mess.messageId, event.currentTarget.duration)
+                        }}
+                        onDurationChange={(event) => {
+                            updateAudioDuration(mess.messageId, event.currentTarget.duration)
+                        }}
+                        onTimeUpdate={(event) => {
+                            const nextCurrentTime = event.currentTarget.currentTime
+                            updateAudioDuration(mess.messageId, event.currentTarget.duration)
+                            setAudioCurrentTimes((prev) => ({
+                                ...prev,
+                                [mess.messageId]: nextCurrentTime,
+                            }))
+                        }}
+                        onEnded={() => {
+                            setPlayingAudioMessageId(null)
+                            setAudioCurrentTimes((prev) => ({
+                                ...prev,
+                                [mess.messageId]: 0,
+                            }))
+                        }}
+                        onPause={() => {
+                            if (playingAudioMessageId === mess.messageId) {
+                                setPlayingAudioMessageId(null)
+                            }
+                        }}
+                        style={{ display: "none" }}
+                    />
+                </Box>
+            )
+        }
+
         return (
             <Box
                 sx={{
@@ -1005,7 +1189,10 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
         if (mess.replyToDeleted) return "Tin nhắn đã được thu hồi"
         if (mess.replyToContent) return mess.replyToContent
         if (mess.replyToFileName) return mess.replyToFileName
-        if (mess.replyToMediaURL) return mess.replyToType?.startsWith("video/") ? "Video" : "Hình ảnh"
+        if (mess.replyToMediaURL) {
+            if (mess.replyToType?.startsWith("audio/")) return "Âm thanh"
+            return mess.replyToType?.startsWith("video/") ? "Video" : "Hình ảnh"
+        }
         return "Tin nhắn"
     }
     const renderReplyPreview = (mess: MessageInterface, isMine: boolean) => {
@@ -1108,6 +1295,28 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                     overflowAnchor: "none",
                     background: theme?.background || "linear-gradient(180deg, #f4f6fb, #eef1f8)",
                     fontFamily: appFontFamily,
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "rgba(100,116,139,0.45) transparent",
+                    "&::-webkit-scrollbar": {
+                        width: 8,
+                    },
+                    "&::-webkit-scrollbar-track": {
+                        background: "transparent",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "rgba(100,116,139,0.38)",
+                        borderRadius: "999px",
+                        border: "2px solid transparent",
+                        backgroundClip: "content-box",
+                    },
+                    "&::-webkit-scrollbar-thumb:hover": {
+                        backgroundColor: "rgba(71,85,105,0.55)",
+                    },
+                    "&::-webkit-scrollbar-button": {
+                        display: "none",
+                        width: 0,
+                        height: 0,
+                    },
                 }}
             >
 
@@ -1312,7 +1521,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                                     >
                                                         <Box
                                                             sx={{
-                                                                width: 240,
+                                                                width: isAudioMessage(mess) ? "min(340px, 78vw)" : 240,
                                                                 overflow: "hidden",
                                                                 borderRadius: "18px 18px 4px 18px",
                                                                 background: theme?.gradient || "#b30000",
@@ -1481,7 +1690,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                                     >
                                                         <Box
                                                             sx={{
-                                                                width: 240,
+                                                                width: isAudioMessage(mess) ? "min(340px, 78vw)" : 240,
                                                                 overflow: "hidden",
                                                                 borderRadius: "18px 18px 4px 18px",
                                                                 background: theme?.gradient || "#b30000",
@@ -1636,7 +1845,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                                 {renderMessageActions(mess, "left")}
                                                 <Box
                                                     sx={{
-                                                        width: 240,
+                                                        width: isAudioMessage(mess) ? "min(340px, 78vw)" : 240,
                                                         overflow: "hidden",
                                                         borderRadius: "18px 18px 4px 18px",
                                                         background: theme?.gradient || "#b30000",

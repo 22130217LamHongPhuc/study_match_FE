@@ -12,6 +12,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import InfoIcon from "@mui/icons-material/Info";
+import StopCircleIcon from "@mui/icons-material/StopCircle";
 import {
   Avatar,
   Box,
@@ -57,8 +58,8 @@ import {
   updateConversationColor,
   updateConversationFont,
 } from "../../services/ChatService";
-import { getActiveGroupMemberIds } from "../../services/GroupService";
-import { FriendUser, loadFriendProfilesService } from "../../services/FriendService";
+import { getActiveGroupMemberIds, getGroupById } from "../../services/GroupService";
+import { FriendUser, loadFriendProfilesService, normalizeAvatarUrl } from "../../services/FriendService";
 import { getGroupStudySessions } from "../../services/StudySessionService";
 import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
 import { StudySessionResponse } from "../StudySession/types";
@@ -73,6 +74,10 @@ import {
 import { badWords } from "@vnphu/vn-badwords";
 const MESSAGE_PAGE_SIZE = 25;
 const MESSAGE_LOADING_MIN_MS = 250;
+const MESSAGE_TEXT_CHUNK_LIMIT = 2000;
+const FRIENDS_PANEL_MIN_WIDTH = 280;
+const FRIENDS_PANEL_MAX_WIDTH = 620;
+const CHAT_PANEL_MIN_WIDTH = 420;
 
 const waitForMinLoading = async (startedAt: number) => {
   const remainingTime = MESSAGE_LOADING_MIN_MS - (Date.now() - startedAt);
@@ -125,6 +130,7 @@ type RouteState = {
   fullName?: string | null;
   groupName?: string | null;
   conversationKey?: string | null;
+  groupVisibility?: string | null;
 } | null;
 
 const isSocketData = (data: unknown): data is SocketData => {
@@ -138,6 +144,7 @@ const isMessageStatusData = (data: unknown): data is MessageStatusData => {
 const isReactionData = (data: unknown): data is ReactionData => {
   return !!data && typeof data === "object" && "conversationId" in data && "message" in data;
 };
+
 function hasBadWords(text: string) {
   return badWords(text, { validate: true });
 }
@@ -200,7 +207,10 @@ const getMessagePreview = (message: any) => {
   if (message.isDeleted) return "Tin nhắn đã được thu hồi";
   if (message.content?.trim()) return message.content;
   if (message.fileName) return message.fileName;
-  if (message.mediaURL) return message.type?.startsWith("video/") ? "Video" : "Hình ảnh";
+  if (message.mediaURL) {
+    if (message.type?.startsWith("audio/")) return "Âm thanh";
+    return message.type?.startsWith("video/") ? "Video" : "Hình ảnh";
+  }
   return "Tin nhắn";
 };
 
@@ -217,6 +227,63 @@ const formatFileSize = (size: number) => {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const splitMessageText = (value: string, limit = MESSAGE_TEXT_CHUNK_LIMIT) => {
+  const chunks: string[] = [];
+  let remaining = value.trim();
+
+  while (remaining.length > limit) {
+    let splitAt = -1;
+
+    for (let index = limit; index > 0; index -= 1) {
+      if (/\s/.test(remaining[index])) {
+        splitAt = index;
+        break;
+      }
+    }
+
+    if (splitAt <= 0) {
+      splitAt = limit;
+    }
+
+    const chunk = remaining.slice(0, splitAt).trim();
+    if (chunk) {
+      chunks.push(chunk);
+    }
+    remaining = remaining.slice(splitAt).trimStart();
+  }
+
+  if (remaining) {
+    chunks.push(remaining);
+  }
+
+  return chunks;
+};
+
+const getSupportedAudioMimeType = () => {
+  if (typeof MediaRecorder === "undefined") return "";
+  const mimeTypes = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/ogg;codecs=opus",
+    "audio/ogg",
+  ];
+  return mimeTypes.find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) || "";
+};
+
+const getAudioExtension = (mimeType: string) => {
+  if (mimeType.includes("mp4")) return "m4a";
+  if (mimeType.includes("ogg")) return "ogg";
+  return "webm";
+};
+
+const formatRecordingTime = (elapsedMs: number) => {
+  const totalSeconds = Math.floor(elapsedMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 };
 
 export default function ConversationPage() {
@@ -241,11 +308,12 @@ export default function ConversationPage() {
     Number(routeState?.conversationType) === 0 ||
     groupId !== null;
   const fallbackConversationId = !targetUserId && !isGroupConversation ? currentConversationId : null;
-  const routeAvatar = routeState?.avatar || null;
+  const routeAvatar = normalizeAvatarUrl(routeState?.avatar || null);
   const groupName = routeState?.groupName || null;
   const baseFullName = isGroupConversation
     ? groupName || "Nhom hoc"
     : routeState?.fullName || "Nguoi dung";
+
   const selectedConversationKey = isGroupConversation
     ? routeState?.conversationKey || (groupId ? `group:${groupId}` : "none")
     : targetUserId
@@ -272,6 +340,9 @@ export default function ConversationPage() {
   const [badWordsWarningOpen, setBadWordsWarningOpen] = useState(false);
   const [groupInfoOpen, setGroupInfoOpen] = useState(false);
   const [groupInfoTab, setGroupInfoTab] = useState<GroupInfoTab>("schedule");
+  const [groupVisibility, setGroupVisibility] = useState<string | null>(routeState?.groupVisibility || null);
+  const isCommunityGroup = groupVisibility?.toUpperCase() === "COMMUNITY" || groupVisibility?.toUpperCase() === "COMUNITY";
+  const hasStudySchedule = isGroupConversation && !isCommunityGroup;
   const [groupSessions, setGroupSessions] = useState<StudySessionResponse[]>([]);
   const [groupSessionsLoading, setGroupSessionsLoading] = useState(false);
   const [groupSessionsError, setGroupSessionsError] = useState("");
@@ -283,7 +354,16 @@ export default function ConversationPage() {
   const [fontFamily, setFontFamily] = useState<string>("default");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [mediaFilesOpen, setMediaFilesOpen] = useState(false);
+  const [friendsPanelWidth, setFriendsPanelWidth] = useState(420);
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [recordingElapsedMs, setRecordingElapsedMs] = useState(0);
 
+  const conversationLayoutRef = useRef<HTMLDivElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioRecordingStartedAtRef = useRef<number | null>(null);
+  const recordingTimerRef = useRef<number | null>(null);
   const conversationId = useRef<number | null>(null);
   const pendingTempMessageIds = useRef<number[]>([]);
   const nextTempMessageId = useRef(-1);
@@ -302,6 +382,38 @@ export default function ConversationPage() {
     conversationRef.current = conversation;
   }, [conversation]);
 
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current !== null) {
+        window.clearInterval(recordingTimerRef.current);
+      }
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
+      audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isGroupConversation || !groupId || groupVisibility !== null) return;
+
+    let cancelled = false;
+    getGroupById(groupId)
+      .then((response) => {
+        if (cancelled) return;
+        if (response.success && response.data?.visibility) {
+          setGroupVisibility(response.data.visibility);
+        }
+      })
+      .catch((error) => {
+        console.error("[Conversation][load-group-visibility-error]", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId, isGroupConversation, groupVisibility]);
+
   const privatePeerProfile = targetUserId
     ? privateSenderProfiles[targetUserId]
     : Object.values(privateSenderProfiles).find((profile) => profile.userId !== currentUserId);
@@ -310,7 +422,7 @@ export default function ConversationPage() {
     : privatePeerProfile?.fullName || baseFullName;
   const avatar = isGroupConversation
     ? routeAvatar
-    : privatePeerProfile?.avatarUrl || routeAvatar;
+    : normalizeAvatarUrl(privatePeerProfile?.avatarUrl || routeAvatar);
   const callTargetName = isGroupConversation ? groupName || "Nhóm hoc" : fullName;
   const callTargetAvatar = isGroupConversation ? null : avatar;
   const pinnedMessages = useMemo(
@@ -385,7 +497,27 @@ export default function ConversationPage() {
   }, [showEmojiPicker]);
 
   useEffect(() => {
-    if (!groupInfoOpen || !isGroupConversation || !groupId) return;
+    if (!isGroupConversation || !groupId || groupVisibility !== null) return;
+
+    let cancelled = false;
+    getGroupById(groupId)
+      .then((response) => {
+        if (cancelled) return;
+        if (response.success && response.data?.visibility) {
+          setGroupVisibility(response.data.visibility);
+        }
+      })
+      .catch((error) => {
+        console.error("[Conversation][load-group-visibility-error]", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId, isGroupConversation, groupVisibility]);
+
+  useEffect(() => {
+    if (!groupInfoOpen || !hasStudySchedule || !groupId) return;
 
     let cancelled = false;
     setGroupSessionsLoading(true);
@@ -414,7 +546,7 @@ export default function ConversationPage() {
     return () => {
       cancelled = true;
     };
-  }, [currentUserId, groupId, groupInfoOpen, isGroupConversation]);
+  }, [currentUserId, groupId, groupInfoOpen, hasStudySchedule]);
 
   useLayoutEffect(() => {
     const loadMess = async () => {
@@ -1126,12 +1258,117 @@ export default function ConversationPage() {
     event.target.value = "";
   };
 
+  const stopAudioRecordingResources = () => {
+    if (recordingTimerRef.current !== null) {
+      window.clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+    audioStreamRef.current = null;
+    audioRecordingStartedAtRef.current = null;
+    mediaRecorderRef.current = null;
+    setIsRecordingAudio(false);
+    setRecordingElapsedMs(0);
+  };
+
+  const sendAudioFile = async (file: File, durationSeconds?: number) => {
+    const activeConversationId = await ensureConversationIdBeforeSend();
+    if (!activeConversationId) return;
+
+    const tempMessageId = nextTempMessageId.current--;
+    const audioUrl = URL.createObjectURL(file);
+    pendingTempMessageIds.current.push(tempMessageId);
+    setVisibleStatusIfNewer(tempMessageId, "SENDING");
+    setConversation((prev) => [{
+      messageId: tempMessageId,
+      senderId: currentUserId,
+      type: file.type || "audio/webm",
+      content: "",
+      mediaURL: audioUrl,
+      fileName: file.name,
+      audioDurationSeconds: durationSeconds,
+      createdAt: new Date().toISOString(),
+      status: "SENDING",
+    }, ...prev]);
+    uploadMedia(String(activeConversationId), file, "");
+  };
+
+  const stopAudioRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") return;
+    recorder.requestData();
+    recorder.stop();
+  };
+
+  const startAudioRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      alert("Trình duyệt không hỗ trợ ghi âm.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = getSupportedAudioMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      audioChunksRef.current = [];
+      audioStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const recordedMimeType = recorder.mimeType || mimeType || "audio/webm";
+        const audioBlob = new Blob(audioChunksRef.current, { type: recordedMimeType });
+        const extension = getAudioExtension(recordedMimeType);
+        const audioFile = new File([audioBlob], `voice-message-${Date.now()}.${extension}`, {
+          type: recordedMimeType,
+        });
+        const durationSeconds = audioRecordingStartedAtRef.current
+          ? Math.max(1, Math.round((Date.now() - audioRecordingStartedAtRef.current) / 1000))
+          : undefined;
+        stopAudioRecordingResources();
+        audioChunksRef.current = [];
+        if (audioBlob.size > 0) {
+          void sendAudioFile(audioFile, durationSeconds);
+        }
+      };
+
+      recorder.start();
+      setIsRecordingAudio(true);
+      setRecordingElapsedMs(0);
+      const startedAt = Date.now();
+      audioRecordingStartedAtRef.current = startedAt;
+      recordingTimerRef.current = window.setInterval(() => {
+        setRecordingElapsedMs(Date.now() - startedAt);
+      }, 250);
+    } catch (error) {
+      console.error("[Conversation][audio-record-error]", error);
+      stopAudioRecordingResources();
+      alert("Không thể truy cập micro. Vui lòng kiểm tra quyền ghi âm.");
+    }
+  };
+
+  const handleAudioRecordClick = () => {
+    if (isRecordingAudio) {
+      stopAudioRecording();
+      return;
+    }
+    void startAudioRecording();
+  };
+
   const getReplyBarText = (message: MessageInterface) => {
     if (isPolicyViolationMessage(message)) return "Tin nhắn bị vi phạm chính sách";
     if (message.isDeleted) return "Tin nhắn đã được thu hồi";
     if (message.content) return message.content;
     if (message.fileName) return message.fileName;
-    if (message.mediaURL) return message.type?.startsWith("video/") ? "Video" : "Hình ảnh";
+    if (message.mediaURL) {
+      if (message.type?.startsWith("audio/")) return "Âm thanh";
+      return message.type?.startsWith("video/") ? "Video" : "Hình ảnh";
+    }
     return "Tin nhắn";
   };
 
@@ -1148,35 +1385,42 @@ export default function ConversationPage() {
     if (!activeConversationId) return;
 
     if (!preview && !selectedFile) {
-      const tempMessageId = nextTempMessageId.current--;
-      const content = messageText;
-      pendingTempMessageIds.current.push(tempMessageId);
-      setVisibleStatusIfNewer(tempMessageId, "SENDING");
-      setConversation((prev) => [{
-        messageId: tempMessageId,
-        senderId: currentUserId,
-        type: "text",
-        content,
-        mediaURL: null,
-        fileName: null,
-        createdAt: new Date().toISOString(),
-        status: "SENDING",
-        replyToMessageId: replymess?.messageId ?? null,
-        replyToSenderId: replymess?.senderId ?? null,
-        replyToType: replymess?.type ?? null,
-        replyToContent: replymess?.content ?? null,
-        replyToMediaURL: replymess?.mediaURL ?? null,
-        replyToFileName: replymess?.fileName ?? null,
-        replyToDeleted: replymess?.isDeleted ?? null,
-      }, ...prev]);
+      const chunks = splitMessageText(messageText);
+      if (chunks.length === 0) return;
+
+      const createdAt = new Date().toISOString();
+      const optimisticMessages: MessageInterface[] = chunks.map((content, index) => {
+        const tempMessageId = nextTempMessageId.current--;
+        pendingTempMessageIds.current.push(tempMessageId);
+        return {
+          messageId: tempMessageId,
+          senderId: currentUserId,
+          type: "text",
+          content,
+          mediaURL: null,
+          fileName: null,
+          createdAt,
+          status: "SENDING" as const,
+          replyToMessageId: index === 0 ? replymess?.messageId ?? null : null,
+          replyToSenderId: index === 0 ? replymess?.senderId ?? null : null,
+          replyToType: index === 0 ? replymess?.type ?? null : null,
+          replyToContent: index === 0 ? replymess?.content ?? null : null,
+          replyToMediaURL: index === 0 ? replymess?.mediaURL ?? null : null,
+          replyToFileName: index === 0 ? replymess?.fileName ?? null : null,
+          replyToDeleted: index === 0 ? replymess?.isDeleted ?? null : null,
+        };
+      });
+      setVisibleStatusIfNewer(optimisticMessages[optimisticMessages.length - 1].messageId, "SENDING");
+      setConversation((prev) => [...optimisticMessages].reverse().concat(prev));
       setMessageText("");
 
-      if (replymess) {
-        replyText(content, replymess.messageId, "text", activeConversationId);
-        setReplyMess(null);
+      if (replymess && chunks[0]) {
+        replyText(chunks[0], replymess.messageId, "text", activeConversationId);
+        chunks.slice(1).forEach((content) => sendText(content, activeConversationId));
       } else {
-        sendText(content, activeConversationId);
+        chunks.forEach((content) => sendText(content, activeConversationId));
       }
+      setReplyMess(null);
       return;
     }
 
@@ -1279,10 +1523,61 @@ export default function ConversationPage() {
     }
   };
 
+  const clampFriendsPanelWidth = useCallback((width: number, layoutWidth?: number) => {
+    const availableWidth = layoutWidth ?? conversationLayoutRef.current?.getBoundingClientRect().width ?? 0;
+    const maxWidthByLayout = availableWidth > 0
+      ? Math.max(FRIENDS_PANEL_MIN_WIDTH, availableWidth - CHAT_PANEL_MIN_WIDTH)
+      : FRIENDS_PANEL_MAX_WIDTH;
+    return Math.min(
+      Math.max(width, FRIENDS_PANEL_MIN_WIDTH),
+      Math.min(FRIENDS_PANEL_MAX_WIDTH, maxWidthByLayout),
+    );
+  }, []);
+
+  const handleFriendsPanelResizeStart = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const layout = conversationLayoutRef.current;
+    if (!layout) return;
+
+    event.preventDefault();
+    const rect = layout.getBoundingClientRect();
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const nextWidth = rect.right - moveEvent.clientX;
+      setFriendsPanelWidth(clampFriendsPanelWidth(nextWidth, rect.width));
+    };
+
+    const stopResize = () => {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", stopResize);
+      window.removeEventListener("pointercancel", stopResize);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", stopResize);
+    window.addEventListener("pointercancel", stopResize);
+  }, [clampFriendsPanelWidth]);
+
+  const handleFriendsPanelResizeKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const delta = event.shiftKey ? 40 : 16;
+    setFriendsPanelWidth((width) => clampFriendsPanelWidth(
+      event.key === "ArrowLeft" ? width + delta : width - delta,
+    ));
+  }, [clampFriendsPanelWidth]);
+
   const currentTheme = getThemeById(themeId);
 
   return (
     <Box
+      ref={conversationLayoutRef}
       sx={{
         display: "flex",
         height: "calc(100vh - 73px)",
@@ -1293,9 +1588,10 @@ export default function ConversationPage() {
     >
       <Box
         sx={{
-          width: "75%",
+          flex: 1,
           display: "flex",
           flexDirection: "column",
+          minWidth: CHAT_PANEL_MIN_WIDTH,
           minHeight: 0,
           background: currentTheme.background || "#eef1f8",
           overflow: "hidden",
@@ -1349,7 +1645,7 @@ export default function ConversationPage() {
             component="button"
             type="button"
             onClick={() => {
-              setGroupInfoTab(isGroupConversation ? "schedule" : "pinned");
+              setGroupInfoTab(hasStudySchedule ? "schedule" : "pinned");
               setGroupInfoOpen(true);
             }}
             sx={{
@@ -1382,19 +1678,19 @@ export default function ConversationPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: isGroupConversation ? "#eff6ff" : "#fff7ed",
-                  color: isGroupConversation ? "#2563eb" : "#f97316",
+                  bgcolor: hasStudySchedule ? "#eff6ff" : "#fff7ed",
+                  color: hasStudySchedule ? "#2563eb" : "#f97316",
                   flexShrink: 0,
                 }}
               >
-                {isGroupConversation ? <CalendarMonthIcon sx={{ fontSize: 17 }} /> : <PushPinIcon sx={{ fontSize: 17 }} />}
+                {hasStudySchedule ? <CalendarMonthIcon sx={{ fontSize: 17 }} /> : <PushPinIcon sx={{ fontSize: 17 }} />}
               </Box>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: 14, fontWeight: 750, color: "#1e293b", lineHeight: 1.15 }}>
-                  {isGroupConversation ? "Lịch học nhóm" : "Tin nhắn đã ghim"}
+                  {hasStudySchedule ? "Lịch học nhóm" : "Tin nhắn đã ghim"}
                 </Typography>
                 <Typography sx={{ fontSize: 12.5, color: "#64748b", lineHeight: 1.25 }} noWrap>
-                  {isGroupConversation
+                  {hasStudySchedule
                     ? groupSessions.length > 0
                       ? `${groupSessions.length} lịch học - ${pinnedMessages.length} tin ghim`
                       : `Xem lịch học và ${pinnedMessages.length} tin nhắn đã ghim`
@@ -1522,7 +1818,7 @@ export default function ConversationPage() {
             sx={{
               flexShrink: 0,
               display: "flex",
-              alignItems: "center",
+              alignItems: "flex-end",
               width: "100%",
               gap: 1.5,
               px: 2,
@@ -1531,9 +1827,35 @@ export default function ConversationPage() {
               zIndex: 1,
             }}
           >
-            <IconButton sx={{ color: "#a40000", p: 0.5 }}>
-              <MicIcon />
-            </IconButton>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexShrink: 0, pb: 0.15 }}>
+              <IconButton
+                aria-label={isRecordingAudio ? "Dừng ghi âm và gửi" : "Ghi âm"}
+                onClick={handleAudioRecordClick}
+                sx={{
+                  color: isRecordingAudio ? "#fff" : "#a40000",
+                  bgcolor: isRecordingAudio ? "#dc2626" : "transparent",
+                  p: 0.5,
+                  "&:hover": {
+                    bgcolor: isRecordingAudio ? "#b91c1c" : "rgba(164,0,0,0.08)",
+                  },
+                }}
+              >
+                {isRecordingAudio ? <StopCircleIcon /> : <MicIcon />}
+              </IconButton>
+              {isRecordingAudio && (
+                <Typography
+                  sx={{
+                    color: "#dc2626",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    lineHeight: 1,
+                    minWidth: 36,
+                  }}
+                >
+                  {formatRecordingTime(recordingElapsedMs)}
+                </Typography>
+              )}
+            </Box>
 
             <IconButton sx={{ color: "#a40000", p: 0.5 }} onClick={handleOpenFile}>
               <ImageIcon />
@@ -1563,16 +1885,22 @@ export default function ConversationPage() {
               sx={{
                 flex: 1,
                 display: "flex",
-                alignItems: "center",
-                borderRadius: "999px",
+                alignItems: "flex-end",
+                minHeight: 44,
+                maxHeight: 156,
+                borderRadius: "22px",
                 px: 2,
-                py: 0.5,
+                py: 0.75,
                 bgcolor: "#f6e3de",
+                overflow: "hidden",
               }}
             >
               <InputBase
                 placeholder="Aa"
                 value={messageText}
+                multiline
+                minRows={1}
+                maxRows={5}
                 onChange={(event) => setMessageText(event.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -1580,7 +1908,62 @@ export default function ConversationPage() {
                     sendMessage();
                   }
                 }}
-                sx={{ flex: 1, fontSize: 16, color: "#6b6b6b" }}
+                sx={{
+                  flex: 1,
+                  fontSize: 16,
+                  color: "#111827",
+                  lineHeight: 1.45,
+                  py: 0.35,
+                  maxHeight: 132,
+                  overflowY: "auto",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "rgba(100,116,139,0.45) transparent",
+                  "&::-webkit-scrollbar": {
+                    width: 8,
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "transparent",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: "rgba(100,116,139,0.38)",
+                    borderRadius: "999px",
+                    border: "2px solid transparent",
+                    backgroundClip: "content-box",
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    backgroundColor: "rgba(71,85,105,0.55)",
+                  },
+                  "&::-webkit-scrollbar-button": {
+                    display: "none",
+                    width: 0,
+                    height: 0,
+                  },
+                  "& textarea": {
+                    overflowY: "auto !important",
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "rgba(100,116,139,0.45) transparent",
+                    "&::-webkit-scrollbar": {
+                      width: 8,
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      background: "transparent",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      backgroundColor: "rgba(100,116,139,0.38)",
+                      borderRadius: "999px",
+                      border: "2px solid transparent",
+                      backgroundClip: "content-box",
+                    },
+                    "&::-webkit-scrollbar-thumb:hover": {
+                      backgroundColor: "rgba(71,85,105,0.55)",
+                    },
+                    "&::-webkit-scrollbar-button": {
+                      display: "none",
+                      width: 0,
+                      height: 0,
+                    },
+                  },
+                }}
               />
 
               <Box ref={emojiPickerRef} sx={{ position: "relative", flexShrink: 0 }}>
@@ -1600,7 +1983,7 @@ export default function ConversationPage() {
                   </Box>
                 )}
 
-                <IconButton onClick={() => setShowEmojiPicker((prev) => !prev)} sx={{ color: "#a40000", p: 0.5 }}>
+                <IconButton onClick={() => setShowEmojiPicker((prev) => !prev)} sx={{ color: "#a40000", p: 0.5, mb: 0.15 }}>
                   <SentimentSatisfiedAltIcon />
                 </IconButton>
               </Box>
@@ -1622,7 +2005,59 @@ export default function ConversationPage() {
         </Box>
       </Box>
 
-      <ListFriends />
+      <Box
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Kéo để thay đổi độ rộng danh sách bạn bè"
+        tabIndex={0}
+        onPointerDown={handleFriendsPanelResizeStart}
+        onKeyDown={handleFriendsPanelResizeKeyDown}
+        sx={{
+          width: 8,
+          flexShrink: 0,
+          cursor: "col-resize",
+          position: "relative",
+          bgcolor: "#f1f5f9",
+          borderLeft: "1px solid rgba(148,163,184,0.35)",
+          borderRight: "1px solid rgba(148,163,184,0.35)",
+          transition: "background-color 120ms ease",
+          outline: "none",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: 3,
+            height: 48,
+            borderRadius: "999px",
+            bgcolor: "rgba(100,116,139,0.38)",
+            transform: "translate(-50%, -50%)",
+            transition: "background-color 120ms ease, height 120ms ease",
+          },
+          "&:hover, &:focus-visible": {
+            bgcolor: "#e2e8f0",
+          },
+          "&:hover::after, &:focus-visible::after": {
+            bgcolor: "#3b82f6",
+            height: 68,
+          },
+        }}
+      />
+
+      <Box
+        sx={{
+          width: friendsPanelWidth,
+          minWidth: FRIENDS_PANEL_MIN_WIDTH,
+          maxWidth: FRIENDS_PANEL_MAX_WIDTH,
+          height: "100%",
+          minHeight: 0,
+          flexShrink: 0,
+          overflow: "hidden",
+          bgcolor: "#f4f6fb",
+        }}
+      >
+        <ListFriends />
+      </Box>
       <ForwardMessageModal
         open={!!forwardmess}
         message={forwardmess}
@@ -1663,13 +2098,13 @@ export default function ConversationPage() {
             {fullName}
           </Typography>
           <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25 }}>
-            {isGroupConversation ? "Lịch học nhóm và tin nhắn đã ghim" : "Tin nhắn đã ghim trong cuộc trò chuyện"}
+            {hasStudySchedule ? "Lich hoc nhom va tin nhan da ghim" : "Tin nhan da ghim trong cuoc tro chuyen"}
           </Typography>
         </DialogTitle>
         <DialogContent sx={{ p: 0 }}>
           <Box sx={{ display: "flex", borderBottom: "1px solid #e2e8f0", bgcolor: "#f8fafc" }}>
-            {(isGroupConversation ? [
-              { id: "schedule" as const, label: "Lịch học", icon: <CalendarMonthIcon sx={{ fontSize: 18 }} /> },
+            {(hasStudySchedule ? [
+              { id: "schedule" as const, label: "Lich hoc", icon: <CalendarMonthIcon sx={{ fontSize: 18 }} /> },
               { id: "pinned" as const, label: "Tin ghim", icon: <PushPinIcon sx={{ fontSize: 18 }} /> },
             ] : [
               { id: "pinned" as const, label: "Tin ghim", icon: <PushPinIcon sx={{ fontSize: 18 }} /> },
@@ -1699,27 +2134,24 @@ export default function ConversationPage() {
           </Box>
 
           <Box sx={{ maxHeight: "min(560px, calc(100vh - 220px))", overflowY: "auto", p: 2.5, bgcolor: "#fff" }}>
-            {isGroupConversation && groupInfoTab === "schedule" && (
+            {hasStudySchedule && groupInfoTab === "schedule" && (
               <Box sx={{ display: "grid", gap: 1.5 }}>
                 {groupSessionsLoading && (
-                  <Box sx={{ py: 5, display: "flex", justifyContent: "center" }}>
-                    <CircularProgress size={30} />
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+                    <CircularProgress size={32} sx={{ color: "#2563eb" }} />
                   </Box>
                 )}
-
-                {!groupSessionsLoading && groupSessionsError && (
-                  <Box sx={{ border: "1px solid #fecaca", bgcolor: "#fef2f2", color: "#b91c1c", borderRadius: 2, p: 2, fontSize: 14 }}>
+                {groupSessionsError && (
+                  <Box sx={{ border: "1px dashed #fecaca", borderRadius: 2, p: 3, textAlign: "center", color: "#b91c1c", bgcolor: "#fef2f2" }}>
                     {groupSessionsError}
                   </Box>
                 )}
-
                 {!groupSessionsLoading && !groupSessionsError && groupSessions.length === 0 && (
                   <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
-                    Nhóm chưa có lịch học nào.
+                    Nhom chua co lich hoc nao.
                   </Box>
                 )}
-
-                {!groupSessionsLoading && groupSessions.map((session) => (
+                {!groupSessionsLoading && !groupSessionsError && groupSessions.map((session) => (
                   <Box
                     key={session.id}
                     sx={{
@@ -1765,16 +2197,16 @@ export default function ConversationPage() {
                       )}
                       {session.membersCount !== null && session.membersCount !== undefined && (
                         <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#ecfdf5", color: "#047857", fontSize: 12, fontWeight: 700 }}>
-                          {session.membersCount} thành viên
+                          {session.membersCount} thanh vien
                         </Typography>
                       )}
                     </Box>
 
                     {(session.location || session.meetingUrl || session.description) && (
                       <Box sx={{ mt: 1.5, color: "#475569", fontSize: 13, lineHeight: 1.6 }}>
-                        {session.location && <Typography sx={{ fontSize: 13 }}>Địa điểm: {session.location}</Typography>}
-                        {session.meetingUrl && <Typography sx={{ fontSize: 13 }}>Link học: {session.meetingUrl}</Typography>}
-                        {session.description && <Typography sx={{ fontSize: 13 }}>Ghi chú: {session.description}</Typography>}
+                        {session.location && <Typography sx={{ fontSize: 13 }}>Dia diem: {session.location}</Typography>}
+                        {session.meetingUrl && <Typography sx={{ fontSize: 13 }}>Link hoc: {session.meetingUrl}</Typography>}
+                        {session.description && <Typography sx={{ fontSize: 13 }}>Ghi chu: {session.description}</Typography>}
                       </Box>
                     )}
                   </Box>
@@ -1786,7 +2218,7 @@ export default function ConversationPage() {
               <Box sx={{ display: "grid", gap: 1.25 }}>
                 {pinnedMessages.length === 0 ? (
                   <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
-                    Chưa có tin nhắn nào được ghim.
+                    Chua co tin nhan nao duoc ghim.
                   </Box>
                 ) : (
                   pinnedMessages.map((message) => (
@@ -1810,7 +2242,7 @@ export default function ConversationPage() {
                           {getPinnedSenderName(message)}
                         </Typography>
                         <Typography sx={{ color: "#64748b", fontSize: 12, mt: 0.35 }}>
-                          {message.createdAt ? formatDateTime(message.createdAt) : "Tin nhắn"}
+                          {message.createdAt ? formatDateTime(message.createdAt) : "Tin nhan"}
                         </Typography>
                       </Box>
                       <Button
@@ -1831,7 +2263,7 @@ export default function ConversationPage() {
                         }}
                         variant="outlined"
                       >
-                        Bỏ ghim
+                        Bo ghim
                       </Button>
                     </Box>
                   ))
@@ -1845,7 +2277,7 @@ export default function ConversationPage() {
             onClick={() => setGroupInfoOpen(false)}
             sx={{ textTransform: "none", fontWeight: 700, color: "#475569" }}
           >
-            Đóng
+            Dong
           </Button>
         </DialogActions>
       </Dialog>
@@ -1901,9 +2333,10 @@ export default function ConversationPage() {
           currentUserId={currentUserId}
           getPinnedSenderName={getPinnedSenderName}
           formatDateTime={formatDateTime}
+          isGroupConversation={isGroupConversation}
+          groupId={groupId}
         />
       )}
     </Box>
   );
 }
-

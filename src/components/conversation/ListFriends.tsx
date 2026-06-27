@@ -2,16 +2,14 @@ import SearchIcon from "@mui/icons-material/Search";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import MarkEmailUnreadRoundedIcon from "@mui/icons-material/MarkEmailUnreadRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
-import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
-import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
-import { Avatar, Badge, Box, Button, CircularProgress, IconButton, InputAdornment, TextField, Tooltip, Typography } from "@mui/material";
+import { Avatar, Badge, Box, Button, CircularProgress, InputAdornment, TextField, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { SocketEvent } from "../../enum/SocketEvent";
 import { RootState } from "../../redux/store";
 import { updateCurrentConverId } from "../../redux/ChatReducer";
-import { loadAcceptedDirectConversations, loadConversation, loadGroupConversation, loadGroupConversationPins, loadMessageRequests, MessageRequestItem, setGroupConversationPinned } from "../../services/ChatService";
+import { loadAcceptedDirectConversations, loadConversation, loadGroupConversation, loadGroupConversationPins, loadMessageRequests, MessageRequestItem } from "../../services/ChatService";
 import { FriendUser, loadAllFriendsService, loadFriendOnlineStatusesService, loadFriendProfilesService } from "../../services/FriendService";
 import { getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
 
@@ -158,7 +156,7 @@ export default function ListFriends() {
                 }
 
                 if (friendResult.status === "rejected" && groupResult.status === "rejected") {
-                    setError("KhÃ´ng táº£i Ä‘Æ°á»£c danh sÃ¡ch báº¡n bÃ¨ vÃ  nhÃ³m");
+                    setError("KhÃ´ng táº£i Ä‘Æ°á»£c danh sÃ¡ch báº¡n bÃ¨ vÃ  nhÃóm");
                 }
             } catch (err) {
                 console.error(err);
@@ -374,6 +372,7 @@ export default function ListFriends() {
                 fullName: null,
                 avatar: null,
                 conversationKey,
+                groupVisibility: group.visibility,
             },
         });
 
@@ -387,44 +386,6 @@ export default function ListFriends() {
             }
         } catch (error) {
             console.error(error);
-        }
-    };
-
-    const toggleGroupPin = async (
-        event: React.MouseEvent<HTMLButtonElement>,
-        group: GroupConversationItem,
-    ) => {
-        event.stopPropagation();
-        const currentUserId = Number(localStorage.getItem("userId"));
-        if (!Number.isFinite(currentUserId)) return;
-
-        const nextPinned = !group.isPinned;
-        setGroups((prev) =>
-            prev.map((item) =>
-                item.id === group.id ? { ...item, isPinned: nextPinned } : item
-            )
-        );
-
-        try {
-            const pin = await setGroupConversationPinned(currentUserId, group.id, nextPinned);
-            setGroups((prev) =>
-                prev.map((item) =>
-                    item.id === group.id
-                        ? {
-                            ...item,
-                            isPinned: Boolean(pin.pinned),
-                            conversationId: pin.conversationId ?? item.conversationId ?? null,
-                        }
-                        : item
-                )
-            );
-        } catch (error) {
-            console.error(error);
-            setGroups((prev) =>
-                prev.map((item) =>
-                    item.id === group.id ? { ...item, isPinned: Boolean(group.isPinned) } : item
-                )
-            );
         }
     };
 
@@ -487,6 +448,7 @@ export default function ListFriends() {
         if (lastMessage.content) return lastMessage.content;
         if (lastMessage.type?.startsWith("image/")) return "Đã gửi một ảnh";
         if (lastMessage.type?.startsWith("video/")) return "Đã gửi một video";
+        if (lastMessage.type?.startsWith("audio/")) return "Đã gửi một âm thanh";
         return "Đã gửi một tệp";
     };
 
@@ -503,15 +465,14 @@ export default function ListFriends() {
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon sx={{ color: "#7f8aa0", fontSize: 20 }} />
+                                <SearchIcon sx={{ color: "#7f8aa0", fontSize: 18 }} />
                             </InputAdornment>
                         ),
                     }}
                     sx={{
-                        maxWidth: 360,
                         "& .MuiOutlinedInput-root": {
-                            height: 50,
-                            borderRadius: "16px",
+                            height: 40,
+                            borderRadius: "12px",
                             bgcolor: "#ffffff",
                             border: "1px solid #d2dbea",
                             boxShadow: "0 2px 8px rgba(31,42,68,0.05)",
@@ -520,7 +481,7 @@ export default function ListFriends() {
                             "&:hover": { borderColor: "#b9c6dd", boxShadow: "0 3px 10px rgba(31,42,68,0.08)" },
                             "&.Mui-focused": { borderColor: "#3b82f6", boxShadow: "0 0 0 3px rgba(59,130,246,0.16)" },
                         },
-                        "& .MuiOutlinedInput-input": { py: 0, px: 0, fontSize: 16, color: "#1f2a44" },
+                        "& .MuiOutlinedInput-input": { py: 0, px: 0, fontSize: 14, color: "#1f2a44" },
                         "& .MuiOutlinedInput-input::placeholder": { color: "#9aa3b2", opacity: 1 },
                     }}
                 />
@@ -533,7 +494,7 @@ export default function ListFriends() {
                     variant={activeView === "main" ? "contained" : "outlined"}
                     startIcon={<PeopleAltRoundedIcon />}
                     onClick={() => setActiveView("main")}
-                    sx={{ borderRadius: "10px", textTransform: "none", fontWeight: 700 }}
+                    sx={{ flex: 1, borderRadius: "10px", textTransform: "none", fontWeight: 700 }}
                 >
                     Bạn bè
                 </Button>
@@ -541,7 +502,7 @@ export default function ListFriends() {
                     color="error"
                     badgeContent={messageRequests.length}
                     overlap="rectangular"
-                    sx={{ flex: 1, "& .MuiBadge-badge": { right: 8, top: 4 } }}
+                    sx={{ flex: 1, width: "100%", "& .MuiBadge-badge": { right: 8, top: 4 } }}
                 >
                     <Button
                         fullWidth
@@ -714,28 +675,6 @@ export default function ListFriends() {
                                 </Typography>
                             </Box>
                         </Box>
-                        <Tooltip title={group.isPinned ? "Bỏ ghim nhóm" : "Ghim nhóm lên đầu"}>
-                            <IconButton
-                                aria-label={group.isPinned ? "Bỏ ghim nhóm" : "Ghim nhóm lên đầu"}
-                                onClick={(event) => void toggleGroupPin(event, group)}
-                                sx={{
-                                    width: 34,
-                                    height: 34,
-                                    color: group.isPinned ? "#f97316" : "#9aa3b2",
-                                    flexShrink: 0,
-                                    "&:hover": {
-                                        bgcolor: group.isPinned ? "#fff7ed" : "#eef2f7",
-                                        color: group.isPinned ? "#ea580c" : "#475569",
-                                    },
-                                }}
-                            >
-                                {group.isPinned ? (
-                                    <PushPinRoundedIcon sx={{ fontSize: 18 }} />
-                                ) : (
-                                    <PushPinOutlinedIcon sx={{ fontSize: 18 }} />
-                                )}
-                            </IconButton>
-                        </Tooltip>
                     </Box>
                 ))}
             </Box>

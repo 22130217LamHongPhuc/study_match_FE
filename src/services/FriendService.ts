@@ -16,7 +16,16 @@ type SocialFriendItem = {
     fullName?: string | null;
     full_name?: string | null;
     avatarUrl?: string | null;
+    avatarURL?: string | null;
     avatar_url?: string | null;
+    avatar?: string | null;
+    imageUrl?: string | null;
+    image_url?: string | null;
+    profileImageUrl?: string | null;
+    profile_image_url?: string | null;
+    picture?: string | null;
+    pictureUrl?: string | null;
+    picture_url?: string | null;
     email?: string | null;
 }
 
@@ -255,10 +264,32 @@ export const updateUserProfileService = async (
 
 const unwrapPayload = (payload: any) => payload?.data ?? payload?.result ?? payload;
 
+export const normalizeAvatarUrl = (value?: string | null): string | null => {
+    const trimmed = value?.trim();
+    if (!trimmed) return null;
+    if (/^(https?:)?\/\//i.test(trimmed) || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
+        return trimmed;
+    }
+    return `${BASE_USER_SERVICE}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+}
+
 const normalizeFriendUser = (item: any): FriendUser => ({
     userId: Number(item?.userId ?? item?.user_id ?? item?.id),
     fullName: item?.fullName ?? item?.full_name ?? item?.name ?? item?.username ?? "",
-    avatarUrl: item?.avatarUrl ?? item?.avatar_url ?? item?.avatar ?? null,
+    avatarUrl: normalizeAvatarUrl(
+        item?.avatarUrl ??
+        item?.avatarURL ??
+        item?.avatar_url ??
+        item?.avatar ??
+        item?.imageUrl ??
+        item?.image_url ??
+        item?.profileImageUrl ??
+        item?.profile_image_url ??
+        item?.pictureUrl ??
+        item?.picture_url ??
+        item?.picture ??
+        null
+    ),
     email: item?.email ?? null,
 })
 

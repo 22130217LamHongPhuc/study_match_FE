@@ -52,6 +52,7 @@ const getMessagePreview = (message: MessageInterface | null) => {
     if (message.isDeleted) return "Tin nhắn đã được thu hồi";
     if (message.content?.trim()) return message.content;
     if (message.mediaURL) {
+        if (message.type?.startsWith("audio/")) return "Âm thanh";
         return message.type?.startsWith("video/") ? "Video" : "Hình ảnh";
     }
     return message.fileName || "Tin nhắn";

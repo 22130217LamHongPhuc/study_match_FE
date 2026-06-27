@@ -1,5 +1,5 @@
 import { apiFetch } from "../config/apiClient";
-import { APIResponseData } from "../config/APIResponse";
+import { APIResponseData, StatusCode } from "../config/APIResponse";
 
 const API_BASE_URL_PROFILE = "http://localhost:8082/api";
 const API_BASE_URL_GROUP = "http://localhost:8086";
@@ -144,6 +144,17 @@ export interface AdminGroupDetailResponse {
   updatedAt: string;
   freeTimeSlots?: AdminGroupFreeTimeSlot[] | null;
 }
+
+export type GroupMemberRole = "OWNER" | "ADMIN" | "MEMBER" | (string & {});
+export type GroupMemberStatus = "ACTIVE" | "LEFT" | "REMOVED" | (string & {});
+
+export interface GroupMemberResponse {
+  userId: number;
+  role: GroupMemberRole;
+  status: GroupMemberStatus;
+  joinedAt?: string | null;
+}
+
 export async function getAllSubjectsByCurriculum(
   curriculumId: number,
 ): Promise<APIResponseData<Subject[]>> {
@@ -207,6 +218,29 @@ export async function getGroupsByUserId(
     API_BASE_URL_GROUP,
   );
   return response;
+}
+
+export async function getGroupById(
+  groupId: number,
+): Promise<APIResponseData<StudyGroupDetailResponse>> {
+  const response = await apiFetch<StudyGroupDetailResponse>(
+    `/api/groups/${groupId}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  if (typeof response?.success === "boolean") {
+    return response;
+  }
+
+  return {
+    success: true,
+    code: StatusCode.SUCCESS,
+    message: "Get group successfully",
+    data: response as unknown as StudyGroupDetailResponse,
+  };
 }
 
 export async function browseGroups(
@@ -320,6 +354,36 @@ export async function getActiveGroupMemberIds(
     `/api/groups/${groupId}/members/active-user-ids`,
     {
       method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
+export async function getActiveGroupMembers(
+  groupId: number,
+): Promise<APIResponseData<GroupMemberResponse[]>> {
+  const response = await apiFetch<GroupMemberResponse[]>(
+    `/api/groups/${groupId}/members/active`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
+export async function kickGroupMember(
+  groupId: number,
+  userId: number,
+): Promise<APIResponseData<unknown>> {
+  const response = await apiFetch<unknown>(
+    `/api/groups/${groupId}/members/${userId}/kick`,
+    {
+      method: "POST",
+      body: JSON.stringify({ status: "remove" }),
     },
     API_BASE_URL_GROUP,
   );
