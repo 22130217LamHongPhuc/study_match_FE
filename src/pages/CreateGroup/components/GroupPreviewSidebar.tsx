@@ -44,6 +44,7 @@ interface CreateGroupDraft {
   maxMembers: number;
   visibility: "public" | "private";
   freeTime: FreeTime;
+  avatarPreview?: string | null;
 }
 
 export default function GroupPreviewSidebar({
@@ -136,9 +137,15 @@ export default function GroupPreviewSidebar({
 
         <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
           <div className="flex gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-              <AutoAwesomeMosaicOutlined fontSize="small" />
-            </div>
+            {draft.avatarPreview ? (
+              <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
+                <img src={draft.avatarPreview} alt="Group Preview" className="h-full w-full object-cover" />
+              </div>
+            ) : (
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                <AutoAwesomeMosaicOutlined fontSize="small" />
+              </div>
+            )}
 
             <div>
               <p className="text-sm font-semibold text-slate-900">

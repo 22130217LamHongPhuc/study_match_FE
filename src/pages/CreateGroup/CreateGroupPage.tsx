@@ -16,6 +16,30 @@ import {
   type SlotCode,
 } from "../../services/GroupService";
 import { toast } from "sonner";
+export function CreateGroupSkeleton() {
+  return (
+    <div className="min-h-screen bg-transparent font-sans text-slate-900 animate-pulse">
+      <main className="mx-auto max-w-6xl px-6 py-8 pb-32">
+        <header className="mb-10">
+          <div className="h-10 w-64 bg-slate-200 rounded-md mb-4" />
+          <div className="h-6 max-w-2xl bg-slate-200 rounded-md" />
+        </header>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          <div className="space-y-8 lg:col-span-8">
+            <div className="h-[400px] bg-slate-200/50 rounded-2xl" />
+            <div className="h-[300px] bg-slate-200/50 rounded-2xl" />
+            <div className="h-[500px] bg-slate-200/50 rounded-2xl" />
+          </div>
+          <div className="lg:col-span-4">
+            <div className="h-[600px] bg-slate-200/50 rounded-2xl sticky top-8" />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default function CreateGroupPage() {
   const navigate = useNavigate();
   const [groupName, setGroupName] = useState<string>("");
@@ -23,13 +47,18 @@ export default function CreateGroupPage() {
   const [mainSubject, setMainSubject] = useState<Subject | null>(null);
   const [invitedUserIds, setInvitedUserIds] = useState<number[]>([]);
 
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
   const [maxMembers, setMaxMembers] = useState<number>(5);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
 
   const [freeTime, setFreeTime] = useState<FreeTime>(() => initFreeTime());
   const profileState = useSelector((state: any) => state.profile);
-  if (profileState.loading) {
-    return <div>Loading...</div>;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (profileState.loading || isSubmitting) {
+    return <CreateGroupSkeleton />;
   }
 
   const handleCreateGroup = async () => {
@@ -89,15 +118,20 @@ export default function CreateGroupPage() {
     };
     console.log("CreateGroupPage - payload:", payload);
 
-    const res = await createStudyGroup(payload);
-    if (res.success) {
-      toast.success("Tạo nhóm thành công!");
-      navigate("/groups");
-      return;
-    } else {
-      toast.error(
-        "Tạo nhóm thất bại: " + (res.message || "Lỗi không xác định"),
-      );
+    setIsSubmitting(true);
+    try {
+      const res = await createStudyGroup(payload, avatarFile || undefined);
+      if (res.success) {
+        toast.success("Tạo nhóm thành công!");
+        navigate("/groups");
+        return;
+      } else {
+        toast.error(
+          "Tạo nhóm thất bại: " + (res.message || "Lỗi không xác định"),
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -119,6 +153,11 @@ export default function CreateGroupPage() {
             <BasicInfoSection
               groupName={groupName}
               goalDescription={goalDescription}
+              avatarPreview={avatarPreview}
+              onAvatarChange={(file, preview) => {
+                setAvatarFile(file);
+                setAvatarPreview(preview);
+              }}
               onChange={(next) => {
                 setGroupName(next.groupName);
                 setGoalDescription(next.goalDescription);
@@ -152,6 +191,7 @@ export default function CreateGroupPage() {
               maxMembers,
               visibility,
               freeTime,
+              avatarPreview,
             }}
             invitedUserIds={invitedUserIds}
             onInvitedUserIdsChange={setInvitedUserIds}
