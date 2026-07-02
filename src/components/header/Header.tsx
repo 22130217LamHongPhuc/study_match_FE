@@ -44,7 +44,7 @@ import {
   respondToStudySession
 } from "../../services/StudySessionService";
 import { StudySessionResponse } from "../../pages/StudySession/types";
-
+import {
   getPendingGroupInvitations,
   acceptGroupInvitation,
   rejectGroupInvitation,
@@ -57,6 +57,7 @@ export default function Header() {
   const [popoverAnchor, setPopoverAnchor] = useState<null | HTMLElement>(null);
   const [pendingRequests, setPendingRequests] = useState<(FriendRequestDto & { sender?: FriendUser })[]>([]);
   const [pendingGroupInvitations, setPendingGroupInvitations] = useState<GroupInvitationResponse[]>([]);
+  const [pendingSessions, setPendingSessions] = useState<StudySessionResponse[]>([]);
   const [rejectedInvitations, setRejectedInvitations] = useState<{ groupName: string; inviteeName: string; inviteeUserId: number; timestamp: number }[]>([]);
   const [kickModalOpen, setKickModalOpen] = useState(false);
   const [kickGroupName, setKickGroupName] = useState("");
@@ -126,10 +127,12 @@ export default function Header() {
 
     fetchPendingRequests();
     fetchPendingGroupInvitations();
+    fetchPendingSessions();
 
     const interval = setInterval(() => {
       fetchPendingRequests();
       fetchPendingGroupInvitations();
+      fetchPendingSessions();
     }, 10000);
 
     return () => clearInterval(interval);
@@ -143,6 +146,33 @@ export default function Header() {
         window.dispatchEvent(new Event("friend_status_updated"));
       } else if (newMess.event === "GROUP_INVITATION_RECEIVE") {
         fetchPendingGroupInvitations();
+      } else if (newMess.event === "STUDY_SESSION_CREATED") {
+        fetchPendingSessions();
+        const data = newMess.data as any;
+        const groupName = data?.groupName ? data.groupName : "1-1";
+        const startTime = data?.startTime ? new Date(data.startTime).toLocaleString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        }) : "sắp tới";
+
+        toast.info(
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <span style={{ fontWeight: 600 }}>Bạn có lịch học mới!</span>
+            <span style={{ fontSize: "13px" }}>
+              Lịch học {groupName} vào lúc {startTime}
+            </span>
+          </div>,
+          {
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          }
+        );
       } else if (newMess.event === "GROUP_INVITATION_REJECTED") {
         window.dispatchEvent(new CustomEvent("group_invitation_status_updated", { detail: newMess.data }));
         const d = newMess.data as any;
@@ -238,6 +268,38 @@ export default function Header() {
     }
   };
 
+  const handleAcceptSession = async (sessionId: number) => {
+    try {
+      const currentUserId = Number(localStorage.getItem("userId"));
+      if (!currentUserId) return;
+      const res = await respondToStudySession(sessionId, currentUserId, "ACCEPTED");
+      if (res.success) {
+        toast.success("Đã chấp nhận lời mời học nhóm!");
+        fetchPendingSessions();
+      } else {
+        toast.error("Thao tác thất bại.");
+      }
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi.");
+    }
+  };
+
+  const handleDeclineSession = async (sessionId: number) => {
+    try {
+      const currentUserId = Number(localStorage.getItem("userId"));
+      if (!currentUserId) return;
+      const res = await respondToStudySession(sessionId, currentUserId, "DECLINED");
+      if (res.success) {
+        toast.success("Đã từ chối lời mời học nhóm.");
+        fetchPendingSessions();
+      } else {
+        toast.error("Thao tác thất bại.");
+      }
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi.");
+    }
+  };
+
   const handleAcceptGroupInvitation = async (invitationId: number) => {
     try {
       const res = await acceptGroupInvitation(invitationId);
@@ -326,9 +388,8 @@ export default function Header() {
 
   return (
     <>
-      <>
-        <Box
-          sx={{
+      <Box
+        sx={{
             width: "100%",
             height: "fit-content",
             padding: "10px 20px",
@@ -707,37 +768,15 @@ export default function Header() {
               fontSize: "14px",
               color: "#1f2937",
               mb: 1.5,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
             Thông báo
-          </Typography>
-          <Divider sx={{ mb: 1, borderColor: "#f0e6d9" }} />
-          <Box sx={{ flexGrow: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
-            {pendingRequests.length === 0 && pendingSessions.length === 0 ? (
-              <Box
-                sx={{
-                  py: 4,
-                  textAlign: "center",
-                  color: "#9ca3af",
-                }}
-              >
-                <Typography sx={{ fontSize: "13px", fontWeight: 500 }}>
-                  Không có thông báo mới
-                </Typography>
-              </Box>
-            ) : (
-              <>
-                {pendingRequests.length > 0 && (
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <Typography sx={{ fontWeight: 700, fontSize: "12px", color: "#6b7280", mb: 0.5 }}>
-                      Lời mời kết bạn ({pendingRequests.length})
-                    </Typography>
-                    {pendingRequests.map((req) => (
-                      <Box
-                        key={req.id}
-            {(pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length) > 0 && (
+            {(pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length + pendingSessions.length) > 0 && (
               <Badge
-                badgeContent={pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length}
+                badgeContent={pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length + pendingSessions.length}
                 color="error"
                 sx={{
                   "& .MuiBadge-badge": {
@@ -749,8 +788,8 @@ export default function Header() {
             )}
           </Typography>
           <Divider sx={{ mb: 1, borderColor: "#f0e6d9" }} />
-
-          {pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 ? (
+          <Box sx={{ flexGrow: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
+          {(pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && pendingSessions.length === 0) ? (
             <Box
               sx={{
                 py: 4,
@@ -822,33 +861,16 @@ export default function Header() {
                     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                       <Typography
                         sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                          padding: "10px",
-                          borderRadius: "8px",
-                          backgroundColor: "#fafaf8",
-                          border: "1px solid #f0e6d9",
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          color: "#1f2937",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <Avatar
-                            src={req.sender?.avatarUrl || undefined}
-                            sx={{ width: 36, height: 36 }}
-                          />
-                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                            <Typography
-                              sx={{
-                                fontWeight: 700,
-                                fontSize: "13px",
-                                color: "#1f2937",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {req.sender?.fullName || "Người dùng StudyMatch"}
-                            </Typography>
+                        {req.sender?.fullName || "Người dùng StudyMatch"}
+                      </Typography>
                             <Typography
                               sx={{
                                 fontSize: "11px",
@@ -901,11 +923,9 @@ export default function Header() {
                           >
                             Chấp nhận
                           </Button>
-                        </Box>
                       </Box>
-                    ))}
-                  </Box>
-                )}
+                    </Box>
+                  ))}
 
                 {pendingSessions.length > 0 && (
                   <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -1025,8 +1045,7 @@ export default function Header() {
                       </Box>
                     ))}
                   </Box>
-                </Box>
-              ))}
+                )}
 
               {/* Group invitations */}
               {pendingGroupInvitations.map((inv) => (
@@ -1117,6 +1136,7 @@ export default function Header() {
               ))}
             </Box>
           )}
+          </Box>
         </Popover>
 
         <Dialog
@@ -1162,7 +1182,6 @@ export default function Header() {
             </Button>
           </Box>
         </Dialog>
-      </>
     </>
   );
 }
