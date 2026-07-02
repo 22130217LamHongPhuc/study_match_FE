@@ -1,7 +1,6 @@
 import React from "react";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
-import ProblemSection from "./components/ProblemSection";
 import FeatureSection from "./components/FeatureSection";
 import HowItWorksSection from "./components/HowItWorksSection";
 import BenefitsSection from "./components/BenefitsSection";

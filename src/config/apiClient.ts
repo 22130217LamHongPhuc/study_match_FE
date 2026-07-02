@@ -42,11 +42,18 @@ async function request<T>(
   console.log("Options:", options);
   console.log("Has access token:", !!accessToken);
 
+  const defaultHeaders: Record<string, string> = {
+    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+  };
+
+  if (!(options.body instanceof FormData)) {
+    defaultHeaders["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(url, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...defaultHeaders,
       ...options.headers,
     },
   });

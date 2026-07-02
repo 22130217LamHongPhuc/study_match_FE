@@ -245,6 +245,14 @@ export function CreateSessionModal({
       setFriendError("Vui lòng chọn bạn học");
       return;
     }
+    const startDate = new Date(startTime);
+    const now = new Date();
+    
+    if (startDate <= now) {
+      toast.error("Thời gian bắt đầu phải lớn hơn thời gian hiện tại");
+      return;
+    }
+
     if (startTime >= endTime) {
       toast.error("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc");
       return;

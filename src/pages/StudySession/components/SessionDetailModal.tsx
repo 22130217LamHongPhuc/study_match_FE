@@ -561,25 +561,37 @@ export function SessionDetailModal({
             </div>
           )}
 
-          {!hasSessionEnded(currentSession) && currentSession?.participantStatus === "PENDING" && (
+          {currentSession?.participantStatus === "PENDING" && (
             <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => handleRespond("ACCEPTED")}
-                disabled={responding !== null}
-                className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
-              >
-                {responding === "ACCEPTED" ? "Đang xử lý..." : "Xác nhận tham gia"}
-              </button>
+              {hasSessionEnded(currentSession) ? (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full rounded-lg bg-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-500 cursor-not-allowed"
+                >
+                  Buổi học đã kết thúc
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleRespond("ACCEPTED")}
+                    disabled={responding !== null}
+                    className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                  >
+                    {responding === "ACCEPTED" ? "Đang xử lý..." : "Xác nhận tham gia"}
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => handleRespond("DECLINED")}
-                disabled={responding !== null}
-                className="flex-1 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRespond("DECLINED")}
+                    disabled={responding !== null}
+                    className="flex-1 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
+                  </button>
+                </>
+              )}
             </div>
           )}
 

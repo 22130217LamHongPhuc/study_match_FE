@@ -66,7 +66,7 @@ export function useRecommendations(initialUserId: number) {
         }
 
         const mapped = response.recommendations.map(mapToViewModel);
-        mapped.sort((a, b) => b.matchPercentage - a.matchPercentage);
+        mapped.sort((a: RecommendationCardVm, b: RecommendationCardVm) => b.matchPercentage - a.matchPercentage);
 
 
         console.log("Recommendations mapped: ", mapped);

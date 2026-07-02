@@ -1,5 +1,5 @@
 import { BASE_CHAT_SERVICE, BASE_SOCIAL_SERVICE, BASE_USER_SERVICE, BASE_URL } from "../config/BaseConfig";
-import { FriendRequestStatus } from "../pages/Recommendation/types";
+import { FriendRequestStatus } from "../pages/StudyConnection/types";
 import WebSocketManager from "../socket/WebSocketManager";
 
 export interface FriendUser {
