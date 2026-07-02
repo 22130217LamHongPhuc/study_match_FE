@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { HeaderCard } from "./components/HeaderCard";
 import { QuickStats } from "./components/QuickStats";
 import { FilterTabs } from "./components/FilterTabs";
@@ -183,8 +184,11 @@ export default function StudySessionPage() {
     useState<FeedbackEligibilityResponse | null>(null);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionError, setSessionError] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   const currentUserId = Number(localStorage.getItem("userId"));
+  const querySessionId = searchParams.get("sessionId");
 
   const currentUserName =
     localStorage.getItem("fullName") ||
@@ -196,6 +200,36 @@ export default function StudySessionPage() {
     setFilter(nextFilter);
     setPage(0);
   };
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setReloadTrigger((prev) => prev + 1);
+    };
+    window.addEventListener("study_session_updated", handleUpdate);
+    return () => {
+      window.removeEventListener("study_session_updated", handleUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (querySessionId && Number.isFinite(currentUserId) && currentUserId > 0) {
+      const sessionIdNum = Number(querySessionId);
+      if (sessionIdNum > 0) {
+        getStudySessionById(sessionIdNum, currentUserId)
+          .then((res) => {
+            if (res.data) {
+              const mapped = mapSessionToVm(res.data, new Map());
+              setSelectedSession(mapped);
+              searchParams.delete("sessionId");
+              setSearchParams(searchParams, { replace: true });
+            }
+          })
+          .catch((err) => {
+            console.error("Lỗi khi tải chi tiết lịch học từ URL:", err);
+          });
+      }
+    }
+  }, [querySessionId, currentUserId]);
 
   useEffect(() => {
     let mounted = true;
@@ -271,7 +305,7 @@ export default function StudySessionPage() {
     return () => {
       mounted = false;
     };
-  }, [currentUserId, filter, page, pageSize]);
+  }, [currentUserId, filter, page, pageSize, reloadTrigger]);
 
   const todaySessions = useMemo(() => {
     const today = new Date().toDateString();
