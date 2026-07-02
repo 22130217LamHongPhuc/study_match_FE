@@ -44,6 +44,57 @@ const getFontFamilyValue = (fontId: string | null | undefined): string => {
     }
 };
 
+const ImageWithLoader = ({ src, alt, sx }: { src: string; alt: string; sx: any }) => {
+    const [loaded, setLoaded] = useState(false)
+
+    return (
+        <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {!loaded && (
+                <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.03)' }}>
+                    <CircularProgress size={24} sx={{ color: '#a40000' }} />
+                </Box>
+            )}
+            <Box
+                component="img"
+                src={src}
+                alt={alt}
+                onLoad={() => setLoaded(true)}
+                sx={{
+                    ...sx,
+                    opacity: loaded ? 1 : 0,
+                    transition: 'opacity 0.25s ease-in-out',
+                }}
+            />
+        </Box>
+    )
+}
+
+const getFormattedMessageTime = (createdAt?: string) => {
+    if (!createdAt) return "";
+    const date = new Date(createdAt);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const now = new Date();
+    const timeStr = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+    const dateZero = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const diffTime = nowZero.getTime() - dateZero.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+        return timeStr;
+    } else if (diffDays === 1) {
+        return `${timeStr} Hôm qua`;
+    } else if (diffDays < 7) {
+        const weekdays = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+        return `${timeStr} ${weekdays[date.getDay()]}`;
+    } else {
+        return `${timeStr} ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    }
+};
+
 type ListMessProps = {
     theme?: ConversationTheme
     fontFamily?: string
@@ -95,6 +146,37 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
         scrollTop: number
     } | null>(null)
     const oldestThresholdReachedRef = useRef(false)
+
+    useEffect(() => {
+        const listeners: Array<{ audio: HTMLAudioElement; name: string; handler: () => void }> = []
+
+        Object.keys(audioRefs.current).forEach((idStr) => {
+            const messageId = Number(idStr)
+            const audio = audioRefs.current[messageId]
+            if (audio) {
+                if (Number.isFinite(audio.duration) && audio.duration > 0) {
+                    updateAudioDuration(messageId, audio.duration)
+                }
+                const handleMetadata = () => {
+                    updateAudioDuration(messageId, audio.duration)
+                }
+                audio.addEventListener("loadedmetadata", handleMetadata)
+                audio.addEventListener("durationchange", handleMetadata)
+                listeners.push({ audio, name: "loadedmetadata", handler: handleMetadata })
+                listeners.push({ audio, name: "durationchange", handler: handleMetadata })
+
+                if (audio.readyState < 1) {
+                    audio.load()
+                }
+            }
+        })
+
+        return () => {
+            listeners.forEach(({ audio, name, handler }) => {
+                audio.removeEventListener(name, handler)
+            })
+        }
+    }, [conversation])
 
     const reactions = ["\u2764\ufe0f", "\ud83d\ude06", "\ud83d\ude2e", "\ud83d\ude22", "\ud83d\ude21", "\ud83d\udc4d"]
     const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim"]
@@ -1074,10 +1156,8 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                         bgcolor: "transparent",
                         cursor: imageUrl ? "zoom-in" : "default",
                         display: "block",
-                    }}
-                >
-                    <Box
-                        component="img"
+                    }}>
+                    <ImageWithLoader
                         src={imageUrl}
                         alt={mess.fileName || "image message"}
                         sx={{
@@ -1100,19 +1180,19 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                             }}
                             sx={{
                                 position: "absolute",
-                                top: 8,
-                                right: 8,
-                                width: 36,
-                                height: 36,
-                                bgcolor: "#fff",
+                                top: 6,
+                                right: 6,
+                                width: 28,
+                                height: 28,
+                                bgcolor: "rgba(255, 255, 255, 0.9)",
                                 color: "#111",
-                                boxShadow: "0 3px 10px rgba(15,23,42,0.18)",
+                                boxShadow: "0 2px 6px rgba(15,23,42,0.15)",
                                 "&:hover": {
-                                    bgcolor: "#f5f5f5",
+                                    bgcolor: "#fff",
                                 },
                             }}
                         >
-                            <DownloadIcon sx={{ fontSize: 21 }} />
+                            <DownloadIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Tooltip>
                 )}
@@ -1193,40 +1273,41 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                             {formatAudioTime(currentTime)} / {formatAudioTime(duration)}
                         </Box>
                     </Box>
-                    <audio
-                        ref={(element) => {
-                            audioRefs.current[mess.messageId] = element
-                        }}
-                        src={mess.mediaURL || ""}
-                        preload="metadata"
-                        onLoadedMetadata={(event) => {
-                            updateAudioDuration(mess.messageId, event.currentTarget.duration)
-                        }}
-                        onDurationChange={(event) => {
-                            updateAudioDuration(mess.messageId, event.currentTarget.duration)
-                        }}
-                        onTimeUpdate={(event) => {
-                            const nextCurrentTime = event.currentTarget.currentTime
-                            updateAudioDuration(mess.messageId, event.currentTarget.duration)
-                            setAudioCurrentTimes((prev) => ({
-                                ...prev,
-                                [mess.messageId]: nextCurrentTime,
-                            }))
-                        }}
-                        onEnded={() => {
-                            setPlayingAudioMessageId(null)
-                            setAudioCurrentTimes((prev) => ({
-                                ...prev,
-                                [mess.messageId]: 0,
-                            }))
-                        }}
-                        onPause={() => {
-                            if (playingAudioMessageId === mess.messageId) {
+                    <Box sx={{ display: "none", width: 0, height: 0, overflow: "hidden" }}>
+                        <audio
+                            ref={(element) => {
+                                audioRefs.current[mess.messageId] = element
+                            }}
+                            src={mess.mediaURL || ""}
+                            preload="auto"
+                            onLoadedMetadata={(event) => {
+                                updateAudioDuration(mess.messageId, event.currentTarget.duration)
+                            }}
+                            onDurationChange={(event) => {
+                                updateAudioDuration(mess.messageId, event.currentTarget.duration)
+                            }}
+                            onTimeUpdate={(event) => {
+                                const nextCurrentTime = event.currentTarget.currentTime
+                                updateAudioDuration(mess.messageId, event.currentTarget.duration)
+                                setAudioCurrentTimes((prev) => ({
+                                    ...prev,
+                                    [mess.messageId]: nextCurrentTime,
+                                }))
+                            }}
+                            onEnded={() => {
                                 setPlayingAudioMessageId(null)
-                            }
-                        }}
-                        style={{ display: "none" }}
-                    />
+                                setAudioCurrentTimes((prev) => ({
+                                    ...prev,
+                                    [mess.messageId]: 0,
+                                }))
+                            }}
+                            onPause={() => {
+                                if (playingAudioMessageId === mess.messageId) {
+                                    setPlayingAudioMessageId(null)
+                                }
+                            }}
+                        />
+                    </Box>
                 </Box>
             )
         }
@@ -1520,12 +1601,20 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                             const senderName = getSenderName(mess.senderId)
                             const senderAvatar = getSenderAvatar(mess.senderId)
                             return (
-                                <>
+                                <Box
+                                    key={mess.messageId}
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "flex-start",
+                                        width: "100%",
+                                        mb: 1,
+                                    }}
+                                >
                                     <Box
                                         sx={{
                                             display: "flex",
                                             justifyContent: "flex-start",
-                                            mb: 1,
                                             alignItems: "flex-end",
                                             gap: 1,
                                             width: "100%",
@@ -1533,7 +1622,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                                 opacity: 1,
                                                 pointerEvents: "auto",
                                             },
-                                        }} key={mess.messageId}
+                                        }}
                                     >
 
                                         <Avatar
@@ -1650,8 +1739,12 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                         }
 
                                     </Box>
-
-                                </>
+                                    <Box sx={{ pl: "40px", mt: 0.25, display: "flex", justifyContent: "flex-start", width: "100%", fontFamily: appFontFamily }}>
+                                        <Typography sx={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>
+                                            {getFormattedMessageTime(mess.createdAt)}
+                                        </Typography>
+                                    </Box>
+                                </Box>
                             )
                         }
 
@@ -1817,6 +1910,9 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
 
                                                 </>)
                                         }
+                                        <Typography sx={{ fontSize: 10, color: "#94a3b8", fontWeight: 500, mt: 0.25, ml: 1, fontFamily: appFontFamily }}>
+                                            {getFormattedMessageTime(mess.createdAt)}
+                                        </Typography>
                                     </Box>
 
                                 </Box>
@@ -1888,6 +1984,11 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                                     {mess.content ? renderMessageContent(mess, mess.content, "#fff") : 'Bạn đã thu hồi tin nhắn'}
                                                     {renderReactionBadge(mess.messageId, "left")}
                                                 </Box>
+                                            </Box>
+                                            <Box sx={{ mt: 0.25, mr: 1, display: "flex", justifyContent: "flex-end", width: "100%", fontFamily: appFontFamily }}>
+                                                <Typography sx={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>
+                                                    {getFormattedMessageTime(mess.createdAt)}
+                                                </Typography>
                                             </Box>
                                             {renderSeenStatus(mess)}
 
@@ -1967,6 +2068,11 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
 
                                                     {renderReactionBadge(mess.messageId, "left")}
                                                 </Box>
+                                            </Box>
+                                            <Box sx={{ mt: 0.25, mr: 1, display: "flex", justifyContent: "flex-end", width: "100%", fontFamily: appFontFamily }}>
+                                                <Typography sx={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>
+                                                    {getFormattedMessageTime(mess.createdAt)}
+                                                </Typography>
                                             </Box>
                                             {renderSeenStatus(mess)}
                                         </Box>)

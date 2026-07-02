@@ -20,6 +20,7 @@ export interface LoginSuccess {
 export interface UserProfile {
     fullName: string,
     avatarUrl: string,
+    bannerUrl?: string,
     bio: string,
     mutualFriend: number,
     numberFriend: number,

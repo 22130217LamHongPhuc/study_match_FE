@@ -379,8 +379,8 @@ export default function ConversationPage() {
   const [cancelCallLoading, setCancelCallLoading] = useState(false);
   const [videoCallLoading, setVideoCallLoading] = useState(false);
   const [badWordsWarningOpen, setBadWordsWarningOpen] = useState(false);
-  const [groupInfoOpen, setGroupInfoOpen] = useState(false);
-  const [groupInfoTab, setGroupInfoTab] = useState<GroupInfoTab>("schedule");
+  const [pinnedMessagesOpen, setPinnedMessagesOpen] = useState(false);
+  const [studyScheduleOpen, setStudyScheduleOpen] = useState(false);
   const [groupVisibility, setGroupVisibility] = useState<string | null>(routeState?.groupVisibility || null);
   const isCommunityGroup = groupVisibility?.toUpperCase() === "COMMUNITY" || groupVisibility?.toUpperCase() === "COMUNITY";
   const hasStudySchedule = isGroupConversation && !isCommunityGroup;
@@ -588,7 +588,7 @@ export default function ConversationPage() {
   }, [groupId, isGroupConversation, groupVisibility]);
 
   useEffect(() => {
-    if (!groupInfoOpen || !hasStudySchedule || !groupId) return;
+    if (!studyScheduleOpen || !hasStudySchedule || !groupId) return;
 
     let cancelled = false;
     setGroupSessionsLoading(true);
@@ -617,7 +617,7 @@ export default function ConversationPage() {
     return () => {
       cancelled = true;
     };
-  }, [currentUserId, groupId, groupInfoOpen, hasStudySchedule]);
+  }, [currentUserId, groupId, studyScheduleOpen, hasStudySchedule]);
 
   useLayoutEffect(() => {
     const loadMess = async () => {
@@ -649,7 +649,8 @@ export default function ConversationPage() {
       setVisibleMessageStatus(null);
       setReplyMess(null);
       setForwardMess(null);
-      setGroupInfoOpen(false);
+      setPinnedMessagesOpen(false);
+      setStudyScheduleOpen(false);
       setConversation([]);
       setLoadingConversation(true);
 
@@ -730,28 +731,31 @@ export default function ConversationPage() {
 
     let cancelled = false;
     const loadGroupMemberProfiles = async () => {
-      const fallbackSenderIds = Array.from(new Set(
-        conversation
-          .map((message) => message.senderId)
-          .filter((senderId) => senderId !== currentUserId)
-          .filter((senderId) => Number.isFinite(senderId) && senderId > 0),
-      ));
+      const fallbackSenderIds = conversation
+        .map((message) => message.senderId)
+        .filter((senderId) => senderId !== currentUserId)
+        .filter((senderId) => Number.isFinite(senderId) && senderId > 0);
 
-      let memberIds = fallbackSenderIds;
+      const seenUserIds = Object.keys(seenStatuses)
+        .map(Number)
+        .filter((uId) => uId !== currentUserId)
+        .filter((uId) => Number.isFinite(uId) && uId > 0);
+
+      let memberIds = [...fallbackSenderIds, ...seenUserIds];
       try {
         const result = await getActiveGroupMemberIds(groupId);
         const activeMemberIds = (result.data || [])
           .map((memberId: number) => Number(memberId))
           .filter((memberId: number) => memberId !== currentUserId)
           .filter((memberId: number) => Number.isFinite(memberId) && memberId > 0);
-        if (activeMemberIds.length > 0) {
-          memberIds = activeMemberIds;
-        }
+        
+        memberIds = [...memberIds, ...activeMemberIds];
       } catch (error) {
         console.error("[Conversation][load-group-members-error]", error);
       }
 
-      const missingMemberIds = Array.from(new Set(memberIds))
+      const uniqueMemberIds = Array.from(new Set(memberIds));
+      const missingMemberIds = uniqueMemberIds
         .filter((memberId) => !groupMemberProfiles[memberId]);
       if (missingMemberIds.length === 0 || cancelled) return;
 
@@ -776,7 +780,7 @@ export default function ConversationPage() {
     return () => {
       cancelled = true;
     };
-  }, [conversation, currentUserId, dispatch, groupId, groupMemberProfiles, isGroupConversation]);
+  }, [conversation, currentUserId, dispatch, groupId, groupMemberProfiles, isGroupConversation, seenStatuses]);
 
   useEffect(() => {
     if (isGroupConversation) {
@@ -1756,6 +1760,17 @@ export default function ConversationPage() {
             <IconButton onClick={() => setIsColorPickerOpen(true)} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
               <PaletteIcon sx={{ fontSize: 22 }} />
             </IconButton>
+            {hasStudySchedule && (
+              <IconButton 
+                onClick={() => {
+                  setStudyScheduleOpen(true);
+                }} 
+                sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}
+                title="Lịch học nhóm"
+              >
+                <CalendarMonthIcon sx={{ fontSize: 22 }} />
+              </IconButton>
+            )}
             <IconButton
               onClick={() => setMediaFilesOpen(true)}
               sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}
@@ -1765,13 +1780,12 @@ export default function ConversationPage() {
           </Box>
         </Box>
 
-        {(isGroupConversation || pinnedMessages.length > 0) && (
+        {pinnedMessages.length > 0 && (
           <Box
             component="button"
             type="button"
             onClick={() => {
-              setGroupInfoTab(hasStudySchedule ? "schedule" : "pinned");
-              setGroupInfoOpen(true);
+              setPinnedMessagesOpen(true);
             }}
             sx={{
               height: 44,
@@ -1803,23 +1817,19 @@ export default function ConversationPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: hasStudySchedule ? "#eff6ff" : "#fff7ed",
-                  color: hasStudySchedule ? "#2563eb" : "#f97316",
+                  bgcolor: "#fff7ed",
+                  color: "#f97316",
                   flexShrink: 0,
                 }}
               >
-                {hasStudySchedule ? <CalendarMonthIcon sx={{ fontSize: 17 }} /> : <PushPinIcon sx={{ fontSize: 17 }} />}
+                <PushPinIcon sx={{ fontSize: 17 }} />
               </Box>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: 14, fontWeight: 750, color: "#1e293b", lineHeight: 1.15 }}>
-                  {hasStudySchedule ? "Lịch học nhóm" : "Tin nhắn đã ghim"}
+                  Tin nhắn đã ghim
                 </Typography>
                 <Typography sx={{ fontSize: 12.5, color: "#64748b", lineHeight: 1.25 }} noWrap>
-                  {hasStudySchedule
-                    ? groupSessions.length > 0
-                      ? `${groupSessions.length} lịch học - ${pinnedMessages.length} tin ghim`
-                      : `Xem lịch học và ${pinnedMessages.length} tin nhắn đã ghim`
-                    : `${pinnedMessages.length} tin nhắn đã ghim`}
+                  {pinnedMessages.length} tin nhắn đã ghim
                 </Typography>
               </Box>
             </Box>
@@ -2207,9 +2217,10 @@ export default function ConversationPage() {
         callType="AUDIO"
         onReject={() => setRejectedVideoCall(false)}
       />
+      {/* Pinned Messages Dialog */}
       <Dialog
-        open={groupInfoOpen}
-        onClose={() => setGroupInfoOpen(false)}
+        open={pinnedMessagesOpen}
+        onClose={() => setPinnedMessagesOpen(false)}
         maxWidth="md"
         fullWidth
         PaperProps={{
@@ -2221,186 +2232,181 @@ export default function ConversationPage() {
       >
         <DialogTitle sx={{ px: 3, py: 2, borderBottom: "1px solid #e2e8f0" }}>
           <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
-            {fullName}
+            Tin nhắn đã ghim
           </Typography>
           <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25 }}>
-            {hasStudySchedule ? "Lịch học nhóm và tin nhắn đã ghim" : "Tin nhắn đã ghim trong cuộc trò chuyện"}
+            Tin nhắn đã ghim trong cuộc trò chuyện - {fullName}
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ p: 0 }}>
-          <Box sx={{ display: "flex", borderBottom: "1px solid #e2e8f0", bgcolor: "#f8fafc" }}>
-            {(hasStudySchedule ? [
-              { id: "schedule" as const, label: "Lịch học", icon: <CalendarMonthIcon sx={{ fontSize: 18 }} /> },
-              { id: "pinned" as const, label: "Tin ghim", icon: <PushPinIcon sx={{ fontSize: 18 }} /> },
-            ] : [
-              { id: "pinned" as const, label: "Tin ghim", icon: <PushPinIcon sx={{ fontSize: 18 }} /> },
-            ]).map((tab) => {
-              const active = groupInfoTab === tab.id;
-              return (
-                <Button
-                  key={tab.id}
-                  startIcon={tab.icon}
-                  onClick={() => setGroupInfoTab(tab.id)}
+        <DialogContent sx={{ p: 2.5, bgcolor: "#fff" }}>
+          <Box sx={{ display: "grid", gap: 1.25 }}>
+            {pinnedMessages.length === 0 ? (
+              <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
+                Chưa có tin nhắn nào được ghim.
+              </Box>
+            ) : (
+              pinnedMessages.map((message) => (
+                <Box
+                  key={message.messageId}
                   sx={{
-                    flex: 1,
-                    py: 1.35,
-                    borderRadius: 0,
-                    textTransform: "none",
-                    fontWeight: 700,
-                    color: active ? "#1d4ed8" : "#475569",
-                    bgcolor: active ? "#fff" : "transparent",
-                    borderBottom: active ? "2px solid #2563eb" : "2px solid transparent",
-                    "&:hover": { bgcolor: active ? "#fff" : "#eef2ff" },
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 2,
+                    p: 1.5,
+                    display: "flex",
+                    gap: 1.25,
+                    alignItems: "flex-start",
                   }}
                 >
-                  {tab.label}
-                </Button>
-              );
-            })}
-          </Box>
-
-          <Box sx={{ maxHeight: "min(560px, calc(100vh - 220px))", overflowY: "auto", p: 2.5, bgcolor: "#fff" }}>
-            {hasStudySchedule && groupInfoTab === "schedule" && (
-              <Box sx={{ display: "grid", gap: 1.5 }}>
-                {groupSessionsLoading && (
-                  <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                    <CircularProgress size={32} sx={{ color: "#2563eb" }} />
+                  <PushPinIcon sx={{ color: "#f97316", fontSize: 19, mt: 0.25 }} />
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography sx={{ color: "#0f172a", fontSize: 14, fontWeight: 700 }}>
+                      {getMessagePreview(message)}
+                    </Typography>
+                    <Typography sx={{ color: "#334155", fontSize: 12.5, mt: 0.35, fontWeight: 700 }}>
+                      {getPinnedSenderName(message)}
+                    </Typography>
+                    <Typography sx={{ color: "#64748b", fontSize: 12, mt: 0.35 }}>
+                      {message.createdAt ? formatDateTime(message.createdAt) : "Tin nhắn"}
+                    </Typography>
                   </Box>
-                )}
-                {groupSessionsError && (
-                  <Box sx={{ border: "1px dashed #fecaca", borderRadius: 2, p: 3, textAlign: "center", color: "#b91c1c", bgcolor: "#fef2f2" }}>
-                    {groupSessionsError}
-                  </Box>
-                )}
-                {!groupSessionsLoading && !groupSessionsError && groupSessions.length === 0 && (
-                  <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
-                    Nhóm chưa có lịch học nào.
-                  </Box>
-                )}
-                {!groupSessionsLoading && !groupSessionsError && groupSessions.map((session) => (
-                  <Box
-                    key={session.id}
+                  <Button
+                    size="small"
+                    onClick={() => handlePinMessage(message, false)}
                     sx={{
-                      border: "1px solid #e2e8f0",
-                      borderRadius: 2,
-                      p: 2,
+                      alignSelf: "center",
+                      flexShrink: 0,
+                      color: "#b91c1c",
+                      borderColor: "#fecaca",
                       bgcolor: "#fff",
+                      textTransform: "none",
+                      fontWeight: 700,
+                      "&:hover": {
+                        borderColor: "#fca5a5",
+                        bgcolor: "#fef2f2",
+                      },
                     }}
+                    variant="outlined"
                   >
-                    <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, alignItems: "flex-start" }}>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography sx={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>
-                          {session.title}
-                        </Typography>
-                        <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.5 }}>
-                          {formatDateTime(session.startTime)} - {formatDateTime(session.endTime)}
-                        </Typography>
-                      </Box>
-                      <Typography
-                        sx={{
-                          px: 1,
-                          py: 0.4,
-                          borderRadius: 1,
-                          bgcolor: session.status === "CANCELLED" ? "#fef2f2" : "#eff6ff",
-                          color: session.status === "CANCELLED" ? "#b91c1c" : "#1d4ed8",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {sessionStatusLabel[session.status] || session.status}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.5 }}>
-                      <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#f1f5f9", color: "#334155", fontSize: 12, fontWeight: 700 }}>
-                        {studyModeLabel[session.studyMode] || session.studyMode}
-                      </Typography>
-                      {session.subjectName && (
-                        <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#fff7ed", color: "#c2410c", fontSize: 12, fontWeight: 700 }}>
-                          {session.subjectName}
-                        </Typography>
-                      )}
-                      {session.membersCount !== null && session.membersCount !== undefined && (
-                        <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#ecfdf5", color: "#047857", fontSize: 12, fontWeight: 700 }}>
-                          {session.membersCount} thành viên
-                        </Typography>
-                      )}
-                    </Box>
-
-                    {(session.location || session.meetingUrl || session.description) && (
-                      <Box sx={{ mt: 1.5, color: "#475569", fontSize: 13, lineHeight: 1.6 }}>
-                        {session.location && <Typography sx={{ fontSize: 13 }}>Địa điểm: {session.location}</Typography>}
-                        {session.meetingUrl && <Typography sx={{ fontSize: 13 }}>Link học: {session.meetingUrl}</Typography>}
-                        {session.description && <Typography sx={{ fontSize: 13 }}>Ghi chú: {session.description}</Typography>}
-                      </Box>
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            )}
-
-            {groupInfoTab === "pinned" && (
-              <Box sx={{ display: "grid", gap: 1.25 }}>
-                {pinnedMessages.length === 0 ? (
-                  <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
-                    Chưa có tin nhắn nào được ghim.
-                  </Box>
-                ) : (
-                  pinnedMessages.map((message) => (
-                    <Box
-                      key={message.messageId}
-                      sx={{
-                        border: "1px solid #e2e8f0",
-                        borderRadius: 2,
-                        p: 1.5,
-                        display: "flex",
-                        gap: 1.25,
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      <PushPinIcon sx={{ color: "#f97316", fontSize: 19, mt: 0.25 }} />
-                      <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography sx={{ color: "#0f172a", fontSize: 14, fontWeight: 700 }}>
-                          {getMessagePreview(message)}
-                        </Typography>
-                        <Typography sx={{ color: "#334155", fontSize: 12.5, mt: 0.35, fontWeight: 700 }}>
-                          {getPinnedSenderName(message)}
-                        </Typography>
-                        <Typography sx={{ color: "#64748b", fontSize: 12, mt: 0.35 }}>
-                          {message.createdAt ? formatDateTime(message.createdAt) : "Tin nhắn"}
-                        </Typography>
-                      </Box>
-                      <Button
-                        size="small"
-                        onClick={() => handlePinMessage(message, false)}
-                        sx={{
-                          alignSelf: "center",
-                          flexShrink: 0,
-                          color: "#b91c1c",
-                          borderColor: "#fecaca",
-                          bgcolor: "#fff",
-                          textTransform: "none",
-                          fontWeight: 700,
-                          "&:hover": {
-                            borderColor: "#fca5a5",
-                            bgcolor: "#fef2f2",
-                          },
-                        }}
-                        variant="outlined"
-                      >
-                        Bỏ ghim
-                      </Button>
-                    </Box>
-                  ))
-                )}
-              </Box>
+                    Bỏ ghim
+                  </Button>
+                </Box>
+              ))
             )}
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #e2e8f0" }}>
           <Button
-            onClick={() => setGroupInfoOpen(false)}
+            onClick={() => setPinnedMessagesOpen(false)}
+            sx={{ textTransform: "none", fontWeight: 700, color: "#475569" }}
+          >
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Study Schedule Dialog */}
+      <Dialog
+        open={studyScheduleOpen}
+        onClose={() => setStudyScheduleOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle sx={{ px: 3, py: 2, borderBottom: "1px solid #e2e8f0" }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
+            Lịch học nhóm
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25 }}>
+            Lịch học nhóm của {fullName}
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ p: 2.5, bgcolor: "#fff" }}>
+          <Box sx={{ display: "grid", gap: 1.5 }}>
+            {groupSessionsLoading && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+                <CircularProgress size={32} sx={{ color: "#2563eb" }} />
+              </Box>
+            )}
+            {groupSessionsError && (
+              <Box sx={{ border: "1px dashed #fecaca", borderRadius: 2, p: 3, textAlign: "center", color: "#b91c1c", bgcolor: "#fef2f2" }}>
+                {groupSessionsError}
+              </Box>
+            )}
+            {!groupSessionsLoading && !groupSessionsError && groupSessions.length === 0 && (
+              <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
+                Nhóm chưa có lịch học nào.
+              </Box>
+            )}
+            {!groupSessionsLoading && !groupSessionsError && groupSessions.map((session) => (
+              <Box
+                key={session.id}
+                sx={{
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 2,
+                  p: 2,
+                  bgcolor: "#fff",
+                }}
+              >
+                <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, alignItems: "flex-start" }}>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>
+                      {session.title}
+                    </Typography>
+                    <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.5 }}>
+                      {formatDateTime(session.startTime)} - {formatDateTime(session.endTime)}
+                    </Typography>
+                  </Box>
+                  <Typography
+                    sx={{
+                      px: 1,
+                      py: 0.4,
+                      borderRadius: 1,
+                      bgcolor: session.status === "CANCELLED" ? "#fef2f2" : "#eff6ff",
+                      color: session.status === "CANCELLED" ? "#b91c1c" : "#1d4ed8",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {sessionStatusLabel[session.status] || session.status}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.5 }}>
+                  <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#f1f5f9", color: "#334155", fontSize: 12, fontWeight: 700 }}>
+                    {studyModeLabel[session.studyMode] || session.studyMode}
+                  </Typography>
+                  {session.subjectName && (
+                    <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#fff7ed", color: "#c2410c", fontSize: 12, fontWeight: 700 }}>
+                      {session.subjectName}
+                    </Typography>
+                  )}
+                  {session.membersCount !== null && session.membersCount !== undefined && (
+                    <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#ecfdf5", color: "#047857", fontSize: 12, fontWeight: 700 }}>
+                      {session.membersCount} thành viên
+                    </Typography>
+                  )}
+                </Box>
+
+                {(session.location || session.meetingUrl || session.description) && (
+                  <Box sx={{ mt: 1.5, color: "#475569", fontSize: 13, lineHeight: 1.6 }}>
+                    {session.location && <Typography sx={{ fontSize: 13 }}>Địa điểm: {session.location}</Typography>}
+                    {session.meetingUrl && <Typography sx={{ fontSize: 13 }}>Link học: {session.meetingUrl}</Typography>}
+                    {session.description && <Typography sx={{ fontSize: 13 }}>Ghi chú: {session.description}</Typography>}
+                  </Box>
+                )}
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #e2e8f0" }}>
+          <Button
+            onClick={() => setStudyScheduleOpen(false)}
             sx={{ textTransform: "none", fontWeight: 700, color: "#475569" }}
           >
             Đóng

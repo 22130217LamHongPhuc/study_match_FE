@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { LockKeyhole } from "lucide-react";
 import { resetPassword } from "../../../services/AuthService";
 import { LoadingSkeleton } from "../../../components/modal/basic/LoadingSkeleton";
+import BackgroundLayer from "../components/BackgroundLayer";
+
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -48,8 +50,10 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm border border-slate-200">
+    <div className="relative min-h-screen bg-[#f7f5f0] flex items-center justify-center px-4 overflow-hidden">
+      <BackgroundLayer />
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-8 shadow-sm border border-slate-200">
+
         {loading ? (
           <LoadingSkeleton />
         ) : (
