@@ -626,6 +626,8 @@ export default function ListFriends() {
     const hasActiveChat = Boolean(routeState?.targetUserId || routeState?.groupId || routeState?.conversationKey);
 
     useEffect(() => {
+        if (location.pathname !== "/conversation") return;
+
         if (!loading && !hasActiveChat && unifiedConversations.length > 0) {
             const firstConv = unifiedConversations[0];
             setSelectedItemKey(firstConv.id);
@@ -637,7 +639,7 @@ export default function ListFriends() {
                 openConversation(firstConv.original);
             }
         }
-    }, [loading, hasActiveChat, unifiedConversations]);
+    }, [loading, hasActiveChat, unifiedConversations, location.pathname]);
 
     useEffect(() => {
         if (routeState) {

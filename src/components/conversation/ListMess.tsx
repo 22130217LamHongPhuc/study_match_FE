@@ -135,36 +135,42 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
     };
 
     const renderSeenStatus = (mess: MessageInterface) => {
-        const isLatest = conversation.length > 0 && mess.messageId === conversation[0]?.messageId;
-        const seenUsers = getSeenUsersForMessage(mess.messageId);
-        const unseenNames = isLatest ? getUnseenUsersForLatestMessage(mess.messageId, mess.senderId) : [];
-        const showAvatars = seenUsers.length > 0;
-        const showUnseen = unseenNames.length > 0;
-        if (!showAvatars && !showUnseen) {
+        if (!isGroupConversation) {
             if (mess.senderId === currentUserId) {
                 return renderOutgoingStatus(mess);
             }
             return null;
         }
+
+        const isLatest = conversation.length > 0 && mess.messageId === conversation[0]?.messageId;
+        const seenUsers = getSeenUsersForMessage(mess.messageId);
+        const unseenNames = isLatest ? getUnseenUsersForLatestMessage(mess.messageId, mess.senderId) : [];
+        const showAvatars = seenUsers.length > 0;
+        const showUnseen = unseenNames.length > 0;
+
+        if (!showAvatars && !showUnseen) {
+            return null;
+        }
+
         const isSentByMe = mess.senderId === currentUserId;
         return (
             <Box sx={{ mt: 0.5, mb: 0.5, display: "flex", flexDirection: "column", alignItems: isSentByMe ? "flex-end" : "flex-start", width: "100%", fontFamily: appFontFamily }}>
-                {showAvatars && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexDirection: "row", justifyContent: isSentByMe ? "flex-end" : "flex-start" }}>
-                        {seenUsers.map((user) => (
-                            <Tooltip key={user.userId} title={`${user.fullName} đã xem`}>
-                                <Avatar src={user.avatarUrl || undefined} sx={{ width: 16, height: 16, fontSize: 8, border: "1px solid #fff", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
-                                    {user.fullName.charAt(0).toUpperCase()}
-                                </Avatar>
-                            </Tooltip>
-                        ))}
-                    </Box>
-                )}
-                {showUnseen && (
-                    <Typography sx={{ fontSize: 11, color: "#64748b", fontWeight: 450, mt: 0.25, textAlign: isSentByMe ? "right" : "left" }}>
-                        Chưa xem: {unseenNames.join(", ")}
-                    </Typography>
-                )}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexDirection: "row", justifyContent: isSentByMe ? "flex-end" : "flex-start" }}>
+                    {showAvatars && seenUsers.map((user) => (
+                        <Tooltip key={user.userId} title={`${user.fullName} đã xem`}>
+                            <Avatar src={user.avatarUrl || undefined} sx={{ width: 16, height: 16, fontSize: 8, border: "1px solid #fff", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
+                                {user.fullName.charAt(0).toUpperCase()}
+                            </Avatar>
+                        </Tooltip>
+                    ))}
+                    {showUnseen && (
+                        <Tooltip title={`Chưa xem: ${unseenNames.join(", ")}`}>
+                            <Typography sx={{ fontSize: 11, color: "#94a3b8", cursor: "pointer", ml: showAvatars ? 1 : 0, '&:hover': { color: '#64748b' } }}>
+                                Chưa xem ({unseenNames.length})
+                            </Typography>
+                        </Tooltip>
+                    )}
+                </Box>
             </Box>
         );
     };

@@ -26,6 +26,7 @@ import {
   InputBase,
   Paper,
   Typography,
+  Skeleton,
 } from "@mui/material";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -86,38 +87,78 @@ const waitForMinLoading = async (startedAt: number) => {
   }
 };
 
-const ConversationLoading = () => (
+const ConversationSkeleton = () => (
   <Box
     sx={{
       flex: 1,
       minHeight: 0,
       width: "100%",
-      position: "relative",
+      p: 3,
+      display: "flex",
+      flexDirection: "column-reverse",
+      gap: 2.25,
       overflow: "hidden",
       background: "transparent",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
     }}
   >
-    <Box
-      sx={{
-        width: 48,
-        height: 48,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <CircularProgress
-        size={48}
-        thickness={4}
-        sx={{
-          color: "#b30000",
-        }}
-      />
-    </Box>
-
+    {[1, 2, 3, 4, 5].map((item, idx) => {
+      const isOutgoing = idx % 2 === 0;
+      return (
+        <Box
+          key={item}
+          sx={{
+            display: "flex",
+            justifyContent: isOutgoing ? "flex-end" : "flex-start",
+            alignItems: "flex-end",
+            gap: 1.5,
+            width: "100%",
+          }}
+        >
+          {!isOutgoing && (
+            <Skeleton
+              variant="circular"
+              width={36}
+              height={36}
+              animation="wave"
+              sx={{ bgcolor: "rgba(15, 23, 42, 0.06)", flexShrink: 0 }}
+            />
+          )}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: isOutgoing ? "flex-end" : "flex-start",
+              gap: 0.5,
+              maxWidth: "60%",
+              width: "100%",
+            }}
+          >
+            <Skeleton
+              variant="rectangular"
+              height={idx === 2 ? 56 : 36}
+              animation="wave"
+              sx={{
+                width: idx === 0 ? "55%" : idx === 1 ? "75%" : idx === 2 ? "90%" : idx === 3 ? "45%" : "65%",
+                borderRadius: isOutgoing ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                bgcolor: isOutgoing ? "rgba(59, 130, 246, 0.08)" : "rgba(15, 23, 42, 0.04)",
+              }}
+            />
+            {idx === 2 && (
+              <Skeleton
+                variant="rectangular"
+                height={32}
+                animation="wave"
+                sx={{
+                  width: "60%",
+                  borderRadius: isOutgoing ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                  bgcolor: isOutgoing ? "rgba(59, 130, 246, 0.08)" : "rgba(15, 23, 42, 0.04)",
+                }}
+              />
+            )}
+          </Box>
+        </Box>
+      );
+    })}
   </Box>
 );
 
@@ -352,6 +393,7 @@ export default function ConversationPage() {
   } | null>(null);
   const [themeId, setThemeId] = useState<string>("default");
   const [fontFamily, setFontFamily] = useState<string>("default");
+  const [seenStatuses, setSeenStatuses] = useState<Record<number, number>>({});
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [mediaFilesOpen, setMediaFilesOpen] = useState(false);
   const [friendsPanelWidth, setFriendsPanelWidth] = useState(420);
@@ -627,6 +669,15 @@ export default function ConversationPage() {
 
         conversationId.current = result.data.conversationId;
         dispatch(updateCurrentConverId({ currentConversationId: result.data.conversationId }));
+
+        const rawSeenStatus = result.data.seenStatus || [];
+        const initialSeen: Record<number, number> = {};
+        rawSeenStatus.forEach((item: any) => {
+          if (item.userId && item.lastSeenMessageId) {
+            initialSeen[Number(item.userId)] = Number(item.lastSeenMessageId);
+          }
+        });
+        setSeenStatuses(initialSeen);
 
         if (result.data?.color) {
           setThemeId(result.data.color);
@@ -1066,6 +1117,14 @@ export default function ConversationPage() {
       );
       if (storeEvent === SocketEvent.MESSAGE_SEEN) {
         dispatch(clearUnread({ conversationId: storeNewMess.data.conversationId }));
+        const seenUserId = Number(storeNewMess.data.userId);
+        const maxMessageId = Math.max(...storeNewMess.data.messageIds.map(Number));
+        if (Number.isFinite(seenUserId) && Number.isFinite(maxMessageId)) {
+          setSeenStatuses((prev) => ({
+            ...prev,
+            [seenUserId]: Math.max(prev[seenUserId] || 0, maxMessageId),
+          }));
+        }
       }
     }
 
@@ -1640,29 +1699,52 @@ export default function ConversationPage() {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
-            <Box sx={{ position: "relative", flexShrink: 0 }}>
-              <Avatar src={avatar || undefined} sx={{ width: 44, height: 44 }} />
-              {!isGroupConversation && isOnline && (
-                <Box
-                  title="Online"
-                  sx={{
-                    position: "absolute",
-                    right: -2,
-                    bottom: -2,
-                    width: 13,
-                    height: 13,
-                    borderRadius: "50%",
-                    bgcolor: "#48d26d",
-                    border: "2px solid white",
-                  }}
+            {loadingConversation ? (
+              <>
+                <Skeleton
+                  variant="circular"
+                  width={44}
+                  height={44}
+                  animation="wave"
+                  sx={{ bgcolor: "rgba(15, 23, 42, 0.06)", flexShrink: 0 }}
                 />
-              )}
-            </Box>
-            <Box>
-              <Typography sx={{ fontWeight: 750, fontSize: 16.5, color: "#111827", lineHeight: 1.25 }} noWrap>
-                {fullName}
-              </Typography>
-            </Box>
+                <Box>
+                  <Skeleton
+                    variant="rectangular"
+                    width={120}
+                    height={20}
+                    animation="wave"
+                    sx={{ borderRadius: "4px", bgcolor: "rgba(15, 23, 42, 0.06)" }}
+                  />
+                </Box>
+              </>
+            ) : (
+              <>
+                <Box sx={{ position: "relative", flexShrink: 0 }}>
+                  <Avatar src={avatar || undefined} sx={{ width: 44, height: 44 }} />
+                  {!isGroupConversation && isOnline && (
+                    <Box
+                      title="Online"
+                      sx={{
+                        position: "absolute",
+                        right: -2,
+                        bottom: -2,
+                        width: 13,
+                        height: 13,
+                        borderRadius: "50%",
+                        bgcolor: "#48d26d",
+                        border: "2px solid white",
+                      }}
+                    />
+                  )}
+                </Box>
+                <Box>
+                  <Typography sx={{ fontWeight: 750, fontSize: 16.5, color: "#111827", lineHeight: 1.25 }} noWrap>
+                    {fullName}
+                  </Typography>
+                </Box>
+              </>
+            )}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("AUDIO")} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
@@ -1746,7 +1828,7 @@ export default function ConversationPage() {
         )}
 
         {loadingConversation ? (
-          <ConversationLoading />
+          <ConversationSkeleton />
         ) : conversation.length > 0 ? (
           <ListMess
             theme={currentTheme}
@@ -1762,6 +1844,7 @@ export default function ConversationPage() {
             onForwardMessage={setForwardMess}
             onPinMessage={handlePinMessage}
             isGroupConversation={isGroupConversation}
+            seenStatuses={seenStatuses}
             senderProfiles={isGroupConversation ? groupMemberProfiles : privateSenderProfiles}
           />
         ) : (
