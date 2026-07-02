@@ -12,6 +12,7 @@ import {
   Tooltip,
   Typography,
   Popover,
+  Dialog,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -38,17 +39,41 @@ import {
   FriendRequestDto
 } from "../../services/FriendService";
 import { toast } from "react-toastify";
+import {
+
+  getPendingGroupInvitations,
+  acceptGroupInvitation,
+  rejectGroupInvitation,
+  GroupInvitationResponse
+} from "../../services/GroupService";
 
 export default function Header() {
   const [modalSignIn, setModalSignIn] = useState<boolean>(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [popoverAnchor, setPopoverAnchor] = useState<null | HTMLElement>(null);
   const [pendingRequests, setPendingRequests] = useState<(FriendRequestDto & { sender?: FriendUser })[]>([]);
+  const [pendingGroupInvitations, setPendingGroupInvitations] = useState<GroupInvitationResponse[]>([]);
+  const [rejectedInvitations, setRejectedInvitations] = useState<{ groupName: string; inviteeName: string; inviteeUserId: number; timestamp: number }[]>([]);
+  const [kickModalOpen, setKickModalOpen] = useState(false);
+  const [kickGroupName, setKickGroupName] = useState("");
   const user = useSelector((state: RootState) => state.user);
   const newMess = useSelector((state: RootState) => state.chat.newMess);
   const navigate = useNavigate();
 
   const isLoggedIn = localStorage.getItem("accessToken") ? true : false;
+
+  const fetchPendingGroupInvitations = async () => {
+    try {
+      const res = await getPendingGroupInvitations();
+      if (res.success && Array.isArray(res.data)) {
+        setPendingGroupInvitations(res.data);
+      } else {
+        setPendingGroupInvitations([]);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách lời mời nhóm:", error);
+    }
+  };
 
   const fetchPendingRequests = async () => {
     try {
@@ -80,13 +105,16 @@ export default function Header() {
   useEffect(() => {
     if (!isLoggedIn) {
       setPendingRequests([]);
+      setPendingGroupInvitations([]);
       return;
     }
 
     fetchPendingRequests();
+    fetchPendingGroupInvitations();
 
     const interval = setInterval(() => {
       fetchPendingRequests();
+      fetchPendingGroupInvitations();
     }, 10000);
 
     return () => clearInterval(interval);
@@ -96,15 +124,44 @@ export default function Header() {
     if (newMess) {
       if (newMess.event === "FRIEND_REQUEST_RECEIVE") {
         fetchPendingRequests();
-        toast.info("Bạn có một lời mời kết bạn mới!");
       } else if (newMess.event === "FRIEND_REQUEST_ACCEPT_RECEIVE") {
-        toast.success("Lời mời kết bạn đã được chấp nhận!");
         window.dispatchEvent(new Event("friend_status_updated"));
+      } else if (newMess.event === "GROUP_INVITATION_RECEIVE") {
+        fetchPendingGroupInvitations();
+      } else if (newMess.event === "GROUP_INVITATION_REJECTED") {
+        window.dispatchEvent(new CustomEvent("group_invitation_status_updated", { detail: newMess.data }));
+        const d = newMess.data as any;
+        const inviteeId = Number(d?.inviteeUserId);
+        const groupName = d?.groupName || "học";
+        const ts = Date.now();
+        // Fetch invitee profile to get their display name
+        if (inviteeId) {
+          loadFriendProfilesService([inviteeId])
+            .then((profiles) => {
+              const name = profiles?.[0]?.fullName || `User #${inviteeId}`;
+              setRejectedInvitations((prev) => [
+                { groupName, inviteeName: name, inviteeUserId: inviteeId, timestamp: ts },
+                ...prev,
+              ].slice(0, 20));
+            })
+            .catch(() => {
+              setRejectedInvitations((prev) => [
+                { groupName, inviteeName: `User #${inviteeId}`, inviteeUserId: inviteeId, timestamp: ts },
+                ...prev,
+              ].slice(0, 20));
+            });
+        }
+      } else if (newMess.event === "GROUP_MEMBER_KICKED") {
+        const d = newMess.data as any;
+        setKickGroupName(d?.groupName || "nhóm học");
+        setKickModalOpen(true);
+        window.dispatchEvent(new Event("group_list_updated"));
+        if (window.location.pathname.includes("/conversation")) {
+          navigate("/conversation", { replace: true });
+        }
       }
     }
   }, [newMess]);
-
-
   const handleOpenNotifications = (event: React.MouseEvent<HTMLElement>) => {
     setPopoverAnchor(event.currentTarget);
   };
@@ -166,6 +223,33 @@ export default function Header() {
     }
   };
 
+  const handleAcceptGroupInvitation = async (invitationId: number) => {
+    try {
+      const res = await acceptGroupInvitation(invitationId);
+      if (res.success) {
+        fetchPendingGroupInvitations();
+        window.dispatchEvent(new Event("group_list_updated"));
+      } else {
+        console.error(res.message || "Không thể chấp nhận lời mời.");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleRejectGroupInvitation = async (invitationId: number) => {
+    try {
+      const res = await rejectGroupInvitation(invitationId);
+      if (res.success) {
+        fetchPendingGroupInvitations();
+      } else {
+        console.error(res.message || "Không thể từ chối lời mời.");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleLogout = async () => {
     WebSocketManager.getInstance().disconnect();
     const response = await logout();
@@ -190,7 +274,12 @@ export default function Header() {
 
   const handleGoProfile = () => {
     handleCloseMenu();
-    navigate("/my-profile");
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      navigate(`/profile/${userId}`);
+    } else {
+      navigate("/my-profile");
+    }
   };
 
   const handleGoSettings = () => {
@@ -322,7 +411,7 @@ export default function Header() {
                       <Badge
                         color="error"
                         variant="dot"
-                        invisible={pendingRequests.length === 0}
+                        invisible={pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0}
                       >
                         <NotificationsActiveIcon
                           sx={{ color: "#f97316", fontSize: "20px" }}
@@ -606,10 +695,10 @@ export default function Header() {
               alignItems: "center",
             }}
           >
-            Thông báo kết bạn
-            {pendingRequests.length > 0 && (
+            Thông báo
+            {(pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length) > 0 && (
               <Badge
-                badgeContent={pendingRequests.length}
+                badgeContent={pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length}
                 color="error"
                 sx={{
                   "& .MuiBadge-badge": {
@@ -621,7 +710,8 @@ export default function Header() {
             )}
           </Typography>
           <Divider sx={{ mb: 1, borderColor: "#f0e6d9" }} />
-          {pendingRequests.length === 0 ? (
+
+          {pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 ? (
             <Box
               sx={{
                 py: 4,
@@ -630,14 +720,51 @@ export default function Header() {
               }}
             >
               <Typography sx={{ fontSize: "13px", fontWeight: 500 }}>
-                Không có lời mời kết bạn mới
+                Không có thông báo mới
               </Typography>
             </Box>
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+
+              {/* Rejection notifications from socket */}
+              {rejectedInvitations.map((rej, idx) => (
+                <Box
+                  key={`rej-${idx}-${rej.timestamp}`}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    backgroundColor: "#fef2f2",
+                    border: "1px solid #fecaca",
+                  }}
+                >
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Typography
+                      sx={{
+                        fontSize: "12px",
+                        color: "#991b1b",
+                        fontWeight: 600,
+                      }}
+                    >
+                      <strong>{rej.inviteeName}</strong> đã từ chối lời mời vào nhóm <strong>{rej.groupName}</strong>
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    onClick={() => setRejectedInvitations((prev) => prev.filter((_, i) => i !== idx))}
+                    sx={{ minWidth: "auto", padding: "2px", color: "#9ca3af", fontSize: "11px" }}
+                  >
+                    ✕
+                  </Button>
+                </Box>
+              ))}
+
+              {/* Friend requests */}
               {pendingRequests.map((req) => (
                 <Box
-                  key={req.id}
+                  key={`fr-${req.id}`}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -721,9 +848,141 @@ export default function Header() {
                   </Box>
                 </Box>
               ))}
+
+              {/* Group invitations */}
+              {pendingGroupInvitations.map((inv) => (
+                <Box
+                  key={`gi-${inv.invitationId}`}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    backgroundColor: "#fafaf8",
+                    border: "1px solid #f0e6d9",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Avatar
+                      src={inv.inviterAvatar || undefined}
+                      sx={{ width: 36, height: 36 }}
+                    />
+                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          color: "#1f2937",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {inv.inviterName}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "11px",
+                          color: "#6b7280",
+                        }}
+                      >
+                        Mời bạn vào nhóm <strong>{inv.groupName}</strong>
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleRejectGroupInvitation(inv.invitationId)}
+                      sx={{
+                        fontSize: "11px",
+                        textTransform: "none",
+                        color: "#ef4444",
+                        borderColor: "#fca5a5",
+                        borderRadius: "6px",
+                        padding: "2px 8px",
+                        minWidth: "60px",
+                        "&:hover": {
+                          backgroundColor: "#fef2f2",
+                          borderColor: "#ef4444",
+                        },
+                      }}
+                    >
+                      Từ chối
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => handleAcceptGroupInvitation(inv.invitationId)}
+                      sx={{
+                        fontSize: "11px",
+                        textTransform: "none",
+                        backgroundColor: "#f97316",
+                        color: "#ffffff",
+                        borderRadius: "6px",
+                        padding: "2px 8px",
+                        minWidth: "60px",
+                        boxShadow: "none",
+                        "&:hover": {
+                          backgroundColor: "#ea580c",
+                          boxShadow: "none",
+                        },
+                      }}
+                    >
+                      Đồng ý
+                    </Button>
+                  </Box>
+                </Box>
+              ))}
             </Box>
           )}
         </Popover>
+
+        <Dialog
+          open={kickModalOpen}
+          onClose={() => {
+            setKickModalOpen(false);
+            window.location.href = "/conversation";
+          }}
+          PaperProps={{
+            sx: {
+              borderRadius: "12px",
+              padding: "20px",
+              maxWidth: "400px",
+              textAlign: "center",
+            },
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5, color: "#1f2937" }}>
+            Thông báo nhóm học
+          </Typography>
+          <Typography variant="body2" sx={{ color: "#4b5563", mb: 3 }}>
+            Bạn đã bị mời ra khỏi nhóm <strong>{kickGroupName}</strong> bởi quản trị viên.
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setKickModalOpen(false);
+                window.location.href = "/conversation";
+              }}
+              sx={{
+                backgroundColor: "#f97316",
+                color: "#ffffff",
+                textTransform: "none",
+                borderRadius: "6px",
+                padding: "6px 20px",
+                "&:hover": {
+                  backgroundColor: "#ea580c",
+                },
+              }}
+            >
+              Xác nhận
+            </Button>
+          </Box>
+        </Dialog>
       </>
     </>
   );

@@ -123,12 +123,18 @@ export function CreateSessionModal({
 
         if (!mounted) return;
 
-        setGroups(data);
+        const filteredGroups = data.filter(
+          (g) => g.visibility !== "COMMUNITY" && g.visibility !== "COMUNITY"
+        );
+        setGroups(filteredGroups);
 
-        if (data.length > 0) {
-          setSelectedGroupId(data[0].id);
-          setTargetName(data[0].name);
-          setSubjectName((current) => current || data[0].subjectName || "");
+        if (filteredGroups.length > 0) {
+          setSelectedGroupId(filteredGroups[0].id);
+          setTargetName(filteredGroups[0].name);
+          setSubjectName((current) => current || filteredGroups[0].subjectName || "");
+        } else {
+          setSelectedGroupId("");
+          setTargetName("");
         }
       } catch {
         if (!mounted) return;
