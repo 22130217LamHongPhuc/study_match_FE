@@ -3,6 +3,10 @@ import ImageIcon from "@mui/icons-material/Image";
 import LockIcon from "@mui/icons-material/Lock";
 import PeopleIcon from "@mui/icons-material/People";
 import PublicIcon from "@mui/icons-material/Public";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import SchoolIcon from "@mui/icons-material/School";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";
 import {
   Avatar,
   Box,
@@ -18,12 +22,20 @@ import {
   Tabs,
   TextField,
   Typography,
+  Grid,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
 } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EditProfileModal from "../../components/modal/user/EditProfileModal";
 import { ProfileStatus } from "../../enum/Profile";
 import { UserProfile } from "../../model/UserModel";
+import { getProfileByUserId } from "../../services/ProfileService";
+import { ProfileApiResponse } from "../MyProfile/types";
 
 import { loadProfileService, requestFriendService, unfriendService } from "../../services/FriendService";
 import { matchingItemApi } from "../../services/matchingItemApi";
@@ -59,7 +71,11 @@ type RecommendationState = {
   reasonText?: string;
 };
 
-
+const profileTheme = createTheme({
+  typography: {
+    fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
+  },
+});
 
 export default function ProfilePage() {
   const location = useLocation();
@@ -78,6 +94,8 @@ export default function ProfilePage() {
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedMediaItem[]>([]);
   const [posting, setPosting] = useState(false);
   const [unfriendConfirmOpen, setUnfriendConfirmOpen] = useState(false);
+  const [studyProfile, setStudyProfile] = useState<ProfileApiResponse | null>(null);
+  const [loadingStudyProfile, setLoadingStudyProfile] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -92,43 +110,62 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!profileUserId) return;
+    setActiveTab(0);
     loadProfileService(profileUserId)
       .then((response: UserProfile) => setProfile(response))
       .catch((error) => console.error("Cannot load profile", error));
   }, [profileUserId]);
 
-useEffect(() => {
-  if (!currentUserId || !profileUserId) return;
-  if (currentUserId === profileUserId) return;
-  if (!recommendation?.fromRecommendation) return;
-  if(!recommendation.finalScore || recommendation.finalScore <= 0) return;
-
-  const viewKey = `${currentUserId}:${profileUserId}`;
-  if (trackedViewKeyRef.current === viewKey) return;
-  trackedViewKeyRef.current = viewKey;
-
-  const trackProfileViewed = async () => {
-    try {
-      await matchingItemApi.recordAction({
-        userId: currentUserId,
-        recommendedUserId: profileUserId,
-        actionStatus: "VIEWED",
-        finalScore: recommendation.finalScore,
-        reasonText: recommendation.reasonText,
-      });
-    } catch (error) {
-      console.error("Track matching VIEWED failed", error);
+  useEffect(() => {
+    if (!profileUserId || isOwnProfile) {
+      setStudyProfile(null);
+      return;
     }
-  };
+    setLoadingStudyProfile(true);
+    getProfileByUserId(profileUserId)
+      .then((data) => {
+        setStudyProfile(data);
+      })
+      .catch((error) => {
+        console.error("Cannot load study profile", error);
+      })
+      .finally(() => {
+        setLoadingStudyProfile(false);
+      });
+  }, [profileUserId, isOwnProfile]);
 
-  void trackProfileViewed();
-}, [
-  currentUserId,
-  profileUserId,
-  recommendation?.fromRecommendation,
-  recommendation?.finalScore,
-  recommendation?.reasonText,
-]);
+  useEffect(() => {
+    if (!currentUserId || !profileUserId) return;
+    if (currentUserId === profileUserId) return;
+    if (!recommendation?.fromRecommendation) return;
+    if (!recommendation.finalScore || recommendation.finalScore <= 0) return;
+
+    const viewKey = `${currentUserId}:${profileUserId}`;
+    if (trackedViewKeyRef.current === viewKey) return;
+    trackedViewKeyRef.current = viewKey;
+
+    const trackProfileViewed = async () => {
+      try {
+        await matchingItemApi.recordAction({
+          userId: currentUserId,
+          recommendedUserId: profileUserId,
+          actionStatus: "VIEWED",
+          finalScore: recommendation.finalScore,
+          reasonText: recommendation.reasonText,
+        });
+      } catch (error) {
+        console.error("Track matching VIEWED failed", error);
+      }
+    };
+
+    void trackProfileViewed();
+  }, [
+    currentUserId,
+    profileUserId,
+    recommendation?.fromRecommendation,
+    recommendation?.finalScore,
+    recommendation?.reasonText,
+  ]);
   useEffect(() => {
     if (!profileUserId) return;
     Promise.all([
@@ -150,7 +187,7 @@ useEffect(() => {
       loadProfileService(profileUserId)
         .then((response: UserProfile) => setProfile(response))
         .catch((error) => console.error("Cannot load profile", error));
-      
+
       Promise.all([
         loadProfilePosts(profileUserId, currentUserId),
         loadProfileSocialStats(profileUserId),
@@ -373,6 +410,221 @@ useEffect(() => {
     </Box>
   );
 
+  const renderStudyProfile = () => {
+    if (loadingStudyProfile) {
+      return (
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 8 }}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    if (!studyProfile) {
+      return (
+        <Box sx={{ p: 4, textAlign: "center", bgcolor: "#f8fafc", borderRadius: "8px", mt: 2 }}>
+          <Typography sx={{ color: "#64748b" }}>Không có thông tin hồ sơ học tập</Typography>
+        </Box>
+      );
+    }
+
+    const termProfile = studyProfile.termProfiles?.[0];
+    const mainSubject = termProfile?.mainSubjectName || "Chưa cập nhật";
+    const rawGoal = termProfile?.studyGoal || "";
+    const rawMode = termProfile?.studyMode || "";
+
+    const studyGoalLabels: Record<string, string> = {
+      Survivor: "Cần củng cố nền tảng",
+      "Passive Learner": "Học ở mức cơ bản",
+      "Standard Learner": "Học ổn định",
+      "High Achiever": "Học tốt và định hướng điểm cao",
+    };
+
+    const studyModeLabels: Record<string, string> = {
+      mutual_support: "Học cùng bạn ngang trình độ",
+      peer_support: "Học cùng bạn khá hơn",
+      challenge: "Học cùng bạn học tốt",
+      support: "Hỗ trợ bạn khác",
+    };
+
+    const displayGoal = studyGoalLabels[rawGoal] || rawGoal || "Chưa cập nhật";
+    const displayMode = studyModeLabels[rawMode] || rawMode || "Chưa cập nhật";
+
+    const enrollments = studyProfile.enrollments || [];
+    const freeTimeSlots = studyProfile.freeTimeSlots || [];
+
+    const daysMeta = [
+      { id: 0, label: "T2", fullName: "Thứ Hai" },
+      { id: 1, label: "T3", fullName: "Thứ Ba" },
+      { id: 2, label: "T4", fullName: "Thứ Tư" },
+      { id: 3, label: "T5", fullName: "Thứ Năm" },
+      { id: 4, label: "T6", fullName: "Thứ Sáu" },
+      { id: 5, label: "T7", fullName: "Thứ Bảy" },
+      { id: 6, label: "CN", fullName: "Chủ Nhật" },
+    ];
+
+    const slotsMap: Record<string, string> = {
+      ca1: "Ca 1",
+      ca2: "Ca 2",
+      ca3: "Ca 3",
+      ca4: "Ca 4",
+      ca5: "Ca 5",
+      ca6: "Ca 6",
+    };
+
+    const groupedFreeTime: Record<number, string[]> = {};
+    freeTimeSlots.forEach((slot) => {
+      if (slot.isAvailable) {
+        if (!groupedFreeTime[slot.dayOfWeek]) {
+          groupedFreeTime[slot.dayOfWeek] = [];
+        }
+        groupedFreeTime[slot.dayOfWeek].push(slot.slotCode);
+      }
+    });
+
+    return (
+      <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
+
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            bgcolor: "#fff",
+            overflow: "hidden",
+          }}
+        >
+          <Box sx={{ p: 3 }}>
+            <Typography variant="subtitle2" sx={{ color: "#64748b", fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", mb: 1 }}>
+              Môn học mong muốn
+            </Typography>
+            <Typography variant="body1" sx={{ color: "#2563eb", fontWeight: 700, fontSize: "15px" }}>
+              {mainSubject}
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              p: 3,
+              borderLeft: { xs: "none", md: "1px solid #e2e8f0" },
+              borderTop: { xs: "1px solid #e2e8f0", md: "none" },
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ color: "#64748b", fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", mb: 1 }}>
+              Trình độ học tập
+            </Typography>
+            <Typography variant="body1" sx={{ color: "#1e293b", fontWeight: 700, fontSize: "15px" }}>
+              {displayGoal}
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              p: 3,
+              borderLeft: { xs: "none", md: "1px solid #e2e8f0" },
+              borderTop: { xs: "1px solid #e2e8f0", md: "none" },
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ color: "#64748b", fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", mb: 1 }}>
+              Mục tiêu học tập với đối tác
+            </Typography>
+            <Typography variant="body1" sx={{ color: "#1e293b", fontWeight: 700, fontSize: "15px" }}>
+              {displayMode}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ p: 3, borderRadius: "12px", border: "1px solid #e2e8f0", bgcolor: "#fff" }}>
+          <Typography variant="subtitle2" sx={{ color: "#64748b", fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", mb: 2 }}>
+            Thời gian học rảnh trong tuần
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+            {daysMeta.map((day) => {
+              const slots = groupedFreeTime[day.id];
+              const hasSlots = slots && slots.length > 0;
+              return (
+                <Box
+                  key={day.id}
+                  sx={{
+                    flex: "1 1 0px",
+                    minWidth: "85px",
+                    p: 1.5,
+                    borderRadius: "8px",
+                    border: "1px solid",
+                    borderColor: hasSlots ? "rgba(37, 99, 235, 0.2)" : "#f1f5f9",
+                    bgcolor: hasSlots ? "rgba(37, 99, 235, 0.03)" : "#fff",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Typography sx={{ fontWeight: 700, fontSize: "12px", color: hasSlots ? "#2563eb" : "#94a3b8" }}>
+                    {day.fullName}
+                  </Typography>
+                  {hasSlots ? (
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, width: "100%" }}>
+                      {slots.sort().map((slotCode) => (
+                        <Chip
+                          key={slotCode}
+                          label={slotsMap[slotCode] || slotCode}
+                          size="small"
+                          sx={{
+                            fontSize: "10px",
+                            height: "18px",
+                            bgcolor: "#e0f2fe",
+                            color: "#0369a1",
+                            fontWeight: 700,
+                            borderRadius: "4px",
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography sx={{ fontSize: "11px", color: "#cbd5e1", fontStyle: "italic", mt: 0.5 }}>
+                      Bận
+                    </Typography>
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+
+        <Box sx={{ p: 3, borderRadius: "12px", border: "1px solid #e2e8f0", bgcolor: "#fff" }}>
+          <Typography variant="subtitle2" sx={{ color: "#64748b", fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", mb: 2 }}>
+            Các môn học đang tham gia đăng ký khác
+          </Typography>
+          {enrollments.length === 0 ? (
+            <Typography variant="body2" sx={{ color: "#94a3b8", fontSize: "14px" }}>
+              Chưa đăng ký môn học nào khác
+            </Typography>
+          ) : (
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {enrollments.map((enrollment) => (
+                <Chip
+                  key={enrollment.enrollmentId}
+                  label={`${enrollment.subject.subjectCode} - ${enrollment.subject.subjectName}`}
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    fontWeight: 500,
+                    fontSize: "12px",
+                    borderRadius: "6px",
+                    borderColor: "#e2e8f0",
+                    bgcolor: "#fff",
+                    color: "#475569",
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+
+      </Box>
+    );
+  };
+
   if (profile?.statusFriend === ProfileStatus.BLOCKED) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -384,7 +636,7 @@ useEffect(() => {
   }
 
   return (
-    <>
+    <ThemeProvider theme={profileTheme}>
       <Box component="div" sx={{ display: "flex", mt: "20px" }}>
         <Box
           sx={{
@@ -508,13 +760,15 @@ useEffect(() => {
           <Box sx={{ backgroundColor: "#e9f0ff", "& .MuiTab-root": { fontSize: "12px", fontWeight: 700 } }}>
             <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)} centered>
               <Tab label="Bản tin" />
-              <Tab label="Thành tích" />
-              <Tab label="Thống kê" />
+              {/* <Tab label="Thành tích" />
+              <Tab label="Thống kê" /> */}
+              {!isOwnProfile && <Tab label="Hồ sơ học" />}
             </Tabs>
           </Box>
           {activeTab === 0 && renderFeed()}
-          {activeTab === 1 && renderAchievements()}
-          {activeTab === 2 && renderStats()}
+          {/* {activeTab === 1 && renderAchievements()}
+          {activeTab === 2 && renderStats()} */}
+          {activeTab === 3 && !isOwnProfile && renderStudyProfile()}
         </Box>
       </Box>
 
@@ -653,10 +907,10 @@ useEffect(() => {
             prev.map((post) =>
               post.authorId === currentUserId
                 ? {
-                    ...post,
-                    authorName: updatedProfile.fullName,
-                    authorAvatarUrl: updatedProfile.avatarUrl,
-                  }
+                  ...post,
+                  authorName: updatedProfile.fullName,
+                  authorAvatarUrl: updatedProfile.avatarUrl,
+                }
                 : post,
             ),
           );
@@ -699,7 +953,7 @@ useEffect(() => {
           </Box>
         </DialogContent>
       </Dialog>
-    </>
+    </ThemeProvider>
   );
 }
 

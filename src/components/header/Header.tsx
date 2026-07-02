@@ -40,6 +40,10 @@ import {
 } from "../../services/FriendService";
 import { toast } from "react-toastify";
 import {
+  getUserStudySessions,
+  respondToStudySession
+} from "../../services/StudySessionService";
+import { StudySessionResponse } from "../../pages/StudySession/types";
 
   getPendingGroupInvitations,
   acceptGroupInvitation,
@@ -99,6 +103,17 @@ export default function Header() {
       setPendingRequests(requestsWithProfiles);
     } catch (error) {
       console.error("Lỗi khi tải danh sách kết bạn:", error);
+    }
+  };
+
+  const fetchPendingSessions = async () => {
+    try {
+      const currentUserId = Number(localStorage.getItem("userId"));
+      if (!currentUserId) return;
+      const res = await getUserStudySessions(currentUserId, { participantStatus: "PENDING" });
+      setPendingSessions(res.data?.content || []);
+    } catch (error) {
+      console.error("Lỗi khi tải lời mời học nhóm:", error);
     }
   };
 
@@ -676,11 +691,13 @@ export default function Header() {
               mt: 1,
               width: 320,
               maxWidth: "100%",
-              maxHeight: 400,
+              maxHeight: 450,
               borderRadius: "12px",
               boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
               border: "1px solid #f0e6d9",
               padding: "12px",
+              display: "flex",
+              flexDirection: "column",
             },
           }}
         >
@@ -690,12 +707,34 @@ export default function Header() {
               fontSize: "14px",
               color: "#1f2937",
               mb: 1.5,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
             }}
           >
             Thông báo
+          </Typography>
+          <Divider sx={{ mb: 1, borderColor: "#f0e6d9" }} />
+          <Box sx={{ flexGrow: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
+            {pendingRequests.length === 0 && pendingSessions.length === 0 ? (
+              <Box
+                sx={{
+                  py: 4,
+                  textAlign: "center",
+                  color: "#9ca3af",
+                }}
+              >
+                <Typography sx={{ fontSize: "13px", fontWeight: 500 }}>
+                  Không có thông báo mới
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                {pendingRequests.length > 0 && (
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "12px", color: "#6b7280", mb: 0.5 }}>
+                      Lời mời kết bạn ({pendingRequests.length})
+                    </Typography>
+                    {pendingRequests.map((req) => (
+                      <Box
+                        key={req.id}
             {(pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length) > 0 && (
               <Badge
                 badgeContent={pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length}
@@ -783,68 +822,208 @@ export default function Header() {
                     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                       <Typography
                         sx={{
-                          fontWeight: 700,
-                          fontSize: "13px",
-                          color: "#1f2937",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          padding: "10px",
+                          borderRadius: "8px",
+                          backgroundColor: "#fafaf8",
+                          border: "1px solid #f0e6d9",
                         }}
                       >
-                        {req.sender?.fullName || "Người dùng StudyMatch"}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "11px",
-                          color: "#6b7280",
-                        }}
-                      >
-                        Muốn kết bạn với bạn
-                      </Typography>
-                    </Box>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <Avatar
+                            src={req.sender?.avatarUrl || undefined}
+                            sx={{ width: 36, height: 36 }}
+                          />
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography
+                              sx={{
+                                fontWeight: 700,
+                                fontSize: "13px",
+                                color: "#1f2937",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {req.sender?.fullName || "Người dùng StudyMatch"}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontSize: "11px",
+                                color: "#6b7280",
+                              }}
+                            >
+                              Muốn kết bạn với bạn
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Box sx={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleDeclineRequest(req.id)}
+                            sx={{
+                              fontSize: "11px",
+                              textTransform: "none",
+                              color: "#ef4444",
+                              borderColor: "#fca5a5",
+                              borderRadius: "6px",
+                              padding: "2px 8px",
+                              minWidth: "60px",
+                              "&:hover": {
+                                backgroundColor: "#fef2f2",
+                                borderColor: "#ef4444",
+                              },
+                            }}
+                          >
+                            Từ chối
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => handleAcceptRequest(req.id)}
+                            sx={{
+                              fontSize: "11px",
+                              textTransform: "none",
+                              backgroundColor: "#f97316",
+                              color: "#ffffff",
+                              borderRadius: "6px",
+                              padding: "2px 8px",
+                              minWidth: "60px",
+                              boxShadow: "none",
+                              "&:hover": {
+                                backgroundColor: "#ea580c",
+                                boxShadow: "none",
+                              },
+                            }}
+                          >
+                            Chấp nhận
+                          </Button>
+                        </Box>
+                      </Box>
+                    ))}
                   </Box>
-                  <Box sx={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => handleDeclineRequest(req.id)}
-                      sx={{
-                        fontSize: "11px",
-                        textTransform: "none",
-                        color: "#ef4444",
-                        borderColor: "#fca5a5",
-                        borderRadius: "6px",
-                        padding: "2px 8px",
-                        minWidth: "60px",
-                        "&:hover": {
-                          backgroundColor: "#fef2f2",
-                          borderColor: "#ef4444",
-                        },
-                      }}
-                    >
-                      Từ chối
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={() => handleAcceptRequest(req.id)}
-                      sx={{
-                        fontSize: "11px",
-                        textTransform: "none",
-                        backgroundColor: "#f97316",
-                        color: "#ffffff",
-                        borderRadius: "6px",
-                        padding: "2px 8px",
-                        minWidth: "60px",
-                        boxShadow: "none",
-                        "&:hover": {
-                          backgroundColor: "#ea580c",
-                          boxShadow: "none",
-                        },
-                      }}
-                    >
-                      Chấp nhận
-                    </Button>
+                )}
+
+                {pendingSessions.length > 0 && (
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "12px", color: "#6b7280", mb: 0.5 }}>
+                      Lời mời học nhóm ({pendingSessions.length})
+                    </Typography>
+                    {pendingSessions.map((session) => (
+                      <Box
+                        key={session.id}
+                        onClick={() => {
+                          handleCloseNotifications();
+                          navigate(`/schedule?sessionId=${session.id}`);
+                        }}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          padding: "10px",
+                          borderRadius: "8px",
+                          backgroundColor: "#fafaf8",
+                          border: "1px solid #f0e6d9",
+                          cursor: "pointer",
+                          "&:hover": {
+                            backgroundColor: "#f5f5f0",
+                          },
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <Avatar sx={{ bgcolor: "#fff7ed", width: 36, height: 36 }}>
+                            <NotificationsActiveIcon sx={{ color: "#f97316", fontSize: 18 }} />
+                          </Avatar>
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography
+                              sx={{
+                                fontWeight: 700,
+                                fontSize: "13px",
+                                color: "#1f2937",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {session.title}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontSize: "11px",
+                                color: "#6b7280",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {session.groupName ? `Nhóm: ${session.groupName}` : "Lịch học 1-1"}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontSize: "10px",
+                                color: "#9ca3af",
+                              }}
+                            >
+                              Bắt đầu: {new Date(session.startTime).toLocaleString("vi-VN", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Box
+                          sx={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleDeclineSession(session.id)}
+                            sx={{
+                              fontSize: "11px",
+                              textTransform: "none",
+                              color: "#ef4444",
+                              borderColor: "#fca5a5",
+                              borderRadius: "6px",
+                              padding: "2px 8px",
+                              minWidth: "60px",
+                              "&:hover": {
+                                backgroundColor: "#fef2f2",
+                                borderColor: "#ef4444",
+                              },
+                            }}
+                          >
+                            Từ chối
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => handleAcceptSession(session.id)}
+                            sx={{
+                              fontSize: "11px",
+                              textTransform: "none",
+                              backgroundColor: "#f97316",
+                              color: "#ffffff",
+                              borderRadius: "6px",
+                              padding: "2px 8px",
+                              minWidth: "60px",
+                              boxShadow: "none",
+                              "&:hover": {
+                                backgroundColor: "#ea580c",
+                                boxShadow: "none",
+                              },
+                            }}
+                          >
+                            Chấp nhận
+                          </Button>
+                        </Box>
+                      </Box>
+                    ))}
                   </Box>
                 </Box>
               ))}

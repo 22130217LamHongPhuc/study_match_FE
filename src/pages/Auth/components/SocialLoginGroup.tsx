@@ -28,7 +28,7 @@ export default function SocialLoginGroup() {
           navigate("/onboarding");
           return;
         }
-        navigate("/");
+        navigate("/home");
       } else {
         console.log("Google login failed:", response.message);
       }
