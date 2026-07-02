@@ -20,6 +20,8 @@ export type MessageInterface = {
     moderationStatus?: MessageModerationStatus | null;
     isPinned?: MessagePinnedValue;
     pinned?: MessagePinnedValue;
+    audioDurationSeconds?: number;
+    durationSeconds?: number;
     replyToMessageId?: number | null;
     replyToSenderId?: number | null;
     replyToType?: string | null;

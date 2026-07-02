@@ -50,6 +50,12 @@ const chatReducer = createSlice({
         clearUnread(state, action: PayloadAction<{ conversationId: number }>) {
             state.unreadByConversation[action.payload.conversationId] = 0
         },
+        setUnreads(state, action: PayloadAction<Record<number, number>>) {
+            state.unreadByConversation = {
+                ...state.unreadByConversation,
+                ...action.payload
+            }
+        },
         upsertGroupMemberProfiles(state, action: PayloadAction<GroupMemberProfile[]>) {
             action.payload.forEach((profile) => {
                 const userId = Number(profile.userId ?? profile.user_id ?? profile.id)
@@ -66,5 +72,5 @@ const chatReducer = createSlice({
     }
 })
 
-export const { updateNewMess, updateCurrentConverId, increaseUnread, clearUnread, upsertGroupMemberProfiles } = chatReducer.actions
+export const { updateNewMess, updateCurrentConverId, increaseUnread, clearUnread, setUnreads, upsertGroupMemberProfiles } = chatReducer.actions
 export default chatReducer.reducer

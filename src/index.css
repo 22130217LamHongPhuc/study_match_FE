@@ -55,4 +55,6 @@
 
 html {
   scroll-behavior: smooth;
+.MuiTypography-root {
+  font-family: "Inter", system-ui, -apple-system, sans-serif !important;
 }
