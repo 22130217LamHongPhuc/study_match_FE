@@ -66,6 +66,29 @@ export default function Header() {
   const navigate = useNavigate();
 
   const isLoggedIn = localStorage.getItem("accessToken") ? true : false;
+  const [currentUserProfile, setCurrentUserProfile] = useState<FriendUser | null>(null);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setCurrentUserProfile(null);
+      return;
+    }
+    const currentUserId = Number(localStorage.getItem("userId"));
+    if (Number.isFinite(currentUserId) && currentUserId > 0) {
+      loadFriendProfilesService([currentUserId])
+        .then((profiles) => {
+          const profile = profiles.find((p) => p.userId === currentUserId);
+          if (profile) {
+            setCurrentUserProfile(profile);
+            if (profile.fullName) localStorage.setItem("fullName", profile.fullName);
+            if (profile.avatarUrl) localStorage.setItem("avatarUrl", profile.avatarUrl);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load current user profile in Header", err);
+        });
+    }
+  }, [isLoggedIn]);
 
   const fetchPendingGroupInvitations = async () => {
     try {
@@ -464,18 +487,7 @@ export default function Header() {
                     gap: "8px",
                   }}
                 >
-                  <Tooltip title="Tin nhắn">
-                    <IconButton
-                      sx={{
-                        bgcolor: "#fff7ed",
-                        "&:hover": { bgcolor: "#ffedd5" },
-                      }}
-                    >
-                      <TextsmsIcon
-                        sx={{ color: "#f97316", fontSize: "20px" }}
-                      />
-                    </IconButton>
-                  </Tooltip>
+
                   <Tooltip title="Thông báo">
                     <IconButton
                       onClick={handleOpenNotifications}
@@ -514,17 +526,14 @@ export default function Header() {
                     }}
                   >
                     <Avatar
-                      src="https://futbol-eros.com/wp-content/uploads/2022/12/Cristiano-Ronaldo-2008-Portrait-Poster-Wall-Art_FutbolEros-Closeup-1536x1536.jpg"
+                      src={currentUserProfile?.avatarUrl || user?.avatar || localStorage.getItem("avatarUrl") || undefined}
                       sx={{ width: 32, height: 32 }}
                     />
                     <Box sx={{ textAlign: "left" }}>
                       <Typography
                         sx={{ fontWeight: 700, fontSize: 13, color: "#1f2937" }}
                       >
-                        {user?.username || "StudyMate"}
-                      </Typography>
-                      <Typography sx={{ fontSize: 10, color: "#9ca3af" }}>
-                        Học viên
+                        {currentUserProfile?.fullName || localStorage.getItem("fullName") || user?.username || "StudyMate"}
                       </Typography>
                     </Box>
                   </Button>

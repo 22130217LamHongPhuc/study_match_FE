@@ -7,7 +7,7 @@ export default function AuthShell({
   headerAction,
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-slate-50 font-sans text-slate-900">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f7f5f0] font-sans text-slate-900">
       {showHeader && (
         <header className="relative z-20  top-0 border-b border-slate-200 bg-white/80 backdrop-blur-md">
           <nav className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-6 py-4">

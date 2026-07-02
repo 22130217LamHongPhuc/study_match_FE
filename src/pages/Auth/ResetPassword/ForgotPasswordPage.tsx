@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { LoadingSkeleton } from "../../../components/modal/basic/LoadingSkeleton";
 import { forgetPassword } from "../../../services/AuthService";
+import BackgroundLayer from "../components/BackgroundLayer";
+
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -29,8 +31,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm border border-slate-200">
+    <div className="relative min-h-screen bg-[#f7f5f0] flex items-center justify-center px-4 overflow-hidden">
+      <BackgroundLayer />
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-8 shadow-sm border border-slate-200">
+
         {loading ? (
           <LoadingSkeleton />
         ) : (

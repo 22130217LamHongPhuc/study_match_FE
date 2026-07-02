@@ -33,6 +33,9 @@ export default function EditProfileModal({
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+    const [bannerFile, setBannerFile] = useState<File | null>(null);
+    const [bannerPreview, setBannerPreview] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -45,6 +48,12 @@ export default function EditProfileModal({
             if (prev) URL.revokeObjectURL(prev);
             return null;
         });
+        setBannerUrl(profile?.bannerUrl || null);
+        setBannerFile(null);
+        setBannerPreview((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return null;
+        });
     }, [stateModal, profile]);
 
     useEffect(() => {
@@ -52,6 +61,12 @@ export default function EditProfileModal({
             if (avatarPreview) URL.revokeObjectURL(avatarPreview);
         };
     }, [avatarPreview]);
+
+    useEffect(() => {
+        return () => {
+            if (bannerPreview) URL.revokeObjectURL(bannerPreview);
+        };
+    }, [bannerPreview]);
 
     const handleClose = () => {
         if (saving) return;
@@ -69,6 +84,17 @@ export default function EditProfileModal({
         setAvatarPreview(URL.createObjectURL(file));
     };
 
+    const handleSelectBanner = (file: File | null) => {
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            alert('Chỉ chọn ảnh bìa dạng hình ảnh');
+            return;
+        }
+        if (bannerPreview) URL.revokeObjectURL(bannerPreview);
+        setBannerFile(file);
+        setBannerPreview(URL.createObjectURL(file));
+    };
+
     const handleSave = async () => {
         const userId = Number(localStorage.getItem('userId'));
         if (!userId) {
@@ -83,10 +109,12 @@ export default function EditProfileModal({
         setSaving(true);
         try {
             const uploadedAvatar = avatarFile ? await uploadPostMedia(avatarFile) : null;
+            const uploadedBanner = bannerFile ? await uploadPostMedia(bannerFile) : null;
             const updated = await updateUserProfileService(userId, {
                 fullName: fullName.trim(),
                 bio: bio.trim(),
                 avatarUrl: uploadedAvatar?.mediaUrl || avatarUrl,
+                bannerUrl: uploadedBanner?.mediaUrl || bannerUrl,
             });
             onProfileUpdated?.({
                 ...(profile as UserProfile),
@@ -94,6 +122,7 @@ export default function EditProfileModal({
                 fullName: updated?.fullName ?? fullName.trim(),
                 bio: updated?.bio ?? bio.trim(),
                 avatarUrl: updated?.avatarUrl ?? uploadedAvatar?.mediaUrl ?? avatarUrl ?? '',
+                bannerUrl: updated?.bannerUrl ?? uploadedBanner?.mediaUrl ?? bannerUrl ?? '',
             });
             setModalEdit(false);
         } catch (error) {
@@ -135,43 +164,116 @@ export default function EditProfileModal({
                 </Stack>
 
                 <Stack spacing={3}>
-                    <Box textAlign="center" mb={1}>
-                        <Button component="label" sx={{ p: 0, borderRadius: '50%', position: 'relative' }}>
-                            <Avatar
-                                src={avatarPreview || avatarUrl || undefined}
-                                sx={{ width: 126, height: 126, mx: 'auto', border: '2px solid #ddd' }}
-                            >
-                                {fullName?.charAt(0)?.toUpperCase()}
-                            </Avatar>
+                    {/* Banner and Avatar Area */}
+                    <Box sx={{ position: 'relative', width: '100%', height: 130 }}>
+                        {/* Banner Selector */}
+                        <Button 
+                            component="label" 
+                            sx={{ 
+                                p: 0, 
+                                width: '100%', 
+                                height: '100%', 
+                                borderRadius: '8px', 
+                                overflow: 'hidden', 
+                                display: 'block',
+                                position: 'relative',
+                                bgcolor: '#f3f4f6',
+                                border: '1px solid #e5e7eb',
+                                textTransform: 'none',
+                            }}
+                        >
+                            {bannerPreview || bannerUrl ? (
+                                <Box 
+                                    component="img"
+                                    src={bannerPreview || bannerUrl || undefined}
+                                    sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            ) : (
+                                <Box 
+                                    sx={{ 
+                                        width: '100%', 
+                                        height: '100%', 
+                                        backgroundImage: "linear-gradient(90deg, rgb(225, 193, 169) 0%, rgba(225, 193, 169, 0.314) 100%)" 
+                                    }}
+                                />
+                            )}
                             <Box
+                                className="banner-overlay"
                                 sx={{
                                     position: 'absolute',
-                                    right: 8,
-                                    bottom: 8,
-                                    width: 34,
-                                    height: 34,
-                                    borderRadius: '50%',
-                                    bgcolor: '#e5e7eb',
-                                    color: '#111827',
+                                    inset: 0,
+                                    bgcolor: 'rgba(0,0,0,0.45)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                                    color: '#fff',
+                                    gap: 1
                                 }}
                             >
-                                <PhotoCameraIcon sx={{ fontSize: 19 }} />
+                                <PhotoCameraIcon />
+                                <Typography sx={{ fontWeight: 'bold', fontSize: 14 }}>Thay đổi ảnh bìa</Typography>
                             </Box>
                             <input
                                 hidden
                                 type="file"
                                 accept="image/*"
                                 onChange={(event) => {
-                                    handleSelectAvatar(event.target.files?.[0] || null);
+                                    handleSelectBanner(event.target.files?.[0] || null);
                                     event.target.value = '';
                                 }}
                             />
                         </Button>
+
+                        {/* Avatar Selector */}
+                        <Box 
+                            sx={{ 
+                                position: 'absolute', 
+                                left: '50%', 
+                                transform: 'translateX(-50%)', 
+                                bottom: -45,
+                                zIndex: 2 
+                            }}
+                        >
+                            <Button component="label" sx={{ p: 0, borderRadius: '50%', position: 'relative', bgcolor: '#fff', border: '4px solid #fff' }}>
+                                <Avatar
+                                    src={avatarPreview || avatarUrl || undefined}
+                                    sx={{ width: 90, height: 90, border: '1px solid #ddd' }}
+                                >
+                                    {fullName?.charAt(0)?.toUpperCase()}
+                                </Avatar>
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        right: 2,
+                                        bottom: 2,
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: '50%',
+                                        bgcolor: '#e5e7eb',
+                                        color: '#111827',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                                    }}
+                                >
+                                    <PhotoCameraIcon sx={{ fontSize: 15 }} />
+                                </Box>
+                                <input
+                                    hidden
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                        handleSelectAvatar(event.target.files?.[0] || null);
+                                        event.target.value = '';
+                                    }}
+                                />
+                            </Button>
+                        </Box>
                     </Box>
+
+                    {/* Spacing to push form fields below absolute avatar */}
+                    <Box sx={{ height: '40px' }} />
 
                     <TextField
                         label="Họ và tên"
