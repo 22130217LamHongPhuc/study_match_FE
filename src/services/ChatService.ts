@@ -5,6 +5,7 @@ import { BASE_CHAT_SERVICE, SOCKET_SEND_MESSAGE } from "../config/BaseConfig"
 export type MessageRequestItem = {
     conversationId: number;
     otherUserId: number;
+    unreadCount?: number;
     lastMessage?: {
         messageId: number;
         senderId: number;

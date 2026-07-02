@@ -59,7 +59,7 @@ import {
   updateConversationFont,
 } from "../../services/ChatService";
 import { getActiveGroupMemberIds, getGroupById } from "../../services/GroupService";
-import { FriendUser, loadFriendProfilesService, normalizeAvatarUrl } from "../../services/FriendService";
+import { FriendUser, loadFriendProfilesService, normalizeAvatarUrl, loadFriendOnlineStatusesService } from "../../services/FriendService";
 import { getGroupStudySessions } from "../../services/StudySessionService";
 import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
 import { StudySessionResponse } from "../StudySession/types";
@@ -429,6 +429,35 @@ export default function ConversationPage() {
     () => conversation.filter((message) => isMessagePinned(message) && !message.isDeleted),
     [conversation],
   );
+
+  const [isOnline, setIsOnline] = useState<boolean>(false);
+
+  useEffect(() => {
+    let mounted = true;
+    if (targetUserId) {
+      void loadFriendOnlineStatusesService([targetUserId]).then((statuses) => {
+        if (mounted) {
+          setIsOnline(Boolean(statuses[String(targetUserId)]));
+        }
+      }).catch((err) => {
+        console.error("Lỗi lấy trạng thái online:", err);
+      });
+    } else {
+      setIsOnline(false);
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [targetUserId]);
+
+  useEffect(() => {
+    if (storeEvent === SocketEvent.USER_PRESENCE && storeNewMess?.data && targetUserId) {
+      const presence = storeNewMess.data as { userId?: number; online?: boolean };
+      if (Number(presence.userId) === targetUserId) {
+        setIsOnline(Boolean(presence.online));
+      }
+    }
+  }, [storeEvent, storeNewMess, targetUserId]);
   const getPinnedSenderName = useCallback((message: MessageInterface) => {
     if (message.senderId === currentUserId) {
       return currentUser.username || "Bạn";
@@ -1611,13 +1640,27 @@ export default function ConversationPage() {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
-            <Avatar src={avatar || undefined} sx={{ width: 44, height: 44, flexShrink: 0 }} />
+            <Box sx={{ position: "relative", flexShrink: 0 }}>
+              <Avatar src={avatar || undefined} sx={{ width: 44, height: 44 }} />
+              {!isGroupConversation && isOnline && (
+                <Box
+                  title="Online"
+                  sx={{
+                    position: "absolute",
+                    right: -2,
+                    bottom: -2,
+                    width: 13,
+                    height: 13,
+                    borderRadius: "50%",
+                    bgcolor: "#48d26d",
+                    border: "2px solid white",
+                  }}
+                />
+              )}
+            </Box>
             <Box>
               <Typography sx={{ fontWeight: 750, fontSize: 16.5, color: "#111827", lineHeight: 1.25 }} noWrap>
                 {fullName}
-              </Typography>
-              <Typography sx={{ fontSize: 13, color: "#7f735e", lineHeight: 1.3 }}>
-                Dang hoat dong
               </Typography>
             </Box>
           </Box>
@@ -2098,13 +2141,13 @@ export default function ConversationPage() {
             {fullName}
           </Typography>
           <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25 }}>
-            {hasStudySchedule ? "Lich hoc nhom va tin nhan da ghim" : "Tin nhan da ghim trong cuoc tro chuyen"}
+            {hasStudySchedule ? "Lịch học nhóm và tin nhắn đã ghim" : "Tin nhắn đã ghim trong cuộc trò chuyện"}
           </Typography>
         </DialogTitle>
         <DialogContent sx={{ p: 0 }}>
           <Box sx={{ display: "flex", borderBottom: "1px solid #e2e8f0", bgcolor: "#f8fafc" }}>
             {(hasStudySchedule ? [
-              { id: "schedule" as const, label: "Lich hoc", icon: <CalendarMonthIcon sx={{ fontSize: 18 }} /> },
+              { id: "schedule" as const, label: "Lịch học", icon: <CalendarMonthIcon sx={{ fontSize: 18 }} /> },
               { id: "pinned" as const, label: "Tin ghim", icon: <PushPinIcon sx={{ fontSize: 18 }} /> },
             ] : [
               { id: "pinned" as const, label: "Tin ghim", icon: <PushPinIcon sx={{ fontSize: 18 }} /> },
@@ -2148,7 +2191,7 @@ export default function ConversationPage() {
                 )}
                 {!groupSessionsLoading && !groupSessionsError && groupSessions.length === 0 && (
                   <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
-                    Nhom chua co lich hoc nao.
+                    Nhóm chưa có lịch học nào.
                   </Box>
                 )}
                 {!groupSessionsLoading && !groupSessionsError && groupSessions.map((session) => (
@@ -2197,16 +2240,16 @@ export default function ConversationPage() {
                       )}
                       {session.membersCount !== null && session.membersCount !== undefined && (
                         <Typography sx={{ px: 1, py: 0.5, borderRadius: 1, bgcolor: "#ecfdf5", color: "#047857", fontSize: 12, fontWeight: 700 }}>
-                          {session.membersCount} thanh vien
+                          {session.membersCount} thành viên
                         </Typography>
                       )}
                     </Box>
 
                     {(session.location || session.meetingUrl || session.description) && (
                       <Box sx={{ mt: 1.5, color: "#475569", fontSize: 13, lineHeight: 1.6 }}>
-                        {session.location && <Typography sx={{ fontSize: 13 }}>Dia diem: {session.location}</Typography>}
-                        {session.meetingUrl && <Typography sx={{ fontSize: 13 }}>Link hoc: {session.meetingUrl}</Typography>}
-                        {session.description && <Typography sx={{ fontSize: 13 }}>Ghi chu: {session.description}</Typography>}
+                        {session.location && <Typography sx={{ fontSize: 13 }}>Địa điểm: {session.location}</Typography>}
+                        {session.meetingUrl && <Typography sx={{ fontSize: 13 }}>Link học: {session.meetingUrl}</Typography>}
+                        {session.description && <Typography sx={{ fontSize: 13 }}>Ghi chú: {session.description}</Typography>}
                       </Box>
                     )}
                   </Box>
@@ -2218,7 +2261,7 @@ export default function ConversationPage() {
               <Box sx={{ display: "grid", gap: 1.25 }}>
                 {pinnedMessages.length === 0 ? (
                   <Box sx={{ border: "1px dashed #cbd5e1", borderRadius: 2, p: 3, textAlign: "center", color: "#64748b" }}>
-                    Chua co tin nhan nao duoc ghim.
+                    Chưa có tin nhắn nào được ghim.
                   </Box>
                 ) : (
                   pinnedMessages.map((message) => (
@@ -2242,7 +2285,7 @@ export default function ConversationPage() {
                           {getPinnedSenderName(message)}
                         </Typography>
                         <Typography sx={{ color: "#64748b", fontSize: 12, mt: 0.35 }}>
-                          {message.createdAt ? formatDateTime(message.createdAt) : "Tin nhan"}
+                          {message.createdAt ? formatDateTime(message.createdAt) : "Tin nhắn"}
                         </Typography>
                       </Box>
                       <Button
@@ -2263,7 +2306,7 @@ export default function ConversationPage() {
                         }}
                         variant="outlined"
                       >
-                        Bo ghim
+                        Bỏ ghim
                       </Button>
                     </Box>
                   ))
@@ -2277,7 +2320,7 @@ export default function ConversationPage() {
             onClick={() => setGroupInfoOpen(false)}
             sx={{ textTransform: "none", fontWeight: 700, color: "#475569" }}
           >
-            Dong
+            Đóng
           </Button>
         </DialogActions>
       </Dialog>

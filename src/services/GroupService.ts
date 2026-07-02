@@ -390,3 +390,80 @@ export async function kickGroupMember(
 
   return response;
 }
+
+export interface GroupInvitationResponse {
+  invitationId: number;
+  groupId: number;
+  groupName: string;
+  inviterUserId: number;
+  inviteeUserId: number;
+  inviterName: string;
+  inviterAvatar?: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'CANCELLED';
+  createdAt: string;
+}
+
+export async function sendGroupInvitation(
+  groupId: number,
+  userId: number,
+): Promise<APIResponseData<GroupInvitationResponse>> {
+  const response = await apiFetch<GroupInvitationResponse>(
+    `/api/groups/${groupId}/invitations`,
+    {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export async function getPendingGroupInvitations(): Promise<APIResponseData<GroupInvitationResponse[]>> {
+  const response = await apiFetch<GroupInvitationResponse[]>(
+    `/api/groups/invitations/pending`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export async function getGroupInvitations(
+  groupId: number,
+): Promise<APIResponseData<GroupInvitationResponse[]>> {
+  const response = await apiFetch<GroupInvitationResponse[]>(
+    `/api/groups/${groupId}/invitations`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export async function acceptGroupInvitation(
+  invitationId: number,
+): Promise<APIResponseData<unknown>> {
+  const response = await apiFetch<unknown>(
+    `/api/groups/invitations/${invitationId}/accept`,
+    {
+      method: "POST",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export async function rejectGroupInvitation(
+  invitationId: number,
+): Promise<APIResponseData<unknown>> {
+  const response = await apiFetch<unknown>(
+    `/api/groups/invitations/${invitationId}/reject`,
+    {
+      method: "POST",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}

@@ -5,10 +5,10 @@ import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import { Avatar, Badge, Box, Button, CircularProgress, InputAdornment, TextField, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { SocketEvent } from "../../enum/SocketEvent";
 import { RootState } from "../../redux/store";
-import { updateCurrentConverId } from "../../redux/ChatReducer";
+import { updateCurrentConverId, setUnreads } from "../../redux/ChatReducer";
 import { loadAcceptedDirectConversations, loadConversation, loadGroupConversation, loadGroupConversationPins, loadMessageRequests, MessageRequestItem } from "../../services/ChatService";
 import { FriendUser, loadAllFriendsService, loadFriendOnlineStatusesService, loadFriendProfilesService } from "../../services/FriendService";
 import { getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
@@ -16,6 +16,7 @@ import { getGroupsByUserId, StudyGroupDetailResponse } from "../../services/Grou
 type GroupConversationItem = StudyGroupDetailResponse & {
     conversationId?: number | null;
     isPinned?: boolean;
+    lastMessage?: any;
 };
 
 const getLastMessageTime = (conversation: MessageRequestItem) => {
@@ -29,8 +30,73 @@ const sortByLatestMessage = <T extends MessageRequestItem>(conversations: T[]) =
     return [...conversations].sort((a, b) => getLastMessageTime(b) - getLastMessageTime(a));
 };
 
+const formatCallPreview = (lastMessage: NonNullable<MessageRequestItem["lastMessage"]>) => {
+    const callType = lastMessage.type === "CALL_AUDIO" ? "thoại" : "video";
+    let detail: { status?: string; durationSeconds?: number } = {};
+
+    try {
+        detail = lastMessage.content ? JSON.parse(lastMessage.content) : {};
+    } catch {
+        detail = {};
+    }
+
+    if (detail.status === "MISSED") {
+        return `Đã nhỡ cuộc gọi ${callType}`;
+    }
+
+    const duration = Math.max(0, Number(detail.durationSeconds || 0));
+    const durationText = duration < 60 ? `${duration} giây` : `${Math.ceil(duration / 60)} phút`;
+    return `Cuộc gọi ${callType} · ${durationText}`;
+};
+
+const getLastMessagePreview = (
+    request: any,
+    isGroup = false,
+    currentUserId?: number,
+    groupMemberProfiles?: any
+) => {
+    const lastMessage = request.lastMessage;
+    if (!lastMessage) return "Tin nhắn mới";
+    if (lastMessage.isDeleted) return "Tin nhắn đã được thu hồi";
+
+    let prefix = "";
+    const effectiveUserId = currentUserId ?? Number(localStorage.getItem("userId"));
+
+    if (isGroup && lastMessage.senderId) {
+        if (Number(lastMessage.senderId) === effectiveUserId) {
+            prefix = "Bạn: ";
+        } else {
+            const senderId = Number(lastMessage.senderId);
+            const memberProfile = groupMemberProfiles?.[senderId];
+            const senderName = memberProfile?.fullName || memberProfile?.username || `User ${senderId}`;
+            prefix = `${senderName}: `;
+        }
+    } else if (!isGroup && lastMessage.senderId) {
+        if (Number(lastMessage.senderId) === effectiveUserId) {
+            prefix = "Bạn: ";
+        }
+    }
+
+    let body = "";
+    if (lastMessage.type === "CALL_AUDIO" || lastMessage.type === "CALL_VIDEO") {
+        body = formatCallPreview(lastMessage);
+    } else if (lastMessage.content) {
+        body = lastMessage.content;
+    } else if (lastMessage.type?.startsWith("image/")) {
+        body = "Đã gửi một ảnh";
+    } else if (lastMessage.type?.startsWith("video/")) {
+        body = "Đã gửi một video";
+    } else if (lastMessage.type?.startsWith("audio/")) {
+        body = "Đã gửi một âm thanh";
+    } else {
+        body = "Đã gửi một tệp";
+    }
+    return prefix + body;
+};
+
 export default function ListFriends() {
     const navigate = useNavigate();
+    const location = useLocation();
     const dispatch = useDispatch();
     const [friends, setFriends] = useState<FriendUser[]>([]);
     const [groups, setGroups] = useState<GroupConversationItem[]>([]);
@@ -43,10 +109,14 @@ export default function ListFriends() {
     const [requestLoading, setRequestLoading] = useState(false);
     const [activeView, setActiveView] = useState<"main" | "requests">("main");
     const [error, setError] = useState("");
+    const [selectedItemKey, setSelectedItemKey] = useState<string | null>(null);
 
     const socketEvent = useSelector((state: RootState) => state.chat.newMess?.event);
     const socketData = useSelector((state: RootState) => state.chat.newMess?.data);
+    const unreadByConversation = useSelector((state: RootState) => state.chat.unreadByConversation) ?? {};
+    const groupMemberProfiles = useSelector((state: RootState) => state.chat.groupMemberProfiles) ?? {};
 
+    const currentUserId = Number(localStorage.getItem("userId"));
     const friendIdsKey = useMemo(() => friends.map((friend) => friend.userId).join(","), [friends]);
 
     useEffect(() => {
@@ -74,7 +144,7 @@ export default function ListFriends() {
             }, {}));
         };
 
-        const loadPendingRequests = async (currentUserId: number) => {
+        const loadPendingRequests = async (currentUserId: number, finalGroups: GroupConversationItem[] = []) => {
             setRequestLoading(true);
             try {
                 const [requests, acceptedDirect] = await Promise.all([
@@ -85,6 +155,27 @@ export default function ListFriends() {
 
                 setMessageRequests(requests);
                 setAcceptedDirectConversations(acceptedDirect);
+
+                const unreads: Record<number, number> = {};
+                acceptedDirect.forEach((c) => {
+                    if (c.conversationId && typeof c.unreadCount === "number") {
+                        unreads[c.conversationId] = c.unreadCount;
+                    }
+                });
+                requests.forEach((r) => {
+                    if (r.conversationId && typeof r.unreadCount === "number") {
+                        unreads[r.conversationId] = r.unreadCount;
+                    }
+                });
+                finalGroups.forEach((g) => {
+                    if (g.conversationId && typeof (g as any).unreadCount === "number") {
+                        unreads[g.conversationId] = (g as any).unreadCount;
+                    }
+                });
+                if (Object.keys(unreads).length > 0) {
+                    dispatch(setUnreads(unreads));
+                }
+
                 await Promise.all([
                     loadProfilesByRequests(requests, setRequestProfiles),
                     loadProfilesByRequests(acceptedDirect, setDirectProfiles),
@@ -124,6 +215,7 @@ export default function ListFriends() {
                     setFriends([]);
                 }
 
+                let finalGroups: GroupConversationItem[] = [];
                 if (groupResult.status === "fulfilled") {
                     const groupResponse = groupResult.value;
                     const loadedGroups = groupResponse.success && Array.isArray(groupResponse.data)
@@ -135,15 +227,19 @@ export default function ListFriends() {
                             loadedGroups.map((group) => group.id),
                         );
                         const pinByGroupId = new Map<number, any>(pins.map((pin: any) => [pin.groupId, pin]));
-                        setGroups(loadedGroups.map((group) => {
+                        finalGroups = loadedGroups.map((group) => {
                             const pin = pinByGroupId.get(group.id);
                             return {
                                 ...group,
                                 conversationId: pin?.conversationId ?? null,
                                 isPinned: Boolean(pin?.pinned),
+                                lastMessage: pin?.lastMessage ?? null,
+                                unreadCount: pin?.unreadCount ?? 0,
                             };
-                        }));
+                        });
+                        setGroups(finalGroups);
                     } else {
+                        finalGroups = loadedGroups;
                         setGroups(loadedGroups);
                     }
                 } else {
@@ -152,7 +248,7 @@ export default function ListFriends() {
                 }
 
                 if (shouldLoadGroups) {
-                    void loadPendingRequests(currentUserId);
+                    void loadPendingRequests(currentUserId, finalGroups);
                 }
 
                 if (friendResult.status === "rejected" && groupResult.status === "rejected") {
@@ -169,8 +265,15 @@ export default function ListFriends() {
         };
 
         void loadSidebarData();
+
+        const handleGroupListUpdate = () => {
+            if (mounted) void loadSidebarData();
+        };
+        window.addEventListener("group_list_updated", handleGroupListUpdate);
+
         return () => {
             mounted = false;
+            window.removeEventListener("group_list_updated", handleGroupListUpdate);
         };
     }, []);
 
@@ -218,11 +321,41 @@ export default function ListFriends() {
     }, [socketEvent, socketData]);
 
     useEffect(() => {
-        if (socketEvent !== SocketEvent.NEW_MESSAGE && socketEvent !== SocketEvent.MESSAGE_ACK) {
+        if (
+            socketEvent !== SocketEvent.NEW_MESSAGE &&
+            socketEvent !== SocketEvent.MESSAGE_ACK &&
+            socketEvent !== SocketEvent.MESSAGE_RECALL
+        ) {
             return;
         }
 
-        const currentUserId = Number(localStorage.getItem("userId"));
+        const socketPayload = socketData as { conversationId?: number; message?: any } | null;
+        if (socketPayload?.conversationId && socketPayload?.message) {
+            const convId = Number(socketPayload.conversationId);
+            const msg = socketPayload.message;
+            setGroups((prev) =>
+                prev.map((g) =>
+                    g.conversationId === convId
+                        ? { ...g, lastMessage: msg, updatedAt: msg.createdAt }
+                        : g
+                )
+            );
+            setAcceptedDirectConversations((prev) =>
+                prev.map((c) =>
+                    c.conversationId === convId
+                        ? { ...c, lastMessage: msg }
+                        : c
+                )
+            );
+            setMessageRequests((prev) =>
+                prev.map((r) =>
+                    r.conversationId === convId
+                        ? { ...r, lastMessage: msg }
+                        : r
+                )
+            );
+        }
+
         if (!Number.isFinite(currentUserId) || currentUserId <= 0) return;
         let mounted = true;
 
@@ -258,6 +391,21 @@ export default function ListFriends() {
                 setMessageRequests(requests);
                 setAcceptedDirectConversations(acceptedDirect);
 
+                const unreads: Record<number, number> = {};
+                acceptedDirect.forEach((c) => {
+                    if (c.conversationId && typeof c.unreadCount === "number") {
+                        unreads[c.conversationId] = c.unreadCount;
+                    }
+                });
+                requests.forEach((r) => {
+                    if (r.conversationId && typeof r.unreadCount === "number") {
+                        unreads[r.conversationId] = r.unreadCount;
+                    }
+                });
+                if (Object.keys(unreads).length > 0) {
+                    dispatch(setUnreads(unreads));
+                }
+
                 await Promise.all([
                     loadProfilesByRequests(requests, setRequestProfiles),
                     loadProfilesByRequests(acceptedDirect, setDirectProfiles),
@@ -271,7 +419,7 @@ export default function ListFriends() {
         return () => {
             mounted = false;
         };
-    }, [socketEvent]);
+    }, [socketEvent, socketData, currentUserId]);
 
     const visibleFriends = useMemo(() => {
         const keyword = searchText.trim().toLowerCase();
@@ -331,6 +479,61 @@ export default function ListFriends() {
             : conversations;
         return sortByLatestMessage(filteredConversations);
     }, [acceptedDirectConversations, directProfiles, searchText]);
+
+    const unifiedConversations = useMemo(() => {
+        const directList = visibleAcceptedDirectConversations.map((conv) => {
+            const lastMsgTime = getLastMessageTime(conv);
+            const friendObj = friends.find((f) => Number(f.userId) === Number(conv.otherUserId));
+            const isOnline = friendObj ? Boolean(friendObj.online) : Boolean(conv.profile?.online);
+
+            return {
+                id: `direct-${conv.conversationId}`,
+                type: "PRIVATE" as const,
+                displayName: conv.displayName,
+                avatarUrl: conv.profile?.avatarUrl ?? undefined,
+                lastMessagePreview: getLastMessagePreview(conv, false, currentUserId),
+                time: lastMsgTime,
+                isOnline: isOnline,
+                original: conv,
+            };
+        });
+
+        const activeChatUserIds = new Set(
+            visibleAcceptedDirectConversations.map((c) => Number(c.otherUserId)).filter(Boolean)
+        );
+
+        const inactiveFriendsList = visibleFriends
+            .filter((friend) => !activeChatUserIds.has(Number(friend.userId)))
+            .map((friend) => ({
+                id: `friend-${friend.userId}`,
+                type: "FRIEND" as const,
+                displayName: friend.fullName || friend.email || `User ${friend.userId}`,
+                avatarUrl: friend.avatarUrl ?? undefined,
+                lastMessagePreview: "Tin nhắn mới",
+                time: 0,
+                isOnline: Boolean(friend.online),
+                original: friend,
+            }));
+
+        const groupList = visibleGroups.map((group) => {
+            const lastMsgTime = getLastMessageTime(group as any);
+            const fallbackTime = new Date(group.updatedAt || group.createdAt).getTime();
+            const groupTime = lastMsgTime > 0 ? lastMsgTime : (Number.isFinite(fallbackTime) ? fallbackTime : 0);
+
+            return {
+                id: `group-${group.id}`,
+                type: "GROUP" as const,
+                displayName: group.name || `Nhóm ${group.id}`,
+                avatarUrl: undefined,
+                lastMessagePreview: getLastMessagePreview(group as any, true, currentUserId, groupMemberProfiles),
+                time: groupTime,
+                isOnline: false,
+                original: group,
+            };
+        });
+
+        return [...directList, ...groupList, ...inactiveFriendsList].sort((a, b) => b.time - a.time);
+    }, [visibleAcceptedDirectConversations, visibleFriends, visibleGroups, friends, groupMemberProfiles, currentUserId]);
 
     const openConversation = (friend: FriendUser) => {
         const currentUserId = Number(localStorage.getItem("userId"));
@@ -419,38 +622,39 @@ export default function ListFriends() {
         });
     };
 
-    const formatCallPreview = (lastMessage: NonNullable<MessageRequestItem["lastMessage"]>) => {
-        const callType = lastMessage.type === "CALL_AUDIO" ? "thoại" : "video";
-        let detail: { status?: string; durationSeconds?: number } = {};
+    const routeState = location.state as { targetUserId?: any; groupId?: any; conversationKey?: any } | null;
+    const hasActiveChat = Boolean(routeState?.targetUserId || routeState?.groupId || routeState?.conversationKey);
 
-        try {
-            detail = lastMessage.content ? JSON.parse(lastMessage.content) : {};
-        } catch {
-            detail = {};
+    useEffect(() => {
+        if (!loading && !hasActiveChat && unifiedConversations.length > 0) {
+            const firstConv = unifiedConversations[0];
+            setSelectedItemKey(firstConv.id);
+            if (firstConv.type === "PRIVATE") {
+                openAcceptedDirectConversation(firstConv.original);
+            } else if (firstConv.type === "GROUP") {
+                void openGroupConversation(firstConv.original);
+            } else if (firstConv.type === "FRIEND") {
+                openConversation(firstConv.original);
+            }
         }
+    }, [loading, hasActiveChat, unifiedConversations]);
 
-        if (detail.status === "MISSED") {
-            return `Đã nhỡ cuộc gọi ${callType}`;
+    useEffect(() => {
+        if (routeState) {
+            if (routeState.groupId) {
+                setSelectedItemKey(`group-${routeState.groupId}`);
+            } else if (routeState.targetUserId) {
+                const activeDirect = visibleAcceptedDirectConversations.find(
+                    (c) => Number(c.otherUserId) === Number(routeState.targetUserId)
+                );
+                if (activeDirect) {
+                    setSelectedItemKey(`direct-${activeDirect.conversationId}`);
+                } else {
+                    setSelectedItemKey(`friend-${routeState.targetUserId}`);
+                }
+            }
         }
-
-        const duration = Math.max(0, Number(detail.durationSeconds || 0));
-        const durationText = duration < 60 ? `${duration} giây` : `${Math.ceil(duration / 60)} phút`;
-        return `Cuộc gọi ${callType} · ${durationText}`;
-    };
-
-    const getLastMessagePreview = (request: MessageRequestItem) => {
-        const lastMessage = request.lastMessage;
-        if (!lastMessage) return "Tin nhắn mới";
-        if (lastMessage.isDeleted) return "Tin nhắn đã được thu hồi";
-        if (lastMessage.type === "CALL_AUDIO" || lastMessage.type === "CALL_VIDEO") {
-            return formatCallPreview(lastMessage);
-        }
-        if (lastMessage.content) return lastMessage.content;
-        if (lastMessage.type?.startsWith("image/")) return "Đã gửi một ảnh";
-        if (lastMessage.type?.startsWith("video/")) return "Đã gửi một video";
-        if (lastMessage.type?.startsWith("audio/")) return "Đã gửi một âm thanh";
-        return "Đã gửi một tệp";
-    };
+    }, [routeState, visibleAcceptedDirectConversations]);
 
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
@@ -564,119 +768,118 @@ export default function ListFriends() {
                     </Box>
                 ))}
 
-                {activeView === "main" && !loading && !error && visibleAcceptedDirectConversations.length === 0 && visibleFriends.length === 0 && visibleGroups.length === 0 && (
+                {activeView === "main" && !loading && !error && unifiedConversations.length === 0 && (
                     <Typography sx={{ px: 1, py: 2, color: "#8d8fa3", fontSize: 13 }}>
                         Không có bạn bè hoặc nhóm
                     </Typography>
                 )}
 
-                {activeView === "main" && !loading && !error && visibleAcceptedDirectConversations.map((conversation) => (
-                    <Box
-                        key={`direct-${conversation.conversationId}`}
-                        onClick={() => openAcceptedDirectConversation(conversation)}
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            py: 1.5,
-                            px: 1,
-                            borderRadius: "8px",
-                            "&:hover": { bgcolor: "#f0f2f8", cursor: "pointer" },
-                        }}
-                    >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
-                            <Avatar src={conversation.profile?.avatarUrl ?? undefined} sx={{ width: 45, height: 45 }}>
-                                {conversation.displayName?.charAt(0)?.toUpperCase()}
-                            </Avatar>
-                            <Box sx={{ minWidth: 0 }}>
-                                <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                    {conversation.displayName}
-                                </Typography>
-                                <Typography sx={{ fontSize: 13, color: "#8d8fa3", mt: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                    {getLastMessagePreview(conversation)}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Box>
-                ))}
+                {activeView === "main" && !loading && !error && unifiedConversations.map((item) => {
+                    const isSelected = selectedItemKey === item.id;
 
-                {activeView === "main" && !loading && !error && visibleFriends.map((friend) => (
-                    <Box
-                        key={friend.userId}
-                        onClick={() => openConversation(friend)}
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            py: 1.5,
-                            px: 1,
-                            borderRadius: "8px",
-                            "&:hover": { bgcolor: "#f0f2f8", cursor: "pointer" },
-                        }}
-                    >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
-                            <Box sx={{ position: "relative", flexShrink: 0 }}>
-                                <Avatar src={friend.avatarUrl ?? undefined} sx={{ width: 45, height: 45 }}>
-                                    {friend.fullName?.charAt(0)?.toUpperCase()}
-                                </Avatar>
+                    const conversationId = item.type === "GROUP"
+                        ? item.original.conversationId
+                        : (item.type === "PRIVATE" ? item.original.conversationId : null);
+
+                    const unreadCount = conversationId ? (unreadByConversation[conversationId] || 0) : 0;
+                    const isUnread = unreadCount > 0;
+                    const unreadLabel = unreadCount > 5 ? "5+" : String(unreadCount);
+
+                    const handleClick = () => {
+                        setSelectedItemKey(item.id);
+                        if (item.type === "PRIVATE") {
+                            openAcceptedDirectConversation(item.original);
+                        } else if (item.type === "GROUP") {
+                            void openGroupConversation(item.original);
+                        } else if (item.type === "FRIEND") {
+                            openConversation(item.original);
+                        }
+                    };
+
+                    return (
+                        <Box
+                            key={item.id}
+                            onClick={handleClick}
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                py: 1.5,
+                                px: 1,
+                                borderRadius: "8px",
+                                bgcolor: isSelected ? "#e2e8f0" : "transparent",
+                                "&:hover": { bgcolor: isSelected ? "#cbd5e1" : "#f1f5f9", cursor: "pointer" },
+                                transition: "background-color 150ms ease",
+                            }}
+                        >
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0, flex: 1 }}>
+                                <Box sx={{ position: "relative", flexShrink: 0 }}>
+                                    {item.type === "GROUP" ? (
+                                        <Avatar sx={{ width: 45, height: 45, bgcolor: "#3b82f6" }}>
+                                            <GroupsRoundedIcon sx={{ fontSize: 22 }} />
+                                        </Avatar>
+                                    ) : (
+                                        <>
+                                            <Avatar src={item.avatarUrl ?? undefined} sx={{ width: 45, height: 45 }}>
+                                                {item.displayName?.charAt(0)?.toUpperCase()}
+                                            </Avatar>
+                                            <Box
+                                                title={item.isOnline ? "Online" : "Offline"}
+                                                sx={{
+                                                    position: "absolute",
+                                                    right: -2,
+                                                    bottom: -2,
+                                                    width: 14,
+                                                    height: 14,
+                                                    borderRadius: "50%",
+                                                    bgcolor: item.isOnline ? "#48d26d" : "#a7adba",
+                                                    border: "2px solid white",
+                                                }}
+                                            />
+                                        </>
+                                    )}
+                                </Box>
+                                <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography sx={{ fontSize: 15, fontWeight: isUnread ? 800 : 600, color: isUnread ? "#0f172a" : "#1f2a44", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                        {item.displayName}
+                                    </Typography>
+                                    {item.lastMessagePreview && (
+                                        <Typography sx={{ fontSize: 13, fontWeight: isUnread ? 700 : 400, color: isUnread ? "#1e293b" : "#8d8fa3", mt: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            {item.lastMessagePreview}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Box>
+                            {isUnread && (
                                 <Box
-                                    title={friend.online ? "Online" : "Offline"}
                                     sx={{
-                                        position: "absolute",
-                                        right: -2,
-                                        bottom: -2,
-                                        width: 14,
-                                        height: 14,
-                                        borderRadius: "50%",
-                                        bgcolor: friend.online ? "#48d26d" : "#a7adba",
-                                        border: "2px solid white",
+                                        minWidth: 16,
+                                        height: 16,
+                                        borderRadius: "8px",
+                                        bgcolor: "#94a3b8",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        px: unreadCount > 5 ? 0.6 : 0,
+                                        ml: 1.5,
+                                        flexShrink: 0,
                                     }}
-                                />
-                            </Box>
-                            <Box sx={{ minWidth: 0 }}>
-                                <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                    {friend.fullName || friend.email || `User ${friend.userId}`}
-                                </Typography>
-                            </Box>
+                                >
+                                    <Typography
+                                        sx={{
+                                            color: "#ffffff",
+                                            fontSize: 9,
+                                            fontWeight: 700,
+                                            lineHeight: 1,
+                                        }}
+                                    >
+                                        {unreadLabel}
+                                    </Typography>
+                                </Box>
+                            )}
                         </Box>
-                    </Box>
-                ))}
-
-                {activeView === "main" && !loading && !error && visibleGroups.length > 0 && (
-                    <Typography sx={{ px: 1, pt: 2, pb: 1, color: "#5f6780", fontSize: 12, fontWeight: 700 }}>
-                        Nhóm của bạn
-                    </Typography>
-                )}
-
-                {activeView === "main" && !loading && !error && visibleGroups.map((group) => (
-                    <Box
-                        key={`group-${group.id}`}
-                        onClick={() => void openGroupConversation(group)}
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            py: 1.5,
-                            px: 1,
-                            borderRadius: "8px",
-                            "&:hover": { bgcolor: "#f0f2f8", cursor: "pointer" },
-                        }}
-                    >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
-                            <Avatar sx={{ width: 45, height: 45, bgcolor: "#3b82f6" }}>
-                                <GroupsRoundedIcon sx={{ fontSize: 22 }} />
-                            </Avatar>
-                            <Box sx={{ minWidth: 0 }}>
-                                <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                    {group.name || `Nhóm ${group.id}`}
-                                </Typography>
-                                <Typography sx={{ fontSize: 13, color: "#8d8fa3", mt: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                    {group.subjectName || "Nhóm học"}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Box>
-                ))}
+                    );
+                })}
             </Box>
         </Box>
     );

@@ -11,7 +11,7 @@ import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt
 import PushPinIcon from '@mui/icons-material/PushPin'
 import PauseIcon from '@mui/icons-material/Pause'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
-import { Avatar, Box, CircularProgress, Dialog, IconButton, Tooltip } from '@mui/material'
+import { Avatar, Box, CircularProgress, Dialog, IconButton, Tooltip, Typography } from '@mui/material'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MessageInterface } from '../../model/Conversation'
 import { submitReaction } from '../../services/ReactionService'
@@ -58,6 +58,7 @@ type ListMessProps = {
     onForwardMessage?: (message: MessageInterface) => void
     onPinMessage?: (message: MessageInterface, pinned: boolean) => void
     isGroupConversation?: boolean
+    seenStatuses?: Record<number, number>
     senderProfiles?: Record<number, {
         userId?: number
         user_id?: number
@@ -72,7 +73,7 @@ type ListMessProps = {
     }>
 }
 
-function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false, onRecallMessage, onForwardMessage, onPinMessage, isGroupConversation = false, senderProfiles = {} }: ListMessProps) {
+function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false, onRecallMessage, onForwardMessage, onPinMessage, isGroupConversation = false, seenStatuses = {}, senderProfiles = {} }: ListMessProps) {
     const appFontFamily = getFontFamilyValue(fontFamily)
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
@@ -99,6 +100,74 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
     const moreActions = ["Gỡ", "Chuyển tiếp", "Ghim"]
     const currenConverID = useSelector((state: RootState) => state.chat.currentConversationId)
     const latestOutgoingMessageId = conversation.find((message) => message.senderId === currentUserId)?.messageId ?? null
+
+    const getSeenUsersForMessage = (messageId: number) => {
+        const users: { userId: number; fullName: string; avatarUrl: string | null }[] = [];
+        Object.entries(seenStatuses).forEach(([uIdStr, lastSeenId]) => {
+            const uId = Number(uIdStr);
+            if (uId === currentUserId) return;
+            if (lastSeenId === messageId) {
+                const profile = senderProfiles[uId];
+                users.push({
+                    userId: uId,
+                    fullName: profile?.fullName || profile?.name || profile?.username || `User ${uId}`,
+                    avatarUrl: profile?.avatarUrl || profile?.avatar_url || profile?.avatar || null,
+                });
+            }
+        });
+        return users;
+    };
+
+    const getUnseenUsersForLatestMessage = (latestMessageId: number, latestSenderId: number) => {
+        const unseenUsers: string[] = [];
+        Object.keys(senderProfiles).forEach((uIdStr) => {
+            const uId = Number(uIdStr);
+            if (uId === currentUserId) return;
+            if (uId === latestSenderId) return;
+            const lastSeenId = seenStatuses[uId];
+            if (!lastSeenId || lastSeenId < latestMessageId) {
+                const profile = senderProfiles[uId];
+                const name = profile?.fullName || profile?.name || profile?.username || `User ${uId}`;
+                unseenUsers.push(name);
+            }
+        });
+        return unseenUsers;
+    };
+
+    const renderSeenStatus = (mess: MessageInterface) => {
+        const isLatest = conversation.length > 0 && mess.messageId === conversation[0]?.messageId;
+        const seenUsers = getSeenUsersForMessage(mess.messageId);
+        const unseenNames = isLatest ? getUnseenUsersForLatestMessage(mess.messageId, mess.senderId) : [];
+        const showAvatars = seenUsers.length > 0;
+        const showUnseen = unseenNames.length > 0;
+        if (!showAvatars && !showUnseen) {
+            if (mess.senderId === currentUserId) {
+                return renderOutgoingStatus(mess);
+            }
+            return null;
+        }
+        const isSentByMe = mess.senderId === currentUserId;
+        return (
+            <Box sx={{ mt: 0.5, mb: 0.5, display: "flex", flexDirection: "column", alignItems: isSentByMe ? "flex-end" : "flex-start", width: "100%", fontFamily: appFontFamily }}>
+                {showAvatars && (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexDirection: "row", justifyContent: isSentByMe ? "flex-end" : "flex-start" }}>
+                        {seenUsers.map((user) => (
+                            <Tooltip key={user.userId} title={`${user.fullName} đã xem`}>
+                                <Avatar src={user.avatarUrl || undefined} sx={{ width: 16, height: 16, fontSize: 8, border: "1px solid #fff", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
+                                    {user.fullName.charAt(0).toUpperCase()}
+                                </Avatar>
+                            </Tooltip>
+                        ))}
+                    </Box>
+                )}
+                {showUnseen && (
+                    <Typography sx={{ fontSize: 11, color: "#64748b", fontWeight: 450, mt: 0.25, textAlign: isSentByMe ? "right" : "left" }}>
+                        Chưa xem: {unseenNames.join(", ")}
+                    </Typography>
+                )}
+            </Box>
+        );
+    };
 
     const upsertReaction = (current: ReactionDTO[], reaction: ReactionDTO) => {
         const senderId = reaction.senderId
@@ -1814,7 +1883,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                                     {renderReactionBadge(mess.messageId, "left")}
                                                 </Box>
                                             </Box>
-                                            {renderOutgoingStatus(mess)}
+                                            {renderSeenStatus(mess)}
 
                                         </Box>) :
 
@@ -1893,7 +1962,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                                     {renderReactionBadge(mess.messageId, "left")}
                                                 </Box>
                                             </Box>
-                                            {renderOutgoingStatus(mess)}
+                                            {renderSeenStatus(mess)}
                                         </Box>)
                                 }
 

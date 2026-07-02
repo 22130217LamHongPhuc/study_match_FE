@@ -21,12 +21,14 @@ import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import { MessageInterface } from "../../../model/Conversation";
 import { loadMediaAndFiles } from "../../../services/ChatService";
 import { FriendUser, loadFriendListService, loadFriendProfilesService, normalizeAvatarUrl } from "../../../services/FriendService";
-import { getGroupById, getActiveGroupMemberIds, getActiveGroupMembers, joinMemberIntoGroup, kickGroupMember } from "../../../services/GroupService";
+import { getGroupById, getActiveGroupMemberIds, getActiveGroupMembers, getGroupInvitations, GroupInvitationResponse, kickGroupMember, sendGroupInvitation } from "../../../services/GroupService";
 
 type GroupMemberProfile = FriendUser & {
     role?: string | null;
     status?: string | null;
 };
+
+type InvitationStatusByUserId = Record<number, GroupInvitationResponse>;
 
 type MediaFilesModalProps = {
     open: boolean;
@@ -76,12 +78,14 @@ export default function MediaFilesModal({
     const [friendCandidates, setFriendCandidates] = useState<FriendUser[]>([]);
     const [friendsLoading, setFriendsLoading] = useState(false);
     const [invitingUserId, setInvitingUserId] = useState<number | null>(null);
+    const [invitationStatusByUserId, setInvitationStatusByUserId] = useState<InvitationStatusByUserId>({});
 
     const currentGroupMember = useMemo(
         () => groupMembers.find((member) => member.userId === currentUserId),
         [currentUserId, groupMembers],
     );
     const currentCanManageMembers = canManageMembers(currentGroupMember?.role) || groupOwnerId === currentUserId;
+    const currentCanInviteMembers = currentGroupMember?.role?.toUpperCase() === "OWNER" || groupOwnerId === currentUserId;
     const inviteCandidates = useMemo(() => {
         const memberIds = new Set(groupMembers.map((member) => member.userId));
         return friendCandidates.filter((friend) => friend.userId !== currentUserId && !memberIds.has(friend.userId));
@@ -175,19 +179,32 @@ export default function MediaFilesModal({
     }, [open, isGroupConversation, groupId]);
 
     useEffect(() => {
-        if (!open || !isGroupConversation || !groupId || !currentCanManageMembers || activeTab !== "members") return;
+        if (!open || !isGroupConversation || !groupId || !currentCanInviteMembers || activeTab !== "members") return;
 
         let isMounted = true;
         setFriendsLoading(true);
 
-        loadFriendListService(currentUserId)
-            .then((friends) => {
+        Promise.all([
+            loadFriendListService(currentUserId),
+            getGroupInvitations(groupId),
+        ])
+            .then(([friends, invitationsResponse]) => {
                 if (isMounted) {
                     setFriendCandidates(friends);
+                    if (invitationsResponse.success && Array.isArray(invitationsResponse.data)) {
+                        setInvitationStatusByUserId(
+                            invitationsResponse.data.reduce<InvitationStatusByUserId>((acc, invitation) => {
+                                if (invitation.inviteeUserId && !acc[invitation.inviteeUserId]) {
+                                    acc[invitation.inviteeUserId] = invitation;
+                                }
+                                return acc;
+                            }, {}),
+                        );
+                    }
                 }
             })
             .catch((err) => {
-                console.error("Failed to load friends for group invite:", err);
+                console.error("Failed to load friends or invitation statuses for group invite:", err);
             })
             .finally(() => {
                 if (isMounted) {
@@ -198,7 +215,39 @@ export default function MediaFilesModal({
         return () => {
             isMounted = false;
         };
-    }, [activeTab, currentCanManageMembers, currentUserId, groupId, isGroupConversation, open]);
+    }, [activeTab, currentCanInviteMembers, currentUserId, groupId, isGroupConversation, open]);
+
+    useEffect(() => {
+        const handleInvitationStatusUpdated = (event: Event) => {
+            const detail = (event as CustomEvent<any>).detail;
+            if (!groupId || Number(detail?.groupId) !== Number(groupId)) {
+                return;
+            }
+
+            const inviteeUserId = Number(detail?.inviteeUserId);
+            if (!Number.isFinite(inviteeUserId)) {
+                return;
+            }
+
+            setInvitationStatusByUserId((prev) => ({
+                ...prev,
+                [inviteeUserId]: {
+                    ...(prev[inviteeUserId] || {}),
+                    invitationId: Number(detail?.invitationId || prev[inviteeUserId]?.invitationId || 0),
+                    groupId,
+                    groupName: detail?.groupName || fullName,
+                    inviterUserId: currentUserId,
+                    inviteeUserId,
+                    inviterName: "",
+                    status: detail?.status || "REJECTED",
+                    createdAt: prev[inviteeUserId]?.createdAt || new Date().toISOString(),
+                },
+            }));
+        };
+
+        window.addEventListener("group_invitation_status_updated", handleInvitationStatusUpdated);
+        return () => window.removeEventListener("group_invitation_status_updated", handleInvitationStatusUpdated);
+    }, [currentUserId, fullName, groupId]);
 
     const handleKick = async (member: GroupMemberProfile) => {
         if (!groupId) return;
@@ -223,17 +272,15 @@ export default function MediaFilesModal({
 
         try {
             setInvitingUserId(friend.userId);
-            const res = await joinMemberIntoGroup(groupId, friend.userId);
+            const res = await sendGroupInvitation(groupId, friend.userId);
             if (res.success) {
-                setGroupMembers((prev) => [
-                    ...prev,
-                    {
-                        ...friend,
-                        role: "MEMBER",
-                        status: "ACTIVE",
-                    },
-                ]);
                 setFriendCandidates((prev) => prev.filter((item) => item.userId !== friend.userId));
+                if (res.data) {
+                    setInvitationStatusByUserId((prev) => ({
+                        ...prev,
+                        [friend.userId]: res.data,
+                    }));
+                }
             } else {
                 console.error("Cannot invite group member:", res.message);
             }
@@ -552,7 +599,7 @@ export default function MediaFilesModal({
                             </Box>
                         ) : (
                             <Box sx={{ display: "grid", gap: 1.5 }}>
-                                {currentCanManageMembers && (
+                                {currentCanInviteMembers && (
                                     <Box
                                         sx={{
                                             border: "1px solid #dbeafe",
@@ -602,63 +649,68 @@ export default function MediaFilesModal({
                                             </Typography>
                                         ) : (
                                             <Box sx={{ display: "grid", gap: 1, maxHeight: 180, overflowY: "auto", pr: 0.5 }}>
-                                                {inviteCandidates.map((friend) => (
-                                                    <Box
-                                                        key={friend.userId}
-                                                        sx={{
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "space-between",
-                                                            gap: 1.5,
-                                                            border: "1px solid #e2e8f0",
-                                                            borderRadius: 1.5,
-                                                            p: 1.25,
-                                                            bgcolor: "#fff",
-                                                        }}
-                                                    >
-                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
-                                                            <Avatar
-                                                                src={normalizeAvatarUrl(friend.avatarUrl) || undefined}
-                                                                alt={friend.fullName}
-                                                                sx={{ width: 34, height: 34 }}
-                                                            />
-                                                            <Typography
-                                                                sx={{
-                                                                    fontSize: 13.5,
-                                                                    fontWeight: 700,
-                                                                    color: "#0f172a",
-                                                                    fontFamily: appFontFamily,
-                                                                }}
-                                                                noWrap
-                                                            >
-                                                                {friend.fullName || `User ${friend.userId}`}
-                                                            </Typography>
-                                                        </Box>
-                                                        <Button
-                                                            size="small"
-                                                            onClick={() => handleInvite(friend)}
-                                                            disabled={invitingUserId === friend.userId}
+                                                {inviteCandidates.map((friend) => {
+                                                    const invitationStatus = invitationStatusByUserId[friend.userId]?.status;
+                                                    const isPending = invitationStatus === "PENDING";
+
+                                                    return (
+                                                        <Box
+                                                            key={friend.userId}
                                                             sx={{
-                                                                textTransform: "none",
-                                                                fontWeight: 700,
-                                                                color: "#2563eb",
-                                                                borderColor: "#bfdbfe",
-                                                                borderRadius: "6px",
-                                                                fontFamily: appFontFamily,
-                                                                flexShrink: 0,
-                                                                opacity: invitingUserId === friend.userId ? 0.7 : 1,
-                                                                "&:hover": {
-                                                                    bgcolor: "#eff6ff",
-                                                                    borderColor: "#2563eb",
-                                                                },
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "space-between",
+                                                                gap: 1.5,
+                                                                border: "1px solid #e2e8f0",
+                                                                borderRadius: 1.5,
+                                                                p: 1.25,
+                                                                bgcolor: "#fff",
                                                             }}
-                                                            variant="outlined"
-                                                            startIcon={<PersonAddAlt1Icon sx={{ fontSize: 16 }} />}
                                                         >
-                                                            {invitingUserId === friend.userId ? "Đang mời..." : "Mời"}
-                                                        </Button>
-                                                    </Box>
-                                                ))}
+                                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
+                                                                <Avatar
+                                                                    src={normalizeAvatarUrl(friend.avatarUrl) || undefined}
+                                                                    alt={friend.fullName}
+                                                                    sx={{ width: 34, height: 34 }}
+                                                                />
+                                                                <Typography
+                                                                    sx={{
+                                                                        fontSize: 13.5,
+                                                                        fontWeight: 700,
+                                                                        color: "#0f172a",
+                                                                        fontFamily: appFontFamily,
+                                                                    }}
+                                                                    noWrap
+                                                                >
+                                                                    {friend.fullName || `User ${friend.userId}`}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Button
+                                                                size="small"
+                                                                onClick={() => handleInvite(friend)}
+                                                                disabled={invitingUserId === friend.userId || isPending}
+                                                                sx={{
+                                                                    textTransform: "none",
+                                                                    fontWeight: 700,
+                                                                    color: isPending ? "#64748b" : "#2563eb",
+                                                                    borderColor: isPending ? "#cbd5e1" : "#bfdbfe",
+                                                                    borderRadius: "6px",
+                                                                    fontFamily: appFontFamily,
+                                                                    flexShrink: 0,
+                                                                    opacity: invitingUserId === friend.userId ? 0.7 : 1,
+                                                                    "&:hover": {
+                                                                        bgcolor: isPending ? "transparent" : "#eff6ff",
+                                                                        borderColor: isPending ? "#cbd5e1" : "#2563eb",
+                                                                    },
+                                                                }}
+                                                                variant="outlined"
+                                                                startIcon={!isPending ? <PersonAddAlt1Icon sx={{ fontSize: 16 }} /> : undefined}
+                                                            >
+                                                                {isPending ? "Đang chờ xác nhận" : invitingUserId === friend.userId ? "Đang mời..." : "Mời"}
+                                                            </Button>
+                                                        </Box>
+                                                    );
+                                                })}
                                             </Box>
                                         )}
                                     </Box>
