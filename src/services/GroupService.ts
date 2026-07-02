@@ -181,12 +181,22 @@ export async function getAllSubjects(): Promise<APIResponseData<Subject[]>> {
 
 export async function createStudyGroup(
   payload: CreateStudyGroupRequest,
+  avatar?: File,
 ): Promise<APIResponseData<unknown>> {
+  const formData = new FormData();
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(payload)], { type: "application/json" }),
+  );
+  if (avatar) {
+    formData.append("avatar", avatar);
+  }
+
   const response = await apiFetch<unknown>(
     `/api/groups`,
     {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: formData,
     },
     API_BASE_URL_GROUP,
   );
@@ -195,12 +205,22 @@ export async function createStudyGroup(
 
 export async function createCommunityGroup(
   payload: CreateStudyGroupRequest,
+  avatar?: File,
 ): Promise<APIResponseData<unknown>> {
+  const formData = new FormData();
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(payload)], { type: "application/json" }),
+  );
+  if (avatar) {
+    formData.append("avatar", avatar);
+  }
+
   const response = await apiFetch<unknown>(
     `/api/groups/community`,
     {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: formData,
     },
     API_BASE_URL_GROUP,
   );

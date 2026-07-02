@@ -1,8 +1,8 @@
-import { RECOMMEND_USERS_URL } from "../pages/Recommendation/constants";
+import { RECOMMEND_USERS_URL } from "../pages/StudyConnection/constants";
 import {
   RecommendUserRequest,
   RecommendUsersApiResponse,
-} from "../pages/Recommendation/types";
+} from "../pages/StudyConnection/types";
 
 export async function getRecommendedUsers(
   userId: number,

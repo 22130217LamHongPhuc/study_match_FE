@@ -409,6 +409,10 @@ export default function Header() {
     }
   };
 
+  const validPendingSessions = pendingSessions.filter(
+    (session) => session.endTime && new Date(session.endTime) > new Date()
+  );
+
   return (
     <>
       <Box
@@ -499,7 +503,7 @@ export default function Header() {
                       <Badge
                         color="error"
                         variant="dot"
-                        invisible={pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0}
+                        invisible={pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0}
                       >
                         <NotificationsActiveIcon
                           sx={{ color: "#f97316", fontSize: "20px" }}
@@ -771,34 +775,47 @@ export default function Header() {
             },
           }}
         >
-          <Typography
+          <Box
             sx={{
-              fontWeight: 700,
-              fontSize: "14px",
-              color: "#1f2937",
               mb: 1.5,
               display: "flex",
               alignItems: "center",
               gap: "8px",
             }}
           >
-            Thông báo
-            {(pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length + pendingSessions.length) > 0 && (
-              <Badge
-                badgeContent={pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length + pendingSessions.length}
-                color="error"
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: "16px",
+                color: "#1f2937",
+              }}
+            >
+              Thông báo
+            </Typography>
+            {(pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length + validPendingSessions.length) > 0 && (
+              <Box
                 sx={{
-                  "& .MuiBadge-badge": {
-                    position: "static",
-                    transform: "none",
-                  },
+                  backgroundColor: '#ef4444',
+                  color: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  height: '22px',
+                  minWidth: '22px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: 1,
                 }}
-              />
+              >
+                {pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length + validPendingSessions.length}
+              </Box>
             )}
-          </Typography>
+          </Box>
           <Divider sx={{ mb: 1, borderColor: "#f0e6d9" }} />
           <Box sx={{ flexGrow: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
-          {(pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && pendingSessions.length === 0) ? (
+          {(pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0) ? (
             <Box
               sx={{
                 py: 4,
@@ -936,12 +953,12 @@ export default function Header() {
                     </Box>
                   ))}
 
-                {pendingSessions.length > 0 && (
+                {validPendingSessions.length > 0 && (
                   <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <Typography sx={{ fontWeight: 700, fontSize: "12px", color: "#6b7280", mb: 0.5 }}>
-                      Lời mời học nhóm ({pendingSessions.length})
+                      Lời mời học nhóm ({validPendingSessions.length})
                     </Typography>
-                    {pendingSessions.map((session) => (
+                    {validPendingSessions.map((session) => (
                       <Box
                         key={session.id}
                         onClick={() => {

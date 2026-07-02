@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   { label: "Trang chủ", icon: <HomeIcon />, path: "/home" },
   { label: "Hồ sơ", icon: <BadgeIcon />, path: "/my-profile" },
   { label: "Lịch học", icon: <CalendarMonthIcon />, path: "/schedule" },
-  { label: "Gợi ý bạn học", icon: <BarChartIcon />, path: "/recommendation" },
+  { label: "Kết nối học tập", icon: <BarChartIcon />, path: "/recommendation" },
   { label: "Bạn bè", icon: <PersonIcon />, path: "/friends" },
   {
     label: "Cuộc hội thoại",

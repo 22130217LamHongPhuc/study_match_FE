@@ -3,7 +3,7 @@ import MainLayout from "../pages/MainLayout/MainLayout";
 import HomePage from "../pages/HomePage";
 import FriendsPage from "../pages/FriendsLayout/FriendsPage";
 import SchedulePage from "../pages/SchedulePage/SchedulePage";
-import RecommendationPage from "../pages/Recommendation/RecommendationPage";
+import StudyConnectionPage from "../pages/StudyConnection/StudyConnectionPage";
 import { AuthLayout } from "../pages/MainLayout/AuthLayout";
 import LoginPage from "../pages/Auth/LoginPage";
 import RegisterPage from "../pages/Auth/RegisterPage";
@@ -94,7 +94,7 @@ export const router = createBrowserRouter([
           { path: "/profile/:id", element: <ProfilePage /> },
           { path: "/my-profile", element: <MyProfilePage /> },
           { path: "/conversation", element: <ConversationPage /> },
-          { path: "/recommendation", element: <RecommendationPage /> },
+          { path: "/recommendation", element: <StudyConnectionPage /> },
           { path: "/groups", element: <GroupPage /> },
         ],
       },

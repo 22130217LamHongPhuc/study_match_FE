@@ -5,6 +5,7 @@ import { Subject } from "../../Onboarding/components";
 import { getAllSubjectsByCurriculum } from "../../../services/GroupService";
 import store from "../../../redux/store";
 import { useDispatch } from "react-redux";
+import { Autocomplete, TextField } from "@mui/material";
 
 interface AcademicInfoSectionProps {
   mainSubject: Subject | null;
@@ -34,46 +35,43 @@ export default function AcademicInfoSection({
       title="Thông tin học thuật"
     >
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <SelectField
-          label="Môn học chính"
-          value={mainSubject?.subjectName || ""}
-          onChange={(value) => {
-            const subject =
-              subjects.find((s) => s.subjectName === value) || null;
-            onMainSubjectChange(subject);
-          }}
-          options={subjects.map((s) => s.subjectName)}
-        />
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Môn học chính
+          </label>
+          <Autocomplete
+            options={subjects}
+            getOptionLabel={(option) => option.subjectName}
+            value={mainSubject}
+            onChange={(_, newValue) => {
+              onMainSubjectChange(newValue);
+            }}
+            noOptionsText="Không tìm thấy môn học"
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Tìm môn học..."
+                size="small"
+                sx={{
+                  width: "100%",
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "0.75rem",
+                    backgroundColor: "#ffffff",
+                    minHeight: "44px",
+                    "& fieldset": { borderColor: "#e2e8f0" },
+                    "&:hover fieldset": { borderColor: "#cbd5e1" },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#86efac",
+                      borderWidth: "1px",
+                    },
+                  },
+                }}
+              />
+            )}
+          />
+        </div>
       </div>
     </SectionCard>
   );
 }
 
-interface SelectFieldProps {
-  label: string;
-  value: string;
-  onChange: (next: string) => void;
-  options: string[];
-}
-
-function SelectField({ label, value, onChange, options }: SelectFieldProps) {
-  return (
-    <div>
-      <label className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-      </label>
-      <select
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-green-300 focus:ring-2 focus:ring-green-200/40"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="" disabled>
-          Chọn môn học...
-        </option>
-        {options.map((item) => (
-          <option key={item}>{item}</option>
-        ))}
-      </select>
-    </div>
-  );
-}
