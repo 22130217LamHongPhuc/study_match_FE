@@ -416,7 +416,7 @@ export default function OnboardingFlow() {
               Number(localStorage.getItem("userId")),
             );
             if (response.success) {
-              navigate("/");
+              navigate("/home");
             } else {
               console.error(
                 "Error setting onboarding completed:",

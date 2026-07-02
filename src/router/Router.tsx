@@ -28,18 +28,30 @@ import AdminSchedulesPage from "../pages/admin/AdminSchedulesPage/AdminSchedules
 import AdminAIMatchingPage from "../pages/admin/AdminAIMatchingPage/AdminAIMatchingPage";
 import StudySessionPage from "../pages/StudySession/StudySessionPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
+import LandingPage from "../pages/Landing/LandingPage";
+
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("accessToken");
   console.log("ProtectedRoute token:", token);
 
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/landing" replace />;
   }
   return <Outlet />;
 };
 
 export const router = createBrowserRouter([
+  // Public landing page (also accessible at root for new visitors)
+  {
+    path: "/landing",
+    element: <LandingPage />,
+  },
+  {
+    path: "/",
+    element: <LandingPage />,
+  },
+
   {
     element: <AuthLayout />,
     children: [
@@ -69,13 +81,14 @@ export const router = createBrowserRouter([
     ],
   },
 
+
   {
     element: <ProtectedRoute />,
     children: [
       {
         element: <MainLayout />,
         children: [
-          { path: "/", element: <HomePage /> },
+          { path: "/home", element: <HomePage /> },
           { path: "/friends", element: <HomePage /> },
           { path: "/schedule", element: <StudySessionPage /> },
           { path: "/profile/:id", element: <ProfilePage /> },

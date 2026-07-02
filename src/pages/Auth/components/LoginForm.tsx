@@ -40,7 +40,7 @@ export default function LoginForm() {
           navigate("/onboarding");
           return;
         }
-        navigate("/");
+        navigate("/home");
       } else {
         alert(response.message || "Đăng nhập thất bại. Vui lòng thử lại");
       }
