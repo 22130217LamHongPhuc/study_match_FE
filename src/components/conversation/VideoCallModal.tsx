@@ -67,7 +67,7 @@ export default function VideoCallModal({
                             border: "4px solid #f1f5f9",
                         }}
                     />
-                    <Typography sx={{ fontSize: 20, fontWeight: 800, color: "#111827" }}>
+                    <Typography sx={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>
                         {name || "Nguoi dung"}
                     </Typography>
                     <Typography sx={{ mt: 0.75, fontSize: 14, color: "#64748b" }}>

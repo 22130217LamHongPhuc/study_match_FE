@@ -28,7 +28,6 @@ export default function StudyConnectionPage() {
   return (
     <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-5">
-        {/* Header */}
         <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500 text-white">
@@ -43,10 +42,8 @@ export default function StudyConnectionPage() {
           </div>
         </section>
 
-        {/* Tabs */}
         <ConnectionTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Dynamic Content Section */}
         {renderActiveSection()}
       </div>
     </main>

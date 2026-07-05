@@ -841,7 +841,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                         color: "#991b1b",
                         cursor: "pointer",
                         fontSize: 12,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         px: 1.1,
                         py: 0.35,
                         "&:hover": {
@@ -1252,7 +1252,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                         <Box
                             sx={{
                                 fontSize: 14,
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 lineHeight: 1.2,
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
@@ -1635,7 +1635,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                             (mess.type === 'text' && mess.content) ?
 
                                                 (<>
-                                                                                    <Box
+                                                    <Box
                                                         sx={{
                                                             position: "relative",
                                                             bgcolor: "#fff",

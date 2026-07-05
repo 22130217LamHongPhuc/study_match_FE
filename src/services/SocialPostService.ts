@@ -138,3 +138,27 @@ export async function loadAchievements(userId: number): Promise<Achievement[]> {
   if (!res.ok) throw new Error(`Cannot load achievements. HTTP ${res.status}`);
   return unwrap(await res.json()) || [];
 }
+
+export interface PageResponse<T> {
+  content: T[];
+  empty: boolean;
+  first: boolean;
+  last: boolean;
+  number: number;
+  numberOfElements: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export async function loadFeedPosts(
+  page: number,
+  size: number,
+  viewerId: number,
+): Promise<PageResponse<SocialPost>> {
+  const res = await fetch(
+    `${BASE_SOCIAL_SERVICE}/social/posts?page=${page}&size=${size}&viewerId=${viewerId}`,
+  );
+  if (!res.ok) throw new Error(`Cannot load feed posts. HTTP ${res.status}`);
+  return unwrap(await res.json());
+}

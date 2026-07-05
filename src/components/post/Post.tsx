@@ -1,4 +1,4 @@
-import { Lock, MoreHoriz, People, Public } from "@mui/icons-material";
+import { Lock, MoreHoriz, People, Public, Description } from "@mui/icons-material";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import ShareIcon from "@mui/icons-material/Share";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
@@ -11,6 +11,7 @@ import {
   MenuItem,
   TextField,
   Typography,
+  Skeleton,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -22,6 +23,96 @@ import {
   togglePostLike,
   updatePost,
 } from "../../services/SocialPostService";
+
+const isImageUrl = (url: string) => {
+  const lower = url.toLowerCase();
+  return lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") ||
+    lower.endsWith(".gif") || lower.endsWith(".webp") || lower.endsWith(".svg") ||
+    lower.endsWith(".bmp") || lower.endsWith(".tiff");
+};
+
+const getFileMeta = (fileName: string) => {
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith(".pdf")) {
+    return { label: "PDF", color: "#ef4444", bg: "#fee2e2" };
+  }
+  if (lower.endsWith(".doc") || lower.endsWith(".docx")) {
+    return { label: "Word", color: "#3b82f6", bg: "#dbeafe" };
+  }
+  if (lower.endsWith(".xls") || lower.endsWith(".xlsx")) {
+    return { label: "Excel", color: "#10b981", bg: "#d1fae5" };
+  }
+  if (lower.endsWith(".ppt") || lower.endsWith(".pptx")) {
+    return { label: "PowerPoint", color: "#f97316", bg: "#ffedd5" };
+  }
+  if (lower.endsWith(".zip") || lower.endsWith(".rar") || lower.endsWith(".7z") || lower.endsWith(".tar") || lower.endsWith(".gz")) {
+    return { label: "Archive", color: "#8b5cf6", bg: "#ede9fe" };
+  }
+  if (lower.endsWith(".txt")) {
+    return { label: "Text", color: "#6b7280", bg: "#f3f4f6" };
+  }
+  return { label: "File", color: "#6b7280", bg: "#f3f4f6" };
+};
+
+const getFileNameFromUrl = (url: string) => {
+  try {
+    const urlObj = new URL(url);
+    const filenameParam = urlObj.searchParams.get("filename");
+    if (filenameParam) {
+      return decodeURIComponent(filenameParam);
+    }
+  } catch (e) {
+
+  }
+
+  const lastSlash = url.lastIndexOf("/");
+  if (lastSlash >= 0) {
+    let rawName = url.substring(lastSlash + 1);
+
+    const qMark = rawName.indexOf("?");
+    if (qMark >= 0) {
+      rawName = rawName.substring(0, qMark);
+    }
+    const hash = rawName.indexOf("#");
+    if (hash >= 0) {
+      rawName = rawName.substring(0, hash);
+    }
+
+    const doubleExtMatch = rawName.match(/^(.+)\.(\w+)\.\2$/i);
+    if (doubleExtMatch) {
+      rawName = doubleExtMatch[1] + "." + doubleExtMatch[2];
+    }
+
+    rawName = rawName.replace(/_\d{13}(\.\w+)?$/i, "$1");
+
+    return rawName;
+  }
+  return "Tài liệu học tập";
+};
+
+const downloadFile = async (url: string, fileName?: string | null) => {
+  const safeFileName = fileName || `file-${Date.now()}`;
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = safeFileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = safeFileName;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};
 
 type PostProps = {
   post: SocialPost;
@@ -123,13 +214,13 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
         overflow: "hidden",
       }}
     >
-      <Box sx={{ p: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <Box sx={{ p: "12px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Avatar src={post.authorAvatarUrl || undefined} sx={{ width: 44, height: 44, mr: 1.5, border: "1px solid #f0f2f5" }}>
             {post.authorName?.charAt(0)?.toUpperCase()}
           </Avatar>
           <Box>
-            <Typography sx={{ fontWeight: 700, color: "#050505", lineHeight: 1.2 }}>
+            <Typography sx={{ fontWeight: 700, color: "#050505", leadingHeight: 1.2 }}>
               {post.authorName}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.2 }}>
@@ -163,7 +254,7 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
               value={editContent}
               onChange={(event) => setEditContent(event.target.value)}
             />
-            <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, alignItems: "center" }}>
+            <Box sx={{ display: "flex", justifycontent: "space-between", gap: 1, alignItems: "center" }}>
               <Button
                 size="small"
                 onClick={(event) => setEditVisibilityAnchorEl(event.currentTarget)}
@@ -212,6 +303,8 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
         >
           {mediaItems.map((media, index) => {
             const isVideo = media.mediaType === "VIDEO";
+            const isImage = isImageUrl(media.mediaUrl);
+            const isDoc = !isVideo && !isImage;
             return (
               <Box
                 key={media.id ?? `${media.mediaUrl}-${index}`}
@@ -222,7 +315,42 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
                   overflow: "hidden",
                 }}
               >
-                {isVideo ? (
+                {isDoc ? (
+                  <Box
+                    onClick={() => downloadFile(media.mediaUrl, getFileNameFromUrl(media.mediaUrl))}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      bgcolor: getFileMeta(media.mediaUrl).bg,
+                      p: 2,
+                      textAlign: "center",
+                      gap: 1,
+                      "&:hover": { bgcolor: "#e5e7eb" },
+                    }}
+                  >
+                    <Description sx={{ fontSize: 44, color: getFileMeta(media.mediaUrl).color }} />
+                    <Typography
+                      noWrap
+                      sx={{
+                        width: "100%",
+                        fontSize: "0.875rem",
+                        fontWeight: 700,
+                        color: "#1f2937",
+                        px: 1,
+                      }}
+                    >
+                      {getFileNameFromUrl(media.mediaUrl)}
+                    </Typography>
+                    <Typography sx={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                      Tải xuống ({getFileMeta(media.mediaUrl).label})
+                    </Typography>
+                  </Box>
+                ) : isVideo ? (
                   <Box component="video" src={media.mediaUrl} controls sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 ) : (
                   <Box component="img" src={media.mediaUrl} alt={`post media ${index + 1}`} sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -233,7 +361,7 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
         </Box>
       )}
 
-      <Box sx={{ p: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <Box sx={{ p: "10px 16px", display: "flex", alignItems: "center", justifycontent: "space-between" }}>
         <Box sx={{ display: "flex", gap: 2.5 }}>
           <Box onClick={handleToggleLike} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}>
             <ThumbUpIcon sx={{ fontSize: 22, color: post.likedByViewer ? "#1877f2" : "#65676b" }} />
@@ -283,6 +411,38 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
           </Box>
         </Box>
       )}
+    </Box>
+  );
+}
+
+export function PostSkeleton() {
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        mx: "auto",
+        my: "20px",
+        bgcolor: "white",
+        borderRadius: "8px",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Skeleton variant="circular" width={40} height={40} />
+        <Box sx={{ flex: 1 }}>
+          <Skeleton variant="text" sx={{ fontSize: "1rem", width: "30%" }} />
+          <Skeleton variant="text" sx={{ fontSize: "0.8rem", width: "20%" }} />
+        </Box>
+      </Box>
+      <Skeleton variant="rectangular" height={100} sx={{ borderRadius: "4px" }} />
+      <Box sx={{ display: "flex", gap: 2 }}>
+        <Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: "4px" }} />
+        <Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: "4px" }} />
+      </Box>
     </Box>
   );
 }

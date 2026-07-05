@@ -21,6 +21,7 @@ import {
   updateFriendRequestStatusBySenderAndReceiverService,
 } from "../../../services/FriendService";
 import { LoadingState, EmptyState } from "./SharedStates";
+import { SuggestedStudentSkeleton } from "../../../components/home/SuggestedStudents";
 
 function isSuccessCode(code: number | string | undefined) {
   const responseCode = Number(code);
@@ -51,7 +52,7 @@ export default function SuggestedFriendsSection() {
   const currentUserId =
     profileVm?.userId ?? Number(localStorage.getItem("userId") ?? 0);
 
-  const { loading, error, items, fetchRecommendations } =
+  const { loading, loadingMore, error, items, page, totalPages, fetchRecommendations } =
     useRecommendations(currentUserId);
 
   const [connectingUserId, setConnectingUserId] = useState<number | null>(null);
@@ -348,7 +349,12 @@ export default function SuggestedFriendsSection() {
     };
 
     window.addEventListener("friend_status_updated", handleStatusUpdate);
-    return () => window.removeEventListener("friend_status_updated", handleStatusUpdate);
+    window.addEventListener("friend_request_received", handleStatusUpdate);
+    
+    return () => {
+      window.removeEventListener("friend_status_updated", handleStatusUpdate);
+      window.removeEventListener("friend_request_received", handleStatusUpdate);
+    };
   }, [fetchRecommendations, currentUserId]);
 
 
@@ -391,7 +397,7 @@ export default function SuggestedFriendsSection() {
 
           <button
             type="button"
-            onClick={() => fetchRecommendations(currentUserId)}
+            onClick={() => fetchRecommendations(currentUserId, 1, false)}
             disabled={loading}
             className="mt-2 inline-flex h-9 items-center gap-2 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-0"
           >
@@ -401,7 +407,14 @@ export default function SuggestedFriendsSection() {
         </div>
 
         {loading ? (
-          <LoadingState label="Đang tìm bạn học phù hợp..." />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <SuggestedStudentSkeleton />
+            <SuggestedStudentSkeleton />
+            <SuggestedStudentSkeleton />
+            <SuggestedStudentSkeleton />
+            <SuggestedStudentSkeleton />
+            <SuggestedStudentSkeleton />
+          </div>
         ) : visibleItems.length === 0 ? (
           <EmptyState
             title={items.length === 0 ? "Chưa có bạn học phù hợp" : "Bạn đã xử lý hết gợi ý hiện tại"}
@@ -411,24 +424,45 @@ export default function SuggestedFriendsSection() {
                 : "Hãy tải lại để nhận thêm gợi ý bạn học mới."
             }
             actionLabel="Tải lại"
-            onAction={() => fetchRecommendations(currentUserId)}
+            onAction={() => fetchRecommendations(currentUserId, 1, false)}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {visibleItems.map((item) => (
-              <RecommendationCard
-                key={item.userId}
-                recommendation={item}
-                onViewProfile={handleViewProfile}
-                onConnect={handleConnect}
-                onAccept={handleAcceptFriendRequest}
-                onSecondaryAction={handleSecondaryAction}
-                isConnecting={connectingUserId === item.userId}
-                isAccepting={acceptingRequestId === item.friendRequest?.id}
-                isRejecting={rejectingUserId === item.userId}
-                currentUserId={currentUserId}
-              />
-            ))}
+          <div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {visibleItems.map((item) => (
+                <RecommendationCard
+                  key={item.userId}
+                  recommendation={item}
+                  onViewProfile={handleViewProfile}
+                  onConnect={handleConnect}
+                  onAccept={handleAcceptFriendRequest}
+                  onSecondaryAction={handleSecondaryAction}
+                  isConnecting={connectingUserId === item.userId}
+                  isAccepting={acceptingRequestId === item.friendRequest?.id}
+                  isRejecting={rejectingUserId === item.userId}
+                  currentUserId={currentUserId}
+                />
+              ))}
+              {loadingMore && (
+                <>
+                  <SuggestedStudentSkeleton />
+                  <SuggestedStudentSkeleton />
+                  <SuggestedStudentSkeleton />
+                </>
+              )}
+            </div>
+
+            {page < totalPages && (
+              <div className="flex justify-center pt-6 border-t border-gray-100 mt-6">
+                <button
+                  onClick={() => fetchRecommendations(currentUserId, page + 1, true)}
+                  disabled={loadingMore}
+                  className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  {loadingMore ? "Đang tải..." : "Xem thêm gợi ý"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>

@@ -1217,7 +1217,7 @@ export default function ConversationPage() {
 
       conversationId.current = Number(loadedConversationId);
       dispatch(updateCurrentConverId({ currentConversationId: Number(loadedConversationId) }));
-      
+
       if (result.data?.color) {
         setThemeId(result.data.color);
       } else {
@@ -1294,10 +1294,10 @@ export default function ConversationPage() {
         const resDto = updatedMessage.data;
         setConversation((prev) => prev.map((item) =>
           item.messageId === message.messageId
-            ? { 
-              ...item, 
-              pinned: resDto?.pinned ?? pinned, 
-              isPinned: resDto?.pinned ?? pinned 
+            ? {
+              ...item,
+              pinned: resDto?.pinned ?? pinned,
+              isPinned: resDto?.pinned ?? pinned
             }
             : item
         ));
@@ -1983,7 +1983,7 @@ export default function ConversationPage() {
                   sx={{
                     color: "#dc2626",
                     fontSize: 13,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     lineHeight: 1,
                     minWidth: 36,
                   }}

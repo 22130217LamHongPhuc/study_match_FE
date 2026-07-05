@@ -442,5 +442,44 @@ export const unfriendService = async (
     };
 };
 
+export interface FriendStatsResponse {
+    friendCount: number;
+    pendingReceivedRequestCount: number;
+}
+
+export const getFriendStatsService = async (
+    userId?: number,
+): Promise<FriendRequestResponse<FriendStatsResponse>> => {
+    const resolvedUserId = userId ?? Number(localStorage.getItem("userId"));
+
+    if (!Number.isFinite(resolvedUserId)) {
+        throw new Error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+    }
+
+    const url = `${BASE_URL}/social/friends/${resolvedUserId}/stats`;
+    const res = await fetch(url, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (data) {
+        return data as FriendRequestResponse<FriendStatsResponse>;
+    }
+
+    return {
+        code: res.status,
+        message: res.statusText,
+        data: {
+            friendCount: 0,
+            pendingReceivedRequestCount: 0,
+        },
+        timestamp: new Date().toISOString(),
+    };
+};
+
 
 
