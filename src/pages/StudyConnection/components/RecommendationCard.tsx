@@ -233,11 +233,11 @@ export default function RecommendationCard({
         </div>
       </div>
 
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
           {recommendation.studyGoal}
         </span>
-      </div>
+      </div> */}
 
       <div className="mt-auto space-y-2">
         <button

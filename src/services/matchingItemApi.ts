@@ -15,6 +15,7 @@ export interface RecordMatchingActionRequest {
   actionStatus: MatchingActionStatus;
   finalScore?: number;
   reasonText?: string;
+  isRecommendation?: boolean;
 }
 
 export interface UpdateMatchingStatusRequest {
@@ -23,6 +24,7 @@ export interface UpdateMatchingStatusRequest {
   actionStatus: Exclude<MatchingActionStatus, "VIEWED">;
   finalScore?: number;
   reasonText?: string;
+  isRecommendation?: boolean;
 }
 
 export const matchingItemApi = {

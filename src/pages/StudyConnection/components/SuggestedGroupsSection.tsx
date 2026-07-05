@@ -45,6 +45,24 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
   };
 }
 
+export function CommunityGroupCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-2xs animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="h-5 w-24 bg-gray-200 rounded" />
+        <div className="h-4 w-12 bg-gray-100 rounded" />
+      </div>
+      <div className="mt-3">
+        <div className="h-5 w-3/4 bg-gray-200 rounded" />
+      </div>
+      <div className="mt-4 flex items-center justify-between border-t border-gray-50 pt-3">
+        <div className="h-3 w-16 bg-gray-100 rounded" />
+        <div className="h-8 w-24 bg-gray-200 rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
 export default function SuggestedGroupsSection() {
   const profileVm = useSelector((state: RootState) => state.profile.profileVm);
 
@@ -229,7 +247,11 @@ export default function SuggestedGroupsSection() {
       </div>
 
       {recommendedGroupsLoading ? (
-        <LoadingState label="Đang tải nhóm cộng đồng..." />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <CommunityGroupCardSkeleton />
+          <CommunityGroupCardSkeleton />
+          <CommunityGroupCardSkeleton />
+        </div>
       ) : recommendedGroupsError ? (
         <EmptyState title="Không thể tải nhóm cộng đồng" description={recommendedGroupsError} />
       ) : recommendedGroups.length === 0 ? (
@@ -296,8 +318,10 @@ export default function SuggestedGroupsSection() {
         )}
 
         {selectedOtherSubjectId !== "" && selectedOtherGroupsLoading && (
-          <div className="mt-4">
-            <LoadingState label="Đang tải nhóm cộng đồng..." />
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <CommunityGroupCardSkeleton />
+            <CommunityGroupCardSkeleton />
+            <CommunityGroupCardSkeleton />
           </div>
         )}
 

@@ -66,6 +66,14 @@ export interface RecommendUsersApiResponse {
   success: boolean;
   message: string;
   recommendations: RecommendationApiItem[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total_items: number;
+    total_pages: number;
+    has_next: boolean;
+    has_previous: boolean;
+  };
 }
 
 export interface RecommendationCardVm {

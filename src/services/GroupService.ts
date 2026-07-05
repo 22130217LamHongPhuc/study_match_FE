@@ -487,3 +487,21 @@ export async function rejectGroupInvitation(
   );
   return response;
 }
+
+export interface GroupStatsResponse {
+  joinedGroupCount: number;
+  pendingInvitationCount: number;
+}
+
+export async function getUserGroupStats(
+  userId: number,
+): Promise<APIResponseData<GroupStatsResponse>> {
+  const response = await apiFetch<GroupStatsResponse>(
+    `/api/groups/user/${userId}/stats`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
