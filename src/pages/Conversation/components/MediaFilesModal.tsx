@@ -355,7 +355,7 @@ export default function MediaFilesModal({
                     position: "relative",
                 }}
             >
-                <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a", fontFamily: appFontFamily }}>
+                <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#0f172a", fontFamily: appFontFamily }}>
                     {fullName}
                 </Typography>
                 <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25, fontFamily: appFontFamily }}>
@@ -615,7 +615,7 @@ export default function MediaFilesModal({
                                                 <Typography
                                                     sx={{
                                                         fontSize: 14,
-                                                        fontWeight: 800,
+                                                        fontWeight: 700,
                                                         color: "#0f172a",
                                                         fontFamily: appFontFamily,
                                                     }}

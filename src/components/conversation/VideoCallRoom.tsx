@@ -31,7 +31,7 @@ async function safeDestroyZego(zego: any): Promise<void> {
         if (typeof zego.hangUp === "function") {
             await zego.hangUp()
         }
-    } catch {}
+    } catch { }
 
     await new Promise((resolve) => window.setTimeout(resolve, 200))
 
@@ -256,7 +256,7 @@ export default function VideoCallRoom({ call, peer, onClose }: VideoCallRoomProp
                             border: "4px solid #e0f2fe",
                         }}
                     />
-                    <Typography sx={{ fontSize: 21, fontWeight: 800, color: "#111827" }}>
+                    <Typography sx={{ fontSize: 21, fontWeight: 700, color: "#111827" }}>
                         {displayPeer?.fullName || "Nguoi dung"}
                     </Typography>
                     <Box

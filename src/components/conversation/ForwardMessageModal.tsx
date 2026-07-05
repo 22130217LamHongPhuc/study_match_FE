@@ -213,7 +213,7 @@ export default function ForwardMessageModal({
                     borderBottom: "1px solid #edf0f4",
                     fontFamily: appFontFamily,
                     fontSize: 18,
-                    fontWeight: 800,
+                    fontWeight: 700,
                 }}
             >
                 Chuyển tiếp tin nhắn
@@ -302,7 +302,7 @@ export default function ForwardMessageModal({
                                         <ListItemText
                                             primary={recipient.name}
                                             secondary={recipient.subtitle}
-                                            primaryTypographyProps={{ fontSize: 15, fontWeight: 800, color: "#111827", noWrap: true }}
+                                            primaryTypographyProps={{ fontSize: 15, fontWeight: 700, color: "#111827", noWrap: true }}
                                             secondaryTypographyProps={{ fontSize: 13, color: "#667085", noWrap: true }}
                                         />
                                     </ListItemButton>
@@ -336,7 +336,7 @@ export default function ForwardMessageModal({
                             minWidth: 132,
                             borderRadius: "8px",
                             bgcolor: "#a40000",
-                            fontWeight: 800,
+                            fontWeight: 700,
                             textTransform: "none",
                             "&:hover": { bgcolor: "#8a0000" },
                         }}

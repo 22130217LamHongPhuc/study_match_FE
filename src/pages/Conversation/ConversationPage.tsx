@@ -1213,7 +1213,7 @@ export default function ConversationPage() {
 
       conversationId.current = Number(loadedConversationId);
       dispatch(updateCurrentConverId({ currentConversationId: Number(loadedConversationId) }));
-      
+
       if (result.data?.color) {
         setThemeId(result.data.color);
       } else {
@@ -1290,10 +1290,10 @@ export default function ConversationPage() {
         const resDto = updatedMessage.data;
         setConversation((prev) => prev.map((item) =>
           item.messageId === message.messageId
-            ? { 
-              ...item, 
-              pinned: resDto?.pinned ?? pinned, 
-              isPinned: resDto?.pinned ?? pinned 
+            ? {
+              ...item,
+              pinned: resDto?.pinned ?? pinned,
+              isPinned: resDto?.pinned ?? pinned
             }
             : item
         ));
@@ -1973,7 +1973,7 @@ export default function ConversationPage() {
                   sx={{
                     color: "#dc2626",
                     fontSize: 13,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     lineHeight: 1,
                     minWidth: 36,
                   }}
@@ -2220,7 +2220,7 @@ export default function ConversationPage() {
         }}
       >
         <DialogTitle sx={{ px: 3, py: 2, borderBottom: "1px solid #e2e8f0" }}>
-          <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>
             {fullName}
           </Typography>
           <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25 }}>
@@ -2289,7 +2289,7 @@ export default function ConversationPage() {
                   >
                     <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, alignItems: "flex-start" }}>
                       <Box sx={{ minWidth: 0 }}>
-                        <Typography sx={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>
+                        <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>
                           {session.title}
                         </Typography>
                         <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.5 }}>
