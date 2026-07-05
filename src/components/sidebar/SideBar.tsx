@@ -19,7 +19,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Trang chủ", icon: <HomeIcon />, path: "/" },
+  { label: "Trang chủ", icon: <HomeIcon />, path: "/home" },
   { label: "Hồ sơ", icon: <BadgeIcon />, path: "/my-profile" },
   { label: "Lịch học", icon: <CalendarMonthIcon />, path: "/schedule" },
   { label: "Kết nối học tập", icon: <BarChartIcon />, path: "/recommendation" },

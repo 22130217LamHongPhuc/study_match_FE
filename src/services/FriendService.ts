@@ -243,7 +243,7 @@ export const loadProfileService = async (targetUserId: number) => {
 
 export const updateUserProfileService = async (
     userId: number,
-    payload: { fullName: string; bio: string; avatarUrl?: string | null },
+    payload: { fullName: string; bio: string; avatarUrl?: string | null; bannerUrl?: string | null },
 ) => {
     const token = localStorage.getItem('accessToken');
     const res = await fetch(BASE_USER_SERVICE + `/users/${userId}/profile`, {

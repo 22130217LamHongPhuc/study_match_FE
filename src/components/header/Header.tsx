@@ -66,6 +66,29 @@ export default function Header() {
   const navigate = useNavigate();
 
   const isLoggedIn = localStorage.getItem("accessToken") ? true : false;
+  const [currentUserProfile, setCurrentUserProfile] = useState<FriendUser | null>(null);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setCurrentUserProfile(null);
+      return;
+    }
+    const currentUserId = Number(localStorage.getItem("userId"));
+    if (Number.isFinite(currentUserId) && currentUserId > 0) {
+      loadFriendProfilesService([currentUserId])
+        .then((profiles) => {
+          const profile = profiles.find((p) => p.userId === currentUserId);
+          if (profile) {
+            setCurrentUserProfile(profile);
+            if (profile.fullName) localStorage.setItem("fullName", profile.fullName);
+            if (profile.avatarUrl) localStorage.setItem("avatarUrl", profile.avatarUrl);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load current user profile in Header", err);
+        });
+    }
+  }, [isLoggedIn]);
 
   const fetchPendingGroupInvitations = async () => {
     try {
@@ -421,16 +444,31 @@ export default function Header() {
                     letterSpacing: "-0.2px",
                   }}
                 >
-                  Trang chủ
-                </Typography>
-                <TextField
-                  placeholder="Tìm kiếm bạn học, nhóm..."
-                  sx={{
-                    background: "#fafaf8",
-                    borderRadius: "10px",
-                    marginLeft: "24px",
-                    width: 300,
-                    "& .MuiOutlinedInput-root": {
+
+                  <Tooltip title="Thông báo">
+                    <IconButton
+                      onClick={handleOpenNotifications}
+                      sx={{
+                        bgcolor: "#fff7ed",
+                        "&:hover": { bgcolor: "#ffedd5" },
+                      }}
+                    >
+                      <Badge
+                        color="error"
+                        variant="dot"
+                        invisible={pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0}
+                      >
+                        <NotificationsActiveIcon
+                          sx={{ color: "#f97316", fontSize: "20px" }}
+                        />
+                      </Badge>
+                    </IconButton>
+                  </Tooltip>
+                  <Button
+                    onClick={handleOpenMenu}
+                    endIcon={<ExpandMoreIcon sx={{ color: "#9ca3af" }} />}
+                    sx={{
+                      textTransform: "none",
                       borderRadius: "10px",
                       "& fieldset": {
                         borderColor: "#e5e0d8",
@@ -438,26 +476,21 @@ export default function Header() {
                       "&:hover fieldset": {
                         borderColor: "#f97316",
                       },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#f97316",
-                        borderWidth: "1.5px",
-                      },
-                    },
-                    "& .MuiInputBase-root": {
-                      height: 38,
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: "#374151",
-                    },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ color: "#9ca3af", fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                ></TextField>
+                    }}
+                  >
+                    <Avatar
+                      src={currentUserProfile?.avatarUrl || user?.avatar || localStorage.getItem("avatarUrl") || undefined}
+                      sx={{ width: 32, height: 32 }}
+                    />
+                    <Box sx={{ textAlign: "left" }}>
+                      <Typography
+                        sx={{ fontWeight: 700, fontSize: 13, color: "#1f2937" }}
+                      >
+                        {currentUserProfile?.fullName || localStorage.getItem("fullName") || user?.username || "StudyMate"}
+                      </Typography>
+                    </Box>
+                  </Button>
+                </Box>
               </Box>
 
               <Box

@@ -89,7 +89,7 @@ export default function RegisterForm() {
 
   return (
     <div className="rounded-[28px] bg-white p-8">
-      <div className="mb-8 text-center ">
+      <div className="mb-6 text-center ">
         <h2 className="mb-2 text-3xl font-bold">Đăng ký tài khoản</h2>
         <p className="text-sm font-medium text-slate-500">
           Tham gia cộng đồng StudyMatch ngay hôm nay.
@@ -99,7 +99,10 @@ export default function RegisterForm() {
         <LoadingSkeleton />
       ) : (
         <>
+          <SocialAuthGroup />
+          <Divider />
           <div className="flex flex-col gap-5 mb-5">
+
 
             <InputField
               id="fullName"
@@ -154,10 +157,6 @@ export default function RegisterForm() {
             Tạo tài khoản
           </button>
 
-          <div className="mt-6 space-y-4">
-            <Divider />
-            <SocialAuthGroup />
-          </div>
 
           <div className="mt-6 text-center">
             <p className="text-xs text-slate-500">

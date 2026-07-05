@@ -2,13 +2,13 @@ import SearchIcon from "@mui/icons-material/Search";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import MarkEmailUnreadRoundedIcon from "@mui/icons-material/MarkEmailUnreadRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
-import { Avatar, Badge, Box, Button, CircularProgress, InputAdornment, TextField, Typography } from "@mui/material";
+import { Avatar, Badge, Box, Button, CircularProgress, InputAdornment, Skeleton, TextField, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SocketEvent } from "../../enum/SocketEvent";
 import { RootState } from "../../redux/store";
-import { updateCurrentConverId, setUnreads } from "../../redux/ChatReducer";
+import { updateCurrentConverId, setUnreads, upsertGroupMemberProfiles } from "../../redux/ChatReducer";
 import { loadAcceptedDirectConversations, loadConversation, loadGroupConversation, loadGroupConversationPins, loadMessageRequests, MessageRequestItem } from "../../services/ChatService";
 import { FriendUser, loadAllFriendsService, loadFriendOnlineStatusesService, loadFriendProfilesService } from "../../services/FriendService";
 import { getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
@@ -93,6 +93,48 @@ const getLastMessagePreview = (
     }
     return prefix + body;
 };
+
+const SidebarSkeleton = () => (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, p: 0.5 }}>
+        {[1, 2, 3, 4, 5, 6].map((item) => (
+            <Box
+                key={item}
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    py: 1.5,
+                    px: 1,
+                    borderRadius: "8px",
+                }}
+            >
+                <Skeleton
+                    variant="circular"
+                    width={45}
+                    height={45}
+                    animation="wave"
+                    sx={{ bgcolor: "rgba(15, 23, 42, 0.06)", flexShrink: 0 }}
+                />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Skeleton
+                        variant="rectangular"
+                        width="70%"
+                        height={16}
+                        animation="wave"
+                        sx={{ borderRadius: "4px", bgcolor: "rgba(15, 23, 42, 0.06)", mb: 1 }}
+                    />
+                    <Skeleton
+                        variant="rectangular"
+                        width="50%"
+                        height={12}
+                        animation="wave"
+                        sx={{ borderRadius: "4px", bgcolor: "rgba(15, 23, 42, 0.04)" }}
+                    />
+                </Box>
+            </Box>
+        ))}
+    </Box>
+);
 
 export default function ListFriends() {
     const navigate = useNavigate();
@@ -238,6 +280,21 @@ export default function ListFriends() {
                             };
                         });
                         setGroups(finalGroups);
+
+                        // Fetch sender profiles of group last messages to prevent displaying "User X"
+                        const lastMessageSenderIds = finalGroups
+                            .map((g) => g.lastMessage?.senderId)
+                            .filter(Boolean)
+                            .map(Number);
+                        const uniqueSenderIds = Array.from(new Set(lastMessageSenderIds));
+                        if (uniqueSenderIds.length > 0) {
+                            try {
+                                const senderProfiles = await loadFriendProfilesService(uniqueSenderIds);
+                                dispatch(upsertGroupMemberProfiles(senderProfiles as any));
+                            } catch (err) {
+                                console.error("Failed to load sender profiles for group last messages", err);
+                            }
+                        }
                     } else {
                         finalGroups = loadedGroups;
                         setGroups(loadedGroups);
@@ -725,9 +782,7 @@ export default function ListFriends() {
 
             <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
                 {(activeView === "main" ? loading : requestLoading) && (
-                    <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", py: 3 }}>
-                        <CircularProgress size={24} />
-                    </Box>
+                    <SidebarSkeleton />
                 )}
 
                 {activeView === "main" && !loading && error && (
@@ -788,6 +843,7 @@ export default function ListFriends() {
                     const unreadLabel = unreadCount > 5 ? "5+" : String(unreadCount);
 
                     const handleClick = () => {
+                        if (selectedItemKey === item.id) return;
                         setSelectedItemKey(item.id);
                         if (item.type === "PRIVATE") {
                             openAcceptedDirectConversation(item.original);

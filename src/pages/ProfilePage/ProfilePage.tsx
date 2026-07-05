@@ -27,6 +27,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Skeleton,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import React, { useEffect, useRef, useState } from "react";
@@ -536,6 +537,113 @@ export default function ProfilePage() {
     );
   };
 
+  if (!profile) {
+    return (
+      <ThemeProvider theme={profileTheme}>
+        <Box component="div" sx={{ display: "flex", mt: "20px" }}>
+          {/* Left Column Skeleton */}
+          <Box
+            sx={{
+              position: "relative",
+              height: "fit-content",
+              width: "30%",
+              padding: "20px",
+              mr: "40px",
+              borderRadius: "20px",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+              ml: "20px",
+            }}
+          >
+            {/* Banner skeleton */}
+            <Skeleton variant="rectangular" height={100} sx={{ borderRadius: "10px" }} />
+            
+            {/* Avatar skeleton */}
+            <Box
+              sx={{
+                borderRadius: "50%",
+                width: 115,
+                height: 115,
+                position: "absolute",
+                top: "50px",
+                ml: "10px",
+                backgroundColor: "#fff",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Skeleton variant="circular" width="90%" height="90%" />
+            </Box>
+            
+            {/* Name skeleton */}
+            <Box mt="50px">
+              <Skeleton variant="text" width="80%" height={40} />
+            </Box>
+            
+            {/* Bio skeleton */}
+            <Box sx={{ mt: 2, p: 2 }}>
+              <Skeleton variant="rectangular" height={60} sx={{ borderRadius: "8px" }} />
+            </Box>
+            
+            {/* Stats skeleton */}
+            <Box sx={{ display: "flex", justifyContent: "space-around", mt: 3, mb: 3 }}>
+              <Box sx={{ textAlign: "center", width: "40%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Skeleton variant="text" width="60%" />
+                <Skeleton variant="text" width="40%" height={28} />
+              </Box>
+              <Box sx={{ width: "1px", height: "30px", backgroundColor: "#d1d5db" }} />
+              <Box sx={{ textAlign: "center", width: "40%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Skeleton variant="text" width="60%" />
+                <Skeleton variant="text" width="40%" height={28} />
+              </Box>
+            </Box>
+            
+            {/* Button skeleton */}
+            <Skeleton variant="rectangular" height={40} sx={{ borderRadius: "20px", width: "100%" }} />
+          </Box>
+
+          {/* Right Column Skeleton */}
+          <Box width="70%" sx={{ px: "20px" }}>
+            {/* Tabs skeleton */}
+            <Box sx={{ bgcolor: "#e9f0ff", p: 1, borderRadius: "4px", display: "flex", justifyContent: "center", gap: 4 }}>
+              <Skeleton variant="rectangular" width={100} height={30} />
+              <Skeleton variant="rectangular" width={100} height={30} />
+            </Box>
+            
+            {/* Feed skeleton */}
+            <Box sx={{ mt: 3 }}>
+              <Box sx={{ p: 3, border: "1px solid #e5e7eb", borderRadius: "12px", mb: 3 }}>
+                <Box display="flex" gap={2} alignItems="center" mb={2}>
+                  <Skeleton variant="circular" width={40} height={40} />
+                  <Box flex={1}>
+                    <Skeleton variant="text" width="30%" />
+                    <Skeleton variant="text" width="20%" />
+                  </Box>
+                </Box>
+                <Skeleton variant="rectangular" height={100} sx={{ borderRadius: "8px", mb: 2 }} />
+                <Skeleton variant="text" />
+                <Skeleton variant="text" width="80%" />
+              </Box>
+
+              <Box sx={{ p: 3, border: "1px solid #e5e7eb", borderRadius: "12px" }}>
+                <Box display="flex" gap={2} alignItems="center" mb={2}>
+                  <Skeleton variant="circular" width={40} height={40} />
+                  <Box flex={1}>
+                    <Skeleton variant="text" width="40%" />
+                    <Skeleton variant="text" width="15%" />
+                  </Box>
+                </Box>
+                <Skeleton variant="rectangular" height={120} sx={{ borderRadius: "8px", mb: 2 }} />
+                <Skeleton variant="text" />
+                <Skeleton variant="text" width="60%" />
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
   if (profile?.statusFriend === ProfileStatus.BLOCKED) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -561,7 +669,18 @@ export default function ProfilePage() {
             ml: "20px",
           }}
         >
-          <Box sx={{ backgroundImage: "linear-gradient(90deg, rgb(225, 193, 169) 0%, rgba(225, 193, 169, 0.314) 100%)", height: "100px" }} />
+          <Box
+            sx={{
+              backgroundImage: profile?.bannerUrl
+                ? `url(${profile.bannerUrl})`
+                : "linear-gradient(90deg, rgb(225, 193, 169) 0%, rgba(225, 193, 169, 0.314) 100%)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              height: "100px",
+              borderRadius: "20px 20px 0 0",
+              margin: "-20px -20px 0 -20px", // align with left column padding
+            }}
+          />
           <Box
             sx={{
               borderRadius: "50%",

@@ -9,9 +9,9 @@ export default function LoginCard() {
   return (
     <div className="rounded-[28px] bg-white p-8">
       <WelcomeSection />
-      <LoginForm />
-      <Divider />
       <SocialLoginGroup />
+      <Divider />
+      <LoginForm />
       <RegisterText />
     </div>
   );
