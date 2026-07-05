@@ -36,20 +36,28 @@ const ProtectedRoute = () => {
   console.log("ProtectedRoute token:", token);
 
   if (!token) {
-    return <Navigate to="/landing" replace />;
+    return <Navigate to="/" replace />;
+  }
+  return <Outlet />;
+};
+
+const PublicLayout = () => {
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    return <Navigate to="/home" replace />;
   }
   return <Outlet />;
 };
 
 export const router = createBrowserRouter([
-  // Public landing page (also accessible at root for new visitors)
   {
-    path: "/landing",
-    element: <LandingPage />,
-  },
-  {
-    path: "/",
-    element: <LandingPage />,
+    element: <PublicLayout />,
+    children: [
+      {
+        path: "/",
+        element: <LandingPage />,
+      },
+    ],
   },
 
   {
