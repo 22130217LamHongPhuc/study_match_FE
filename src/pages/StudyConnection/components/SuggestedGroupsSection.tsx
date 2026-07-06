@@ -234,9 +234,6 @@ export default function SuggestedGroupsSection() {
     <section className="rounded-xl border border-gray-200 bg-white p-5">
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100">
-            <Users size={16} className="text-green-600" />
-          </div>
           <div>
             <h2 className="text-base font-bold text-gray-800">Nhóm cộng đồng</h2>
             <p className="text-xs text-gray-500">
@@ -258,6 +255,7 @@ export default function SuggestedGroupsSection() {
         <EmptyState
           title="Chưa có nhóm phù hợp"
           description="Chưa có nhóm cộng đồng nào phù hợp với môn học của bạn."
+          imageUrl="https://app.studystream.live/assets/images/onboarding-slides/result-slide.png"
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -270,9 +268,6 @@ export default function SuggestedGroupsSection() {
       <div className="mt-5 border-t border-gray-100 pt-5">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
-              <Search size={15} className="text-amber-600" />
-            </div>
             <div>
               <h3 className="text-sm font-bold text-gray-700">Khám phá thêm</h3>
               <p className="text-xs text-gray-500">Chọn môn học khác để xem nhóm</p>
@@ -336,8 +331,9 @@ export default function SuggestedGroupsSection() {
           !selectedOtherGroupsError &&
           selectedOtherGroups.length === 0 && (
             <EmptyState
-              title="Chưa có nhóm cộng đồng"
+              title="Chưa có nhóm phù hợp"
               description="Hiện tại chưa có nhóm nào thuộc môn học này."
+              imageUrl="https://app.studystream.live/assets/images/onboarding-slides/result-slide.png"
             />
           )}
 

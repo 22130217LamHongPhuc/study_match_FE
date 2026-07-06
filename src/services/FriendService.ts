@@ -38,11 +38,13 @@ export const getFriendsListService = async (
         throw new Error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
     }
 
+    const token = localStorage.getItem('accessToken');
     const url = `${BASE_URL}/social/friends/${resolvedUserId}/list`;
     const res = await fetch(url, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
     });
 
@@ -297,10 +299,12 @@ export const loadFriendListService = async (userId?: number): Promise<FriendUser
     const currentUserId = userId ?? Number(localStorage.getItem('userId'));
     if (!currentUserId) return [];
 
-    const res = await fetch(BASE_SOCIAL_SERVICE + `/social/friends/${currentUserId}/list`, {
+    const token = localStorage.getItem('accessToken');
+    const res = await fetch(`${BASE_URL}/social/friends/${currentUserId}/list`, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
     });
 
@@ -322,10 +326,12 @@ export const loadFriendProfilesService = async (friendIds: number[]): Promise<Fr
     const params = new URLSearchParams();
     friendIds.forEach((id) => params.append('ids', String(id)));
 
+    const token = localStorage.getItem('accessToken');
     const res = await fetch(BASE_USER_SERVICE + `/users/batch?${params.toString()}`, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
     });
 
@@ -348,11 +354,13 @@ export const loadFriendOnlineStatusesService = async (friendIds: number[]): Prom
         userIds: friendIds.join(",")
     });
 
+    const token = localStorage.getItem('accessToken');
     try {
         const res = await fetch(BASE_CHAT_SERVICE + `/messages/presence/online?${params.toString()}`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
             }
         });
 
@@ -398,10 +406,12 @@ export const loadFriendRequestsService = async (
     const currentUserId = userId ?? Number(localStorage.getItem('userId'));
     if (!currentUserId) return { sent: [], received: [] };
 
+    const token = localStorage.getItem('accessToken');
     const res = await fetch(`${BASE_URL}/social/friend-requests/${currentUserId}?size=100`, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
     });
 
@@ -421,10 +431,12 @@ export const unfriendService = async (
     friendId: number,
 ): Promise<FriendRequestResponse> => {
     const url = `${BASE_URL}/social/friends/unfriend?userId=${userId}&friendId=${friendId}`;
+    const token = localStorage.getItem('accessToken');
     const res = await fetch(url, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
     });
 
@@ -457,10 +469,12 @@ export const getFriendStatsService = async (
     }
 
     const url = `${BASE_URL}/social/friends/${resolvedUserId}/stats`;
+    const token = localStorage.getItem('accessToken');
     const res = await fetch(url, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
     });
 

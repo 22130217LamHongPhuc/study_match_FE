@@ -40,8 +40,8 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
             sx={{
               width: 64,
               height: 64,
-              bgcolor: "#f97316",
-              boxShadow: "0 4px 12px rgba(249, 115, 22, 0.2)",
+              bgcolor: "#2563eb",
+              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
             }}
           >
             <PersonOutlineIcon sx={{ fontSize: 32 }} />
@@ -63,10 +63,10 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
             <Chip
               label={profile.cohortLabel}
               sx={{
-                bgcolor: "#fff7ed",
-                color: "#ea580c",
+                bgcolor: "#f0f7ff",
+                color: "#1d4ed8",
                 fontWeight: 600,
-                border: "1px solid #ffedd5",
+                border: "1px solid #e0effe",
               }}
             />
 
@@ -76,8 +76,8 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
               sx={{
                 color: "#9ca3af",
                 "&:hover": {
-                  color: "#f97316",
-                  bgcolor: "#fff7ed",
+                  color: "#2563eb",
+                  bgcolor: "#f0f7ff",
                 },
               }}
             >

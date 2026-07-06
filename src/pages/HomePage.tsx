@@ -194,7 +194,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-full bg-sand-50/40 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-6">
 
 

@@ -23,28 +23,32 @@ export default function QuickStats({
       title: "Bạn bè",
       value: friendsCount,
       description: "Đã kết bạn",
-      borderClass: "border-t-amber-500",
+      bg: "bg-blue-50",
+      text: "text-blue-600",
     },
     {
       id: "friendRequests",
       title: "Lời mời kết bạn",
       value: friendRequestsCount,
       description: "Chờ bạn phản hồi",
-      borderClass: "border-t-blue-500",
+      bg: "bg-green-50",
+      text: "text-green-600",
     },
     {
       id: "groups",
       title: "Nhóm đã tham gia",
       value: groupsCount,
       description: "Đã tham gia",
-      borderClass: "border-t-sage-500",
+      bg: "bg-amber-50",
+      text: "text-amber-600",
     },
     {
       id: "groupInvites",
       title: "Lời mời nhóm",
       value: groupInvitesCount,
       description: "Chờ bạn phản hồi",
-      borderClass: "border-t-rose-500",
+      bg: "bg-rose-50",
+      text: "text-rose-600",
     },
   ];
 
@@ -55,26 +59,26 @@ export default function QuickStats({
           <button
             key={stat.id}
             onClick={() => onStatClick?.(stat.id)}
-            className={`rounded-xl border border-gray-150 border-t-4 bg-white p-4 text-left transition-all duration-200 hover:shadow-xs cursor-pointer ${stat.borderClass}`}
+            className="rounded-xl border border-gray-200 bg-white p-5 text-left transition-all duration-200 hover:shadow-sm cursor-pointer"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                {stat.title}
-              </span>
+            <div
+              className={`mb-4 inline-flex rounded-lg px-3 py-1.5 text-xs font-semibold ${stat.bg} ${stat.text}`}
+            >
+              {stat.title}
             </div>
             {loading ? (
-              <div className="mt-2.5 flex items-baseline gap-2 w-full animate-pulse">
-                <span className="h-8 w-12 bg-gray-200 rounded" />
-                <span className="h-3 w-16 bg-gray-100 rounded" />
+              <div className="flex flex-col gap-1.5 w-full animate-pulse">
+                <span className="h-9 w-12 bg-gray-200 rounded" />
+                <span className="h-4 w-24 bg-gray-100 rounded" />
               </div>
             ) : (
-              <div className="mt-2.5 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-gray-800">
+              <div>
+                <div className="text-3xl font-bold text-gray-800">
                   {stat.value}
-                </span>
-                <span className="text-[10px] text-gray-400 line-clamp-1 font-medium">
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
                   {stat.description}
-                </span>
+                </p>
               </div>
             )}
           </button>

@@ -384,9 +384,6 @@ export default function SuggestedFriendsSection() {
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100">
-              <Users size={16} className="text-orange-500" />
-            </div>
             <div>
               <h2 className="text-base font-bold text-gray-800">Bạn học phù hợp</h2>
               <p className="text-xs text-gray-500">
@@ -399,10 +396,10 @@ export default function SuggestedFriendsSection() {
             type="button"
             onClick={() => fetchRecommendations(currentUserId, 1, false)}
             disabled={loading}
-            className="mt-2 inline-flex h-9 items-center gap-2 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-0"
+            className="mt-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500 text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-0"
+            title="Tải lại"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-            {loading ? "Đang tải..." : "Tải lại"}
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
 
@@ -425,6 +422,7 @@ export default function SuggestedFriendsSection() {
             }
             actionLabel="Tải lại"
             onAction={() => fetchRecommendations(currentUserId, 1, false)}
+            imageUrl="https://app.studystream.live/assets/images/onboarding-slides/explanation-slide.png"
           />
         ) : (
           <div>

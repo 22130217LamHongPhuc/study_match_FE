@@ -57,7 +57,7 @@ export default function StudySessionReminderToast({
         overflow: "hidden",
         bgcolor: "#ffffff",
         border: "1px solid rgba(0, 0, 0, 0.08)",
-        borderLeft: "4px solid #f97316",
+        borderLeft: "4px solid #2563eb",
         boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08)",
         p: 2,
         display: "flex",
@@ -75,8 +75,8 @@ export default function StudySessionReminderToast({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            bgcolor: "#fff7ed",
-            color: "#f97316",
+            bgcolor: "#f0f7ff",
+            color: "#2563eb",
             flexShrink: 0,
           }}
         >
@@ -91,7 +91,7 @@ export default function StudySessionReminderToast({
                 fontWeight: 700,
                 letterSpacing: 0.8,
                 textTransform: "uppercase",
-                color: "#f97316",
+                color: "#2563eb",
               }}
             >
               Nhắc lịch học

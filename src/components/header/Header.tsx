@@ -26,6 +26,7 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import MenuIcon from "@mui/icons-material/Menu";
 import { logout } from "../../services/AuthService";
 import { useNavigate } from "react-router-dom";
 import WebSocketManager from "../../socket/WebSocketManager";
@@ -51,7 +52,11 @@ import {
   GroupInvitationResponse
 } from "../../services/GroupService";
 
-export default function Header() {
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+}
+
+export default function Header({ onToggleSidebar }: HeaderProps) {
   const [modalSignIn, setModalSignIn] = useState<boolean>(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [popoverAnchor, setPopoverAnchor] = useState<null | HTMLElement>(null);
@@ -167,6 +172,9 @@ export default function Header() {
         fetchPendingRequests();
         window.dispatchEvent(new Event("friend_request_received"));
       } else if (newMess.event === "FRIEND_REQUEST_ACCEPT_RECEIVE") {
+        window.dispatchEvent(new Event("friend_status_updated"));
+      } else if (newMess.event === "FRIEND_REQUEST_CANCEL_RECEIVE") {
+        fetchPendingRequests();
         window.dispatchEvent(new Event("friend_status_updated"));
       } else if (newMess.event === "GROUP_INVITATION_RECEIVE") {
         fetchPendingGroupInvitations();
@@ -424,8 +432,11 @@ export default function Header() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          borderBottom: "1px solid #f0e6d9",
+          borderBottom: "1px solid #e2e8f0",
           background: "#ffffff",
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
         }}
       >
         {isLoggedIn ? (
@@ -444,53 +455,8 @@ export default function Header() {
                     letterSpacing: "-0.2px",
                   }}
                 >
-
-                  <Tooltip title="Thông báo">
-                    <IconButton
-                      onClick={handleOpenNotifications}
-                      sx={{
-                        bgcolor: "#fff7ed",
-                        "&:hover": { bgcolor: "#ffedd5" },
-                      }}
-                    >
-                      <Badge
-                        color="error"
-                        variant="dot"
-                        invisible={pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0}
-                      >
-                        <NotificationsActiveIcon
-                          sx={{ color: "#f97316", fontSize: "20px" }}
-                        />
-                      </Badge>
-                    </IconButton>
-                  </Tooltip>
-                  <Button
-                    onClick={handleOpenMenu}
-                    endIcon={<ExpandMoreIcon sx={{ color: "#9ca3af" }} />}
-                    sx={{
-                      textTransform: "none",
-                      borderRadius: "10px",
-                      "& fieldset": {
-                        borderColor: "#e5e0d8",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#f97316",
-                      },
-                    }}
-                  >
-                    <Avatar
-                      src={currentUserProfile?.avatarUrl || user?.avatar || localStorage.getItem("avatarUrl") || undefined}
-                      sx={{ width: 32, height: 32 }}
-                    />
-                    <Box sx={{ textAlign: "left" }}>
-                      <Typography
-                        sx={{ fontWeight: 700, fontSize: 13, color: "#1f2937" }}
-                      >
-                        {currentUserProfile?.fullName || localStorage.getItem("fullName") || user?.username || "StudyMate"}
-                      </Typography>
-                    </Box>
-                  </Button>
-                </Box>
+                  Trang chủ
+                </Typography>
               </Box>
 
               <Box
@@ -502,24 +468,12 @@ export default function Header() {
                   gap: "8px",
                 }}
               >
-                <Tooltip title="Tin nhắn">
-                  <IconButton
-                    sx={{
-                      bgcolor: "#fff7ed",
-                      "&:hover": { bgcolor: "#ffedd5" },
-                    }}
-                  >
-                    <TextsmsIcon
-                      sx={{ color: "#f97316", fontSize: "20px" }}
-                    />
-                  </IconButton>
-                </Tooltip>
                 <Tooltip title="Thông báo">
                   <IconButton
                     onClick={handleOpenNotifications}
                     sx={{
-                      bgcolor: "#fff7ed",
-                      "&:hover": { bgcolor: "#ffedd5" },
+                      bgcolor: "#f0f7ff",
+                      "&:hover": { bgcolor: "#e0effe" },
                     }}
                   >
                     <Badge
@@ -528,7 +482,7 @@ export default function Header() {
                       invisible={pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0}
                     >
                       <NotificationsActiveIcon
-                        sx={{ color: "#f97316", fontSize: "20px" }}
+                        sx={{ color: "#2563eb", fontSize: "20px" }}
                       />
                     </Badge>
                   </IconButton>
@@ -546,20 +500,20 @@ export default function Header() {
                     gap: "6px",
                     minWidth: "auto",
                     "&:hover": {
-                      background: "#fff7ed",
-                      borderColor: "#f97316",
+                      background: "#f0f7ff",
+                      borderColor: "#2563eb",
                     },
                   }}
                 >
                   <Avatar
-                    src="https://futbol-eros.com/wp-content/uploads/2022/12/Cristiano-Ronaldo-2008-Portrait-Poster-Wall-Art_FutbolEros-Closeup-1536x1536.jpg"
+                    src={currentUserProfile?.avatarUrl || user?.avatar || localStorage.getItem("avatarUrl") || undefined}
                     sx={{ width: 32, height: 32 }}
                   />
                   <Box sx={{ textAlign: "left" }}>
                     <Typography
                       sx={{ fontWeight: 700, fontSize: 13, color: "#1f2937" }}
                     >
-                      {user?.username || "StudyMatching"}
+                      {currentUserProfile?.fullName || localStorage.getItem("fullName") || user?.username || "StudyMate"}
                     </Typography>
                     <Typography sx={{ fontSize: 10, color: "#9ca3af" }}>
                       Học viên
@@ -595,13 +549,13 @@ export default function Header() {
                   color: "#1f2937",
                   gap: "6px",
                   "&:hover": {
-                    background: "#fff7ed",
-                    borderColor: "#f97316",
+                    background: "#f0f7ff",
+                    borderColor: "#2563eb",
                   },
                 }}
               >
-                <Avatar sx={{ width: 30, height: 30, bgcolor: "#fff7ed" }}>
-                  <PersonOutlineIcon sx={{ color: "#f97316" }} />
+                <Avatar sx={{ width: 30, height: 30, bgcolor: "#f0f7ff" }}>
+                  <PersonOutlineIcon sx={{ color: "#2563eb" }} />
                 </Avatar>
                 <Box sx={{ textAlign: "left" }}>
                   <Typography
@@ -628,7 +582,7 @@ export default function Header() {
             borderRadius: "10px",
             minWidth: 210,
             boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-            border: "1px solid #f0e6d9",
+            border: "1px solid #e2e8f0",
             px: 0.5,
           },
         }}
@@ -656,7 +610,7 @@ export default function Header() {
             </Typography>
           </Box>
         )}
-        <Divider sx={{ my: 0.5, borderColor: "#f0e6d9" }} />
+        <Divider sx={{ my: 0.5, borderColor: "#e2e8f0" }} />
         {isLoggedIn ? (
           <>
             <MenuItem
@@ -666,7 +620,7 @@ export default function Header() {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#f0f7ff", color: "#1d4ed8" },
               }}
             >
               <PersonOutlineIcon
@@ -681,7 +635,7 @@ export default function Header() {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#f0f7ff", color: "#1d4ed8" },
               }}
             >
               <SettingsOutlinedIcon
@@ -696,7 +650,7 @@ export default function Header() {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#f0f7ff", color: "#1d4ed8" },
               }}
             >
               <HelpOutlineIcon
@@ -704,7 +658,7 @@ export default function Header() {
               />
               Hỗ trợ
             </MenuItem>
-            <Divider sx={{ my: 0.5, borderColor: "#f0e6d9" }} />
+            <Divider sx={{ my: 0.5, borderColor: "#e2e8f0" }} />
             <MenuItem
               onClick={handleLogout}
               sx={{
@@ -793,7 +747,7 @@ export default function Header() {
             maxHeight: 450,
             borderRadius: "12px",
             boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-            border: "1px solid #f0e6d9",
+            border: "1px solid #e2e8f0",
             padding: "12px",
             display: "flex",
             flexDirection: "column",
@@ -838,7 +792,7 @@ export default function Header() {
             </Box>
           )}
         </Box>
-        <Divider sx={{ mb: 1, borderColor: "#f0e6d9" }} />
+        <Divider sx={{ mb: 1, borderColor: "#e2e8f0" }} />
         <Box sx={{ flexGrow: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
           {(pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0) ? (
             <Box
@@ -901,7 +855,7 @@ export default function Header() {
                     padding: "10px",
                     borderRadius: "8px",
                     backgroundColor: "#fafaf8",
-                    border: "1px solid #f0e6d9",
+                    border: "1px solid #e2e8f0",
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -960,14 +914,14 @@ export default function Header() {
                       sx={{
                         fontSize: "11px",
                         textTransform: "none",
-                        backgroundColor: "#f97316",
+                        backgroundColor: "#2563eb",
                         color: "#ffffff",
                         borderRadius: "6px",
                         padding: "2px 8px",
                         minWidth: "60px",
                         boxShadow: "none",
                         "&:hover": {
-                          backgroundColor: "#ea580c",
+                          backgroundColor: "#1d4ed8",
                           boxShadow: "none",
                         },
                       }}
@@ -997,7 +951,7 @@ export default function Header() {
                         padding: "10px",
                         borderRadius: "8px",
                         backgroundColor: "#fafaf8",
-                        border: "1px solid #f0e6d9",
+                        border: "1px solid #e2e8f0",
                         cursor: "pointer",
                         "&:hover": {
                           backgroundColor: "#f5f5f0",
@@ -1005,8 +959,8 @@ export default function Header() {
                       }}
                     >
                       <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <Avatar sx={{ bgcolor: "#fff7ed", width: 36, height: 36 }}>
-                          <NotificationsActiveIcon sx={{ color: "#f97316", fontSize: 18 }} />
+                        <Avatar sx={{ bgcolor: "#f0f7ff", width: 36, height: 36 }}>
+                          <NotificationsActiveIcon sx={{ color: "#2563eb", fontSize: 18 }} />
                         </Avatar>
                         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                           <Typography
@@ -1078,14 +1032,14 @@ export default function Header() {
                           sx={{
                             fontSize: "11px",
                             textTransform: "none",
-                            backgroundColor: "#f97316",
+                            backgroundColor: "#2563eb",
                             color: "#ffffff",
                             borderRadius: "6px",
                             padding: "2px 8px",
                             minWidth: "60px",
                             boxShadow: "none",
                             "&:hover": {
-                              backgroundColor: "#ea580c",
+                              backgroundColor: "#1d4ed8",
                               boxShadow: "none",
                             },
                           }}
@@ -1109,7 +1063,7 @@ export default function Header() {
                     padding: "10px",
                     borderRadius: "8px",
                     backgroundColor: "#fafaf8",
-                    border: "1px solid #f0e6d9",
+                    border: "1px solid #e2e8f0",
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1168,14 +1122,14 @@ export default function Header() {
                       sx={{
                         fontSize: "11px",
                         textTransform: "none",
-                        backgroundColor: "#f97316",
+                        backgroundColor: "#2563eb",
                         color: "#ffffff",
                         borderRadius: "6px",
                         padding: "2px 8px",
                         minWidth: "60px",
                         boxShadow: "none",
                         "&:hover": {
-                          backgroundColor: "#ea580c",
+                          backgroundColor: "#1d4ed8",
                           boxShadow: "none",
                         },
                       }}
@@ -1219,13 +1173,13 @@ export default function Header() {
               window.location.href = "/conversation";
             }}
             sx={{
-              backgroundColor: "#f97316",
+              backgroundColor: "#2563eb",
               color: "#ffffff",
               textTransform: "none",
               borderRadius: "6px",
               padding: "6px 20px",
               "&:hover": {
-                backgroundColor: "#ea580c",
+                backgroundColor: "#1d4ed8",
               },
             }}
           >

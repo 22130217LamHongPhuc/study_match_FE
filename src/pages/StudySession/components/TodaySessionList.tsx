@@ -1,4 +1,5 @@
 import type { StudySessionVm } from "../types";
+import icon1 from "../../../assets/img/icon1.png";
 
 interface TodaySessionListProps {
   sessions: StudySessionVm[];
@@ -41,6 +42,11 @@ export function TodaySessionList({
       <div className="flex flex-col gap-3">
         {sessions.length === 0 && (
           <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center">
+            <img
+              src={icon1}
+              alt="Hôm nay chưa có lịch học"
+              className="mx-auto mb-4 h-24 w-auto object-contain mix-blend-multiply"
+            />
             <p className="mt-2 text-sm font-semibold text-gray-600">
               Hôm nay chưa có lịch học
             </p>

@@ -14,7 +14,7 @@ export default function MyProfilePage() {
   if (loading) {
     return (
       <Box sx={{ py: 10, textAlign: "center" }}>
-        <CircularProgress sx={{ color: "#f97316" }} />
+        <CircularProgress sx={{ color: "#2563eb" }} />
       </Box>
     );
   }

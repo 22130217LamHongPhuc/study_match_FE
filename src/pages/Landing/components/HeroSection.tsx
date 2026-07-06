@@ -26,8 +26,8 @@ const HeroSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-center">
           <div className="space-y-8 animate-fade-in">
             <div className="inline-flex items-center gap-2">
-              <span className="w-6 h-0.5 bg-[#f97316]" />
-              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#f97316]">
+              <span className="w-6 h-0.5 bg-[#2563eb]" />
+              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#2563eb]">
                 Nền tảng học tập thông minh
               </span>
             </div>
@@ -46,7 +46,7 @@ const HeroSection: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 to="/register"
-                className="group inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-bold text-white bg-[#f97316] rounded-lg hover:bg-[#ea6c0a] transition-colors duration-200"
+                className="group inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-bold text-white bg-[#2563eb] rounded-lg hover:bg-[#1d4ed8] transition-colors duration-200"
               >
                 Bắt đầu học cùng StudyMatch
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

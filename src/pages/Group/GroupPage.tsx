@@ -1,5 +1,6 @@
 import { BookOpen, ChevronRight, Crown, Loader2, Plus, Send, UserPlus, UserX, Users, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import CreateGroupModal from "./components/CreateGroupModal";
 import {
   getActiveGroupMembers,
   getActiveGroupMemberIds,
@@ -93,6 +94,7 @@ export default function GroupPage() {
   const navigate = useNavigate();
   const [groupList, setGroupList] = useState<StudyGroupDetailResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<StudyGroupDetailResponse | null>(null);
   const [members, setMembers] = useState<GroupMemberProfile[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -131,7 +133,7 @@ export default function GroupPage() {
   }, []);
 
   const goToCreateGroup = () => {
-    navigate("/create-group");
+    setCreateModalOpen(true);
   };
 
   const openGroupDetail = async (group: StudyGroupDetailResponse) => {
@@ -347,7 +349,8 @@ export default function GroupPage() {
   return (
     <main className="px-6 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto w-full max-w-7xl">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-5 mb-8">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-5 mb-8">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
               Nhóm học của tôi
@@ -404,10 +407,11 @@ export default function GroupPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       {selectedGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-4 py-6">
           <section className="w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
             <header className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 py-5">
               <div className="min-w-0">
@@ -451,9 +455,6 @@ export default function GroupPage() {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h3 className="text-sm font-bold text-gray-900">Mời bạn bè vào nhóm</h3>
-                      <p className="mt-0.5 text-xs text-gray-500">
-                        Người nhận sẽ thấy lời mời trong thông báo và có thể tham gia hoặc từ chối.
-                      </p>
                     </div>
                     <input
                       value={inviteSearch}
@@ -470,7 +471,7 @@ export default function GroupPage() {
                       </div>
                     ) : visibleInviteCandidates.length === 0 ? (
                       <div className="rounded-md border border-dashed border-orange-200 bg-white/70 p-4 text-center text-sm text-gray-500">
-                        Không tìm thấy bạn bè phù hợp để mời.
+                        Không tìm thấy bạn bè
                       </div>
                     ) : (
                       visibleInviteCandidates.map((friend) => {
@@ -590,7 +591,7 @@ export default function GroupPage() {
                             ) : (
                               <UserX size={15} />
                             )}
-                            Xóa khỏi nhóm
+                            Xóa
                           </button>
                         )}
                       </div>
@@ -602,6 +603,12 @@ export default function GroupPage() {
           </section>
         </div>
       )}
+
+      <CreateGroupModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onCreated={fetchGroups}
+      />
     </main>
   );
 }

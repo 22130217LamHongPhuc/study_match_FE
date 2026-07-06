@@ -589,10 +589,10 @@ export default function OnboardingFlow() {
               >
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${s.id < step
-                      ? "bg-green-500 text-white"
-                      : active
-                        ? "bg-blue-500 text-white ring-2 ring-blue-400 ring-opacity-40"
-                        : "bg-gray-800 text-gray-500"
+                    ? "bg-green-500 text-white"
+                    : active
+                      ? "bg-blue-500 text-white ring-2 ring-blue-400 ring-opacity-40"
+                      : "bg-gray-800 text-gray-500"
                     }`}
                 >
                   {s.id < step ? (
@@ -603,10 +603,10 @@ export default function OnboardingFlow() {
                 </div>
                 <span
                   className={`text-xs font-medium transition-colors ${active
-                      ? "text-white"
-                      : s.id < step
-                        ? "text-gray-400"
-                        : "text-gray-600"
+                    ? "text-white"
+                    : s.id < step
+                      ? "text-gray-400"
+                      : "text-gray-600"
                     }`}
                 >
                   {s.label}
@@ -673,8 +673,8 @@ export default function OnboardingFlow() {
               onClick={handleNext}
               disabled={!canProceed() || submissionLoading}
               className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!canProceed() || submissionLoading
-                  ? "bg-blue-100 text-blue-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                ? "bg-blue-100 text-blue-300 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
                 }`}
             >
               {submissionLoading ? (

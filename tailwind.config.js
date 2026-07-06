@@ -7,6 +7,18 @@ module.exports = {
         sans: ['"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
+        orange: {
+          50: '#f0f7ff',
+          100: '#e0effe',
+          200: '#bae2fd',
+          300: '#7dd0fc',
+          400: '#38bdf8',
+          500: '#2563eb', // Royal Blue primary brand color
+          600: '#1d4ed8', // Darker Blue hover state
+          700: '#1e40af',
+          800: '#1e3a8a',
+          900: '#0f172a',
+        },
         sand: {
           50: '#FAFAF8',
           100: '#F5F5F0',
@@ -20,12 +32,16 @@ module.exports = {
           900: '#292524',
         },
         accent: {
-          DEFAULT: '#B45309',
-          light: '#FEF3C7',
-          50: '#FFFBEB',
-          100: '#FEF3C7',
-          600: '#B45309',
-          700: '#92400E',
+          DEFAULT: '#2563eb',
+          light: '#f0f7ff',
+          50: '#f0f7ff',
+          100: '#e0effe',
+          200: '#bae2fd',
+          300: '#7dd0fc',
+          400: '#38bdf8',
+          500: '#2563eb',
+          600: '#1d4ed8',
+          700: '#1e40af',
         },
         sage: {
           DEFAULT: '#6B8F71',

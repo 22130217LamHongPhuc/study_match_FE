@@ -16,18 +16,28 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
+  imageUrl,
 }: {
   title: string;
   description: string;
   actionLabel?: string;
   onAction?: () => void;
+  imageUrl?: string;
 }) {
   return (
-    <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 text-center">
+    <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-6 text-center">
       <div>
-        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-          <BookOpen size={20} className="text-orange-400" />
-        </div>
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={title}
+            className="mx-auto mb-4 w-96 h-auto object-contain"
+          />
+        ) : (
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
+            <BookOpen size={20} className="text-orange-400" />
+          </div>
+        )}
 
         <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
 

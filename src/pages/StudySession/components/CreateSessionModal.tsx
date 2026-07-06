@@ -247,7 +247,7 @@ export function CreateSessionModal({
     }
     const startDate = new Date(startTime);
     const now = new Date();
-    
+
     if (startDate <= now) {
       toast.error("Thời gian bắt đầu phải lớn hơn thời gian hiện tại");
       return;
@@ -365,8 +365,8 @@ export function CreateSessionModal({
     "w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 transition-all";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 px-4 py-6">
+      <div className="max-h-[calc(100vh-160px)] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
           <div>
             <h2 className="text-lg font-bold text-gray-800">Tạo lịch học</h2>
@@ -627,6 +627,19 @@ export function CreateSessionModal({
             )}
           </div>
 
+          <label className="space-y-2 block">
+            <span className="text-sm font-semibold text-gray-700">
+              Tiêu đề buổi học
+            </span>
+
+            <input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              required
+              placeholder="Ví dụ: Ôn Java OOP"
+              className={inputClass}
+            />
+          </label>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-2">
@@ -674,18 +687,7 @@ export function CreateSessionModal({
             </label>
           )}
 
-          {needSystemRoom && (
-            <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3">
-              <p className="text-sm font-bold text-green-700">
-                Phòng học online sẽ được tạo tự động
-              </p>
-              <p className="mt-1 text-xs leading-5 text-green-700">
-                Sau khi lịch học được tạo, hệ thống sẽ tạo phòng học online.
-              </p>
-            </div>
-          )}
-
-          <label className="space-y-2">
+          <label className="space-y-2 block">
             <span className="text-sm font-semibold text-gray-700">Mô tả</span>
 
             <textarea
@@ -696,24 +698,24 @@ export function CreateSessionModal({
               className={`${inputClass} resize-none`}
             />
           </label>
+        </div>
 
-          <div className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-            >
-              Hủy
-            </button>
+        <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-3 border-t border-gray-100 bg-white px-6 py-4 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Hủy
+          </button>
 
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 transition-colors"
-            >
-              Tạo lịch
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 transition-colors"
+          >
+            Tạo lịch
+          </button>
         </div>
       </div>
     </div>

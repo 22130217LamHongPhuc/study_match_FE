@@ -308,8 +308,8 @@ export default function ListFriends() {
                     void loadPendingRequests(currentUserId, finalGroups);
                 }
 
-                if (friendResult.status === "rejected" && groupResult.status === "rejected") {
-                    setError("KhÃ´ng táº£i Ä‘Æ°á»£c danh sÃ¡ch báº¡n bÃ¨ vÃ  nhÃóm");
+                if (friendResult.status === "rejected" || groupResult.status === "rejected") {
+                    setError("Không tải được danh sách bạn bè và nhóm");
                 }
             } catch (err) {
                 console.error(err);

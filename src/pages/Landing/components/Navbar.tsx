@@ -69,7 +69,7 @@ const Navbar: React.FC = () => {
             </Link>
             <Link
               to="/register"
-              className="px-4 py-2 text-sm font-semibold text-white bg-[#f97316] rounded-lg hover:bg-[#ea6c0a] transition-colors duration-150"
+              className="px-4 py-2 text-sm font-semibold text-white bg-[#2563eb] rounded-lg hover:bg-[#1d4ed8] transition-colors duration-150"
             >
               Bắt đầu ngay
             </Link>
@@ -109,7 +109,7 @@ const Navbar: React.FC = () => {
             </Link>
             <Link
               to="/register"
-              className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-[#f97316] rounded-lg hover:bg-[#ea6c0a] transition-colors"
+              className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-[#2563eb] rounded-lg hover:bg-[#1d4ed8] transition-colors"
               onClick={() => setMobileOpen(false)}
             >
               Bắt đầu ngay
