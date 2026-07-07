@@ -421,99 +421,189 @@ export default function CreatePostDialog({
             )}
  
             {selectedMediaItems.length > 0 && (
-              <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 1.5 }}>
-                {selectedMediaItems.map((item, index) => {
-                  const isImage = item.file.type.startsWith("image/");
-                  const isVideo = item.file.type.startsWith("video/");
- 
-                  if (!isImage && !isVideo) {
-                    const meta = getFileMeta(item.file.name);
+              <Box
+                sx={{
+                  position: "relative",
+                  mt: 2,
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+
+
+                <IconButton
+                  onClick={clearSelectedMedia}
+                  sx={{
+                    position: "absolute",
+                    top: 12,
+                    right: 12,
+                    zIndex: 10,
+                    bgcolor: "white",
+                    color: "#1e293b",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    "&:hover": { bgcolor: "#f1f5f9" },
+                    width: 32,
+                    height: 32,
+                  }}
+                >
+                  <CloseIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+
+                {/* Rich Media Grid */}
+                {(() => {
+                  const count = selectedMediaItems.length;
+
+                  const renderPreviewCell = (item: SelectedMediaItem, idx: number, height: string | number) => {
+                    const isVideo = item.file.type.startsWith("video/");
+                    const isImage = item.file.type.startsWith("image/");
+                    const isDoc = !isVideo && !isImage;
+
                     return (
                       <Box
                         key={item.preview}
                         sx={{
                           position: "relative",
-                          borderRadius: "12px",
-                          border: "1px solid #e2e8f0",
-                          p: 1,
+                          width: "100%",
+                          height: height,
+                          bgcolor: "#111",
                           display: "flex",
-                          flexDirection: "column",
                           alignItems: "center",
                           justifyContent: "center",
-                          textAlign: "center",
-                          bgcolor: meta.bg,
-                          aspectRatio: "1 / 1",
-                          gap: 0.5,
+                          overflow: "hidden",
                         }}
                       >
-                        <DescriptionIcon sx={{ fontSize: 24, color: meta.color, mb: 0.5 }} />
-                        <Typography
-                          noWrap
-                          sx={{
-                            width: "100%",
-                            fontSize: "0.7rem",
-                            fontWeight: 700,
-                            color: "#1e293b",
-                            px: 0.5,
-                          }}
-                        >
-                          {item.file.name}
-                        </Typography>
-                        <Typography sx={{ fontSize: "0.6rem", color: meta.color, fontWeight: 700 }}>
-                          {meta.label}
-                        </Typography>
-                        <IconButton
-                          onClick={() => removeSelectedMedia(index)}
-                          sx={{
-                            position: "absolute",
-                            right: 4,
-                            top: 4,
-                            bgcolor: "rgba(255,255,255,0.9)",
-                            "&:hover": { bgcolor: "#f1f5f9" },
-                            width: 20,
-                            height: 20,
-                          }}
-                        >
-                          <CloseIcon sx={{ fontSize: 12 }} />
-                        </IconButton>
+                        {isDoc ? (
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              bgcolor: getFileMeta(item.file.name).bg,
+                              p: 2,
+                              textAlign: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <DescriptionIcon sx={{ fontSize: 44, color: getFileMeta(item.file.name).color }} />
+                            <Typography noWrap sx={{ width: "100%", fontSize: "0.875rem", fontWeight: 700, color: "#1f2937", px: 1 }}>
+                              {item.file.name}
+                            </Typography>
+                          </Box>
+                        ) : isVideo ? (
+                          <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
+                            <Box component="video" src={item.preview} sx={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            {/* Centered Play Button Overlay */}
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                bgcolor: "rgba(0,0,0,0.15)",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: "50%",
+                                  bgcolor: "rgba(255, 255, 255, 0.9)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+                                }}
+                              >
+                                <span style={{ fontSize: "24px", color: "#1e293b", marginLeft: "4px" }}>▶</span>
+                              </Box>
+                            </Box>
+                          </Box>
+                        ) : (
+                          <Box component="img" src={item.preview} alt={`preview ${idx + 1}`} sx={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        )}
+
+                        {/* Plus Overlay */}
+                        {count > 5 && idx === 4 && (
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              bgcolor: "rgba(0,0,0,0.4)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              zIndex: 2,
+                            }}
+                          >
+                            <Typography sx={{ color: "white", fontSize: "28px", fontWeight: 700 }}>
+                              +{count - 5}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    );
+                  };
+
+                  if (count === 1) {
+                    return renderPreviewCell(selectedMediaItems[0], 0, "360px");
+                  }
+                  if (count === 2) {
+                    return (
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {renderPreviewCell(selectedMediaItems[0], 0, "220px")}
+                        {renderPreviewCell(selectedMediaItems[1], 1, "220px")}
                       </Box>
                     );
                   }
- 
+                  if (count === 3) {
+                    return (
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {renderPreviewCell(selectedMediaItems[0], 0, "240px")}
+                        <Box sx={{ display: "flex", gap: "4px" }}>
+                          <Box sx={{ flex: 1 }}>{renderPreviewCell(selectedMediaItems[1], 1, "160px")}</Box>
+                          <Box sx={{ flex: 1 }}>{renderPreviewCell(selectedMediaItems[2], 2, "160px")}</Box>
+                        </Box>
+                      </Box>
+                    );
+                  }
+                  if (count === 4) {
+                    return (
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {renderPreviewCell(selectedMediaItems[0], 0, "240px")}
+                        <Box sx={{ display: "flex", gap: "4px" }}>
+                          <Box sx={{ flex: 1 }}>{renderPreviewCell(selectedMediaItems[1], 1, "140px")}</Box>
+                          <Box sx={{ flex: 1 }}>{renderPreviewCell(selectedMediaItems[2], 2, "140px")}</Box>
+                          <Box sx={{ flex: 1 }}>{renderPreviewCell(selectedMediaItems[3], 3, "140px")}</Box>
+                        </Box>
+                      </Box>
+                    );
+                  }
+                  // 5 or more
                   return (
-                    <Box
-                      key={item.preview}
-                      sx={{
-                        position: "relative",
-                        borderRadius: "12px",
-                        overflow: "hidden",
-                        border: "1px solid #e2e8f0",
-                        aspectRatio: "1 / 1",
-                        bgcolor: "#f8fafc",
-                      }}
-                    >
-                      {isVideo ? (
-                        <Box component="video" src={item.preview} controls sx={{ width: "100%", height: "100%", objectFit: "cover", bgcolor: "#111" }} />
-                      ) : (
-                        <Box component="img" src={item.preview} alt={`preview ${index + 1}`} sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                      )}
-                      <IconButton
-                        onClick={() => removeSelectedMedia(index)}
-                        sx={{
-                          position: "absolute",
-                          right: 4,
-                          top: 4,
-                          bgcolor: "rgba(255,255,255,0.9)",
-                          "&:hover": { bgcolor: "white" },
-                          width: 20,
-                          height: 20,
-                        }}
-                      >
-                        <CloseIcon sx={{ fontSize: 12 }} />
-                      </IconButton>
+                    <Box sx={{ display: "flex", gap: "4px" }}>
+                      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {renderPreviewCell(selectedMediaItems[0], 0, "180px")}
+                        {renderPreviewCell(selectedMediaItems[1], 1, "180px")}
+                      </Box>
+                      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {renderPreviewCell(selectedMediaItems[2], 2, "120px")}
+                        {renderPreviewCell(selectedMediaItems[3], 3, "120px")}
+                        {renderPreviewCell(selectedMediaItems[4], 4, "120px")}
+                      </Box>
                     </Box>
                   );
-                })}
+                })()}
               </Box>
             )}
  

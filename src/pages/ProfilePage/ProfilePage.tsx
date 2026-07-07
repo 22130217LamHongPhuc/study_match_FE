@@ -16,7 +16,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
-import ShareIcon from "@mui/icons-material/Share";
+import ReplyIcon from "@mui/icons-material/Reply";
 import {
   Avatar,
   Box,
@@ -1060,7 +1060,7 @@ export default function ProfilePage() {
               fontSize: "13px",
               "&:hover": { bgcolor: "#f1f5f9" },
             }}
-            startIcon={<ShareIcon sx={{ fontSize: 18, transform: "scaleX(-1)" }} />}
+            startIcon={<ReplyIcon sx={{ fontSize: 18, transform: "scaleX(-1)" }} />}
           >
             Chia sẻ
           </Button>
