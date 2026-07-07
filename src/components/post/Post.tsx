@@ -23,6 +23,10 @@ import {
   togglePostLike,
   updatePost,
 } from "../../services/SocialPostService";
+import { parsePostContent, POST_BACKGROUNDS } from "../modal/user/CreatePostDialog";
+import EditPostDialog from "../modal/user/EditPostDialog";
+import PostMediaModal from "../modal/user/PostMediaModal";
+import PostReactionsModal from "../modal/user/PostReactionsModal";
 
 const isImageUrl = (url: string) => {
   const lower = url.toLowerCase();
@@ -119,6 +123,7 @@ type PostProps = {
   currentUserId: number;
   onPostChanged: (post: SocialPost) => void;
   onPostDeleted: (postId: number) => void;
+  onImageClick?: (index: number) => void;
 };
 
 type PostVisibility = "PUBLIC" | "FRIENDS" | "PRIVATE";
@@ -142,30 +147,115 @@ const formatTime = (value: string) => {
   return date.toLocaleDateString("vi-VN");
 };
 
-export default function Post({ post, currentUserId, onPostChanged, onPostDeleted }: PostProps) {
+const getReactionEmoji = (type: string) => {
+  switch (type.toUpperCase()) {
+    case "LOVE": return "❤️";
+    case "HAHA": return "😆";
+    case "WOW": return "😮";
+    case "SAD": return "😢";
+    case "ANGRY": return "😡";
+    case "LIKE":
+    default:
+      return "👍";
+  }
+};
+
+export default function Post({ post, currentUserId, onPostChanged, onPostDeleted, onImageClick }: PostProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [editVisibilityAnchorEl, setEditVisibilityAnchorEl] = useState<null | HTMLElement>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [commentText, setCommentText] = useState("");
   const [editing, setEditing] = useState(false);
-  const [editContent, setEditContent] = useState(post.content || "");
-  const [editVisibility, setEditVisibility] = useState<PostVisibility>(getVisibilityOption(post.visibility).value);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [showReactionsPopup, setShowReactionsPopup] = useState(false);
+  const [reactionsModalOpen, setReactionsModalOpen] = useState(false);
   const isOwner = currentUserId === post.authorId;
   const mediaItems = post.media || [];
   const visibility = getVisibilityOption(post.visibility);
-  const selectedEditVisibility = getVisibilityOption(editVisibility);
+
+  const { backgroundId, content: parsedContent } = useMemo(() => parsePostContent(post.content), [post.content]);
+  const hasBackground = backgroundId !== "none" && mediaItems.length === 0;
+  const currentBg = POST_BACKGROUNDS.find(bg => bg.id === backgroundId);
+
+  const shouldTruncate = useMemo(() => {
+    if (!parsedContent) return false;
+    const lines = parsedContent.split("\n").length;
+    return parsedContent.length > 250 || lines > 4;
+  }, [parsedContent]);
+
+  const getTruncatedContent = (text: string) => {
+    const lines = text.split("\n");
+    if (lines.length > 4) {
+      return lines.slice(0, 4).join("\n") + "...";
+    }
+    if (text.length > 250) {
+      return text.substring(0, 220) + "...";
+    }
+    return text;
+  };
 
   useEffect(() => {
-    setEditContent(post.content || "");
-    setEditVisibility(getVisibilityOption(post.visibility).value);
+    setIsExpanded(false);
   }, [post.content, post.visibility]);
 
   const sortedComments = useMemo(() => comments, [comments]);
 
-  const handleToggleLike = async () => {
-    const next = await togglePostLike(post.id, currentUserId);
+  const handleToggleLike = async (reactionType?: string) => {
+    const next = await togglePostLike(post.id, currentUserId, reactionType);
     onPostChanged(next);
+  };
+
+  const getReactionUI = (reactionType?: string | null) => {
+    if (!reactionType) return { icon: <ThumbUpIcon sx={{ fontSize: 22, color: "#65676b" }} />, color: "#65676b" };
+    switch (reactionType.toUpperCase()) {
+      case "LOVE":
+        return { icon: <span style={{ fontSize: 22 }}>❤️</span>, color: "#f43f5e" };
+      case "HAHA":
+        return { icon: <span style={{ fontSize: 22 }}>😆</span>, color: "#eab308" };
+      case "WOW":
+        return { icon: <span style={{ fontSize: 22 }}>😮</span>, color: "#eab308" };
+      case "SAD":
+        return { icon: <span style={{ fontSize: 22 }}>😢</span>, color: "#3b82f6" };
+      case "ANGRY":
+        return { icon: <span style={{ fontSize: 22 }}>😡</span>, color: "#f97316" };
+      case "LIKE":
+      default:
+        return { icon: <ThumbUpIcon sx={{ fontSize: 22, color: "#1877f2" }} />, color: "#1877f2" };
+    }
+  };
+
+  const renderTopReactions = (topReactions?: string[] | null) => {
+    if (!topReactions || topReactions.length === 0) return null;
+    return (
+      <Box
+        onClick={() => setReactionsModalOpen(true)}
+        sx={{ display: "flex", alignItems: "center", cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+      >
+        {topReactions.map((type, idx) => (
+          <Box
+            key={type}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "15px",
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              bgcolor: "#f1f5f9",
+              border: "1.5px solid white",
+              marginLeft: idx > 0 ? "-6px" : "0",
+              zIndex: 2 - idx,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            }}
+          >
+            {getReactionEmoji(type)}
+          </Box>
+        ))}
+      </Box>
+    );
   };
 
   const handleToggleComments = async () => {
@@ -185,22 +275,15 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
     onPostChanged({ ...post, commentCount: post.commentCount + 1 });
   };
 
-  const handleSaveEdit = async () => {
-    const next = await updatePost(post.id, {
-      actorId: currentUserId,
-      content: editContent,
-      visibility: editVisibility,
-      media: post.media?.map((item) => ({ mediaUrl: item.mediaUrl, mediaType: item.mediaType })),
-    });
-    onPostChanged(next);
-    setEditing(false);
-  };
+
 
   const handleDelete = async () => {
     await deletePost(post.id, currentUserId);
     onPostDeleted(post.id);
     setAnchorEl(null);
   };
+
+  const rxUI = getReactionUI(post.likedByViewer ? post.reactionType : null);
 
   return (
     <Box
@@ -246,48 +329,74 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
       </Box>
 
       <Box sx={{ px: 2, pb: 1 }}>
-        {editing ? (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <TextField
-              multiline
-              minRows={3}
-              value={editContent}
-              onChange={(event) => setEditContent(event.target.value)}
-            />
-            <Box sx={{ display: "flex", justifycontent: "space-between", gap: 1, alignItems: "center" }}>
-              <Button
-                size="small"
-                onClick={(event) => setEditVisibilityAnchorEl(event.currentTarget)}
-                startIcon={selectedEditVisibility.icon}
-                sx={{ textTransform: "none", color: "#111827", bgcolor: "#e5e7eb", "&:hover": { bgcolor: "#d1d5db" } }}
-              >
-                {selectedEditVisibility.label}
-              </Button>
-              <Menu anchorEl={editVisibilityAnchorEl} open={Boolean(editVisibilityAnchorEl)} onClose={() => setEditVisibilityAnchorEl(null)}>
-                {visibilityOptions.map((option) => (
-                  <MenuItem
-                    key={option.value}
-                    selected={option.value === editVisibility}
-                    onClick={() => {
-                      setEditVisibility(option.value);
-                      setEditVisibilityAnchorEl(null);
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      {option.icon}
-                      {option.label}
-                    </Box>
-                  </MenuItem>
-                ))}
-              </Menu>
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Button onClick={() => setEditing(false)}>Hủy</Button>
-                <Button variant="contained" onClick={handleSaveEdit}>Lưu</Button>
-              </Box>
-            </Box>
+        {hasBackground ? (
+          <Box
+            sx={{
+              width: "100%",
+              minHeight: "240px",
+              borderRadius: "12px",
+              p: 4,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: currentBg?.style.background,
+              boxShadow: "inset 0 0 80px rgba(0,0,0,0.15)",
+              textAlign: "center",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "20px",
+                fontWeight: 800,
+                color: currentBg?.style.color || "white",
+                lineHeight: 1.4,
+                wordBreak: "break-word",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {shouldTruncate && !isExpanded ? getTruncatedContent(parsedContent) : parsedContent}
+              {shouldTruncate && !isExpanded && (
+                <Box
+                  component="span"
+                  onClick={() => setIsExpanded(true)}
+                  sx={{
+                    color: currentBg?.style.color || "white",
+                    cursor: "pointer",
+                    ml: 1.5,
+                    display: "inline-block",
+                    textDecoration: "underline",
+                    fontSize: "16px",
+                    fontWeight: "normal",
+                    opacity: 0.85,
+                    "&:hover": { opacity: 1 },
+                  }}
+                >
+                  Xem thêm
+                </Box>
+              )}
+            </Typography>
           </Box>
         ) : (
-          post.content && <Typography sx={{ whiteSpace: "pre-wrap", color: "#333" }}>{post.content}</Typography>
+          parsedContent && (
+            <Typography sx={{ whiteSpace: "pre-wrap", color: "#1e293b", fontSize: "15px", lineHeight: 1.5 }}>
+              {shouldTruncate && !isExpanded ? getTruncatedContent(parsedContent) : parsedContent}
+              {shouldTruncate && !isExpanded && (
+                <Box
+                  component="span"
+                  onClick={() => setIsExpanded(true)}
+                  sx={{
+                    color: "#1877f2",
+                    cursor: "pointer",
+                    ml: 1,
+                    display: "inline-block",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  Xem thêm
+                </Box>
+              )}
+            </Typography>
+          )
         )}
       </Box>
 
@@ -308,11 +417,22 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
             return (
               <Box
                 key={media.id ?? `${media.mediaUrl}-${index}`}
+                onClick={() => {
+                  if (!isDoc) {
+                    if (onImageClick) {
+                      onImageClick(index);
+                    } else {
+                      setActiveMediaIndex(index);
+                      setMediaModalOpen(true);
+                    }
+                  }
+                }}
                 sx={{
                   minHeight: mediaItems.length === 1 ? 260 : 180,
                   maxHeight: mediaItems.length === 1 ? 520 : 320,
                   bgcolor: "#111",
                   overflow: "hidden",
+                  cursor: isDoc ? "default" : "pointer",
                 }}
               >
                 {isDoc ? (
@@ -361,11 +481,73 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
         </Box>
       )}
 
-      <Box sx={{ p: "10px 16px", display: "flex", alignItems: "center", justifycontent: "space-between" }}>
+      <Box sx={{ p: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Box sx={{ display: "flex", gap: 2.5 }}>
-          <Box onClick={handleToggleLike} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}>
-            <ThumbUpIcon sx={{ fontSize: 22, color: post.likedByViewer ? "#1877f2" : "#65676b" }} />
-            <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>{post.likeCount}</Typography>
+          <Box
+            onMouseEnter={() => setShowReactionsPopup(true)}
+            onMouseLeave={() => setShowReactionsPopup(false)}
+            sx={{ position: "relative", display: "flex", alignItems: "center" }}
+          >
+            <Box
+              onClick={() => void handleToggleLike()}
+              sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}
+            >
+              {rxUI.icon}
+              <Typography sx={{ fontSize: "0.9rem", color: rxUI.color, fontWeight: 500 }}>
+                {post.likeCount}
+              </Typography>
+            </Box>
+
+            {showReactionsPopup && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: "85%",
+                  left: 0,
+                  bgcolor: "white",
+                  borderRadius: "30px",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+                  border: "1px solid #e2e8f0",
+                  p: "6px 12px",
+                  display: "flex",
+                  gap: "12px",
+                  zIndex: 20,
+                  mb: 0,
+                  animation: "fadeInUp 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
+                  "@keyframes fadeInUp": {
+                    from: { opacity: 0, transform: "translateY(10px)" },
+                    to: { opacity: 1, transform: "translateY(0)" },
+                  },
+                }}
+              >
+                {[
+                  { emoji: "👍", name: "LIKE" },
+                  { emoji: "❤️", name: "LOVE" },
+                  { emoji: "😆", name: "HAHA" },
+                  { emoji: "😮", name: "WOW" },
+                  { emoji: "😢", name: "SAD" },
+                  { emoji: "😡", name: "ANGRY" }
+                ].map(({ emoji, name }) => (
+                  <Box
+                    key={name}
+                    onClick={() => {
+                      void handleToggleLike(name);
+                      setShowReactionsPopup(false);
+                    }}
+                    sx={{
+                      fontSize: "24px",
+                      cursor: "pointer",
+                      transition: "transform 0.15s ease",
+                      "&:hover": {
+                        transform: "scale(1.35) translateY(-4px)",
+                      },
+                    }}
+                  >
+                    {emoji}
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Box>
 
           <Box onClick={handleToggleComments} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}>
@@ -378,6 +560,7 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
             <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>0</Typography>
           </Box>
         </Box>
+        {renderTopReactions(post.topReactions)}
       </Box>
 
       {commentsOpen && (
@@ -411,6 +594,33 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
           </Box>
         </Box>
       )}
+
+      <EditPostDialog
+        open={editing}
+        onClose={() => setEditing(false)}
+        post={post}
+        currentUserId={currentUserId}
+        onPostUpdated={(updatedPost) => {
+          onPostChanged(updatedPost);
+          setEditing(false);
+        }}
+      />
+
+      <PostMediaModal
+        open={mediaModalOpen}
+        onClose={() => setMediaModalOpen(false)}
+        post={post}
+        initialIndex={activeMediaIndex}
+        currentUserId={currentUserId}
+        onPostChanged={onPostChanged}
+      />
+
+      <PostReactionsModal
+        open={reactionsModalOpen}
+        onClose={() => setReactionsModalOpen(false)}
+        postId={post.id}
+        currentUserId={currentUserId}
+      />
     </Box>
   );
 }
