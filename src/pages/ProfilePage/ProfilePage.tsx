@@ -7,6 +7,8 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import SchoolIcon from "@mui/icons-material/School";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";
+import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Avatar,
   Box,
@@ -28,9 +30,10 @@ import {
   Chip,
   CircularProgress,
   Skeleton,
+  InputAdornment,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EditProfileModal from "../../components/modal/user/EditProfileModal";
 import { ProfileStatus } from "../../enum/Profile";
@@ -38,7 +41,7 @@ import { UserProfile } from "../../model/UserModel";
 import { getProfileByUserId } from "../../services/ProfileService";
 import { ProfileApiResponse } from "../MyProfile/types";
 
-import { loadProfileService, requestFriendService, unfriendService } from "../../services/FriendService";
+import { loadProfileService, requestFriendService, unfriendService, loadFriendListService, FriendUser } from "../../services/FriendService";
 import { matchingItemApi } from "../../services/matchingItemApi";
 import {
   Achievement,
@@ -50,10 +53,21 @@ import {
 } from "../../services/SocialPostService";
 import Post, { PostSkeleton } from "../../components/post/Post";
 import CreatePostDialog from "../../components/modal/user/CreatePostDialog";
+import noPostImg from "../../assets/img/no-post.png";
+import noFriendImg from "../../assets/img/no-friend.png";
+import noImgImg from "../../assets/img/no-img.png";
+import noVideoImg from "../../assets/img/no-video.png";
 type RecommendationState = {
   fromRecommendation?: boolean;
   finalScore?: number;
   reasonText?: string;
+};
+
+const isImageUrl = (url: string) => {
+  const lower = url.toLowerCase();
+  return lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") ||
+    lower.endsWith(".gif") || lower.endsWith(".webp") || lower.endsWith(".svg") ||
+    lower.endsWith(".bmp") || lower.endsWith(".tiff");
 };
 
 const profileTheme = createTheme({
@@ -78,6 +92,12 @@ export default function ProfilePage() {
   const [loadingStudyProfile, setLoadingStudyProfile] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
 
+  // New States
+  const [friends, setFriends] = useState<FriendUser[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(false);
+  const [friendsSearchQuery, setFriendsSearchQuery] = useState("");
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+
   const { id } = useParams();
   const navigate = useNavigate();
   const trackedViewKeyRef = useRef<string | null>(null);
@@ -86,7 +106,35 @@ export default function ProfilePage() {
   const profileUserId = Number(id);
   const isOwnProfile = currentUserId === profileUserId;
 
+  // Extract photos and videos from posts
+  const photos = useMemo(() => {
+    const list: string[] = [];
+    posts.forEach((post) => {
+      post.media?.forEach((m) => {
+        if (m.mediaType !== "VIDEO" && isImageUrl(m.mediaUrl)) {
+          list.push(m.mediaUrl);
+        }
+      });
+    });
+    return list;
+  }, [posts]);
 
+  const videos = useMemo(() => {
+    const list: string[] = [];
+    posts.forEach((post) => {
+      post.media?.forEach((m) => {
+        if (
+          m.mediaType === "VIDEO" ||
+          m.mediaUrl.toLowerCase().endsWith(".mp4") ||
+          m.mediaUrl.toLowerCase().endsWith(".mov") ||
+          m.mediaUrl.toLowerCase().endsWith(".webm")
+        ) {
+          list.push(m.mediaUrl);
+        }
+      });
+    });
+    return list;
+  }, [posts]);
 
   useEffect(() => {
     if (!profileUserId) return;
@@ -97,7 +145,7 @@ export default function ProfilePage() {
   }, [profileUserId]);
 
   useEffect(() => {
-    if (!profileUserId || isOwnProfile) {
+    if (!profileUserId) {
       setStudyProfile(null);
       return;
     }
@@ -108,11 +156,27 @@ export default function ProfilePage() {
       })
       .catch((error) => {
         console.error("Cannot load study profile", error);
+        setStudyProfile(null);
       })
       .finally(() => {
         setLoadingStudyProfile(false);
       });
-  }, [profileUserId, isOwnProfile]);
+  }, [profileUserId]);
+
+  useEffect(() => {
+    if (!profileUserId) return;
+    setLoadingFriends(true);
+    loadFriendListService(profileUserId)
+      .then((data) => {
+        setFriends(data);
+      })
+      .catch((error) => {
+        console.error("Cannot load friends list", error);
+      })
+      .finally(() => {
+        setLoadingFriends(false);
+      });
+  }, [profileUserId]);
 
   useEffect(() => {
     if (!currentUserId || !profileUserId) return;
@@ -261,7 +325,23 @@ export default function ProfilePage() {
       {isPosting && <PostSkeleton />}
 
       {posts.length === 0 ? (
-        !isPosting && <Typography sx={{ mt: 3, color: "#6b7280" }}>Chưa có bài viết nào</Typography>
+        !isPosting && (
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", py: 6, gap: 1.5 }}>
+            <Box
+              component="img"
+              src={noPostImg}
+              alt="No posts"
+              sx={{
+                width: "540px",
+                height: "auto",
+                opacity: 0.85,
+              }}
+            />
+            <Typography sx={{ color: "#64748b", fontWeight: 600, fontSize: "15px" }}>
+              Không có bài viết nào
+            </Typography>
+          </Box>
+        )
       ) : (
         posts.map((post) => (
           <Post
@@ -280,6 +360,306 @@ export default function ProfilePage() {
       )}
     </>
   );
+
+  const renderFriends = () => {
+    const filteredFriends = friends.filter((friend) =>
+      friend.fullName.toLowerCase().includes(friendsSearchQuery.toLowerCase())
+    );
+
+    return (
+      <Box sx={{ mt: 2 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Tìm kiếm bạn bè..."
+          value={friendsSearchQuery}
+          onChange={(e) => setFriendsSearchQuery(e.target.value)}
+          sx={{
+            mb: 3,
+            bgcolor: "#fff",
+            borderRadius: "8px",
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "8px",
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: "#94a3b8" }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        {loadingFriends ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : friends.length === 0 ? (
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", py: 6, gap: 1.5 }}>
+            <Box
+              component="img"
+              src={noFriendImg}
+              alt="No friends"
+              sx={{
+                width: "540px",
+                height: "auto",
+                opacity: 0.85,
+              }}
+            />
+            <Typography sx={{ color: "#64748b", fontWeight: 600, fontSize: "15px" }}>
+              Không có bạn bè
+            </Typography>
+          </Box>
+        ) : filteredFriends.length === 0 ? (
+          <Typography sx={{ color: "#6b7280", textAlign: "center", py: 4 }}>
+            Không tìm thấy bạn bè nào
+          </Typography>
+        ) : (
+          <Grid container spacing={2}>
+            {filteredFriends.map((friend) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={friend.userId}>
+                <Card
+                  onClick={() => navigate(`/profile/${friend.userId}`)}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    p: 2,
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                    border: "1px solid #f1f5f9",
+                    cursor: "pointer",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 12px 20px rgba(0,0,0,0.1)",
+                    },
+                  }}
+                >
+                  <Avatar
+                    src={friend.avatarUrl || undefined}
+                    sx={{ width: 56, height: 56, mr: 2, border: "2px solid #e2e8f0" }}
+                  >
+                    {friend.fullName.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 700, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                    >
+                      {friend.fullName}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: friend.online ? "#10b981" : "#64748b", display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          bgcolor: friend.online ? "#10b981" : "#cbd5e1",
+                        }}
+                      />
+                      {friend.online ? "Đang hoạt động" : "Ngoại tuyến"}
+                    </Typography>
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Box>
+    );
+  };
+
+  const renderPhotos = () => {
+    if (photos.length === 0) {
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", py: 6, gap: 1.5 }}>
+          <Box
+            component="img"
+            src={noImgImg}
+            alt="No photos"
+            sx={{
+              width: "540px",
+              height: "auto",
+              opacity: 0.85,
+            }}
+          />
+          <Typography sx={{ color: "#64748b", fontWeight: 600, fontSize: "15px" }}>
+            Không có hình ảnh
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={{ mt: 2 }}>
+        <Grid container spacing={2}>
+          {photos.map((photoUrl, index) => (
+            <Grid size={{ xs: 6, sm: 4, md: 3 }} key={index}>
+              <Box
+                onClick={() => setSelectedPhoto(photoUrl)}
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  paddingTop: "100%", // 1:1 Aspect Ratio
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  bgcolor: "#f1f5f9",
+                  border: "1px solid #e2e8f0",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  "&:hover": {
+                    transform: "scale(1.03)",
+                    boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+                    "& .photo-overlay": {
+                      opacity: 1,
+                    },
+                  },
+                }}
+              >
+                <Box
+                  component="img"
+                  src={photoUrl}
+                  alt={`Gallery photo ${index + 1}`}
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+                <Box
+                  className="photo-overlay"
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    bgcolor: "rgba(0,0,0,0.2)",
+                    opacity: 0,
+                    transition: "opacity 0.2s",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                />
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* Lightbox Dialog */}
+        <Dialog
+          open={Boolean(selectedPhoto)}
+          onClose={() => setSelectedPhoto(null)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              bgcolor: "transparent",
+              boxShadow: "none",
+              overflow: "hidden",
+            },
+          }}
+        >
+          <Box sx={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <IconButton
+              onClick={() => setSelectedPhoto(null)}
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                color: "#fff",
+                bgcolor: "rgba(0,0,0,0.5)",
+                "&:hover": {
+                  bgcolor: "rgba(0,0,0,0.7)",
+                },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <Box
+              component="img"
+              src={selectedPhoto || ""}
+              alt="Full size photo"
+              sx={{
+                maxWidth: "100%",
+                maxHeight: "90vh",
+                objectFit: "contain",
+                borderRadius: "8px",
+              }}
+            />
+          </Box>
+        </Dialog>
+      </Box>
+    );
+  };
+
+  const renderVideos = () => {
+    if (videos.length === 0) {
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", py: 6, gap: 1.5 }}>
+          <Box
+            component="img"
+            src={noVideoImg}
+            alt="No videos"
+            sx={{
+              width: "540px",
+              height: "auto",
+              opacity: 0.85,
+            }}
+          />
+          <Typography sx={{ color: "#64748b", fontWeight: 600, fontSize: "15px" }}>
+            Không có video
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={{ mt: 2 }}>
+        <Grid container spacing={2}>
+          {videos.map((videoUrl, index) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+              <Box
+                sx={{
+                  width: "100%",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  border: "1px solid #e2e8f0",
+                  bgcolor: "#000",
+                  aspectRatio: "16/9",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 8px 16px rgba(0,0,0,0.12)",
+                  },
+                }}
+              >
+                <video
+                  src={videoUrl}
+                  controls
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
+  };
 
   const renderAchievements = () => (
     <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 2 }}>
@@ -542,100 +922,150 @@ export default function ProfilePage() {
       <ThemeProvider theme={profileTheme}>
         <Box component="div" sx={{ display: "flex", mt: "20px" }}>
           {/* Left Column Skeleton */}
-          <Box
-            sx={{
-              position: "relative",
-              height: "fit-content",
-              width: "30%",
-              padding: "20px",
-              mr: "40px",
-              borderRadius: "20px",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-              ml: "20px",
-            }}
-          >
-            {/* Banner skeleton */}
-            <Skeleton variant="rectangular" height={100} sx={{ borderRadius: "10px" }} />
-            
-            {/* Avatar skeleton */}
+          <Box sx={{ width: "30%", ml: "20px", mr: "10px", display: "flex", flexDirection: "column", gap: "16px" }}>
             <Box
               sx={{
-                borderRadius: "50%",
-                width: 115,
-                height: 115,
-                position: "absolute",
-                top: "50px",
-                ml: "10px",
-                backgroundColor: "#fff",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
+                position: "relative",
+                height: "fit-content",
+                width: "100%",
+                padding: "16px",
+                borderRadius: "16px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                border: "1px solid #e2e8f0",
+                bgcolor: "white",
               }}
             >
-              <Skeleton variant="circular" width="90%" height="90%" />
-            </Box>
-            
-            {/* Name skeleton */}
-            <Box mt="50px">
-              <Skeleton variant="text" width="80%" height={40} />
-            </Box>
-            
-            {/* Bio skeleton */}
-            <Box sx={{ mt: 2, p: 2 }}>
-              <Skeleton variant="rectangular" height={60} sx={{ borderRadius: "8px" }} />
-            </Box>
-            
-            {/* Stats skeleton */}
-            <Box sx={{ display: "flex", justifyContent: "space-around", mt: 3, mb: 3 }}>
-              <Box sx={{ textAlign: "center", width: "40%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Skeleton variant="text" width="60%" />
-                <Skeleton variant="text" width="40%" height={28} />
+              {/* Banner skeleton */}
+              <Skeleton variant="rectangular" height={80} sx={{ borderRadius: "12px 12px 0 0", margin: "-16px -16px 0 -16px" }} />
+
+              {/* Avatar skeleton */}
+              <Box
+                sx={{
+                  borderRadius: "50%",
+                  width: 100,
+                  height: 100,
+                  position: "absolute",
+                  top: "30px",
+                  ml: "8px",
+                  backgroundColor: "#fff",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Skeleton variant="circular" width="90%" height="90%" />
               </Box>
-              <Box sx={{ width: "1px", height: "30px", backgroundColor: "#d1d5db" }} />
-              <Box sx={{ textAlign: "center", width: "40%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Skeleton variant="text" width="60%" />
-                <Skeleton variant="text" width="40%" height={28} />
+
+              {/* Name skeleton */}
+              <Box mt="60px">
+                <Skeleton variant="text" width="80%" height={32} />
               </Box>
+
+              {/* Bio skeleton */}
+              <Box sx={{ mt: 1.5, p: 1.5 }}>
+                <Skeleton variant="rectangular" height={45} sx={{ borderRadius: "8px" }} />
+              </Box>
+
+              {/* Stats skeleton */}
+              <Box sx={{ display: "flex", justifyContent: "space-around", mt: 2, mb: 2 }}>
+                <Box sx={{ textAlign: "center", width: "40%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <Skeleton variant="text" width="50%" />
+                  <Skeleton variant="text" width="30%" height={24} />
+                </Box>
+                <Box sx={{ width: "1px", height: "24px", backgroundColor: "#d1d5db" }} />
+                <Box sx={{ textAlign: "center", width: "40%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <Skeleton variant="text" width="50%" />
+                  <Skeleton variant="text" width="30%" height={24} />
+                </Box>
+              </Box>
+
+              {/* Button skeleton */}
+              <Skeleton variant="rectangular" height={36} sx={{ borderRadius: "8px", width: "100%" }} />
             </Box>
-            
-            {/* Button skeleton */}
-            <Skeleton variant="rectangular" height={40} sx={{ borderRadius: "20px", width: "100%" }} />
+
+            {/* Friends Preview Skeleton Card */}
+            <Box
+              sx={{
+                width: "100%",
+                bgcolor: "white",
+                border: "1px solid #e2e8f0",
+                borderRadius: "16px",
+                p: "16px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+              }}
+            >
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                <Skeleton variant="text" width="40%" height={24} />
+                <Skeleton variant="text" width="30%" height={20} />
+              </Box>
+              <Skeleton variant="text" width="25%" height={16} sx={{ mb: 2 }} />
+
+              <Grid container spacing={1.5}>
+                {Array.from({ length: 9 }).map((_, index) => (
+                  <Grid size={{ xs: 4 }} key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <Skeleton variant="rectangular" sx={{ width: "100%", aspectRatio: "1/1", borderRadius: "8px", mb: 0.5 }} />
+                    <Skeleton variant="text" width="80%" height={14} />
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
           </Box>
 
           {/* Right Column Skeleton */}
           <Box width="70%" sx={{ px: "20px" }}>
             {/* Tabs skeleton */}
-            <Box sx={{ bgcolor: "#e9f0ff", p: 1, borderRadius: "4px", display: "flex", justifyContent: "center", gap: 4 }}>
-              <Skeleton variant="rectangular" width={100} height={30} />
-              <Skeleton variant="rectangular" width={100} height={30} />
+            <Box sx={{ 
+              display: "inline-flex",
+              bgcolor: "#f1f5f9", 
+              p: "4px", 
+              borderRadius: "30px", 
+              border: "1px solid #e2e8f0",
+              gap: "4px", 
+              mb: 3
+            }}>
+              <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: "20px" }} />
+              <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: "20px" }} />
+              <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: "20px" }} />
+              <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: "20px" }} />
+              <Skeleton variant="rectangular" width={120} height={32} sx={{ borderRadius: "20px" }} />
             </Box>
-            
-            {/* Feed skeleton */}
-            <Box sx={{ mt: 3 }}>
-              <Box sx={{ p: 3, border: "1px solid #e5e7eb", borderRadius: "12px", mb: 3 }}>
-                <Box display="flex" gap={2} alignItems="center" mb={2}>
-                  <Skeleton variant="circular" width={40} height={40} />
-                  <Box flex={1}>
-                    <Skeleton variant="text" width="30%" />
-                    <Skeleton variant="text" width="20%" />
-                  </Box>
-                </Box>
-                <Skeleton variant="rectangular" height={100} sx={{ borderRadius: "8px", mb: 2 }} />
-                <Skeleton variant="text" />
-                <Skeleton variant="text" width="80%" />
-              </Box>
 
-              <Box sx={{ p: 3, border: "1px solid #e5e7eb", borderRadius: "12px" }}>
-                <Box display="flex" gap={2} alignItems="center" mb={2}>
-                  <Skeleton variant="circular" width={40} height={40} />
-                  <Box flex={1}>
-                    <Skeleton variant="text" width="40%" />
-                    <Skeleton variant="text" width="15%" />
+            {/* Content skeleton card */}
+            <Box sx={{
+              bgcolor: "white",
+              border: "1px solid #e2e8f0",
+              borderRadius: "16px",
+              p: 3,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+              minHeight: "450px"
+            }}>
+              {/* Feed skeleton */}
+              <Box sx={{ mt: 1 }}>
+                <Box sx={{ p: 3, border: "1px solid #e5e7eb", borderRadius: "12px", mb: 3 }}>
+                  <Box display="flex" gap={2} alignItems="center" mb={2}>
+                    <Skeleton variant="circular" width={40} height={40} />
+                    <Box flex={1}>
+                      <Skeleton variant="text" width="30%" />
+                      <Skeleton variant="text" width="20%" />
+                    </Box>
                   </Box>
+                  <Skeleton variant="rectangular" height={100} sx={{ borderRadius: "8px", mb: 2 }} />
+                  <Skeleton variant="text" />
+                  <Skeleton variant="text" width="80%" />
                 </Box>
-                <Skeleton variant="rectangular" height={120} sx={{ borderRadius: "8px", mb: 2 }} />
-                <Skeleton variant="text" />
-                <Skeleton variant="text" width="60%" />
+
+                <Box sx={{ p: 3, border: "1px solid #e5e7eb", borderRadius: "12px" }}>
+                  <Box display="flex" gap={2} alignItems="center" mb={2}>
+                    <Skeleton variant="circular" width={40} height={40} />
+                    <Box flex={1}>
+                      <Skeleton variant="text" width="40%" />
+                      <Skeleton variant="text" width="15%" />
+                    </Box>
+                  </Box>
+                  <Skeleton variant="rectangular" height={120} sx={{ borderRadius: "8px", mb: 2 }} />
+                  <Skeleton variant="text" />
+                  <Skeleton variant="text" width="60%" />
+                </Box>
               </Box>
             </Box>
           </Box>
@@ -657,148 +1087,333 @@ export default function ProfilePage() {
   return (
     <ThemeProvider theme={profileTheme}>
       <Box component="div" sx={{ display: "flex", mt: "20px" }}>
-        <Box
-          sx={{
-            position: "relative",
-            height: "fit-content",
-            width: "30%",
-            padding: "20px",
-            mr: "40px",
-            borderRadius: "20px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-            ml: "20px",
-          }}
-        >
+        <Box sx={{ width: "30%", ml: "20px", mr: "10px", display: "flex", flexDirection: "column", gap: "16px" }}>
           <Box
             sx={{
-              backgroundImage: profile?.bannerUrl
-                ? `url(${profile.bannerUrl})`
-                : "linear-gradient(90deg, rgb(225, 193, 169) 0%, rgba(225, 193, 169, 0.314) 100%)",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              height: "100px",
-              borderRadius: "20px 20px 0 0",
-              margin: "-20px -20px 0 -20px", // align with left column padding
-            }}
-          />
-          <Box
-            sx={{
-              borderRadius: "50%",
-              width: 115,
-              height: 115,
-              position: "absolute",
-              top: "50px",
-              ml: "10px",
-              backgroundColor: "#fff",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              position: "relative",
+              height: "fit-content",
+              width: "100%",
+              padding: "16px",
+              borderRadius: "16px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+              border: "1px solid #e2e8f0",
+              bgcolor: "white",
             }}
           >
-            <Avatar alt="avatar" src={profile?.avatarUrl || undefined} sx={{ width: "90%", height: "90%" }}>
-              {profile?.fullName?.charAt(0)?.toUpperCase()}
-            </Avatar>
-          </Box>
-          <Typography fontSize="32px" fontWeight="bold" color="black" mt="50px">
-            {profile?.fullName}
-          </Typography>
-
-          <Box sx={{ mt: 2, p: 2, borderRadius: "12px", backgroundColor: "#e9edf2", color: "#6b7280" }}>
-            {profile?.bio || "Chưa có giới thiệu"}
-          </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-around", alignItems: "center", mt: 3, mb: 3 }}>
-            <Box textAlign="center">
-              <Typography color="#6b7280">Bạn bè</Typography>
-              <Typography fontSize="20px" fontWeight="bold">{profile?.numberFriend ?? 0}</Typography>
-            </Box>
-            <Box sx={{ width: "1px", height: "30px", backgroundColor: "#d1d5db" }} />
-            <Box textAlign="center">
-              <Typography color="#6b7280">Bạn chung</Typography>
-              <Typography fontSize="20px" fontWeight="bold">{profile?.mutualFriend ?? 0}</Typography>
-            </Box>
-          </Box>
-
-          {isOwnProfile ? (
-            <Button
-              variant="outlined"
-              fullWidth
-              sx={{ borderRadius: "20px", py: 1.3, textTransform: "none", fontWeight: "bold" }}
-              onClick={() => setModalEdit(true)}
+            <Box
+              sx={{
+                backgroundImage: profile?.bannerUrl
+                  ? `url(${profile.bannerUrl})`
+                  : "linear-gradient(90deg, rgb(225, 193, 169) 0%, rgba(225, 193, 169, 0.314) 100%)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                height: "80px",
+                borderRadius: "14px 14px 0 0",
+                margin: "-16px -16px 0 -16px",
+              }}
+            />
+            <Box
+              sx={{
+                borderRadius: "50%",
+                width: 100,
+                height: 100,
+                position: "absolute",
+                top: "30px",
+                ml: "8px",
+                backgroundColor: "#fff",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
             >
-              Chỉnh sửa hồ sơ
-            </Button>
-          ) : (
-            <Box display="flex" mt="20px">
-              {profile?.friend && (
+              <Avatar alt="avatar" src={profile?.avatarUrl || undefined} sx={{ width: "90%", height: "90%" }}>
+                {profile?.fullName?.charAt(0)?.toUpperCase()}
+              </Avatar>
+            </Box>
+            <Typography fontSize="24px" fontWeight="800" color="black" mt="60px">
+              {profile?.fullName}
+            </Typography>
 
-                <Button
-                  variant="outlined"
-                  color="error"
-                  sx={{
-                    borderRadius: "20px",
-                    py: 1.5,
-                    textTransform: "none",
-                    fontWeight: "bold",
-                    width: "50%",
-                    mr: 2,
-                    borderColor: "error.main",
-                    "&:hover": {
-                      backgroundColor: "rgba(211, 47, 47, 0.04)",
-                      borderColor: "error.dark",
-                    }
-                  }}
-                  onClick={() => setUnfriendConfirmOpen(true)}
-                >
-                  Hủy kết bạn
-                </Button>
-              )}
-              {!profile?.friend && profile?.statusFriend !== ProfileStatus.PENDING && (
-                <Button
-                  sx={{
-                    borderRadius: "20px",
-                    py: 1.5,
-                    textTransform: "none",
-                    fontWeight: "bold",
-                    background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
-                    color: "white",
-                    width: "50%",
-                    mr: 2,
-                  }}
-                  onClick={requestFriend}
-                >
-                  Kết bạn
-                </Button>
-              )}
-              {!profile?.friend && profile?.statusFriend === ProfileStatus.PENDING && (
-                <Button disabled sx={{ borderRadius: "20px", py: 1.5, textTransform: "none", fontWeight: "bold", width: "50%", mr: 2 }}>
-                  Đã gửi lời mời
-                </Button>
-              )}
+            {profile?.bio && (
+              <Box sx={{ mt: 1.5, p: "10px 14px", borderRadius: "8px", backgroundColor: "#f8fafc", color: "#475569", fontSize: "13.5px" }}>
+                {profile.bio}
+              </Box>
+            )}
+            <Box sx={{ display: "flex", justifyContent: "space-around", alignItems: "center", mt: 2, mb: 2 }}>
+              <Box textAlign="center">
+                <Typography color="#64748b" fontSize="12px">Bạn bè</Typography>
+                <Typography fontSize="16px" fontWeight="700" color="#0f172a">{profile?.numberFriend ?? 0}</Typography>
+              </Box>
+              <Box sx={{ width: "1px", height: "24px", backgroundColor: "#d1d5db" }} />
+              <Box textAlign="center">
+                <Typography color="#64748b" fontSize="12px">Bạn chung</Typography>
+                <Typography fontSize="16px" fontWeight="700" color="#0f172a">{profile?.mutualFriend ?? 0}</Typography>
+              </Box>
+            </Box>
+
+            {isOwnProfile ? (
               <Button
                 variant="outlined"
-                sx={{ borderRadius: "20px", py: 1.5, textTransform: "none", fontWeight: "bold", width: "50%" }}
-                onClick={sendMess}
+                fullWidth
+                sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", fontSize: "14px" }}
+                onClick={() => setModalEdit(true)}
               >
-                Nhắn tin
+                Chỉnh sửa hồ sơ
               </Button>
-            </Box>
+            ) : (
+              <Box display="flex" mt="20px">
+                {profile?.friend && (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    sx={{
+                      borderRadius: "8px",
+                      py: 1,
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      width: "50%",
+                      mr: 2,
+                      fontSize: "14px",
+                      borderColor: "error.main",
+                      "&:hover": {
+                        backgroundColor: "rgba(211, 47, 47, 0.04)",
+                        borderColor: "error.dark",
+                      }
+                    }}
+                    onClick={() => setUnfriendConfirmOpen(true)}
+                  >
+                    Hủy kết bạn
+                  </Button>
+                )}
+                {!profile?.friend && profile?.statusFriend !== ProfileStatus.PENDING && (
+                  <Button
+                    sx={{
+                      borderRadius: "8px",
+                      py: 1,
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
+                      color: "white",
+                      width: "50%",
+                      mr: 2,
+                      fontSize: "14px",
+                    }}
+                    onClick={requestFriend}
+                  >
+                    Kết bạn
+                  </Button>
+                )}
+                {!profile?.friend && profile?.statusFriend === ProfileStatus.PENDING && (
+                  <Button disabled sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", mr: 2, fontSize: "14px" }}>
+                    Đã gửi lời mời
+                  </Button>
+                )}
+                <Button
+                  variant="outlined"
+                  sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", fontSize: "14px" }}
+                  onClick={sendMess}
+                >
+                  Nhắn tin
+                </Button>
+              </Box>
+            )}
+          </Box>
 
+          {/* Friends Preview Card */}
+          {profile && (
+            <Box
+              sx={{
+                width: "100%",
+                bgcolor: "white",
+                border: "1px solid #e2e8f0",
+                borderRadius: "16px",
+                p: "16px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+              }}
+            >
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: "16px", color: "#0f172a" }}>
+                  Bạn bè
+                </Typography>
+                <Typography
+                  onClick={() => setActiveTab(1)}
+                  sx={{
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "#2563eb",
+                    cursor: "pointer",
+                    "&:hover": {
+                      textDecoration: "underline",
+                    },
+                  }}
+                >
+                  Xem tất cả bạn bè
+                </Typography>
+              </Box>
+              <Typography sx={{ color: "#64748b", fontSize: "13px", mb: 2 }}>
+                {profile.numberFriend ?? 0} người bạn
+              </Typography>
+
+              {friends.length === 0 ? (
+                <Typography sx={{ color: "#94a3b8", fontSize: "13px", textAlign: "center", py: 2 }}>
+                  Chưa có bạn bè nào
+                </Typography>
+              ) : (
+                <Grid container spacing={1.5}>
+                  {friends.slice(0, 9).map((friend) => {
+                    const mockMutualCount = ((friend.userId * 7) % 12) + 1;
+                    const showMockMutual = (friend.userId % 3) !== 0 && !isOwnProfile;
+
+                    return (
+                      <Grid size={{ xs: 4 }} key={friend.userId} sx={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }} onClick={() => navigate(`/profile/${friend.userId}`)}>
+                        <Box
+                          sx={{
+                            width: "100%",
+                            aspectRatio: "1/1",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            border: "1px solid #f1f5f9",
+                            bgcolor: "#f8fafc",
+                            mb: 0.5,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          {friend.avatarUrl ? (
+                            <Box
+                              component="img"
+                              src={friend.avatarUrl}
+                              alt={friend.fullName}
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            <Avatar
+                              variant="rounded"
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                borderRadius: "8px",
+                                bgcolor: "#3b82f6",
+                                fontSize: "28px",
+                                fontWeight: "bold"
+                              }}
+                            >
+                              {friend.fullName.charAt(0).toUpperCase()}
+                            </Avatar>
+                          )}
+                        </Box>
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "13px",
+                            color: "#1e293b",
+                            width: "100%",
+                            textAlign: "center",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {friend.fullName}
+                        </Typography>
+                        {showMockMutual && (
+                          <Typography
+                            sx={{
+                              fontSize: "11px",
+                              color: "#64748b",
+                              width: "100%",
+                              textAlign: "center",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {mockMutualCount} bạn chung
+                          </Typography>
+                        )}
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              )}
+            </Box>
           )}
         </Box>
 
         <Box width="70%" sx={{ px: "20px" }}>
-          <Box sx={{ backgroundColor: "#e9f0ff", "& .MuiTab-root": { fontSize: "12px", fontWeight: 700 } }}>
-            <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)} centered>
-              <Tab label="Bản tin" />
-              {/* <Tab label="Thành tích" />
-              <Tab label="Thống kê" /> */}
-              {!isOwnProfile && <Tab label="Hồ sơ học" />}
+          <Box sx={{ 
+            display: "inline-flex",
+            backgroundColor: "#f1f5f9", 
+            borderRadius: "30px", 
+            p: "4px", 
+            mb: 3, 
+            border: "1px solid #e2e8f0",
+            maxWidth: "100%",
+            overflowX: "auto"
+          }}>
+            <Tabs
+              value={activeTab}
+              onChange={(_, value) => setActiveTab(value)}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                minHeight: "auto",
+                "& .MuiTabs-indicator": {
+                  display: "none",
+                },
+                "& .MuiTabs-flexContainer": {
+                  gap: "4px",
+                },
+                "& .MuiTab-root": {
+                  fontSize: "13.5px",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  color: "#64748b",
+                  minWidth: "auto",
+                  minHeight: "auto",
+                  px: 2.5,
+                  py: 1,
+                  borderRadius: "20px",
+                  transition: "all 0.2s ease",
+                  "&.Mui-selected": {
+                    color: "#2563eb",
+                    backgroundColor: "#ffffff",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+                  },
+                  "&:hover:not(.Mui-selected)": {
+                    color: "#1e293b",
+                    backgroundColor: "rgba(255,255,255,0.4)",
+                  },
+                },
+              }}
+            >
+              <Tab label="Bài viết" />
+              <Tab label="Bạn bè" />
+              <Tab label="Ảnh" />
+              <Tab label="Video" />
+              <Tab label="Hồ sơ học tập" />
             </Tabs>
           </Box>
-          {activeTab === 0 && renderFeed()}
-          {/* {activeTab === 1 && renderAchievements()}
-          {activeTab === 2 && renderStats()} */}
-          {activeTab === 3 && !isOwnProfile && renderStudyProfile()}
+          <Box sx={{
+            bgcolor: "white",
+            border: "1px solid #e2e8f0",
+            borderRadius: "16px",
+            p: 3,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+            minHeight: "450px"
+          }}>
+            {activeTab === 0 && renderFeed()}
+            {activeTab === 1 && renderFriends()}
+            {activeTab === 2 && renderPhotos()}
+            {activeTab === 3 && renderVideos()}
+            {activeTab === 4 && renderStudyProfile()}
+          </Box>
         </Box>
       </Box>
 
