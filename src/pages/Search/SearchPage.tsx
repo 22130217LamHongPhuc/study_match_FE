@@ -2,19 +2,18 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
-import { Search, Users, GraduationCap, UserPlus, MessageCircle, UserMinus, Clock, CheckCircle, ChevronDown, Check } from "lucide-react";
+import { Search, Users, GraduationCap, UserPlus, MessageCircle, UserMinus, Clock, ChevronDown, Check } from "lucide-react";
 
 import { RootState } from "../../redux/store";
 import { searchStudents, StudentSearchItem } from "../../services/UserService";
-import { browseGroups, joinMemberIntoGroup, BrowseGroupResponse, getGroupsByUserId } from "../../services/GroupService";
+import { browseGroups, requestJoinGroup, BrowseGroupResponse, getGroupsByUserId } from "../../services/GroupService";
 import { requestFriendService, loadFriendRequestsService, normalizeAvatarUrl } from "../../services/FriendService";
 import { BASE_USER_SERVICE } from "../../config/BaseConfig";
 
 import CommunityGroupCard, { CommunityGroup } from "../StudyConnection/components/CommunityGroupCard";
+import JoinGroupRequestModal from "../StudyConnection/components/JoinGroupRequestModal";
 import { EmptyState } from "../StudyConnection/components/SharedStates";
 import { CommunityGroupCardSkeleton } from "../StudyConnection/components/SuggestedGroupsSection";
-
-// ─── Sort Dropdown (generic) ─────────────────────────────────────────────────
 
 interface SortOption<T extends string = string> {
   value: T;
@@ -56,7 +55,6 @@ function SortDropdown({ value, onChange, options }: {
 
   return (
     <div ref={ref} className="relative">
-      {/* Trigger */}
       <button
         onClick={() => setOpen((p) => !p)}
         className={`flex items-center gap-2 h-8 pl-3 pr-2.5 rounded-lg border text-xs font-medium transition-all ${
@@ -74,7 +72,6 @@ function SortDropdown({ value, onChange, options }: {
         />
       </button>
 
-      {/* Dropdown panel */}
       {open && (
         <div className="absolute right-0 top-full mt-1.5 z-50 min-w-[11rem] rounded-xl border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5">
           {options.map((opt) => (
@@ -97,8 +94,6 @@ function SortDropdown({ value, onChange, options }: {
   );
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type FriendStatus = "NONE" | "PENDING_SENT" | "PENDING_RECEIVED" | "FRIEND";
 
 interface StudentCard {
@@ -109,11 +104,9 @@ interface StudentCard {
   bio: string | null;
   friendStatus: FriendStatus;
   friendRequestId?: number;
-  mutualCount: number | null;      // null = loading
-  commonGroupCount: number | null; // null = loading
+  mutualCount: number | null;
+  commonGroupCount: number | null;
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGroup {
   return {
@@ -125,7 +118,12 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
     visibility: (item.visibility as any) || "COMMUNITY",
     createdAt: item.createdAt,
     isMember: item.member || false,
+    isJoinRequestPending: item.joinRequestPending || false,
   };
+}
+
+function isJoinRequestPendingConflict(message?: string): boolean {
+  return Boolean(message?.toLowerCase().includes("already pending"));
 }
 
 async function fetchMutualCount(currentUserId: number, targetUserId: number): Promise<number> {
@@ -148,7 +146,6 @@ async function fetchMutualCount(currentUserId: number, targetUserId: number): Pr
   }
 }
 
-// ─── Avatar component ─────────────────────────────────────────────────────────
 
 const AVATAR_COLORS = [
   "from-orange-400 to-orange-600",
@@ -200,7 +197,6 @@ function AvatarCircle({ userId, name, avatarUrl, size = 48 }: { userId: number; 
   );
 }
 
-// ─── Student Card ─────────────────────────────────────────────────────────────
 
 interface StudentCardProps {
   student: StudentCard;
@@ -214,7 +210,6 @@ interface StudentCardProps {
 function StudentCardComponent({ student, currentUserId, onViewProfile, onConnect, onMessage, isConnecting }: StudentCardProps) {
   const isSelf = student.userId === currentUserId;
 
-  // Mutual friends badge
   const mutualBadge = () => {
     if (student.mutualCount === null) {
       return (
@@ -233,7 +228,6 @@ function StudentCardComponent({ student, currentUserId, onViewProfile, onConnect
     );
   };
 
-  // Action buttons
   const actionButtons = () => {
     if (isSelf) return null;
 
@@ -297,7 +291,6 @@ function StudentCardComponent({ student, currentUserId, onViewProfile, onConnect
       );
     }
 
-    // NONE
     return (
       <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
         <button
@@ -324,7 +317,6 @@ function StudentCardComponent({ student, currentUserId, onViewProfile, onConnect
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow cursor-default">
-      {/* Top: avatar + info */}
       <div
         className="flex items-center gap-3 cursor-pointer"
         onClick={() => onViewProfile(student.userId)}
@@ -343,13 +335,11 @@ function StudentCardComponent({ student, currentUserId, onViewProfile, onConnect
         </div>
       </div>
 
-      {/* Bottom: action buttons */}
       {actionButtons()}
     </div>
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function StudentCardSkeleton() {
   return (
@@ -369,7 +359,6 @@ function StudentCardSkeleton() {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
@@ -391,11 +380,11 @@ export default function SearchPage() {
   const [groups, setGroups] = useState<CommunityGroup[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
-  const [groupFriendCountMap, setGroupFriendCountMap] = useState<Record<number, number>>({}); // groupId -> friend count
+  const [selectedJoinGroup, setSelectedJoinGroup] = useState<CommunityGroup | null>(null);
+  const [groupFriendCountMap, setGroupFriendCountMap] = useState<Record<number, number>>({});
 
   useEffect(() => { setLocalQuery(query); }, [query]);
 
-  // ── Friend status map ──
   const buildFriendStatusMap = useCallback(async () => {
     try {
       const requests = await loadFriendRequestsService(currentUserId);
@@ -427,11 +416,9 @@ export default function SearchPage() {
     return { friendStatus: "NONE" };
   };
 
-  // ── Fetch common group counts in background ──
   const loadCommonGroupCounts = useCallback(
     async (cards: StudentCard[], myGroupIds: Set<number>) => {
       if (!currentUserId || myGroupIds.size === 0) {
-        // No groups to compare — set all to 0 immediately
         setStudents((prev) => prev.map((s) => ({ ...s, commonGroupCount: 0 })));
         return;
       }
@@ -463,11 +450,9 @@ export default function SearchPage() {
     [currentUserId],
   );
 
-  // ── Fetch mutual counts in background ──
   const loadMutualCounts = useCallback(
     async (cards: StudentCard[]) => {
       if (!currentUserId) return;
-      // Batch: up to 20 at a time to avoid flooding
       const BATCH = 20;
       for (let i = 0; i < cards.length; i += BATCH) {
         const batch = cards.slice(i, i + BATCH);
@@ -486,7 +471,6 @@ export default function SearchPage() {
     [currentUserId],
   );
 
-  // ── Fetch students ──
   const fetchStudents = useCallback(
     async (keyword: string) => {
       if (!currentUserId) return;
@@ -516,9 +500,7 @@ export default function SearchPage() {
               };
             });
           setStudents(cards);
-          // Load mutual counts in background
           loadMutualCounts(cards);
-          // Load common group counts in background
           const myGroupsRes = await getGroupsByUserId(currentUserId).catch(() => ({ data: [] as any }));
           const myGroupIds = new Set<number>((myGroupsRes.data ?? []).map((g: any) => g.id as number));
           loadCommonGroupCounts(cards, myGroupIds);
@@ -532,7 +514,6 @@ export default function SearchPage() {
     [currentUserId, buildFriendStatusMap, loadMutualCounts, loadCommonGroupCounts],
   );
 
-  // ── Fetch groups + friend count per group in background ──
   const loadGroupFriendCounts = useCallback(async (groupList: CommunityGroup[]) => {
     try {
       const { sentMap, receivedMap } = await buildFriendStatusMap();
@@ -561,7 +542,7 @@ export default function SearchPage() {
           return next;
         });
       }
-    } catch { /* silent */ }
+    } catch {}
   }, [buildFriendStatusMap]);
 
   const fetchGroups = useCallback(async () => {
@@ -581,26 +562,18 @@ export default function SearchPage() {
     }
   }, [loadGroupFriendCounts]);
 
-  useEffect(() => { fetchStudents(query); fetchGroups(); }, []); // eslint-disable-line
-  useEffect(() => { fetchStudents(query); }, [query]); // eslint-disable-line
+  useEffect(() => { fetchGroups(); }, [fetchGroups]);
+  useEffect(() => { fetchStudents(query); }, [fetchStudents, query]);
 
-  // ── Debounced search ──
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleQueryChange = (value: string) => {
     setLocalQuery(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      navigate(`/search?query=${encodeURIComponent(value.trim())}`);
-    }, 400);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (debounceRef.current) clearTimeout(debounceRef.current);
     navigate(`/search?query=${encodeURIComponent(localQuery.trim())}`);
   };
 
-  // ── Sort students ──
   const sortedStudents = useMemo(() => {
     const arr = [...students];
     switch (sortOrder) {
@@ -617,7 +590,6 @@ export default function SearchPage() {
     }
   }, [students, sortOrder]);
 
-  // ── Filter + sort groups ──
   const sortedGroups = useMemo(() => {
     const pub = groups.filter((g) => g.visibility !== "PRIVATE");
     const filtered = query
@@ -633,7 +605,6 @@ export default function SearchPage() {
     }
   }, [groups, query, groupSortOrder, groupFriendCountMap]);
 
-  // ── Connect ──
   const handleConnect = useCallback(
     async (targetUserId: number) => {
       if (!currentUserId) { toast.error("Vui lòng đăng nhập lại."); return; }
@@ -657,42 +628,81 @@ export default function SearchPage() {
     [connectingUserId, currentUserId],
   );
 
-  // ── Message ──
   const handleMessage = useCallback(
     (targetUserId: number) => navigate(`/conversation?userId=${targetUserId}`),
     [navigate],
   );
 
-  // ── Join group ──
-  const handleJoinGroup = useCallback(
-    async (groupId: number) => {
-      if (!currentUserId) { toast.error("Vui lòng đăng nhập lại."); return; }
+  const handleViewProfile = useCallback((userId: number) => navigate(`/profile/${userId}`), [navigate]);
+
+  const handleOpenJoinModal = useCallback(
+    (groupId: number) => {
+      setSelectedJoinGroup(groups.find((group) => group.id === groupId) || null);
+    },
+    [groups],
+  );
+
+  const handleSubmitJoinRequest = useCallback(
+    async (message: string) => {
+      if (!selectedJoinGroup) return;
+      if (!currentUserId) {
+        toast.error("Vui lòng đăng nhập lại.");
+        return;
+      }
+
+      const groupId = selectedJoinGroup.id;
       if (joiningGroupId === groupId) return;
+
       setJoiningGroupId(groupId);
       try {
-        const response = await joinMemberIntoGroup(groupId, currentUserId);
-        if (!response.success) { toast.error(response.message || "Tham gia nhóm thất bại."); return; }
-        toast.success("Tham gia nhóm thành công!");
-        setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, isMember: true, memberCount: g.memberCount + 1 } : g));
+        const response = await requestJoinGroup(groupId, currentUserId, message);
+        if (!response.success) {
+          if (isJoinRequestPendingConflict(response.message)) {
+            setGroups((prev) =>
+              prev.map((group) =>
+                group.id === groupId ? { ...group, isJoinRequestPending: true } : group,
+              ),
+            );
+            setSelectedJoinGroup(null);
+            return;
+          }
+
+          toast.error(response.message || "Gửi yêu cầu tham gia nhóm thất bại.");
+          return;
+        }
+
+        setGroups((prev) =>
+          prev.map((group) =>
+            group.id === groupId ? { ...group, isJoinRequestPending: true } : group,
+          ),
+        );
+        setSelectedJoinGroup(null);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Đã có lỗi xảy ra.");
+        const errorMessage = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        if (isJoinRequestPendingConflict(errorMessage)) {
+          setGroups((prev) =>
+            prev.map((group) =>
+              group.id === groupId ? { ...group, isJoinRequestPending: true } : group,
+            ),
+          );
+          setSelectedJoinGroup(null);
+          return;
+        }
+
+        toast.error(errorMessage);
       } finally {
         setJoiningGroupId(null);
       }
     },
-    [currentUserId, joiningGroupId],
+    [currentUserId, joiningGroupId, selectedJoinGroup],
   );
 
-  const handleViewProfile = useCallback((userId: number) => navigate(`/profile/${userId}`), [navigate]);
-
-  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-6">
 
-          {/* Header */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-100 pb-5">
             <div>
               <h1 className="text-xl font-bold text-gray-800">Kết quả tìm kiếm</h1>
@@ -722,7 +732,6 @@ export default function SearchPage() {
             </form>
           </div>
 
-          {/* Tabs + Sort */}
           <div className="flex items-center justify-between border-b border-gray-200">
             <div className="flex">
               <button
@@ -749,7 +758,6 @@ export default function SearchPage() {
               </button>
             </div>
 
-            {/* Sort dropdown */}
             <div className="flex items-center gap-2 pb-1">
               <span className="text-xs text-gray-400">Sắp xếp:</span>
               {activeTab === "classmates" ? (
@@ -768,7 +776,6 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* Content */}
           {activeTab === "classmates" ? (
             <div>
               {loadingStudents ? (
@@ -814,7 +821,7 @@ export default function SearchPage() {
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {sortedGroups.map((group: CommunityGroup) => (
-                    <CommunityGroupCard key={group.id} group={group} onJoin={handleJoinGroup} />
+                    <CommunityGroupCard key={group.id} group={group} onJoin={handleOpenJoinModal} />
                   ))}
                 </div>
               )}
@@ -822,6 +829,17 @@ export default function SearchPage() {
           )}
         </div>
       </div>
+
+      <JoinGroupRequestModal
+        open={Boolean(selectedJoinGroup)}
+        group={selectedJoinGroup}
+        submitting={joiningGroupId === selectedJoinGroup?.id}
+        onClose={() => {
+          if (joiningGroupId) return;
+          setSelectedJoinGroup(null);
+        }}
+        onSubmit={handleSubmitJoinRequest}
+      />
     </main>
   );
 }

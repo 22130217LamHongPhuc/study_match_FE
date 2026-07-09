@@ -13,6 +13,7 @@ export interface CommunityGroup {
   visibility?: "PUBLIC" | "PRIVATE" | "COMMUNITY";
   createdAt: string;
   isMember?: boolean;
+  isJoinRequestPending?: boolean;
 }
 
 interface CommunityGroupCardProps {
@@ -28,6 +29,13 @@ export default function CommunityGroupCard({
   onView,
   onJoin,
 }: CommunityGroupCardProps) {
+  const isJoinDisabled = Boolean(group.isMember || group.isJoinRequestPending);
+  const joinLabel = group.isMember
+    ? "Đã tham gia"
+    : group.isJoinRequestPending
+      ? "Chờ duyệt"
+      : "Tham gia";
+
   return (
     <article className="flex flex-col min-h-[175px] rounded-xl border border-gray-200 bg-white transition-shadow duration-200 hover:shadow-md overflow-hidden">
       <div className="flex flex-1 flex-col p-5">
@@ -70,11 +78,11 @@ export default function CommunityGroupCard({
           <button
             type="button"
             onClick={() => onJoin?.(group.id)}
-            disabled={group.isMember}
+            disabled={isJoinDisabled}
             className="flex w-full items-center justify-center gap-1.5 h-10 rounded-lg bg-orange-500 text-sm font-semibold text-white hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
           >
-            {group.isMember ? "Đã tham gia" : "Tham gia"}
-            {!group.isMember && <ArrowRight size={14} />}
+            {joinLabel}
+            {!isJoinDisabled && <ArrowRight size={14} />}
           </button>
         </div>
       </div>
