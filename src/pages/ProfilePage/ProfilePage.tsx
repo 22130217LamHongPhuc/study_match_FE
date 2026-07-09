@@ -891,7 +891,7 @@ export default function ProfilePage() {
                           variant="body2"
                           sx={{ color: "#64748b", fontSize: "14px", mt: 0.5 }}
                         >
-                          {mutualCount !== undefined ? `${mutualCount} bạn chung` : "0 bạn chung"}
+                          {mutualCount !== undefined && mutualCount > 0 ? `${mutualCount} bạn chung` : ""}
                         </Typography>
                       </Box>
                     </Box>
@@ -2048,11 +2048,15 @@ export default function ProfilePage() {
                         <Typography color="#64748b" fontSize="12px">Bạn bè</Typography>
                         <Typography fontSize="16px" fontWeight="700" color="#0f172a">{profile?.numberFriend ?? 0}</Typography>
                       </Box>
-                      <Box sx={{ width: "1px", height: "24px", backgroundColor: "#d1d5db" }} />
-                      <Box textAlign="center">
-                        <Typography color="#64748b" fontSize="12px">Bạn chung</Typography>
-                        <Typography fontSize="16px" fontWeight="700" color="#0f172a">{profile?.mutualFriend ?? 0}</Typography>
-                      </Box>
+                      {(profile?.mutualFriend ?? 0) > 0 && (
+                        <>
+                          <Box sx={{ width: "1px", height: "24px", backgroundColor: "#d1d5db" }} />
+                          <Box textAlign="center">
+                            <Typography color="#64748b" fontSize="12px">Bạn chung</Typography>
+                            <Typography fontSize="16px" fontWeight="700" color="#0f172a">{profile?.mutualFriend}</Typography>
+                          </Box>
+                        </>
+                      )}
                     </Box>
 
                     {isOwnProfile ? (

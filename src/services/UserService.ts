@@ -63,6 +63,36 @@ export async function updateAdminUserStatus(
   return response;
 }
 
+export interface StudentSearchItem {
+  user_id: number;
+  full_name: string | null;
+  email: string;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
+export async function searchStudents(
+  keyword: string,
+  page: number = 0,
+  size: number = 50,
+): Promise<APIResponseData<PageResponse<StudentSearchItem>>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+
+  if (keyword.trim()) {
+    params.set("keyword", keyword.trim());
+  }
+
+  const response = await apiFetch<PageResponse<StudentSearchItem>>(
+    `/api/users/search?${params.toString()}`,
+    { method: "GET" },
+    API_BASE_URL_USER,
+  );
+
+  return response;
+}
+
 export async function getAdminUsers(
   page: number,
   size: number,
