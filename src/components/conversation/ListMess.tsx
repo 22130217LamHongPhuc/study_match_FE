@@ -69,6 +69,68 @@ const ImageWithLoader = ({ src, alt, sx }: { src: string; alt: string; sx: any }
     )
 }
 
+const ChatVideoPlayer = ({ src }: { src: string }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    return (
+        <Box sx={{ width: "100%", height: "100%", position: "relative", bgcolor: "black" }}>
+            {isPlaying ? (
+                <Box
+                    component="video"
+                    controls
+                    autoPlay
+                    src={src}
+                    sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                    }}
+                />
+            ) : (
+                <Box sx={{ width: "100%", height: "100%", position: "relative", cursor: "pointer" }} onClick={() => setIsPlaying(true)}>
+                    <Box
+                        component="video"
+                        src={src}
+                        sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                        }}
+                    />
+                    {/* Play button overlay */}
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            inset: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            bgcolor: "rgba(0,0,0,0.15)",
+                        }}
+                    >
+                        <Box
+                          sx={{
+                            width: 50,
+                            height: 50,
+                            borderRadius: "50%",
+                            bgcolor: "rgba(255, 255, 255, 0.9)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+                          }}
+                        >
+                          <span style={{ fontSize: "24px", color: "#1e293b", marginLeft: "4px" }}>▶</span>
+                        </Box>
+                    </Box>
+                </Box>
+            )}
+        </Box>
+    );
+};
+
 const getFormattedMessageTime = (createdAt?: string) => {
     if (!createdAt) return "";
     const date = new Date(createdAt);
@@ -1323,17 +1385,7 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                 }}
             >
                 {isVideoMessage(mess) ? (
-                    <Box
-                        component="video"
-                        controls
-                        src={mess.mediaURL ? mess.mediaURL : ''}
-                        sx={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                        }}
-                    />
+                    <ChatVideoPlayer src={mess.mediaURL ? mess.mediaURL : ''} />
                 ) : (
                     renderImageMessage(mess)
                 )}

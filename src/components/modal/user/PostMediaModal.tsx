@@ -66,10 +66,17 @@ export default function PostMediaModal({
   const [comments, setComments] = useState<PostComment[]>([]);
   const [commentText, setCommentText] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
+  const [mediaLoading, setMediaLoading] = useState(true);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
   const mediaItems = post.media || [];
   const activeMedia = mediaItems[activeIndex];
+
+  useEffect(() => {
+    if (activeMedia?.mediaUrl) {
+      setMediaLoading(true);
+    }
+  }, [activeMedia?.mediaUrl]);
 
   // Sync initial index
   useEffect(() => {
@@ -191,16 +198,37 @@ export default function PostMediaModal({
           </IconButton>
 
           {/* Media Element */}
+          {mediaLoading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 2,
+              }}
+            >
+              <CircularProgress size={40} sx={{ color: "white" }} />
+            </Box>
+          )}
           {isVideo ? (
             <Box
               component="video"
               src={activeMedia.mediaUrl}
               controls
               autoPlay
+              onLoadedData={() => setMediaLoading(false)}
+              onCanPlay={() => setMediaLoading(false)}
+              onError={() => setMediaLoading(false)}
               sx={{
                 maxWidth: "100%",
                 maxHeight: "100%",
                 objectFit: "contain",
+                display: mediaLoading ? "none" : "block",
               }}
             />
           ) : (
@@ -208,10 +236,13 @@ export default function PostMediaModal({
               component="img"
               src={activeMedia.mediaUrl}
               alt="fullscreen preview"
+              onLoad={() => setMediaLoading(false)}
+              onError={() => setMediaLoading(false)}
               sx={{
                 maxWidth: "100%",
                 maxHeight: "100%",
                 objectFit: "contain",
+                display: mediaLoading ? "none" : "block",
               }}
             />
           )}

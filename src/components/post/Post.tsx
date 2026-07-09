@@ -11,8 +11,10 @@ import {
   TextField,
   Typography,
   Skeleton,
+  CircularProgress,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   addPostComment,
   deletePost,
@@ -127,6 +129,7 @@ type PostProps = {
   onPostDeleted: (postId: number) => void;
   onImageClick?: (index: number) => void;
   onPostCreated?: (post: SocialPost) => void;
+  onViewSharedPost?: (sharedPost: SocialPost, mediaIndex: number) => void;
 };
 
 type PostVisibility = "PUBLIC" | "FRIENDS" | "PRIVATE";
@@ -170,6 +173,7 @@ function SharedPostCard({
   spBg,
   spMedia,
   spLong,
+  onViewSharedPost,
 }: {
   sp: SocialPost;
   spContent: string;
@@ -177,164 +181,335 @@ function SharedPostCard({
   spBg: ReturnType<typeof POST_BACKGROUNDS.find>;
   spMedia: SocialPost["media"];
   spLong: boolean;
+  onViewSharedPost?: (sharedPost: SocialPost, mediaIndex: number) => void;
 }) {
   const [expanded, setExpanded] = React.useState(false);
+  const navigate = useNavigate();
+
+  const goToProfile = () => navigate(`/profile/${sp.authorId}`);
+
+  const handleMediaClick = (idx: number) => {
+    if (onViewSharedPost) {
+      onViewSharedPost(sp, idx);
+    }
+  };
 
   return (
-    <Box
-      sx={{
-        mx: 2,
-        mb: 1.5,
-        border: "1px solid #dde3ec",
-        borderRadius: "14px",
-        overflow: "hidden",
-        bgcolor: "#f8fafc",
-      }}
-    >
-      {/* Author row */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, pt: 1.5, pb: 0.75 }}>
-        <Avatar src={sp.authorAvatarUrl || undefined} sx={{ width: 34, height: 34 }}>
-          {sp.authorName?.charAt(0)?.toUpperCase()}
-        </Avatar>
-        <Box>
-          <Typography sx={{ fontWeight: 700, fontSize: 13.5, color: "#1e293b", lineHeight: 1.2 }}>
-            {sp.authorName}
-          </Typography>
-          <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
-            {sp.visibility === "PUBLIC" ? "Công khai" : sp.visibility === "FRIENDS" ? "Bạn bè" : "Riêng tư"}
-          </Typography>
-        </Box>
-      </Box>
-
-      {/* Content */}
-      {spHasBg ? (
-        <Box
-          sx={{
-            mx: 2,
-            mb: spMedia.length > 0 ? 1 : 1.5,
-            borderRadius: "10px",
-            minHeight: "90px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: spBg?.style.background,
-          }}
-        >
-          <Typography
+    <>
+      <Box
+        sx={{
+          mx: 2,
+          mb: 1.5,
+          border: "1px solid #dde3ec",
+          borderRadius: "14px",
+          overflow: "hidden",
+          bgcolor: "#f8fafc",
+        }}
+      >
+        {/* Author row */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, px: 2, pt: 1.5, pb: 0.75 }}>
+          <Avatar
+            src={sp.authorAvatarUrl || undefined}
+            onClick={goToProfile}
             sx={{
-              fontWeight: 800,
-              fontSize: 15,
-              color: spBg?.style.color || "white",
-              textAlign: "center",
-              p: 1.5,
-              lineHeight: 1.45,
+              width: 36,
+              height: 36,
+              cursor: "pointer",
+              transition: "transform 0.18s, box-shadow 0.18s",
+              "&:hover": {
+                transform: "scale(1.08)",
+                boxShadow: "0 0 0 3px #bfdbfe",
+              },
             }}
           >
-            {spContent}
-          </Typography>
+            {sp.authorName?.charAt(0)?.toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography
+              onClick={goToProfile}
+              sx={{
+                fontWeight: 700,
+                fontSize: 13.5,
+                color: "#1e293b",
+                lineHeight: 1.2,
+                cursor: "pointer",
+                "&:hover": { textDecoration: "underline", color: "#1877f2" },
+              }}
+            >
+              {sp.authorName}
+            </Typography>
+            <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+              {sp.visibility === "PUBLIC" ? "Công khai" : sp.visibility === "FRIENDS" ? "Bạn bè" : "Riêng tư"}
+            </Typography>
+          </Box>
         </Box>
-      ) : spContent ? (
-        <Box sx={{ px: 2, pb: spMedia.length > 0 ? 1 : 1.5 }}>
-          <Typography
-            component="div"
+
+        {/* Content */}
+        {spHasBg ? (
+          <Box
             sx={{
-              fontSize: 14,
-              color: "#374151",
-              lineHeight: 1.6,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              ...(spLong && !expanded
-                ? {
+              mx: 2,
+              mb: spMedia.length > 0 ? 1 : 1.5,
+              borderRadius: "10px",
+              minHeight: "90px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: spBg?.style.background,
+            }}
+          >
+            <Typography
+              sx={{
+                fontWeight: 800,
+                fontSize: 15,
+                color: spBg?.style.color || "white",
+                textAlign: "center",
+                p: 1.5,
+                lineHeight: 1.45,
+              }}
+            >
+              {spContent}
+            </Typography>
+          </Box>
+        ) : spContent ? (
+          <Box sx={{ px: 2, pb: spMedia.length > 0 ? 1 : 1.5 }}>
+            <Typography
+              component="div"
+              sx={{
+                fontSize: 14,
+                color: "#374151",
+                lineHeight: 1.6,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                ...(spLong && !expanded
+                  ? {
                     display: "-webkit-box",
                     WebkitLineClamp: 3,
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
                   }
-                : {}),
-            }}
-          >
-            {spContent}
-          </Typography>
-          {spLong && (
-            <Box
-              component="span"
-              onClick={() => setExpanded((v) => !v)}
-              sx={{
-                display: "inline-block",
-                mt: 0.5,
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#1877f2",
-                cursor: "pointer",
-                "&:hover": { textDecoration: "underline" },
+                  : {}),
               }}
             >
-              {expanded ? "Thu gọn" : "Xem thêm"}
-            </Box>
-          )}
-        </Box>
-      ) : null}
+              {spContent}
+            </Typography>
+            {spLong && (
+              <Box
+                component="span"
+                onClick={() => setExpanded((v) => !v)}
+                sx={{
+                  display: "inline-block",
+                  mt: 0.5,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#1877f2",
+                  cursor: "pointer",
+                  "&:hover": { textDecoration: "underline" },
+                }}
+              >
+                {expanded ? "Thu gọn" : "Xem thêm"}
+              </Box>
+            )}
+          </Box>
+        ) : null}
 
-      {/* Media thumbnail */}
-      {spMedia.length > 0 && (
+        {/* Media thumbnail — clickable */}
+        {spMedia.length > 0 && (
+          <Box
+            onClick={() => handleMediaClick(0)}
+            sx={{
+              position: "relative",
+              mx: 2,
+              mb: 1.5,
+              borderRadius: "10px",
+              overflow: "hidden",
+              height: 200,
+              bgcolor: "#111",
+              cursor: onViewSharedPost ? "pointer" : "default",
+              "&:hover .media-overlay": { opacity: onViewSharedPost ? 1 : 0 },
+            }}
+          >
+            <MediaRenderer
+              item={spMedia[0]}
+              alt="shared post media"
+              isVideo={spMedia[0].mediaType === "VIDEO"}
+              isDoc={spMedia[0].mediaType !== "VIDEO" && !isImageUrl(spMedia[0].mediaUrl)}
+            />
+            {/* Hover overlay */}
+            <Box
+              className="media-overlay"
+              sx={{
+                position: "absolute",
+                inset: 0,
+                bgcolor: "rgba(0,0,0,0.18)",
+                opacity: 0,
+                transition: "opacity 0.2s",
+                zIndex: 2,
+              }}
+            />
+            {spMedia.length > 1 && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 10,
+                  right: 10,
+                  bgcolor: "rgba(0,0,0,0.62)",
+                  borderRadius: "8px",
+                  px: 1.25,
+                  py: 0.4,
+                  zIndex: 2,
+                }}
+              >
+                <Typography sx={{ color: "white", fontSize: 12.5, fontWeight: 700 }}>
+                  +{spMedia.length - 1} ảnh/video
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+      </Box>
+    </>
+  );
+}
+
+function MediaRenderer({
+  item,
+  alt,
+  isVideo,
+  isDoc,
+}: {
+  item: any;
+  alt?: string;
+  isVideo: boolean;
+  isDoc: boolean;
+}) {
+  const [loading, setLoading] = useState(true);
+
+  if (isDoc) {
+    return (
+      <Box
+        onClick={() => downloadFile(item.mediaUrl, getFileNameFromUrl(item.mediaUrl))}
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          bgcolor: getFileMeta(item.mediaUrl).bg,
+          p: 2,
+          textAlign: "center",
+          gap: 1,
+          "&:hover": { bgcolor: "#e5e7eb" },
+        }}
+      >
+        <Description sx={{ fontSize: 44, color: getFileMeta(item.mediaUrl).color }} />
+        <Typography
+          noWrap
+          sx={{
+            width: "100%",
+            fontSize: "0.875rem",
+            fontWeight: 700,
+            color: "#1f2937",
+            px: 1,
+          }}
+        >
+          {getFileNameFromUrl(item.mediaUrl)}
+        </Typography>
+        <Typography sx={{ fontSize: "0.75rem", color: "#6b7280" }}>
+          Tải xuống ({getFileMeta(item.mediaUrl).label})
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ width: "100%", height: "100%", position: "relative", bgcolor: isVideo ? "#000" : "#f1f5f9" }}>
+      {loading && (
         <Box
           sx={{
-            position: "relative",
-            mx: 2,
-            mb: 1.5,
-            borderRadius: "10px",
-            overflow: "hidden",
-            height: 200,
-            bgcolor: "#111",
-            backgroundImage:
-              spMedia[0].mediaType === "IMAGE" ? `url(${spMedia[0].mediaUrl})` : undefined,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            zIndex: 3,
           }}
         >
-          {spMedia[0].mediaType === "VIDEO" && (
-            <Box
-              sx={{
-                width: 52,
-                height: 52,
-                borderRadius: "50%",
-                bgcolor: "rgba(255,255,255,0.92)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
-              }}
-            >
-              <span style={{ fontSize: "22px", marginLeft: "4px" }}>▶</span>
-            </Box>
-          )}
-          {spMedia.length > 1 && (
+          <CircularProgress size={32} />
+        </Box>
+      )}
+
+      {isVideo ? (
+        <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
+          <Box
+            component="video"
+            src={item.mediaUrl}
+            onLoadedData={() => setLoading(false)}
+            onCanPlay={() => setLoading(false)}
+            onError={() => setLoading(false)}
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: loading ? "none" : "block",
+            }}
+          />
+          {!loading && (
             <Box
               sx={{
                 position: "absolute",
-                bottom: 10,
-                right: 10,
-                bgcolor: "rgba(0,0,0,0.6)",
-                borderRadius: "8px",
-                px: 1.25,
-                py: 0.4,
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: "rgba(0,0,0,0.15)",
               }}
             >
-              <Typography sx={{ color: "white", fontSize: 12.5, fontWeight: 700 }}>
-                +{spMedia.length - 1} ảnh/video
-              </Typography>
+              <Box
+                sx={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  bgcolor: "rgba(255, 255, 255, 0.9)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+                }}
+              >
+                <span style={{ fontSize: "24px", color: "#1e293b", marginLeft: "4px" }}>▶</span>
+              </Box>
             </Box>
           )}
         </Box>
+      ) : (
+        <Box
+          component="img"
+          src={item.mediaUrl}
+          alt={alt}
+          onLoad={() => setLoading(false)}
+          onError={() => setLoading(false)}
+          sx={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: loading ? "none" : "block",
+          }}
+        />
       )}
     </Box>
   );
 }
 
-export default function Post({ post, currentUserId, authorName, authorAvatarUrl, onPostChanged, onPostDeleted, onImageClick, onPostCreated }: PostProps) {
+export default function Post({ post, currentUserId, authorName, authorAvatarUrl, onPostChanged, onPostDeleted, onImageClick, onPostCreated, onViewSharedPost }: PostProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<PostComment[]>([]);
@@ -476,77 +651,12 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
             },
           }}
         >
-          {isDoc ? (
-            <Box
-              onClick={() => downloadFile(item.mediaUrl, getFileNameFromUrl(item.mediaUrl))}
-              sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                bgcolor: getFileMeta(item.mediaUrl).bg,
-                p: 2,
-                textAlign: "center",
-                gap: 1,
-                "&:hover": { bgcolor: "#e5e7eb" },
-              }}
-            >
-              <Description sx={{ fontSize: 44, color: getFileMeta(item.mediaUrl).color }} />
-              <Typography
-                noWrap
-                sx={{
-                  width: "100%",
-                  fontSize: "0.875rem",
-                  fontWeight: 700,
-                  color: "#1f2937",
-                  px: 1,
-                }}
-              >
-                {getFileNameFromUrl(item.mediaUrl)}
-              </Typography>
-              <Typography sx={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                Tải xuống ({getFileMeta(item.mediaUrl).label})
-              </Typography>
-            </Box>
-          ) : isVideo ? (
-            <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
-              <Box component="video" src={item.mediaUrl} />
-              {/* Centered Play Button Overlay */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  bgcolor: "rgba(0,0,0,0.15)",
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: "50%",
-                    bgcolor: "rgba(255, 255, 255, 0.9)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-                  }}
-                >
-                  <span style={{ fontSize: "24px", color: "#1e293b", marginLeft: "4px" }}>▶</span>
-                </Box>
-              </Box>
-            </Box>
-          ) : (
-            <Box component="img" src={item.mediaUrl} alt={`post media ${index + 1}`} />
-          )}
+          <MediaRenderer
+            item={item}
+            alt={`post media ${index + 1}`}
+            isVideo={isVideo}
+            isDoc={isDoc}
+          />
 
           {/* Plus overlay for more than 5 items */}
           {count > 5 && index === 4 && (
@@ -797,6 +907,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
             spBg={spBg}
             spMedia={spMedia}
             spLong={spLong}
+            onViewSharedPost={onViewSharedPost}
           />
         );
       })()}

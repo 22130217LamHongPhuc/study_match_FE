@@ -94,6 +94,237 @@ const formatTime = (value: string) => {
   return date.toLocaleDateString("vi-VN");
 };
 
+function ProfilePhotoItem({ url, alt, onClick }: { url: string; alt: string; onClick: () => void }) {
+  const [loading, setLoading] = useState(true);
+  return (
+    <Box
+      onClick={onClick}
+      sx={{
+        position: "relative",
+        width: "100%",
+        paddingTop: "100%", // 1:1 Aspect Ratio
+        borderRadius: "12px",
+        overflow: "hidden",
+        cursor: "pointer",
+        bgcolor: "#f1f5f9",
+        border: "1px solid #e2e8f0",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        "&:hover": {
+          transform: "scale(1.03)",
+          boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+          "& .photo-overlay": {
+            opacity: 1,
+          },
+        },
+      }}
+    >
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2,
+          }}
+        >
+          <CircularProgress size={24} />
+        </Box>
+      )}
+      <Box
+        component="img"
+        src={url}
+        alt={alt}
+        onLoad={() => setLoading(false)}
+        onError={() => setLoading(false)}
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: loading ? "none" : "block",
+        }}
+      />
+      <Box
+        className="photo-overlay"
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          bgcolor: "rgba(0,0,0,0.2)",
+          opacity: 0,
+          transition: "opacity 0.2s",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      />
+    </Box>
+  );
+}
+
+function ProfileVideoItem({ url }: { url: string }) {
+  const [loading, setLoading] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        borderRadius: "12px",
+        overflow: "hidden",
+        border: "1px solid #e2e8f0",
+        bgcolor: "#000",
+        aspectRatio: "16/9",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        position: "relative",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 8px 16px rgba(0,0,0,0.12)",
+        },
+      }}
+    >
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 3,
+          }}
+        >
+          <CircularProgress size={28} />
+        </Box>
+      )}
+      {isPlaying ? (
+        <video
+          src={url}
+          controls
+          autoPlay
+          onLoadedData={() => setLoading(false)}
+          onCanPlay={() => setLoading(false)}
+          onError={() => setLoading(false)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: loading ? "none" : "block",
+          }}
+        />
+      ) : (
+        <Box
+          onClick={() => setIsPlaying(true)}
+          sx={{
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            cursor: "pointer",
+          }}
+        >
+          <video
+            src={url}
+            onLoadedData={() => setLoading(false)}
+            onCanPlay={() => setLoading(false)}
+            onError={() => setLoading(false)}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: loading ? "none" : "block",
+            }}
+          />
+          {!loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: "rgba(0,0,0,0.15)",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  bgcolor: "rgba(255, 255, 255, 0.9)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+                }}
+              >
+                <span style={{ fontSize: "24px", color: "#1e293b", marginLeft: "4px" }}>▶</span>
+              </Box>
+            </Box>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+function InlineMediaRenderer({ url, isVideo }: { url: string; isVideo: boolean }) {
+  const [loading, setLoading] = useState(true);
+  return (
+    <Box sx={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center", position: "relative" }}>
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2,
+          }}
+        >
+          <CircularProgress size={40} sx={{ color: "white" }} />
+        </Box>
+      )}
+      {isVideo ? (
+        <Box
+          component="video"
+          src={url}
+          controls
+          autoPlay
+          onLoadedData={() => setLoading(false)}
+          onCanPlay={() => setLoading(false)}
+          onError={() => setLoading(false)}
+          sx={{ maxWidth: "100%", maxHeight: "550px", objectFit: "contain", display: loading ? "none" : "block" }}
+        />
+      ) : (
+        <Box
+          component="img"
+          src={url}
+          alt="Fullscreen inline preview"
+          onLoad={() => setLoading(false)}
+          onError={() => setLoading(false)}
+          sx={{ maxWidth: "100%", maxHeight: "550px", objectFit: "contain", display: loading ? "none" : "block" }}
+        />
+      )}
+    </Box>
+  );
+}
+
 const profileTheme = createTheme({
   typography: {
     fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
@@ -526,6 +757,10 @@ export default function ProfilePage() {
               setActiveViewingPost(post);
               setActiveViewingMediaIndex(index);
             }}
+            onViewSharedPost={(sharedPost, mediaIndex) => {
+              setActiveViewingPost(sharedPost);
+              setActiveViewingMediaIndex(mediaIndex);
+            }}
           />
         ))
       )}
@@ -746,60 +981,14 @@ export default function ProfilePage() {
         <Grid container spacing={2}>
           {photos.map((item, index) => (
             <Grid size={{ xs: 6, sm: 4, md: 3 }} key={index}>
-              <Box
+              <ProfilePhotoItem
+                url={item.url}
+                alt={`Gallery photo ${index + 1}`}
                 onClick={() => {
                   setActiveViewingPost(item.post);
                   setActiveViewingMediaIndex(item.mediaIndex);
                 }}
-                sx={{
-                  position: "relative",
-                  width: "100%",
-                  paddingTop: "100%", // 1:1 Aspect Ratio
-                  borderRadius: "12px",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  bgcolor: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                  "&:hover": {
-                    transform: "scale(1.03)",
-                    boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-                    "& .photo-overlay": {
-                      opacity: 1,
-                    },
-                  },
-                }}
-              >
-                <Box
-                  component="img"
-                  src={item.url}
-                  alt={`Gallery photo ${index + 1}`}
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-                <Box
-                  className="photo-overlay"
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    bgcolor: "rgba(0,0,0,0.2)",
-                    opacity: 0,
-                    transition: "opacity 0.2s",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                />
-              </Box>
+              />
             </Grid>
           ))}
         </Grid>
@@ -1197,22 +1386,7 @@ export default function ProfilePage() {
         </IconButton>
 
         {/* Media */}
-        {isVideo ? (
-          <Box
-            component="video"
-            src={activeMedia.mediaUrl}
-            controls
-            autoPlay
-            sx={{ maxWidth: "100%", maxHeight: "550px", objectFit: "contain" }}
-          />
-        ) : (
-          <Box
-            component="img"
-            src={activeMedia.mediaUrl}
-            alt="Fullscreen inline preview"
-            sx={{ maxWidth: "100%", maxHeight: "550px", objectFit: "contain" }}
-          />
-        )}
+        <InlineMediaRenderer key={activeMedia.mediaUrl} url={activeMedia.mediaUrl} isVideo={isVideo} />
 
         {/* Navigations */}
         {activeViewingMediaIndex > 0 && (
@@ -1294,33 +1468,7 @@ export default function ProfilePage() {
         <Grid container spacing={2}>
           {videos.map((videoUrl, index) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-              <Box
-                sx={{
-                  width: "100%",
-                  borderRadius: "12px",
-                  overflow: "hidden",
-                  border: "1px solid #e2e8f0",
-                  bgcolor: "#000",
-                  aspectRatio: "16/9",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 8px 16px rgba(0,0,0,0.12)",
-                  },
-                }}
-              >
-                <video
-                  src={videoUrl}
-                  controls
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
-              </Box>
+              <ProfileVideoItem url={videoUrl} />
             </Grid>
           ))}
         </Grid>

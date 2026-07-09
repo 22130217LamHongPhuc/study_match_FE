@@ -24,7 +24,8 @@ export interface CommunityGroup {
   subjectName: string;
   memberCount: number;
   status: CommunityGroupStatus;
-  type: CommunityGroupType;
+  type?: CommunityGroupType;
+  visibility?: "PUBLIC" | "PRIVATE" | "COMMUNITY";
   createdAt: string;
   isMember: boolean;
 }
@@ -39,7 +40,7 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
     subjectName: item.subjectName ?? "-",
     memberCount: item.memberCount ?? 0,
     status: normalizedStatus,
-    type: "COMMUNITY",
+    visibility: (item.visibility as any) || "COMMUNITY",
     createdAt: item.createdAt,
     isMember: item.member || false,
   };
@@ -171,7 +172,9 @@ export default function SuggestedGroupsSection() {
         }
 
         const content = response.data?.content ?? [];
-        onSuccess(content.map(mapBrowseGroupToCommunityGroup));
+        const mapped = content.map(mapBrowseGroupToCommunityGroup);
+        const filtered = mapped.filter((g) => g.visibility !== "PRIVATE");
+        onSuccess(filtered);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
         onError(errorMessage);
