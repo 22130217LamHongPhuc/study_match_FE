@@ -115,6 +115,7 @@ export default function ProfilePage() {
   }, [profileUserId, isOwnProfile]);
 
   useEffect(() => {
+
     if (!currentUserId || !profileUserId) return;
     if (currentUserId === profileUserId) return;
     if (!recommendation?.fromRecommendation) return;
@@ -556,7 +557,7 @@ export default function ProfilePage() {
           >
             {/* Banner skeleton */}
             <Skeleton variant="rectangular" height={100} sx={{ borderRadius: "10px" }} />
-            
+
             {/* Avatar skeleton */}
             <Box
               sx={{
@@ -574,17 +575,17 @@ export default function ProfilePage() {
             >
               <Skeleton variant="circular" width="90%" height="90%" />
             </Box>
-            
+
             {/* Name skeleton */}
             <Box mt="50px">
               <Skeleton variant="text" width="80%" height={40} />
             </Box>
-            
+
             {/* Bio skeleton */}
             <Box sx={{ mt: 2, p: 2 }}>
               <Skeleton variant="rectangular" height={60} sx={{ borderRadius: "8px" }} />
             </Box>
-            
+
             {/* Stats skeleton */}
             <Box sx={{ display: "flex", justifyContent: "space-around", mt: 3, mb: 3 }}>
               <Box sx={{ textAlign: "center", width: "40%", display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -597,7 +598,7 @@ export default function ProfilePage() {
                 <Skeleton variant="text" width="40%" height={28} />
               </Box>
             </Box>
-            
+
             {/* Button skeleton */}
             <Skeleton variant="rectangular" height={40} sx={{ borderRadius: "20px", width: "100%" }} />
           </Box>
@@ -609,7 +610,7 @@ export default function ProfilePage() {
               <Skeleton variant="rectangular" width={100} height={30} />
               <Skeleton variant="rectangular" width={100} height={30} />
             </Box>
-            
+
             {/* Feed skeleton */}
             <Box sx={{ mt: 3 }}>
               <Box sx={{ p: 3, border: "1px solid #e5e7eb", borderRadius: "12px", mb: 3 }}>

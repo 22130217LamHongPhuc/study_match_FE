@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 import RecommendationCard from "./RecommendationCard";
 import RejectRecommendationModal, {
@@ -19,6 +19,7 @@ import { matchingItemApi } from "../../../services/matchingItemApi";
 import {
   requestFriendService,
   updateFriendRequestStatusBySenderAndReceiverService,
+  skipUserService,
 } from "../../../services/FriendService";
 import { LoadingState, EmptyState } from "./SharedStates";
 import { SuggestedStudentSkeleton } from "../../../components/home/SuggestedStudents";
@@ -106,7 +107,7 @@ export default function SuggestedFriendsSection() {
 
         if (isSuccessCode(response.code)) {
           try {
-            await matchingItemApi.updateStatus({
+            await matchingItemApi.createActionRequestFriend({
               userId: currentUserId,
               recommendedUserId: targetUserId,
               actionStatus: "FRIEND_REQUEST_SENT",
@@ -163,7 +164,6 @@ export default function SuggestedFriendsSection() {
               userId: currentUserId,
               recommendedUserId: senderId,
               actionStatus: "ACCEPTED",
-              finalScore: items.find((item) => item.userId === senderId)?.finalScore,
             });
           } catch (trackingError) {
             console.error("Track matching ACCEPTED failed", trackingError);
@@ -204,7 +204,7 @@ export default function SuggestedFriendsSection() {
       if (
         !friendRequest?.senderId ||
         !friendRequest?.receiverId ||
-        friendRequest.status !== "FRIEND_REQUEST_SENT" ||
+        (friendRequest.status !== "FRIEND_REQUEST_SENT" && friendRequest.status !== "PENDING") ||
         friendRequest.senderId !== currentUserId
       ) {
         return;
@@ -273,21 +273,28 @@ export default function SuggestedFriendsSection() {
       const reasonText = buildRejectReasonText({ selectedReasons, note });
       const friendRequest = rejectTarget.friendRequest;
       const isPendingReceivedRequest =
-        friendRequest?.status === "FRIEND_REQUEST_SENT" &&
+        (friendRequest?.status === "FRIEND_REQUEST_SENT" || friendRequest?.status === "PENDING") &&
         friendRequest.receiverId === currentUserId;
 
       try {
         if (rejectActionStatus === "SKIPPED") {
-          const matchingResponse = await matchingItemApi.updateStatus({
-            userId: currentUserId,
-            recommendedUserId: targetUserId,
-            actionStatus: "SKIPPED",
-            finalScore: rejectTarget.finalScore,
-            reasonText,
-          });
+          const response = await skipUserService(currentUserId, targetUserId);
 
-          if (!matchingResponse.success) {
-            throw new Error(matchingResponse.message || "Không thể gửi phản hồi cho gợi ý này.");
+          if (response.code !== 200 && response.code !== "200") {
+            throw new Error(response.message || "Không thể bỏ qua người dùng.");
+          }
+
+          try {
+            await matchingItemApi.createActionSkip({
+              userId: currentUserId,
+              recommendedUserId: targetUserId,
+              actionStatus: "SKIPPED",
+              finalScore: rejectTarget.finalScore,
+              reasonText,
+              isRecommendation: true,
+            });
+          } catch (trackingError) {
+            console.error("Track matching SKIPPED failed", trackingError);
           }
 
           toast.success("Đã bỏ qua gợi ý.");
@@ -350,7 +357,7 @@ export default function SuggestedFriendsSection() {
 
     window.addEventListener("friend_status_updated", handleStatusUpdate);
     window.addEventListener("friend_request_received", handleStatusUpdate);
-    
+
     return () => {
       window.removeEventListener("friend_status_updated", handleStatusUpdate);
       window.removeEventListener("friend_request_received", handleStatusUpdate);

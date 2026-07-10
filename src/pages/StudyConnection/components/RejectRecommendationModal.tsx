@@ -1,11 +1,4 @@
 import { FormEvent, useEffect, useState } from "react";
-import {
-  CircleHelp,
-  LoaderCircle,
-  MessageSquareText,
-  Sparkles,
-  X,
-} from "lucide-react";
 
 const OTHER_REASON_VALUE = "other";
 
@@ -156,66 +149,59 @@ export default function RejectRecommendationModal({
         className="absolute inset-0 cursor-default"
       />
 
-      <section className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-orange-100 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
-        <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-sage-50 px-5 py-5 sm:px-6">
+      <section className="relative z-10 flex max-h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-[24px] border border-orange-100 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.22)]">
+        <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-sage-50 px-5 py-4 sm:px-6">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-orange-500 shadow-sm">
-                <CircleHelp size={22} />
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-orange-600">
+                Phản hồi gợi ý
               </div>
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-orange-600">
-                  <Sparkles size={14} />
-                  Phản hồi gợi ý
-                </div>
-                <h3 className="mt-3 text-xl font-bold text-gray-900">
-                  Vì sao bạn chưa muốn kết nối với bạn học này?
-                </h3>
-                <p className="mt-1 text-sm leading-6 text-gray-600">
-                  {recommendationName
-                    ? `Phản hồi của bạn về ${recommendationName} sẽ giúp các gợi ý sau sát hơn với nhu cầu học tập.`
-                    : "Phản hồi của bạn sẽ giúp các gợi ý sau sát hơn với nhu cầu học tập."}
-                </p>
-              </div>
+              <h3 className="mt-2 text-lg font-bold text-gray-900">
+                Vì sao bạn chưa muốn kết nối với bạn học này?
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-gray-600">
+                {recommendationName
+                  ? `Phản hồi của bạn về ${recommendationName} sẽ giúp các gợi ý sau sát hơn với nhu cầu học tập.`
+                  : "Phản hồi của bạn sẽ giúp các gợi ý sau sát hơn với nhu cầu học tập."}
+              </p>
             </div>
 
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-60 font-bold"
             >
-              <X size={18} />
+              ✕
             </button>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
-            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-orange-100 bg-orange-50/80 px-4 py-3 text-sm text-orange-700">
-              <MessageSquareText size={18} />
+          <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+            <div className="mb-3 flex items-center gap-2 rounded-xl border border-orange-100 bg-orange-50/80 px-3.5 py-2 text-xs text-orange-700 font-medium">
               Bạn có thể chọn nhiều lý do để phản hồi chính xác hơn.
             </div>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               {REJECTION_REASONS.map((reason) => {
                 const checked = selectedReasons.includes(reason.value);
 
                 return (
                   <label
                     key={reason.value}
-                    className={`group flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition-all ${checked
-                        ? "border-orange-300 bg-orange-50 shadow-[0_10px_24px_rgba(249,115,22,0.12)]"
-                        : "border-gray-200 bg-white hover:border-orange-200 hover:bg-orange-50/40"
+                    className={`group flex cursor-pointer items-start gap-2.5 rounded-xl border px-3.5 py-2.5 transition-all ${checked
+                      ? "border-orange-300 bg-orange-50 shadow-[0_4px_12px_rgba(249,115,22,0.06)]"
+                      : "border-gray-200 bg-white hover:border-orange-200 hover:bg-orange-50/40"
                       }`}
                   >
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleReason(reason.value)}
-                      className="mt-1 h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-300"
+                      className="mt-1 h-3.5 w-3.5 rounded border-gray-300 text-orange-500 focus:ring-orange-300 cursor-pointer"
                     />
-                    <span className="text-sm font-medium leading-6 text-gray-700">
+                    <span className="text-xs font-semibold leading-5 text-gray-700">
                       {reason.label}
                     </span>
                   </label>
@@ -223,18 +209,17 @@ export default function RejectRecommendationModal({
               })}
             </div>
 
-            <div className="mt-5 rounded-[24px] border border-gray-200 bg-gray-50/80 p-4">
-              <div className="flex items-center justify-between gap-3">
+            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/80 p-3">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h4 className="text-sm font-bold text-gray-800">
+                  <h4 className="text-xs font-bold text-gray-800">
                     Ghi chú thêm
                   </h4>
-                  <p className="mt-1 text-xs leading-5 text-gray-500">
-                    Bạn có thể chia sẻ chi tiết hơn để hệ thống gợi ý tốt hơn
-                    cho lần sau.
+                  <p className="mt-0.5 text-[10px] leading-4 text-gray-500">
+                    Bạn có thể chia sẻ chi tiết hơn để hệ thống gợi ý tốt hơn cho lần sau.
                   </p>
                 </div>
-                <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-500 shadow-sm">
+                <div className="rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-gray-500 shadow-sm">
                   {selectedReasons.length} lý do
                 </div>
               </div>
@@ -245,41 +230,34 @@ export default function RejectRecommendationModal({
                   setError("");
                   setNote(event.target.value);
                 }}
-                rows={4}
+                rows={3}
                 placeholder="Ví dụ: Mình đang ưu tiên bạn học cùng ca tối và có cùng mục tiêu ôn thi giữa kỳ."
-                className="mt-4 w-full resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm leading-6 text-gray-700 outline-none transition-all placeholder:text-gray-400 focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+                className="mt-3 w-[70%] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs leading-5 text-gray-700 outline-none transition-all placeholder:text-gray-400 focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
               />
             </div>
 
             {error && (
-              <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-700">
                 {error}
               </div>
             )}
           </div>
 
-          <div className="flex flex-col-reverse gap-3 border-t border-gray-100 bg-white px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <div className="flex flex-col-reverse gap-3 border-t border-gray-100 bg-white px-5 py-3 sm:flex-row sm:justify-end sm:px-6">
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-gray-200 bg-white px-5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-9 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               Bỏ qua
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+              className="inline-flex h-9 items-center justify-center rounded-xl bg-orange-500 px-5 text-xs font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300 cursor-pointer"
             >
-              {submitting ? (
-                <>
-                  <LoaderCircle size={16} className="animate-spin" />
-                  Đang gửi...
-                </>
-              ) : (
-                "Gửi phản hồi"
-              )}
+              {submitting ? "Đang gửi..." : "Gửi phản hồi"}
             </button>
           </div>
         </form>

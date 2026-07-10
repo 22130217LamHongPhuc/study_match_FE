@@ -1,4 +1,3 @@
-import { Card, CardContent, Chip, Stack, Typography } from "@mui/material";
 import { ProfileViewModel } from "../types";
 
 interface SubjectsCardProps {
@@ -7,60 +6,46 @@ interface SubjectsCardProps {
 
 export default function SubjectsCard({ profile }: SubjectsCardProps) {
   return (
-    <Card
-      sx={{
-        borderRadius: 3,
-        border: "1px solid #e5e7eb",
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-        background: "#ffffff",
-      }}
-    >
-      <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-        <Stack spacing={2.5}>
-          <Typography
-            variant="subtitle1"
-            sx={{ fontWeight: 700, color: "#1f2937" }}
-          >
-            Môn học
-          </Typography>
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="border-b border-gray-100 pb-3 mb-4">
+        <h3 className="text-base font-bold text-gray-800">Học phần đăng ký</h3>
+      </div>
 
-          <Stack spacing={0.5}>
-            <Typography variant="caption" sx={{ color: "#6b7280", fontWeight: 500 }}>
-              Môn chính
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{ fontWeight: 600, color: "#1f2937" }}
-            >
-              {profile.mainSubjectName}
-            </Typography>
-          </Stack>
+      <div className="space-y-4">
+        <div>
+          <span className="block text-xs font-semibold text-gray-400 mb-1">
+            Môn học chính
+          </span>
+          <p className="text-sm font-semibold text-gray-800">
+            {profile.mainSubjectName}
+          </p>
+        </div>
 
-          <Stack spacing={1}>
-            <Typography variant="caption" sx={{ color: "#6b7280", fontWeight: 500 }}>
-              Môn đang học
-            </Typography>
-            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+        <div>
+          <span className="block text-xs font-semibold text-gray-400 mb-2">
+            Môn học đang tham gia
+          </span>
+          {profile.enrolledSubjects.length === 0 ? (
+            <p className="text-sm text-gray-400 italic">
+              Chưa đăng ký môn học nào.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
               {profile.enrolledSubjects.map((subject) => (
-                <Chip
+                <span
                   key={subject.subjectId}
-                  label={`${subject.subjectCode} - ${subject.subjectName}`}
-                  variant="outlined"
-                  sx={{
-                    borderColor: "#e5e7eb",
-                    bgcolor: "#f9fafb",
-                    borderRadius: 2,
-                    color: "#4b5563",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    px: 0.5,
-                  }}
-                />
+                  className="inline-flex items-center rounded-lg bg-gray-50 border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600"
+                >
+                  <span className="font-bold text-orange-600 mr-1">
+                    {subject.subjectCode}
+                  </span>
+                  - {subject.subjectName}
+                </span>
               ))}
-            </Stack>
-          </Stack>
-        </Stack>
-      </CardContent>
-    </Card>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
