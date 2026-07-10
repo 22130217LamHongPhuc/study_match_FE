@@ -21,6 +21,9 @@ export type SocialPost = {
   likeCount: number;
   commentCount: number;
   likedByViewer: boolean;
+  reactionType?: string | null;
+  topReactions?: string[] | null;
+  sharedPost?: SocialPost | null;
 };
 
 export type PostComment = {
@@ -103,8 +106,11 @@ export async function deletePost(postId: number, actorId: number): Promise<void>
   if (!res.ok) throw new Error(`Cannot delete post. HTTP ${res.status}`);
 }
 
-export async function togglePostLike(postId: number, userId: number): Promise<SocialPost> {
-  const res = await fetch(`${BASE_SOCIAL_SERVICE}/social/posts/${postId}/like?userId=${userId}`, {
+export async function togglePostLike(postId: number, userId: number, reactionType?: string): Promise<SocialPost> {
+  const url = reactionType 
+    ? `${BASE_SOCIAL_SERVICE}/social/posts/${postId}/like?userId=${userId}&reactionType=${encodeURIComponent(reactionType)}`
+    : `${BASE_SOCIAL_SERVICE}/social/posts/${postId}/like?userId=${userId}`;
+  const res = await fetch(url, {
     method: "POST",
   });
   if (!res.ok) throw new Error(`Cannot toggle like. HTTP ${res.status}`);
@@ -169,5 +175,42 @@ export async function loadFeedPosts(
     `${BASE_SOCIAL_SERVICE}/social/posts/feed?page=${page}&size=${size}&viewerId=${viewerId}`,
   );
   if (!res.ok) throw new Error(`Cannot load feed posts. HTTP ${res.status}`);
+  return unwrap(await res.json());
+}
+
+export type PostReactionUser = {
+  userId: number;
+  fullName: string;
+  avatarUrl?: string | null;
+  reactionType: string;
+  isFriend: boolean;
+  mutualFriends: number;
+};
+
+export async function loadPostReactions(postId: number, viewerId?: number): Promise<PostReactionUser[]> {
+  const url = viewerId 
+    ? `${BASE_SOCIAL_SERVICE}/social/posts/${postId}/reactions?viewerId=${viewerId}`
+    : `${BASE_SOCIAL_SERVICE}/social/posts/${postId}/reactions`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Cannot load reactions. HTTP ${res.status}`);
+  return unwrap(await res.json()) || [];
+}
+
+export async function sharePost(
+  postId: number,
+  payload: {
+    authorId: number;
+    content?: string;
+    visibility?: string;
+  },
+  viewerId?: number,
+): Promise<SocialPost> {
+  const query = viewerId ? `?viewerId=${viewerId}` : "";
+  const res = await fetch(`${BASE_SOCIAL_SERVICE}/social/posts/${postId}/share${query}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Cannot share post. HTTP ${res.status}`);
   return unwrap(await res.json());
 }

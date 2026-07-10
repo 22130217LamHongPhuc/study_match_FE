@@ -40,7 +40,8 @@ export default function ConnectionTabs({ activeTab, onTabChange }: ConnectionTab
     try {
       const data = await loadFriendRequestsService();
       if (data && Array.isArray(data.received)) {
-        setRequestCount(data.received.length);
+        const pendingCount = data.received.filter((req) => req.status === "PENDING").length;
+        setRequestCount(pendingCount);
       }
     } catch (error) {
       console.error("Failed to load friend request count:", error);

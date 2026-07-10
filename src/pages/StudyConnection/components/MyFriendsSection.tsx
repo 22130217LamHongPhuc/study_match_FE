@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { toast } from "react-toastify";
 import { Search, MessageSquare, UserMinus, GraduationCap, Users, BookOpen, ChevronDown } from "lucide-react";
-import { Avatar } from "@mui/material";
+import { Avatar, Dialog, DialogTitle, DialogContent, Typography, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -19,6 +19,8 @@ export default function MyFriendsSection() {
   const [searchText, setSearchText] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "online">("all");
   const [sortBy, setSortBy] = useState<string>("connected");
+  const [unfriendConfirmOpen, setUnfriendConfirmOpen] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState<{ id: number; name: string } | null>(null);
   const navigate = useNavigate();
 
   const socketEvent = useSelector((state: RootState) => state.chat.newMess?.event);
@@ -60,9 +62,15 @@ export default function MyFriendsSection() {
     });
   };
 
-  const handleUnfriend = async (friendId: number, name: string) => {
-    const confirmed = window.confirm(`Bạn có chắc chắn muốn hủy kết bạn với ${name}?`);
-    if (!confirmed) return;
+  const handleUnfriendClick = (friendId: number, name: string) => {
+    setSelectedFriend({ id: friendId, name });
+    setUnfriendConfirmOpen(true);
+  };
+
+  const handleConfirmUnfriend = async () => {
+    if (!selectedFriend) return;
+    const { id: friendId, name } = selectedFriend;
+    setUnfriendConfirmOpen(false);
 
     try {
       setActionLoading(friendId);
@@ -74,7 +82,6 @@ export default function MyFriendsSection() {
         throw new Error(res.message || "Failed to unfriend");
       }
 
-      toast.success(`Đã hủy kết bạn với ${name}`);
       setFriends((prev) => prev.filter((f) => f.userId !== friendId));
       window.dispatchEvent(new Event("friend_status_updated"));
     } catch (error: any) {
@@ -82,6 +89,7 @@ export default function MyFriendsSection() {
       toast.error("Hủy kết bạn thất bại");
     } finally {
       setActionLoading(null);
+      setSelectedFriend(null);
     }
   };
 
@@ -187,14 +195,32 @@ export default function MyFriendsSection() {
             {filteredFriends.map((friend) => {
               const displayName = friend.fullName || "Người dùng StudyMatch";
 
-              return (
-                <div
-                  key={friend.userId}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
-                >
-                  {/* Profile detail section */}
-                  <div className="flex items-start gap-4">
-                    <div
+            return (
+              <div
+                key={friend.userId}
+                className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-orange-200 hover:shadow-md"
+              >
+                {/* Profile detail section */}
+                <div className="flex items-start gap-4">
+                  <div
+                    onClick={() => handleGoProfile(friend.userId)}
+                    className="relative cursor-pointer transition-transform hover:scale-105"
+                  >
+                    <Avatar
+                      src={friend.avatarUrl || undefined}
+                      alt={displayName}
+                      className="h-12 w-12 border-2 border-orange-500/10"
+                      sx={{ width: 48, height: 48 }}
+                    />
+                    {/* Status Dot */}
+                    <span
+                      className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white ${
+                        friend.online ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3
                       onClick={() => handleGoProfile(friend.userId)}
                       className="relative cursor-pointer transition-transform hover:scale-105"
                     >
@@ -231,31 +257,74 @@ export default function MyFriendsSection() {
                   {/* Divider */}
                   <div className="my-4 border-t border-gray-100" />
 
-                  {/* Actions */}
-                  <div className="flex gap-2.5">
-                    <button
-                      onClick={() => handleUnfriend(friend.userId, displayName)}
-                      disabled={actionLoading !== null}
-                      className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
-                    >
-                      <UserMinus size={14} />
-                      Hủy kết bạn
-                    </button>
-                    <button
-                      onClick={() => handleChat(friend)}
-                      disabled={actionLoading !== null}
-                      className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
-                    >
-                      <MessageSquare size={14} />
-                      Nhắn tin
-                    </button>
-                  </div>
+                {/* Actions */}
+                <div className="flex gap-2.5">
+                  <button
+                    onClick={() => handleUnfriendClick(friend.userId, displayName)}
+                    disabled={actionLoading !== null}
+                    className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
+                  >
+                    <UserMinus size={14} />
+                    Hủy kết bạn
+                  </button>
+                  <button
+                    onClick={() => handleChat(friend)}
+                    disabled={actionLoading !== null}
+                    className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
+                  >
+                    <MessageSquare size={14} />
+                    Nhắn tin
+                  </button>
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Dialog Unfriend Confirm */}
+      <Dialog
+        open={unfriendConfirmOpen}
+        onClose={() => {
+          setUnfriendConfirmOpen(false);
+          setSelectedFriend(null);
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: "15px",
+            padding: "10px",
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: "bold", textAlign: "center" }}>
+          Hủy kết bạn
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ textAlign: "center", mb: 2 }}>
+            Bạn có chắc chắn muốn hủy kết bạn với <strong>{selectedFriend?.name}</strong> không?
+          </Typography>
+          <Box display="flex" justifyContent="center" gap={2} mt={2}>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setUnfriendConfirmOpen(false);
+                setSelectedFriend(null);
+              }}
+              sx={{ borderRadius: "20px", px: 4, textTransform: "none" }}
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleConfirmUnfriend}
+              sx={{ borderRadius: "20px", px: 4, textTransform: "none" }}
+            >
+              Đồng ý
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

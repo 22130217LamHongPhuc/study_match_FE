@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
-import LockIcon from "@mui/icons-material/Lock";
-import PeopleIcon from "@mui/icons-material/People";
-import PublicIcon from "@mui/icons-material/Public";
 import DescriptionIcon from "@mui/icons-material/Description";
 import {
   Avatar,
@@ -20,56 +17,22 @@ import {
   Skeleton,
   CircularProgress,
 } from "@mui/material";
-import { createPost, uploadPostMedia, SocialPost } from "../../../services/SocialPostService";
-
-export type PostVisibility = "PUBLIC" | "FRIENDS" | "PRIVATE";
+import { updatePost, uploadPostMedia, SocialPost } from "../../../services/SocialPostService";
+import {
+  POST_BACKGROUNDS,
+  parsePostContent,
+  visibilityOptions,
+  getVisibilityOption,
+  PostVisibility,
+} from "./CreatePostDialog";
 
 type SelectedMediaItem = {
-  file: File;
+  id?: number;
+  file?: File;
   preview: string;
+  mediaType: string;
+  name: string;
 };
-
-export const visibilityOptions: { value: PostVisibility; label: string; icon: React.ReactNode }[] = [
-  { value: "PUBLIC", label: "Công khai", icon: <PublicIcon sx={{ fontSize: 15 }} /> },
-  { value: "FRIENDS", label: "Bạn bè", icon: <PeopleIcon sx={{ fontSize: 15 }} /> },
-  { value: "PRIVATE", label: "Riêng tư", icon: <LockIcon sx={{ fontSize: 15 }} /> },
-];
-
-export const getVisibilityOption = (value: string) =>
-  visibilityOptions.find((option) => option.value === value) || visibilityOptions[0];
-
-export const POST_BACKGROUNDS = [
-  { id: "none", name: "none", style: { bgcolor: "white", color: "#1e293b", border: "1px solid #cbd5e1" } },
-  { id: "bg-sky", name: "Bầu trời", style: { background: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)", color: "#0369a1" } },
-  { id: "bg-lavender", name: "Oải hương", style: { background: "linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)", color: "#6b21a8" } },
-  { id: "bg-rose", name: "Hoa hồng", style: { background: "linear-gradient(135deg, #fff1f2 0%, #fecdd3 100%)", color: "#be123c" } },
-  { id: "bg-mint", name: "Bạc hà", style: { background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)", color: "#047857" } },
-  { id: "bg-lemon", name: "Chanh vàng", style: { background: "linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)", color: "#a16207" } },
-  { id: "bg-clay", name: "Đất sét", style: { background: "linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)", color: "#c2410c" } },
-  { id: "bg-sunset", name: "Sunset", style: { background: "linear-gradient(135deg, #a21caf 0%, #3b82f6 100%)", color: "white" } },
-  { id: "bg-violet-pink", name: "Violet Pink", style: { background: "linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)", color: "white" } },
-  { id: "bg-orange-yellow", name: "Orange Yellow", style: { background: "linear-gradient(135deg, #f97316 0%, #facc15 100%)", color: "white" } },
-  { id: "bg-purple", name: "Màu Tím", style: { background: "linear-gradient(135deg, #d904e9 0%, #70027a 100%)", color: "white" } },
-  { id: "bg-red", name: "Màu Đỏ", style: { background: "linear-gradient(135deg, #e11d48 0%, #9f1239 100%)", color: "white" } },
-  { id: "bg-black", name: "Màu Đen", style: { background: "linear-gradient(135deg, #0f172a 0%, #020617 100%)", color: "white" } },
-];
-
-export function parsePostContent(rawContent: string | null | undefined) {
-  if (!rawContent) return { backgroundId: "none", content: "" };
-  try {
-    const parsed = JSON.parse(rawContent);
-    if (parsed && typeof parsed === "object" && "background" in parsed) {
-      return { backgroundId: parsed.background || "none", content: parsed.text || "" };
-    }
-  } catch (e) {
-    // Not valid JSON
-  }
-  const match = rawContent.match(/^\[BG:([^\]]+)\](.*)$/s);
-  if (match) {
-    return { backgroundId: match[1], content: match[2] };
-  }
-  return { backgroundId: "none", content: rawContent };
-}
 
 const MAX_POST_MEDIA = 10;
 
@@ -96,30 +59,25 @@ const getFileMeta = (fileName: string) => {
   return { label: "File", color: "#6b7280", bg: "#f3f4f6" };
 };
 
-interface CreatePostDialogProps {
+interface EditPostDialogProps {
   open: boolean;
   onClose: () => void;
+  post: SocialPost;
   currentUserId: number;
-  authorName?: string;
-  authorAvatarUrl?: string | null;
-  showSubjectSelect?: boolean;
-  onPostCreated: (post: SocialPost) => void;
+  onPostUpdated: (post: SocialPost) => void;
   onPostingChange?: (posting: boolean) => void;
 }
 
-export default function CreatePostDialog({
+export default function EditPostDialog({
   open,
   onClose,
+  post,
   currentUserId,
-  authorName = "Người dùng",
-  authorAvatarUrl,
-  showSubjectSelect = false,
-  onPostCreated,
+  onPostUpdated,
   onPostingChange,
-}: CreatePostDialogProps) {
+}: EditPostDialogProps) {
   const [postContent, setPostContent] = useState("");
   const [postVisibility, setPostVisibility] = useState<PostVisibility>("PUBLIC");
-  const [postSubject, setPostSubject] = useState("Toán cao cấp");
   const [visibilityAnchorEl, setVisibilityAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedMediaItem[]>([]);
   const [posting, setPosting] = useState(false);
@@ -128,25 +86,44 @@ export default function CreatePostDialog({
   const selectedVisibility = getVisibilityOption(postVisibility);
 
   useEffect(() => {
-    if (!open) {
-      setPostContent("");
-      setPostVisibility("PUBLIC");
-      setPostSubject("Toán cao cấp");
-      setSelectedMediaItems([]);
+    if (open && post) {
+      const { backgroundId, content: parsed } = parsePostContent(post.content);
+      setPostContent(parsed || "");
+      setPostVisibility(getVisibilityOption(post.visibility).value);
+      setSelectedBgId(backgroundId || "none");
+
+      // Pre-fill existing media items
+      const existingMedia = (post.media || []).map((m) => {
+        const lowerUrl = m.mediaUrl.toLowerCase();
+        let name = "Tệp tin";
+        try {
+          const parts = m.mediaUrl.split("/");
+          name = parts[parts.length - 1] || "Tệp tin";
+        } catch (e) {}
+
+        return {
+          id: m.id,
+          preview: m.mediaUrl,
+          mediaType: m.mediaType,
+          name: name,
+        };
+      });
+      setSelectedMediaItems(existingMedia);
       setPosting(false);
-      setSelectedBgId("none");
     }
-  }, [open]);
+  }, [open, post]);
 
   const clearSelectedMedia = () => {
-    selectedMediaItems.forEach((item) => URL.revokeObjectURL(item.preview));
+    selectedMediaItems.forEach((item) => {
+      if (item.file) URL.revokeObjectURL(item.preview);
+    });
     setSelectedMediaItems([]);
   };
 
   const removeSelectedMedia = (index: number) => {
     setSelectedMediaItems((prev) => {
       const removed = prev[index];
-      if (removed) URL.revokeObjectURL(removed.preview);
+      if (removed && removed.file) URL.revokeObjectURL(removed.preview);
       return prev.filter((_, itemIndex) => itemIndex !== index);
     });
   };
@@ -182,51 +159,69 @@ export default function CreatePostDialog({
 
       return [
         ...prev,
-        ...filesToAdd.map((file) => ({
-          file,
-          preview: URL.createObjectURL(file),
-        })),
+        ...filesToAdd.map((file) => {
+          const type = file.type;
+          const mediaType = type.startsWith("video/") ? "VIDEO" : type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
+          return {
+            file,
+            preview: URL.createObjectURL(file),
+            mediaType,
+            name: file.name,
+          };
+        }),
       ];
     });
   };
 
-  const handleCloseCreatePost = () => {
+  const handleCloseEditPost = () => {
     if (posting) return;
     clearSelectedMedia();
     onClose();
   };
 
-  const handleCreatePost = async () => {
+  const handleUpdatePost = async () => {
     if (!postContent.trim() && selectedMediaItems.length === 0) return;
     setPosting(true);
     onPostingChange?.(true);
     try {
-      let uploadedMedia: any[] = [];
-      if (selectedMediaItems.length > 0) {
-        uploadedMedia = await Promise.all(selectedMediaItems.map((item) => uploadPostMedia(item.file)));
-      }
+      // 1. Upload new files and map existing ones
+      const finalMediaPayload = await Promise.all(
+        selectedMediaItems.map(async (item) => {
+          if (item.file) {
+            // New file upload
+            const uploaded = await uploadPostMedia(item.file);
+            return {
+              mediaUrl: uploaded.mediaUrl,
+              mediaType: uploaded.mediaType,
+            };
+          } else {
+            // Existing file
+            return {
+              mediaUrl: item.preview,
+              mediaType: item.mediaType,
+            };
+          }
+        })
+      );
 
+      // 2. Build standard JSON if background is set
       const finalContent = selectedBgId !== "none"
         ? JSON.stringify({ text: postContent.trim(), background: selectedBgId })
         : postContent.trim();
 
-      const payload: any = {
-        authorId: currentUserId,
+      const payload = {
+        actorId: currentUserId,
         content: finalContent,
         visibility: postVisibility,
-        media: uploadedMedia,
+        media: finalMediaPayload,
       };
 
-      if (showSubjectSelect) {
-        payload.subject = postSubject;
-      }
-
-      const post = await createPost(payload);
-      onPostCreated(post);
-      handleCloseCreatePost();
+      const updated = await updatePost(post.id, payload);
+      onPostUpdated(updated);
+      handleCloseEditPost();
     } catch (error) {
       console.error(error);
-      alert("Không thể tạo bài viết");
+      alert("Không thể cập nhật bài viết");
     } finally {
       setPosting(false);
       onPostingChange?.(false);
@@ -236,14 +231,14 @@ export default function CreatePostDialog({
   return (
     <Dialog
       open={open}
-      onClose={handleCloseCreatePost}
+      onClose={handleCloseEditPost}
       fullWidth
       PaperProps={{ sx: { borderRadius: "16px", p: 0.5, width: 550, maxWidth: "92%" } }}
     >
       <DialogTitle sx={{ textAlign: "center", fontSize: 20, fontWeight: 800, position: "relative", py: 2, color: "#0f172a" }}>
-        Tạo bài viết
+        Chỉnh sửa bài viết
         <IconButton
-          onClick={handleCloseCreatePost}
+          onClick={handleCloseEditPost}
           sx={{ position: "absolute", right: 18, top: 12, color: '#64748b', bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }}
           size="small"
         >
@@ -266,18 +261,18 @@ export default function CreatePostDialog({
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 2, gap: 1.5 }}>
               <CircularProgress size={18} sx={{ color: "#3b82f6" }} />
               <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#4b5563" }}>
-                Đang tải tệp lên
+                Đang lưu thay đổi...
               </Typography>
             </Box>
           </Box>
         ) : (
           <>
             <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
-              <Avatar src={authorAvatarUrl || undefined} sx={{ width: 48, height: 48, border: "1px solid #e2e8f0" }}>
-                {authorName?.charAt(0)?.toUpperCase()}
+              <Avatar src={post.authorAvatarUrl || undefined} sx={{ width: 48, height: 48, border: "1px solid #e2e8f0" }}>
+                {post.authorName?.charAt(0)?.toUpperCase()}
               </Avatar>
               <Box>
-                <Typography sx={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>{authorName}</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>{post.authorName}</Typography>
                 <Button
                   size="small"
                   onClick={(event) => setVisibilityAnchorEl(event.currentTarget)}
@@ -321,13 +316,13 @@ export default function CreatePostDialog({
                 </Menu>
               </Box>
             </Box>
- 
+
             {selectedBgId === "none" ? (
               <TextField
                 fullWidth
                 multiline
                 minRows={3}
-                placeholder={`${authorName} ơi, bạn đang nghĩ gì thế?`}
+                placeholder={`${post.authorName} ơi, bạn đang nghĩ gì thế?`}
                 value={postContent}
                 onChange={(event) => setPostContent(event.target.value)}
                 variant="standard"
@@ -350,7 +345,7 @@ export default function CreatePostDialog({
                 <TextField
                   fullWidth
                   multiline
-                  placeholder={`${authorName} ơi, bạn đang nghĩ gì thế?`}
+                  placeholder={`${post.authorName} ơi, bạn đang nghĩ gì thế?`}
                   value={postContent}
                   onChange={(event) => setPostContent(event.target.value)}
                   variant="standard"
@@ -419,7 +414,7 @@ export default function CreatePostDialog({
                 ))}
               </Box>
             )}
- 
+
             {selectedMediaItems.length > 0 && (
               <Box
                 sx={{
@@ -455,8 +450,8 @@ export default function CreatePostDialog({
                   const count = selectedMediaItems.length;
 
                   const renderPreviewCell = (item: SelectedMediaItem, idx: number, height: string | number) => {
-                    const isVideo = item.file.type.startsWith("video/");
-                    const isImage = item.file.type.startsWith("image/");
+                    const isVideo = item.mediaType === "VIDEO" || item.preview.toLowerCase().endsWith(".mp4");
+                    const isImage = item.mediaType === "IMAGE" || (/\.(jpg|jpeg|png|gif|webp|svg)$/i).test(item.preview);
                     const isDoc = !isVideo && !isImage;
 
                     return (
@@ -482,15 +477,15 @@ export default function CreatePostDialog({
                               flexDirection: "column",
                               alignItems: "center",
                               justifyContent: "center",
-                              bgcolor: getFileMeta(item.file.name).bg,
+                              bgcolor: getFileMeta(item.name).bg,
                               p: 2,
                               textAlign: "center",
                               gap: 1,
                             }}
                           >
-                            <DescriptionIcon sx={{ fontSize: 44, color: getFileMeta(item.file.name).color }} />
+                            <DescriptionIcon sx={{ fontSize: 24, color: getFileMeta(item.name).color }} />
                             <Typography noWrap sx={{ width: "100%", fontSize: "0.875rem", fontWeight: 700, color: "#1f2937", px: 1 }}>
-                              {item.file.name}
+                              {item.name}
                             </Typography>
                           </Box>
                         ) : isVideo ? (
@@ -606,7 +601,7 @@ export default function CreatePostDialog({
                 })()}
               </Box>
             )}
- 
+
             <Box sx={{ mt: 2, p: 1.5, border: "1px solid #e2e8f0", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1.5 }}>
               <Typography sx={{ fontWeight: 700, fontSize: 13, color: "#475569" }}>Thêm đính kèm ({selectedMediaItems.length}/{MAX_POST_MEDIA})</Typography>
               <Button
@@ -629,12 +624,12 @@ export default function CreatePostDialog({
                 />
               </Button>
             </Box>
- 
+
             <Button
               fullWidth
               disabled={posting || (!postContent.trim() && selectedMediaItems.length === 0)}
               variant="contained"
-              onClick={handleCreatePost}
+              onClick={handleUpdatePost}
               sx={{ 
                 mt: 2.5, 
                 py: 1, 
@@ -655,7 +650,7 @@ export default function CreatePostDialog({
                 }
               }}
             >
-              Đăng
+              Lưu thay đổi
             </Button>
           </>
         )}

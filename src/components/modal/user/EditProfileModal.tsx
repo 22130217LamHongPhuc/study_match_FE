@@ -133,6 +133,8 @@ export default function EditProfileModal({
         }
     };
 
+    const hasBanner = bannerPreview || bannerUrl;
+
     return (
         <Modal
             open={stateModal}
@@ -146,26 +148,26 @@ export default function EditProfileModal({
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: { xs: '92%', sm: 560 },
+                    width: { xs: '92%', sm: 500 },
                     bgcolor: 'background.paper',
-                    boxShadow: 24,
-                    p: 4,
-                    borderRadius: 2,
+                    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+                    p: 3,
+                    borderRadius: '16px',
                     outline: 'none',
                 }}
             >
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                    <Typography id="edit-profile-title" variant="h5" component="h2" fontWeight="bold">
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2.5}>
+                    <Typography id="edit-profile-title" variant="h6" fontWeight="800" sx={{ color: '#0f172a' }}>
                         Chỉnh sửa thông tin
                     </Typography>
-                    <IconButton size="medium" onClick={handleClose}>
-                        <CloseIcon />
+                    <IconButton size="small" onClick={handleClose} sx={{ color: '#64748b', bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }}>
+                        <CloseIcon sx={{ fontSize: 18 }} />
                     </IconButton>
                 </Stack>
 
-                <Stack spacing={3}>
+                <Stack spacing={2.5}>
                     {/* Banner and Avatar Area */}
-                    <Box sx={{ position: 'relative', width: '100%', height: 130 }}>
+                    <Box sx={{ position: 'relative', width: '100%', height: 120 }}>
                         {/* Banner Selector */}
                         <Button 
                             component="label" 
@@ -173,16 +175,16 @@ export default function EditProfileModal({
                                 p: 0, 
                                 width: '100%', 
                                 height: '100%', 
-                                borderRadius: '8px', 
+                                borderRadius: '12px', 
                                 overflow: 'hidden', 
                                 display: 'block',
                                 position: 'relative',
-                                bgcolor: '#f3f4f6',
-                                border: '1px solid #e5e7eb',
+                                bgcolor: '#f1f5f9',
+                                border: '1px solid #e2e8f0',
                                 textTransform: 'none',
                             }}
                         >
-                            {bannerPreview || bannerUrl ? (
+                            {hasBanner ? (
                                 <Box 
                                     component="img"
                                     src={bannerPreview || bannerUrl || undefined}
@@ -193,7 +195,7 @@ export default function EditProfileModal({
                                     sx={{ 
                                         width: '100%', 
                                         height: '100%', 
-                                        backgroundImage: "linear-gradient(90deg, rgb(225, 193, 169) 0%, rgba(225, 193, 169, 0.314) 100%)" 
+                                        backgroundImage: "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)" 
                                     }}
                                 />
                             )}
@@ -202,16 +204,23 @@ export default function EditProfileModal({
                                 sx={{
                                     position: 'absolute',
                                     inset: 0,
-                                    bgcolor: 'rgba(0,0,0,0.45)',
+                                    bgcolor: hasBanner ? 'rgba(15, 23, 42, 0.5)' : 'transparent',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    color: '#fff',
-                                    gap: 1
+                                    color: hasBanner ? '#fff' : '#64748b',
+                                    gap: 1,
+                                    opacity: hasBanner ? 0 : 1,
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                        opacity: 1,
+                                        bgcolor: 'rgba(15, 23, 42, 0.6)',
+                                        color: '#fff',
+                                    }
                                 }}
                             >
-                                <PhotoCameraIcon />
-                                <Typography sx={{ fontWeight: 'bold', fontSize: 14 }}>Thay đổi ảnh bìa</Typography>
+                                <PhotoCameraIcon sx={{ fontSize: 20 }} />
+                                <Typography sx={{ fontWeight: 700, fontSize: 13 }}>Thay đổi ảnh bìa</Typography>
                             </Box>
                             <input
                                 hidden
@@ -230,34 +239,39 @@ export default function EditProfileModal({
                                 position: 'absolute', 
                                 left: '50%', 
                                 transform: 'translateX(-50%)', 
-                                bottom: -45,
+                                bottom: -35,
                                 zIndex: 2 
                             }}
                         >
-                            <Button component="label" sx={{ p: 0, borderRadius: '50%', position: 'relative', bgcolor: '#fff', border: '4px solid #fff' }}>
+                            <Button component="label" sx={{ p: 0, borderRadius: '50%', position: 'relative', bgcolor: '#fff', border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
                                 <Avatar
                                     src={avatarPreview || avatarUrl || undefined}
-                                    sx={{ width: 90, height: 90, border: '1px solid #ddd' }}
+                                    sx={{ width: 80, height: 80 }}
                                 >
                                     {fullName?.charAt(0)?.toUpperCase()}
                                 </Avatar>
                                 <Box
                                     sx={{
                                         position: 'absolute',
-                                        right: 2,
-                                        bottom: 2,
-                                        width: 28,
-                                        height: 28,
+                                        right: -2,
+                                        bottom: -2,
+                                        width: 26,
+                                        height: 26,
                                         borderRadius: '50%',
-                                        bgcolor: '#e5e7eb',
-                                        color: '#111827',
+                                        bgcolor: '#3b82f6',
+                                        color: '#fff',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                                        boxShadow: '0 2px 8px rgba(59,130,246,0.3)',
+                                        border: '2px solid #fff',
+                                        transition: 'background-color 0.2s ease',
+                                        '&:hover': {
+                                            bgcolor: '#2563eb'
+                                        }
                                     }}
                                 >
-                                    <PhotoCameraIcon sx={{ fontSize: 15 }} />
+                                    <PhotoCameraIcon sx={{ fontSize: 13 }} />
                                 </Box>
                                 <input
                                     hidden
@@ -273,35 +287,95 @@ export default function EditProfileModal({
                     </Box>
 
                     {/* Spacing to push form fields below absolute avatar */}
-                    <Box sx={{ height: '40px' }} />
+                    <Box sx={{ height: '24px' }} />
 
                     <TextField
                         label="Họ và tên"
                         variant="outlined"
                         fullWidth
+                        size="small"
                         value={fullName}
                         onChange={(event) => setFullName(event.target.value)}
+                        sx={{
+                            "& .MuiOutlinedInput-root": {
+                                borderRadius: "10px",
+                                "& fieldset": {
+                                    borderColor: "#e2e8f0",
+                                },
+                                "&:hover fieldset": {
+                                    borderColor: "#cbd5e1",
+                                },
+                                "&.Mui-focused fieldset": {
+                                    borderColor: "#3b82f6",
+                                }
+                            }
+                        }}
                     />
                     <TextField
                         label="Bio"
                         variant="outlined"
                         fullWidth
                         multiline
-                        rows={5}
+                        rows={3}
                         value={bio}
                         onChange={(event) => setBio(event.target.value)}
+                        sx={{
+                            "& .MuiOutlinedInput-root": {
+                                borderRadius: "10px",
+                                "& fieldset": {
+                                    borderColor: "#e2e8f0",
+                                },
+                                "&:hover fieldset": {
+                                    borderColor: "#cbd5e1",
+                                },
+                                "&.Mui-focused fieldset": {
+                                    borderColor: "#3b82f6",
+                                }
+                            }
+                        }}
                     />
                 </Stack>
 
-                <Stack direction="row" justifyContent="flex-end" spacing={2} mt={4}>
-                    <Button variant="outlined" onClick={handleClose} disabled={saving}>
+                <Stack direction="row" justifyContent="flex-end" spacing={1.5} mt={3}>
+                    <Button 
+                        variant="outlined" 
+                        onClick={handleClose} 
+                        disabled={saving}
+                        sx={{ 
+                            borderRadius: '20px', 
+                            textTransform: 'none', 
+                            fontWeight: 700, 
+                            px: 3,
+                            borderColor: '#cbd5e1',
+                            color: '#475569',
+                            '&:hover': {
+                                borderColor: '#94a3b8',
+                                bgcolor: '#f8fafc'
+                            }
+                        }}
+                    >
                         Hủy
                     </Button>
                     <Button
                         variant="contained"
                         disabled={saving}
                         onClick={handleSave}
-                        sx={{ px: 5, background: 'linear-gradient(90deg, #4f8dfd, #3b82f6)' }}
+                        sx={{ 
+                            px: 4, 
+                            background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                            borderRadius: '20px',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                boxShadow: '0 6px 16px rgba(59, 130, 246, 0.3)',
+                            },
+                            '&.Mui-disabled': {
+                                background: '#93c5fd',
+                                color: '#ffffff'
+                            }
+                        }}
                     >
                         {saving ? 'Đang lưu...' : 'Lưu'}
                     </Button>

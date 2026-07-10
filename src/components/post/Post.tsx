@@ -1,6 +1,5 @@
-import { Lock, MoreHoriz, People, Public, Description } from "@mui/icons-material";
+import { Lock, MoreHoriz, People, Public, Description, Send, Reply } from "@mui/icons-material";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
-import ShareIcon from "@mui/icons-material/Share";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import {
   Avatar,
@@ -12,8 +11,10 @@ import {
   TextField,
   Typography,
   Skeleton,
+  CircularProgress,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   addPostComment,
   deletePost,
@@ -23,6 +24,11 @@ import {
   togglePostLike,
   updatePost,
 } from "../../services/SocialPostService";
+import { parsePostContent, POST_BACKGROUNDS } from "../modal/user/CreatePostDialog";
+import EditPostDialog from "../modal/user/EditPostDialog";
+import PostMediaModal from "../modal/user/PostMediaModal";
+import PostReactionsModal from "../modal/user/PostReactionsModal";
+import SharePostModal from "../modal/user/SharePostModal";
 
 const isImageUrl = (url: string) => {
   const lower = url.toLowerCase();
@@ -117,8 +123,13 @@ const downloadFile = async (url: string, fileName?: string | null) => {
 type PostProps = {
   post: SocialPost;
   currentUserId: number;
+  authorName?: string;
+  authorAvatarUrl?: string | null;
   onPostChanged: (post: SocialPost) => void;
   onPostDeleted: (postId: number) => void;
+  onImageClick?: (index: number) => void;
+  onPostCreated?: (post: SocialPost) => void;
+  onViewSharedPost?: (sharedPost: SocialPost, mediaIndex: number) => void;
 };
 
 type PostVisibility = "PUBLIC" | "FRIENDS" | "PRIVATE";
@@ -142,30 +153,595 @@ const formatTime = (value: string) => {
   return date.toLocaleDateString("vi-VN");
 };
 
-export default function Post({ post, currentUserId, onPostChanged, onPostDeleted }: PostProps) {
+const getReactionEmoji = (type: string) => {
+  switch (type.toUpperCase()) {
+    case "LOVE": return "❤️";
+    case "HAHA": return "😆";
+    case "WOW": return "😮";
+    case "SAD": return "😢";
+    case "ANGRY": return "😡";
+    case "LIKE":
+    default:
+      return "👍";
+  }
+};
+
+function SharedPostCard({
+  sp,
+  spContent,
+  spHasBg,
+  spBg,
+  spMedia,
+  spLong,
+  onViewSharedPost,
+}: {
+  sp: SocialPost;
+  spContent: string;
+  spHasBg: boolean;
+  spBg: ReturnType<typeof POST_BACKGROUNDS.find>;
+  spMedia: SocialPost["media"];
+  spLong: boolean;
+  onViewSharedPost?: (sharedPost: SocialPost, mediaIndex: number) => void;
+}) {
+  const [expanded, setExpanded] = React.useState(false);
+  const navigate = useNavigate();
+
+  const goToProfile = () => navigate(`/profile/${sp.authorId}`);
+
+  const handleMediaClick = (idx: number) => {
+    if (onViewSharedPost) {
+      onViewSharedPost(sp, idx);
+    }
+  };
+
+  return (
+    <>
+      <Box
+        sx={{
+          mx: 2,
+          mb: 1.5,
+          border: "1px solid #dde3ec",
+          borderRadius: "14px",
+          overflow: "hidden",
+          bgcolor: "#f8fafc",
+        }}
+      >
+        {/* Author row */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, px: 2, pt: 1.5, pb: 0.75 }}>
+          <Avatar
+            src={sp.authorAvatarUrl || undefined}
+            onClick={goToProfile}
+            sx={{
+              width: 36,
+              height: 36,
+              cursor: "pointer",
+              transition: "transform 0.18s, box-shadow 0.18s",
+              "&:hover": {
+                transform: "scale(1.08)",
+                boxShadow: "0 0 0 3px #bfdbfe",
+              },
+            }}
+          >
+            {sp.authorName?.charAt(0)?.toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography
+              onClick={goToProfile}
+              sx={{
+                fontWeight: 700,
+                fontSize: 13.5,
+                color: "#1e293b",
+                lineHeight: 1.2,
+                cursor: "pointer",
+                "&:hover": { textDecoration: "underline", color: "#1877f2" },
+              }}
+            >
+              {sp.authorName}
+            </Typography>
+            <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+              {sp.visibility === "PUBLIC" ? "Công khai" : sp.visibility === "FRIENDS" ? "Bạn bè" : "Riêng tư"}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Content */}
+        {spHasBg ? (
+          <Box
+            sx={{
+              mx: 2,
+              mb: spMedia.length > 0 ? 1 : 1.5,
+              borderRadius: "10px",
+              minHeight: "90px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: spBg?.style.background,
+            }}
+          >
+            <Typography
+              sx={{
+                fontWeight: 800,
+                fontSize: 15,
+                color: spBg?.style.color || "white",
+                textAlign: "center",
+                p: 1.5,
+                lineHeight: 1.45,
+              }}
+            >
+              {spContent}
+            </Typography>
+          </Box>
+        ) : spContent ? (
+          <Box sx={{ px: 2, pb: spMedia.length > 0 ? 1 : 1.5 }}>
+            <Typography
+              component="div"
+              sx={{
+                fontSize: 14,
+                color: "#374151",
+                lineHeight: 1.6,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                ...(spLong && !expanded
+                  ? {
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }
+                  : {}),
+              }}
+            >
+              {spContent}
+            </Typography>
+            {spLong && (
+              <Box
+                component="span"
+                onClick={() => setExpanded((v) => !v)}
+                sx={{
+                  display: "inline-block",
+                  mt: 0.5,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#1877f2",
+                  cursor: "pointer",
+                  "&:hover": { textDecoration: "underline" },
+                }}
+              >
+                {expanded ? "Thu gọn" : "Xem thêm"}
+              </Box>
+            )}
+          </Box>
+        ) : null}
+
+        {/* Media thumbnail — clickable */}
+        {spMedia.length > 0 && (
+          <Box
+            onClick={() => handleMediaClick(0)}
+            sx={{
+              position: "relative",
+              mx: 2,
+              mb: 1.5,
+              borderRadius: "10px",
+              overflow: "hidden",
+              height: 200,
+              bgcolor: "#111",
+              cursor: onViewSharedPost ? "pointer" : "default",
+              "&:hover .media-overlay": { opacity: onViewSharedPost ? 1 : 0 },
+            }}
+          >
+            <MediaRenderer
+              item={spMedia[0]}
+              alt="shared post media"
+              isVideo={spMedia[0].mediaType === "VIDEO"}
+              isDoc={spMedia[0].mediaType !== "VIDEO" && !isImageUrl(spMedia[0].mediaUrl)}
+            />
+            {/* Hover overlay */}
+            <Box
+              className="media-overlay"
+              sx={{
+                position: "absolute",
+                inset: 0,
+                bgcolor: "rgba(0,0,0,0.18)",
+                opacity: 0,
+                transition: "opacity 0.2s",
+                zIndex: 2,
+              }}
+            />
+            {spMedia.length > 1 && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 10,
+                  right: 10,
+                  bgcolor: "rgba(0,0,0,0.62)",
+                  borderRadius: "8px",
+                  px: 1.25,
+                  py: 0.4,
+                  zIndex: 2,
+                }}
+              >
+                <Typography sx={{ color: "white", fontSize: 12.5, fontWeight: 700 }}>
+                  +{spMedia.length - 1} ảnh/video
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+      </Box>
+    </>
+  );
+}
+
+function MediaRenderer({
+  item,
+  alt,
+  isVideo,
+  isDoc,
+}: {
+  item: any;
+  alt?: string;
+  isVideo: boolean;
+  isDoc: boolean;
+}) {
+  const [loading, setLoading] = useState(true);
+
+  if (isDoc) {
+    return (
+      <Box
+        onClick={() => downloadFile(item.mediaUrl, getFileNameFromUrl(item.mediaUrl))}
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          bgcolor: getFileMeta(item.mediaUrl).bg,
+          p: 2,
+          textAlign: "center",
+          gap: 1,
+          "&:hover": { bgcolor: "#e5e7eb" },
+        }}
+      >
+        <Description sx={{ fontSize: 44, color: getFileMeta(item.mediaUrl).color }} />
+        <Typography
+          noWrap
+          sx={{
+            width: "100%",
+            fontSize: "0.875rem",
+            fontWeight: 700,
+            color: "#1f2937",
+            px: 1,
+          }}
+        >
+          {getFileNameFromUrl(item.mediaUrl)}
+        </Typography>
+        <Typography sx={{ fontSize: "0.75rem", color: "#6b7280" }}>
+          Tải xuống ({getFileMeta(item.mediaUrl).label})
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ width: "100%", height: "100%", position: "relative", bgcolor: isVideo ? "#000" : "#f1f5f9" }}>
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 3,
+          }}
+        >
+          <CircularProgress size={32} />
+        </Box>
+      )}
+
+      {isVideo ? (
+        <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
+          <Box
+            component="video"
+            src={item.mediaUrl}
+            onLoadedData={() => setLoading(false)}
+            onCanPlay={() => setLoading(false)}
+            onError={() => setLoading(false)}
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: loading ? "none" : "block",
+            }}
+          />
+          {!loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: "rgba(0,0,0,0.15)",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  bgcolor: "rgba(255, 255, 255, 0.9)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+                }}
+              >
+                <span style={{ fontSize: "24px", color: "#1e293b", marginLeft: "4px" }}>▶</span>
+              </Box>
+            </Box>
+          )}
+        </Box>
+      ) : (
+        <Box
+          component="img"
+          src={item.mediaUrl}
+          alt={alt}
+          onLoad={() => setLoading(false)}
+          onError={() => setLoading(false)}
+          sx={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: loading ? "none" : "block",
+          }}
+        />
+      )}
+    </Box>
+  );
+}
+
+export default function Post({ post, currentUserId, authorName, authorAvatarUrl, onPostChanged, onPostDeleted, onImageClick, onPostCreated, onViewSharedPost }: PostProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [editVisibilityAnchorEl, setEditVisibilityAnchorEl] = useState<null | HTMLElement>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [commentText, setCommentText] = useState("");
   const [editing, setEditing] = useState(false);
-  const [editContent, setEditContent] = useState(post.content || "");
-  const [editVisibility, setEditVisibility] = useState<PostVisibility>(getVisibilityOption(post.visibility).value);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [showReactionsPopup, setShowReactionsPopup] = useState(false);
+  const [reactionsModalOpen, setReactionsModalOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const isOwner = currentUserId === post.authorId;
   const mediaItems = post.media || [];
   const visibility = getVisibilityOption(post.visibility);
-  const selectedEditVisibility = getVisibilityOption(editVisibility);
+
+  const { backgroundId, content: parsedContent } = useMemo(() => parsePostContent(post.content), [post.content]);
+  const hasBackground = backgroundId !== "none" && mediaItems.length === 0;
+  const currentBg = POST_BACKGROUNDS.find(bg => bg.id === backgroundId);
+
+  const shouldTruncate = useMemo(() => {
+    if (!parsedContent) return false;
+    const lines = parsedContent.split("\n").length;
+    return parsedContent.length > 250 || lines > 4;
+  }, [parsedContent]);
+
+  const getTruncatedContent = (text: string) => {
+    const lines = text.split("\n");
+    if (lines.length > 4) {
+      return lines.slice(0, 4).join("\n") + "...";
+    }
+    if (text.length > 250) {
+      return text.substring(0, 220) + "...";
+    }
+    return text;
+  };
 
   useEffect(() => {
-    setEditContent(post.content || "");
-    setEditVisibility(getVisibilityOption(post.visibility).value);
+    setIsExpanded(false);
   }, [post.content, post.visibility]);
 
   const sortedComments = useMemo(() => comments, [comments]);
 
-  const handleToggleLike = async () => {
-    const next = await togglePostLike(post.id, currentUserId);
+  const handleToggleLike = async (reactionType?: string) => {
+    const next = await togglePostLike(post.id, currentUserId, reactionType);
     onPostChanged(next);
+  };
+
+  const getReactionUI = (reactionType?: string | null) => {
+    if (!reactionType) return { icon: <ThumbUpIcon sx={{ fontSize: 22, color: "#65676b" }} />, color: "#65676b" };
+    switch (reactionType.toUpperCase()) {
+      case "LOVE":
+        return { icon: <span style={{ fontSize: 22 }}>❤️</span>, color: "#f43f5e" };
+      case "HAHA":
+        return { icon: <span style={{ fontSize: 22 }}>😆</span>, color: "#eab308" };
+      case "WOW":
+        return { icon: <span style={{ fontSize: 22 }}>😮</span>, color: "#eab308" };
+      case "SAD":
+        return { icon: <span style={{ fontSize: 22 }}>😢</span>, color: "#3b82f6" };
+      case "ANGRY":
+        return { icon: <span style={{ fontSize: 22 }}>😡</span>, color: "#f97316" };
+      case "LIKE":
+      default:
+        return { icon: <ThumbUpIcon sx={{ fontSize: 22, color: "#1877f2" }} />, color: "#1877f2" };
+    }
+  };
+
+  const renderTopReactions = (topReactions?: string[] | null) => {
+    if (!topReactions || topReactions.length === 0) return null;
+    return (
+      <Box
+        onClick={() => setReactionsModalOpen(true)}
+        sx={{ display: "flex", alignItems: "center", cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+      >
+        {topReactions.map((type, idx) => (
+          <Box
+            key={type}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "15px",
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              bgcolor: "#f1f5f9",
+              border: "1.5px solid white",
+              marginLeft: idx > 0 ? "-6px" : "0",
+              zIndex: 2 - idx,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            }}
+          >
+            {getReactionEmoji(type)}
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
+  const renderMediaGrid = () => {
+    const count = mediaItems.length;
+    if (count === 0) return null;
+
+    const renderMediaItem = (item: typeof mediaItems[0], index: number, height: string | number) => {
+      const isVideo = item.mediaType === "VIDEO";
+      const isImage = isImageUrl(item.mediaUrl);
+      const isDoc = !isVideo && !isImage;
+
+      return (
+        <Box
+          key={item.id ?? `${item.mediaUrl}-${index}`}
+          onClick={() => {
+            if (!isDoc) {
+              if (onImageClick) {
+                onImageClick(index);
+              } else {
+                setActiveMediaIndex(index);
+                setMediaModalOpen(true);
+              }
+            }
+          }}
+          sx={{
+            width: "100%",
+            height: height,
+            bgcolor: "#111",
+            overflow: "hidden",
+            cursor: isDoc ? "default" : "pointer",
+            position: "relative",
+            "& video": {
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            },
+            "& img": {
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            },
+          }}
+        >
+          <MediaRenderer
+            item={item}
+            alt={`post media ${index + 1}`}
+            isVideo={isVideo}
+            isDoc={isDoc}
+          />
+
+          {/* Plus overlay for more than 5 items */}
+          {count > 5 && index === 4 && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                bgcolor: "rgba(0, 0, 0, 0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 2,
+                pointerEvents: "none",
+              }}
+            >
+              <Typography sx={{ color: "white", fontSize: "28px", fontWeight: 700 }}>
+                +{count - 5}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      );
+    };
+
+    if (count === 1) {
+      return (
+        <Box sx={{ width: "100%", overflow: "hidden", borderRadius: "12px" }}>
+          {renderMediaItem(mediaItems[0], 0, "400px")}
+        </Box>
+      );
+    }
+
+    if (count === 2) {
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%", overflow: "hidden", borderRadius: "12px" }}>
+          {renderMediaItem(mediaItems[0], 0, "240px")}
+          {renderMediaItem(mediaItems[1], 1, "240px")}
+        </Box>
+      );
+    }
+
+    if (count === 3) {
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%", overflow: "hidden", borderRadius: "12px" }}>
+          {renderMediaItem(mediaItems[0], 0, "260px")}
+          <Box sx={{ display: "flex", gap: "4px" }}>
+            <Box sx={{ flex: 1 }}>{renderMediaItem(mediaItems[1], 1, "180px")}</Box>
+            <Box sx={{ flex: 1 }}>{renderMediaItem(mediaItems[2], 2, "180px")}</Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    if (count === 4) {
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%", overflow: "hidden", borderRadius: "12px" }}>
+          {renderMediaItem(mediaItems[0], 0, "260px")}
+          <Box sx={{ display: "flex", gap: "4px" }}>
+            <Box sx={{ flex: 1 }}>{renderMediaItem(mediaItems[1], 1, "150px")}</Box>
+            <Box sx={{ flex: 1 }}>{renderMediaItem(mediaItems[2], 2, "150px")}</Box>
+            <Box sx={{ flex: 1 }}>{renderMediaItem(mediaItems[3], 3, "150px")}</Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    // 5 or more items
+    return (
+      <Box sx={{ display: "flex", gap: "4px", width: "100%", overflow: "hidden", borderRadius: "12px" }}>
+        {/* Left Column (2 items) */}
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+          {renderMediaItem(mediaItems[0], 0, "200px")}
+          {renderMediaItem(mediaItems[1], 1, "200px")}
+        </Box>
+        {/* Right Column (3 items) */}
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+          {renderMediaItem(mediaItems[2], 2, "132px")}
+          {renderMediaItem(mediaItems[3], 3, "132px")}
+          {renderMediaItem(mediaItems[4], 4, "132px")}
+        </Box>
+      </Box>
+    );
   };
 
   const handleToggleComments = async () => {
@@ -185,22 +761,15 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
     onPostChanged({ ...post, commentCount: post.commentCount + 1 });
   };
 
-  const handleSaveEdit = async () => {
-    const next = await updatePost(post.id, {
-      actorId: currentUserId,
-      content: editContent,
-      visibility: editVisibility,
-      media: post.media?.map((item) => ({ mediaUrl: item.mediaUrl, mediaType: item.mediaType })),
-    });
-    onPostChanged(next);
-    setEditing(false);
-  };
+
 
   const handleDelete = async () => {
     await deletePost(post.id, currentUserId);
     onPostDeleted(post.id);
     setAnchorEl(null);
   };
+
+  const rxUI = getReactionUI(post.likedByViewer ? post.reactionType : null);
 
   return (
     <Box
@@ -246,126 +815,170 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
       </Box>
 
       <Box sx={{ px: 2, pb: 1 }}>
-        {editing ? (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <TextField
-              multiline
-              minRows={3}
-              value={editContent}
-              onChange={(event) => setEditContent(event.target.value)}
-            />
-            <Box sx={{ display: "flex", justifycontent: "space-between", gap: 1, alignItems: "center" }}>
-              <Button
-                size="small"
-                onClick={(event) => setEditVisibilityAnchorEl(event.currentTarget)}
-                startIcon={selectedEditVisibility.icon}
-                sx={{ textTransform: "none", color: "#111827", bgcolor: "#e5e7eb", "&:hover": { bgcolor: "#d1d5db" } }}
-              >
-                {selectedEditVisibility.label}
-              </Button>
-              <Menu anchorEl={editVisibilityAnchorEl} open={Boolean(editVisibilityAnchorEl)} onClose={() => setEditVisibilityAnchorEl(null)}>
-                {visibilityOptions.map((option) => (
-                  <MenuItem
-                    key={option.value}
-                    selected={option.value === editVisibility}
-                    onClick={() => {
-                      setEditVisibility(option.value);
-                      setEditVisibilityAnchorEl(null);
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      {option.icon}
-                      {option.label}
-                    </Box>
-                  </MenuItem>
-                ))}
-              </Menu>
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Button onClick={() => setEditing(false)}>Hủy</Button>
-                <Button variant="contained" onClick={handleSaveEdit}>Lưu</Button>
-              </Box>
-            </Box>
+        {hasBackground ? (
+          <Box
+            sx={{
+              width: "100%",
+              minHeight: "240px",
+              borderRadius: "12px",
+              p: 4,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: currentBg?.style.background,
+              boxShadow: "inset 0 0 80px rgba(0,0,0,0.15)",
+              textAlign: "center",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "20px",
+                fontWeight: 800,
+                color: currentBg?.style.color || "white",
+                lineHeight: 1.4,
+                wordBreak: "break-word",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {shouldTruncate && !isExpanded ? getTruncatedContent(parsedContent) : parsedContent}
+              {shouldTruncate && !isExpanded && (
+                <Box
+                  component="span"
+                  onClick={() => setIsExpanded(true)}
+                  sx={{
+                    color: currentBg?.style.color || "white",
+                    cursor: "pointer",
+                    ml: 1.5,
+                    display: "inline-block",
+                    textDecoration: "underline",
+                    fontSize: "16px",
+                    fontWeight: "normal",
+                    opacity: 0.85,
+                    "&:hover": { opacity: 1 },
+                  }}
+                >
+                  Xem thêm
+                </Box>
+              )}
+            </Typography>
           </Box>
         ) : (
-          post.content && <Typography sx={{ whiteSpace: "pre-wrap", color: "#333" }}>{post.content}</Typography>
+          parsedContent && (
+            <Typography sx={{ whiteSpace: "pre-wrap", color: "#1e293b", fontSize: "15px", lineHeight: 1.5 }}>
+              {shouldTruncate && !isExpanded ? getTruncatedContent(parsedContent) : parsedContent}
+              {shouldTruncate && !isExpanded && (
+                <Box
+                  component="span"
+                  onClick={() => setIsExpanded(true)}
+                  sx={{
+                    color: "#1877f2",
+                    cursor: "pointer",
+                    ml: 1,
+                    display: "inline-block",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  Xem thêm
+                </Box>
+              )}
+            </Typography>
+          )
         )}
       </Box>
 
-      {mediaItems.length > 0 && (
-        <Box
-          sx={{
-            bgcolor: "#fdf4e3",
-            display: "grid",
-            gridTemplateColumns: mediaItems.length === 1 ? "1fr" : "repeat(2, minmax(0, 1fr))",
-            gap: mediaItems.length === 1 ? 0 : "3px",
-            overflow: "hidden",
-          }}
-        >
-          {mediaItems.map((media, index) => {
-            const isVideo = media.mediaType === "VIDEO";
-            const isImage = isImageUrl(media.mediaUrl);
-            const isDoc = !isVideo && !isImage;
-            return (
+      <Box sx={{ px: 2, pb: 0.5 }}>
+        {renderMediaGrid()}
+      </Box>
+
+      {post.sharedPost && (() => {
+        const sp = post.sharedPost!;
+        const { backgroundId: spBgId, content: spContent } = parsePostContent(sp.content ?? "");
+        const spBg = POST_BACKGROUNDS.find(b => b.id === spBgId);
+        const spHasBg = spBgId !== "none" && (sp.media ?? []).length === 0;
+        const spMedia = sp.media ?? [];
+        const CLAMP = 3;
+        const spLines = (spContent ?? "").split("\n").length;
+        const spLong = (spContent?.length ?? 0) > 180 || spLines > CLAMP;
+        return (
+          <SharedPostCard
+            sp={sp}
+            spContent={spContent}
+            spHasBg={spHasBg}
+            spBg={spBg}
+            spMedia={spMedia}
+            spLong={spLong}
+            onViewSharedPost={onViewSharedPost}
+          />
+        );
+      })()}
+
+      <Box sx={{ p: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Box sx={{ display: "flex", gap: 2.5 }}>
+          <Box
+            onMouseEnter={() => setShowReactionsPopup(true)}
+            onMouseLeave={() => setShowReactionsPopup(false)}
+            sx={{ position: "relative", display: "flex", alignItems: "center" }}
+          >
+            <Box
+              onClick={() => void handleToggleLike()}
+              sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}
+            >
+              {rxUI.icon}
+              <Typography sx={{ fontSize: "0.9rem", color: rxUI.color, fontWeight: 500 }}>
+                {post.likeCount}
+              </Typography>
+            </Box>
+
+            {showReactionsPopup && (
               <Box
-                key={media.id ?? `${media.mediaUrl}-${index}`}
                 sx={{
-                  minHeight: mediaItems.length === 1 ? 260 : 180,
-                  maxHeight: mediaItems.length === 1 ? 520 : 320,
-                  bgcolor: "#111",
-                  overflow: "hidden",
+                  position: "absolute",
+                  bottom: "85%",
+                  left: 0,
+                  bgcolor: "white",
+                  borderRadius: "30px",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+                  border: "1px solid #e2e8f0",
+                  p: "6px 12px",
+                  display: "flex",
+                  gap: "12px",
+                  zIndex: 20,
+                  mb: 0,
+                  animation: "fadeInUp 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
+                  "@keyframes fadeInUp": {
+                    from: { opacity: 0, transform: "translateY(10px)" },
+                    to: { opacity: 1, transform: "translateY(0)" },
+                  },
                 }}
               >
-                {isDoc ? (
+                {[
+                  { emoji: "👍", name: "LIKE" },
+                  { emoji: "❤️", name: "LOVE" },
+                  { emoji: "😆", name: "HAHA" },
+                  { emoji: "😮", name: "WOW" },
+                  { emoji: "😢", name: "SAD" },
+                  { emoji: "😡", name: "ANGRY" }
+                ].map(({ emoji, name }) => (
                   <Box
-                    onClick={() => downloadFile(media.mediaUrl, getFileNameFromUrl(media.mediaUrl))}
+                    key={name}
+                    onClick={() => {
+                      void handleToggleLike(name);
+                      setShowReactionsPopup(false);
+                    }}
                     sx={{
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      fontSize: "24px",
                       cursor: "pointer",
-                      bgcolor: getFileMeta(media.mediaUrl).bg,
-                      p: 2,
-                      textAlign: "center",
-                      gap: 1,
-                      "&:hover": { bgcolor: "#e5e7eb" },
+                      transition: "transform 0.15s ease",
+                      "&:hover": {
+                        transform: "scale(1.35) translateY(-4px)",
+                      },
                     }}
                   >
-                    <Description sx={{ fontSize: 44, color: getFileMeta(media.mediaUrl).color }} />
-                    <Typography
-                      noWrap
-                      sx={{
-                        width: "100%",
-                        fontSize: "0.875rem",
-                        fontWeight: 700,
-                        color: "#1f2937",
-                        px: 1,
-                      }}
-                    >
-                      {getFileNameFromUrl(media.mediaUrl)}
-                    </Typography>
-                    <Typography sx={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                      Tải xuống ({getFileMeta(media.mediaUrl).label})
-                    </Typography>
+                    {emoji}
                   </Box>
-                ) : isVideo ? (
-                  <Box component="video" src={media.mediaUrl} controls sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                ) : (
-                  <Box component="img" src={media.mediaUrl} alt={`post media ${index + 1}`} sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                )}
+                ))}
               </Box>
-            );
-          })}
-        </Box>
-      )}
-
-      <Box sx={{ p: "10px 16px", display: "flex", alignItems: "center", justifycontent: "space-between" }}>
-        <Box sx={{ display: "flex", gap: 2.5 }}>
-          <Box onClick={handleToggleLike} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}>
-            <ThumbUpIcon sx={{ fontSize: 22, color: post.likedByViewer ? "#1877f2" : "#65676b" }} />
-            <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>{post.likeCount}</Typography>
+            )}
           </Box>
 
           <Box onClick={handleToggleComments} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}>
@@ -373,11 +986,14 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
             <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>{post.commentCount}</Typography>
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}>
-            <ShareIcon sx={{ fontSize: 24, color: "#65676b", transform: "scaleX(-1)" }} />
-            <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>0</Typography>
-          </Box>
+          {!isOwner && (
+            <Box onClick={() => setShareModalOpen(true)} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer", "&:hover": { color: "#1877f2" } }}>
+              <Reply sx={{ fontSize: 24, color: "#65676b", transform: "scaleX(-1)" }} />
+              <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>Chia sẻ</Typography>
+            </Box>
+          )}
         </Box>
+        {renderTopReactions(post.topReactions)}
       </Box>
 
       {commentsOpen && (
@@ -393,7 +1009,7 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
               </Box>
             </Box>
           ))}
-          <Box sx={{ display: "flex", gap: 1 }}>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <TextField
               fullWidth
               size="small"
@@ -406,11 +1022,76 @@ export default function Post({ post, currentUserId, onPostChanged, onPostDeleted
                   void handleAddComment();
                 }
               }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "20px",
+                  fontSize: "13px",
+                  bgcolor: "#f1f5f9",
+                  "& fieldset": { borderColor: "transparent" },
+                  "&:hover fieldset": { borderColor: "transparent" },
+                },
+              }}
             />
-            <Button variant="contained" onClick={handleAddComment}>Gửi</Button>
+            <IconButton
+              onClick={handleAddComment}
+              disabled={!commentText.trim()}
+              color="primary"
+              size="small"
+              sx={{
+                bgcolor: "#1877f2",
+                color: "white",
+                "&:hover": { bgcolor: "#166fe5" },
+                "&.Mui-disabled": { bgcolor: "#e2e8f0", color: "#94a3b8" },
+                width: 32,
+                height: 32,
+                flexShrink: 0,
+              }}
+            >
+              <Send sx={{ fontSize: 16 }} />
+            </IconButton>
           </Box>
         </Box>
       )}
+
+      <EditPostDialog
+        open={editing}
+        onClose={() => setEditing(false)}
+        post={post}
+        currentUserId={currentUserId}
+        onPostUpdated={(updatedPost) => {
+          onPostChanged(updatedPost);
+          setEditing(false);
+        }}
+      />
+
+      <PostMediaModal
+        open={mediaModalOpen}
+        onClose={() => setMediaModalOpen(false)}
+        post={post}
+        initialIndex={activeMediaIndex}
+        currentUserId={currentUserId}
+        onPostChanged={onPostChanged}
+      />
+
+      <PostReactionsModal
+        open={reactionsModalOpen}
+        onClose={() => setReactionsModalOpen(false)}
+        postId={post.id}
+        currentUserId={currentUserId}
+      />
+
+      <SharePostModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        post={post}
+        currentUserId={currentUserId}
+        authorName={authorName || post.authorName}
+        authorAvatarUrl={authorAvatarUrl ?? post.authorAvatarUrl}
+        onPostShared={(newPost) => {
+          onPostCreated?.(newPost);
+          setShareModalOpen(false);
+        }}
+      />
     </Box>
   );
 }

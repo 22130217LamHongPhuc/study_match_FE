@@ -5,11 +5,12 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 import CommunityGroupCard from "./CommunityGroupCard";
+import JoinGroupRequestModal from "./JoinGroupRequestModal";
 import {
   browseGroups,
   BrowseGroupResponse,
   getAllSubjects,
-  joinMemberIntoGroup,
+  requestJoinGroup,
   Subject,
 } from "../../../services/GroupService";
 import { RootState } from "../../../redux/store";
@@ -24,10 +25,12 @@ export interface CommunityGroup {
   subjectName: string;
   memberCount?: number;
   status: CommunityGroupStatus;
-  type: CommunityGroupType;
+  type?: CommunityGroupType;
+  visibility?: "PUBLIC" | "PRIVATE" | "COMMUNITY";
   createdAt: string;
   isMember: boolean;
   avatarUrl?: string | null;
+  isJoinRequestPending?: boolean;
 }
 
 function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGroup {
@@ -44,7 +47,14 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
     createdAt: item.createdAt,
     isMember: item.member || false,
     avatarUrl: item.avatarUrl,
+            isJoinRequestPending: item.joinRequestPending || false,
+
+
   };
+}
+
+function isJoinRequestPendingConflict(message?: string): boolean {
+  return Boolean(message?.toLowerCase().includes("already pending"));
 }
 
 export function CommunityGroupCardSkeleton() {
@@ -84,36 +94,60 @@ export default function SuggestedGroupsSection() {
   const [selectedOtherGroupsError, setSelectedOtherGroupsError] = useState<string | null>(null);
 
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
+  const [selectedJoinGroup, setSelectedJoinGroup] = useState<CommunityGroup | null>(null);
 
-  const handleJoinGroup = useCallback(
-    async (groupId: number) => {
+  const handleOpenJoinModal = useCallback(
+    (groupId: number) => {
+      const group =
+        recommendedGroups.find((item) => item.id === groupId) ||
+        selectedOtherGroups.find((item) => item.id === groupId) ||
+        null;
+      setSelectedJoinGroup(group);
+    },
+    [recommendedGroups, selectedOtherGroups],
+  );
+
+  const handleSubmitJoinRequest = useCallback(
+    async (message: string) => {
+      if (!selectedJoinGroup) return;
       if (!currentUserId) {
         toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
         return;
       }
 
+      const groupId = selectedJoinGroup.id;
       if (joiningGroupId === groupId) return;
 
       setJoiningGroupId(groupId);
 
       try {
-        const response = await joinMemberIntoGroup(groupId, currentUserId);
+        const response = await requestJoinGroup(groupId, currentUserId, message);
 
         if (!response.success) {
-          toast.error(response.message || "Tham gia nhóm thất bại.");
+          if (isJoinRequestPendingConflict(response.message)) {
+            setRecommendedGroups((prev) =>
+              prev.map((g) =>
+                g.id === groupId ? { ...g, isJoinRequestPending: true } : g,
+              ),
+            );
+
+            setSelectedOtherGroups((prev) =>
+              prev.map((g) =>
+                g.id === groupId ? { ...g, isJoinRequestPending: true } : g,
+              ),
+            );
+            setSelectedJoinGroup(null);
+            return;
+          }
+
+          toast.error(response.message || "Gửi yêu cầu tham gia nhóm thất bại.");
           return;
         }
-
-        toast.success("Tham gia nhóm thành công!");
 
         setRecommendedGroups((prev) =>
           prev.map((g) =>
             g.id === groupId
-              ? {
-                ...g,
-                isMember: true,
-                memberCount: g.memberCount !== undefined ? g.memberCount + 1 : undefined,
-              }
+              ? { ...g, isJoinRequestPending: true }
               : g,
           ),
         );
@@ -121,22 +155,35 @@ export default function SuggestedGroupsSection() {
         setSelectedOtherGroups((prev) =>
           prev.map((g) =>
             g.id === groupId
-              ? {
-                ...g,
-                isMember: true,
-                memberCount: g.memberCount !== undefined ? g.memberCount + 1 : undefined,
-              }
+              ? { ...g, isJoinRequestPending: true }
               : g,
           ),
         );
+        setSelectedJoinGroup(null);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        if (isJoinRequestPendingConflict(message)) {
+          setRecommendedGroups((prev) =>
+            prev.map((g) =>
+              g.id === groupId ? { ...g, isJoinRequestPending: true } : g,
+            ),
+          );
+
+          setSelectedOtherGroups((prev) =>
+            prev.map((g) =>
+              g.id === groupId ? { ...g, isJoinRequestPending: true } : g,
+            ),
+          );
+          setSelectedJoinGroup(null);
+          return;
+        }
+
         toast.error(message);
       } finally {
         setJoiningGroupId((prev) => (prev === groupId ? null : prev));
       }
     },
-    [currentUserId, joiningGroupId],
+    [currentUserId, joiningGroupId, selectedJoinGroup],
   );
 
   const otherSubjects = useMemo(() => {
@@ -181,7 +228,9 @@ export default function SuggestedGroupsSection() {
         }
 
         const content = response.data?.content ?? [];
-        onSuccess(content.map(mapBrowseGroupToCommunityGroup));
+        const mapped = content.map(mapBrowseGroupToCommunityGroup);
+        const filtered = mapped.filter((g) => g.visibility !== "PRIVATE");
+        onSuccess(filtered);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
         onError(errorMessage);
@@ -270,7 +319,7 @@ export default function SuggestedGroupsSection() {
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {recommendedGroups.map((group) => (
-            <CommunityGroupCard key={group.id} group={group} recommended onJoin={handleJoinGroup} />
+            <CommunityGroupCard key={group.id} group={group} recommended onJoin={handleOpenJoinModal} />
           ))}
         </div>
       )}
@@ -350,11 +399,22 @@ export default function SuggestedGroupsSection() {
         {!selectedOtherGroupsLoading && selectedOtherGroups.length > 0 && (
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {selectedOtherGroups.map((group) => (
-              <CommunityGroupCard key={group.id} group={group} onJoin={handleJoinGroup} />
+              <CommunityGroupCard key={group.id} group={group} onJoin={handleOpenJoinModal} />
             ))}
           </div>
         )}
       </div>
+
+      <JoinGroupRequestModal
+        open={Boolean(selectedJoinGroup)}
+        group={selectedJoinGroup}
+        submitting={joiningGroupId === selectedJoinGroup?.id}
+        onClose={() => {
+          if (joiningGroupId) return;
+          setSelectedJoinGroup(null);
+        }}
+        onSubmit={handleSubmitJoinRequest}
+      />
     </section>
   );
 }
