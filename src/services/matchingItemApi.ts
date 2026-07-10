@@ -32,7 +32,7 @@ export const matchingItemApi = {
     body: RecordMatchingActionRequest,
   ): Promise<APIResponseData<unknown>> => {
     return apiFetch<unknown>(
-      "/api/matching-items/action",
+      "/api/matching-items/action/view",
       {
         method: "POST",
         body: JSON.stringify(body),
@@ -40,6 +40,32 @@ export const matchingItemApi = {
       BASE_URL,
     );
   },
+  createActionSkip: (
+    body: RecordMatchingActionRequest,
+  ): Promise<APIResponseData<unknown>> => {
+    return apiFetch<unknown>(
+      "/api/matching-items/action/skip",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      BASE_URL,
+    );
+  },
+
+  createActionRequestFriend: (
+    body: RecordMatchingActionRequest,
+  ): Promise<APIResponseData<unknown>> => {
+    return apiFetch<unknown>(
+      "/api/matching-items/action/friend-request",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      BASE_URL,
+    );
+  },
+
   updateStatus: (
     body: UpdateMatchingStatusRequest,
   ): Promise<APIResponseData<unknown>> => {
@@ -53,3 +79,4 @@ export const matchingItemApi = {
     );
   },
 };
+

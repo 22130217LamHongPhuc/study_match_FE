@@ -5,7 +5,7 @@ import {
   CreateStudyGroupRequest,
   getAllSubjects,
 } from "../../../../services/GroupService";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Subject } from "../../../Onboarding/components";
 import { Numbers } from "@mui/icons-material";
 import { LoadingSkeleton } from "../../../../components/modal/basic/LoadingSkeleton";

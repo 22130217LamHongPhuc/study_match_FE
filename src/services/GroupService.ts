@@ -2,7 +2,7 @@ import { apiFetch } from "../config/apiClient";
 import { APIResponseData, StatusCode } from "../config/APIResponse";
 
 const API_BASE_URL_PROFILE = "http://localhost:8082/api";
-const API_BASE_URL_GROUP = "http://localhost:8086";
+const API_BASE_URL_GROUP = "http://localhost:8080";
 
 export type Subject = {
   subjectId: number;
@@ -34,6 +34,7 @@ export interface CreateStudyGroupRequest {
 export interface StudyGroupDetailResponse {
   id: number;
   name: string;
+  avatarUrl?: string | null;
   description: string;
   ownerUserId: number;
   termId: number;
@@ -77,6 +78,7 @@ export type BrowseGroupVisibility =
 export interface BrowseGroupResponse {
   id: number;
   name: string;
+  avatarUrl?: string | null;
   description?: string | null;
   ownerUserId?: number | null;
   termId?: number | null;
@@ -99,6 +101,7 @@ export interface AdminGroupRowResponse {
   id: number;
   memberCount: number;
   name: string;
+  avatarUrl?: string | null;
   status: AdminGroupStatus;
   subjectName: string;
   type: AdminGroupType;
@@ -129,6 +132,7 @@ export interface AdminGroupFreeTimeSlot {
 export interface AdminGroupDetailResponse {
   id: number;
   name: string;
+  avatarUrl?: string | null;
   description?: string | null;
   groupType: AdminGroupType;
   createdByUserId?: number | null;
@@ -415,6 +419,7 @@ export interface GroupInvitationResponse {
   invitationId: number;
   groupId: number;
   groupName: string;
+  groupAvatarUrl?: string;
   inviterUserId: number;
   inviteeUserId: number;
   inviterName: string;

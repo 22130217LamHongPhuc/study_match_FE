@@ -495,5 +495,33 @@ export const getFriendStatsService = async (
     };
 };
 
+export const skipUserService = async (
+    userId: number,
+    skippedUserId: number,
+): Promise<FriendRequestResponse> => {
+    const url = `${BASE_URL}/social/friends/skip?userId=${userId}&skippedUserId=${skippedUserId}`;
+    const token = localStorage.getItem('accessToken');
+    const res = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (data) {
+        return data as FriendRequestResponse;
+    }
+
+    return {
+        code: res.status,
+        message: res.statusText,
+        data: null,
+        timestamp: new Date().toISOString(),
+    };
+};
+
 
 
