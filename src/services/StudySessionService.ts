@@ -296,3 +296,16 @@ export async function getAdminSessions(params: {
 
   return response;
 }
+
+export async function getTopUpcomingSessions(
+  userId: number,
+): Promise<APIResponseData<StudySessionResponse[]>> {
+  const response = await apiFetch<StudySessionResponse[]>(
+    `/api/study-sessions/user/${userId}/upcoming`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL,
+  );
+  return response;
+}

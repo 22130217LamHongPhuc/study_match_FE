@@ -15,7 +15,7 @@ import {
   type FreeTimeSlotRequest,
   type SlotCode,
 } from "../../services/GroupService";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 export function CreateGroupSkeleton() {
   return (
     <div className="min-h-screen bg-transparent font-sans text-slate-900 animate-pulse">

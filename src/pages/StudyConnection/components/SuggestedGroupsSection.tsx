@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Search, Users } from "lucide-react";
 import { Autocomplete, TextField } from "@mui/material";
 import { useSelector } from "react-redux";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 import CommunityGroupCard from "./CommunityGroupCard";
 import JoinGroupRequestModal from "./JoinGroupRequestModal";
@@ -17,18 +17,19 @@ import { RootState } from "../../../redux/store";
 import { LoadingState, EmptyState } from "./SharedStates";
 
 type CommunityGroupStatus = "ACTIVE" | "INACTIVE";
-type CommunityGroupType = "COMMUNITY" | "PRIVATE";
+type CommunityGroupType = "COMMUNITY" | "STUDY" | "PRIVATE" | "PUBLIC";
 
 export interface CommunityGroup {
   id: number;
   name: string;
   subjectName: string;
-  memberCount: number;
+  memberCount?: number;
   status: CommunityGroupStatus;
   type?: CommunityGroupType;
   visibility?: "PUBLIC" | "PRIVATE" | "COMMUNITY";
   createdAt: string;
   isMember: boolean;
+  avatarUrl?: string | null;
   isJoinRequestPending?: boolean;
 }
 
@@ -40,12 +41,15 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
     id: item.id,
     name: item.name,
     subjectName: item.subjectName ?? "-",
-    memberCount: item.memberCount ?? 0,
+    memberCount: item.memberCount ?? undefined,
     status: normalizedStatus,
-    visibility: (item.visibility as any) || "COMMUNITY",
+    type: (item.visibility as CommunityGroupType) ?? "COMMUNITY",
     createdAt: item.createdAt,
     isMember: item.member || false,
-    isJoinRequestPending: item.joinRequestPending || false,
+    avatarUrl: item.avatarUrl,
+            isJoinRequestPending: item.joinRequestPending || false,
+
+
   };
 }
 
@@ -83,12 +87,12 @@ export default function SuggestedGroupsSection() {
   const [recommendedGroups, setRecommendedGroups] = useState<CommunityGroup[]>([]);
   const [recommendedGroupsLoading, setRecommendedGroupsLoading] = useState(false);
   const [recommendedGroupsError, setRecommendedGroupsError] = useState<string | null>(null);
-  
+
   const [selectedOtherSubjectId, setSelectedOtherSubjectId] = useState<number | "">("");
   const [selectedOtherGroups, setSelectedOtherGroups] = useState<CommunityGroup[]>([]);
   const [selectedOtherGroupsLoading, setSelectedOtherGroupsLoading] = useState(false);
   const [selectedOtherGroupsError, setSelectedOtherGroupsError] = useState<string | null>(null);
-  
+
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
   const [selectedJoinGroup, setSelectedJoinGroup] = useState<CommunityGroup | null>(null);
 

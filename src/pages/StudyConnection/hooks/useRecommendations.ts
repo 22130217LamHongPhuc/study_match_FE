@@ -26,6 +26,9 @@ function mapToViewModel(item: RecommendationApiItem): RecommendationCardVm {
     finalScore: item.final_score,
     reasonText: item.reason_text ?? item.reasonText,
     matchPercentage: item.match_percentage,
+    mainSubjectName: item.main_subject_name,
+    avatarUrl: item.avatar_url,
+    commonGroups: item.common_groups,
     friendRequest: friendRequest
       ? {
           id: friendRequest.id,

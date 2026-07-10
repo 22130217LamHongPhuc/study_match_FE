@@ -546,6 +546,7 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
+
     if (!currentUserId || !profileUserId) return;
     if (currentUserId === profileUserId) return;
     if (!recommendation?.fromRecommendation) return;

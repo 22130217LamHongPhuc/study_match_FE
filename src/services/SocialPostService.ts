@@ -157,13 +157,22 @@ export interface PageResponse<T> {
   totalPages: number;
 }
 
+export interface SocialFeedPageResponse<T> {
+  items: T[];
+  page: number;
+  size: number;
+  totalItems: number;
+  totalPages: number;
+  hasNext: boolean;
+}
+
 export async function loadFeedPosts(
   page: number,
   size: number,
   viewerId: number,
-): Promise<PageResponse<SocialPost>> {
+): Promise<SocialFeedPageResponse<SocialPost>> {
   const res = await fetch(
-    `${BASE_SOCIAL_SERVICE}/social/posts?page=${page}&size=${size}&viewerId=${viewerId}`,
+    `${BASE_SOCIAL_SERVICE}/social/posts/feed?page=${page}&size=${size}&viewerId=${viewerId}`,
   );
   if (!res.ok) throw new Error(`Cannot load feed posts. HTTP ${res.status}`);
   return unwrap(await res.json());

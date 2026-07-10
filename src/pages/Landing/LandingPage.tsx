@@ -9,7 +9,7 @@ import Footer from "./components/Footer";
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-white font-sans antialiased">
+    <div className="min-h-screen bg-white font-sans antialiased" style={{ fontFamily: "Arial, sans-serif" }}>
       <Navbar />
       <main>
         <HeroSection />

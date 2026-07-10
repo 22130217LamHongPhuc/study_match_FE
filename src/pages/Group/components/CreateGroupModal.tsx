@@ -1,33 +1,33 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
-import { 
-  BookOpen, 
-  Camera, 
-  ChevronRight, 
-  ChevronLeft, 
-  Plus, 
-  Search, 
-  Globe, 
-  Lock 
+import {
+  BookOpen,
+  Camera,
+  ChevronRight,
+  ChevronLeft,
+  Plus,
+  Search,
+  Globe,
+  Lock
 } from "lucide-react";
 import { Autocomplete, TextField, CircularProgress } from "@mui/material";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 import { initFreeTime } from "../../Onboarding/components/constants";
 import type { FreeTime, Subject } from "../../Onboarding/components/types";
 import FreeTimePicker from "../../CreateGroup/components/FreeTimePicker";
 
-import { 
-  createStudyGroup, 
+import {
+  createStudyGroup,
   getAllSubjectsByCurriculum,
   type CreateStudyGroupRequest,
   type DayOfWeek,
   type FreeTimeSlotRequest,
   type SlotCode
 } from "../../../services/GroupService";
-import { 
-  getFriendsListService, 
-  type FriendListItem 
+import {
+  getFriendsListService,
+  type FriendListItem
 } from "../../../services/FriendService";
 
 interface CreateGroupModalProps {
@@ -36,7 +36,7 @@ interface CreateGroupModalProps {
   onCreated: () => void;
 }
 
-type StepId = 1 | 2 | 3 | 4;
+type StepId = 1 | 2 | 3 | 4 | 5;
 
 interface StepItem {
   id: StepId;
@@ -48,7 +48,8 @@ const STEPS: StepItem[] = [
   { id: 1, name: "Cơ bản", desc: "Tên & Mô tả nhóm" },
   { id: 2, name: "Môn học", desc: "Chọn môn học chính" },
   { id: 3, name: "Thiết lập", desc: "Số lượng & Quyền riêng tư" },
-  { id: 4, name: "Lịch & Bạn bè", desc: "Thời gian & Mời bạn học" }
+  { id: 4, name: "Lịch học", desc: "Thời gian rảnh dự kiến" },
+  { id: 5, name: "Bạn bè", desc: "Mời bạn học" }
 ];
 
 export default function CreateGroupModal({ open, onClose, onCreated }: CreateGroupModalProps) {
@@ -102,7 +103,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
   // Load friends
   useEffect(() => {
-    if (!open || step !== 4) return;
+    if (!open || step !== 5) return;
     const loadFriends = async () => {
       setLoadingFriends(true);
       try {
@@ -157,6 +158,8 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       setStep(3);
     } else if (step === 3) {
       setStep(4);
+    } else if (step === 4) {
+      setStep(5);
     }
   };
 
@@ -240,8 +243,8 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 px-4 py-6">
-      <div className="w-full max-h-[calc(100vh-120px)] max-w-2xl rounded-xl bg-white shadow-xl flex flex-col overflow-hidden">
-        
+      <div className="w-full max-h-[calc(100vh-80px)] max-w-3xl rounded-xl bg-white shadow-xl flex flex-col overflow-hidden">
+
         {/* Sticky Header */}
         <div className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4 shrink-0">
           <div>
@@ -258,16 +261,15 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
         {/* Wizard Steps Progress Indicator */}
         <div className="border-b border-gray-100 bg-gray-50/50 py-2.5 shrink-0 select-none">
-          <div className="mx-auto flex max-w-xs items-center justify-between px-4">
+          <div className="mx-auto flex max-w-md items-center justify-between px-4">
             {STEPS.map((s, index) => (
               <React.Fragment key={s.id}>
-                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${
-                  step === s.id
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${step === s.id
                     ? "bg-orange-500 text-white scale-105 shadow-sm"
                     : step > s.id
                       ? "bg-orange-100 text-orange-600"
                       : "bg-gray-200 text-gray-500"
-                }`}>
+                  }`}>
                   {s.id}
                 </span>
                 {index < STEPS.length - 1 && (
@@ -280,7 +282,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
         {/* Scrollable Form Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          
+
           {step === 1 && (
             <div className="space-y-6">
               {/* Centered Avatar Uploader */}
@@ -358,6 +360,18 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                     value={mainSubject}
                     onChange={(_, newValue) => setMainSubject(newValue)}
                     noOptionsText="Không tìm thấy môn học nào"
+                    slotProps={{
+                      listbox: {
+                        style: {
+                          maxHeight: "180px",
+                        },
+                      },
+                      popper: {
+                        sx: {
+                          zIndex: 11000,
+                        },
+                      },
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -400,13 +414,13 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           {/* STEP 3: Group Settings */}
           {step === 3 && (
             <div className="space-y-6">
-              
+
               {/* Max Members */}
               <div className="space-y-3">
                 <label className="text-sm font-semibold text-gray-700 block">
                   Số lượng thành viên tối đa (từ 3 đến 10)
                 </label>
-                
+
                 {/* Compact grid selectors for member counts */}
                 <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
                   {[3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
@@ -414,11 +428,10 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                       key={num}
                       type="button"
                       onClick={() => setMaxMembers(num)}
-                      className={`h-10 rounded-lg border text-sm font-bold transition-all cursor-pointer ${
-                        maxMembers === num
+                      className={`h-10 rounded-lg border text-sm font-bold transition-all cursor-pointer ${maxMembers === num
                           ? "bg-orange-500 text-white border-orange-500 shadow-sm"
                           : "border-gray-200 bg-white text-gray-600 hover:border-orange-300 hover:bg-orange-50/30"
-                      }`}
+                        }`}
                     >
                       {num}
                     </button>
@@ -429,14 +442,13 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
               {/* Visibility Card options */}
               <div className="space-y-3">
                 <span className="text-sm font-semibold text-gray-700 block">Quyền riêng tư nhóm</span>
-                
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Public Card Option */}
-                  <label className={`flex cursor-pointer items-start gap-4 rounded-xl border-2 p-4 transition-all ${
-                    visibility === "public"
+                  <label className={`flex cursor-pointer items-start gap-4 rounded-xl border-2 p-4 transition-all ${visibility === "public"
                       ? "border-orange-500 bg-orange-50/20"
                       : "border-gray-150 bg-gray-50/30 hover:bg-gray-50/80"
-                  }`}>
+                    }`}>
                     <input
                       type="radio"
                       name="visibility"
@@ -455,11 +467,10 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                   </label>
 
                   {/* Private Card Option */}
-                  <label className={`flex cursor-pointer items-start gap-4 rounded-xl border-2 p-4 transition-all ${
-                    visibility === "private"
+                  <label className={`flex cursor-pointer items-start gap-4 rounded-xl border-2 p-4 transition-all ${visibility === "private"
                       ? "border-orange-500 bg-orange-50/20"
                       : "border-gray-150 bg-gray-50/30 hover:bg-gray-50/80"
-                  }`}>
+                    }`}>
                     <input
                       type="radio"
                       name="visibility"
@@ -482,20 +493,22 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
             </div>
           )}
 
-          {/* STEP 4: Schedule & Invite Friends */}
+          {/* STEP 4: Group Schedule */}
           {step === 4 && (
             <div className="space-y-6">
-              
-              {/* Group Schedule */}
               <div className="space-y-2">
                 <span className="text-sm font-semibold text-gray-700 block">Thời gian rảnh dự kiến của nhóm</span>
                 <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
                   <FreeTimePicker value={freeTime} onChange={setFreeTime} />
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Friend Invitation list */}
-              <div className="space-y-3 border-t border-gray-100 pt-5">
+          {/* STEP 5: Invite Friends */}
+          {step === 5 && (
+            <div className="space-y-6">
+              <div className="space-y-3">
                 <div>
                   <span className="text-sm font-semibold text-gray-700 block">Mời bạn bè tham gia nhóm (Tùy chọn)</span>
                   <p className="text-xs text-gray-400 mt-0.5">
@@ -514,7 +527,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                   />
                 </div>
 
-                {/* Invited status bar */}
                 {invitedUserIds.length > 0 && (
                   <div className="rounded-lg border border-orange-100 bg-orange-50/40 p-3">
                     <p className="text-xs font-bold text-orange-700 mb-1.5">
@@ -543,7 +555,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                   </div>
                 )}
 
-                {/* List of Friends */}
                 <div className="max-h-60 overflow-y-auto space-y-2 border border-gray-100 rounded-lg p-2 bg-white">
                   {loadingFriends ? (
                     <div className="flex items-center justify-center py-6 text-sm text-gray-400 gap-2">
@@ -586,11 +597,10 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                           <button
                             type="button"
                             onClick={() => handleToggleInvite(friend.user_id)}
-                            className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                              isInvited
+                            className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${isInvited
                                 ? "bg-orange-50 text-orange-600 border-orange-200"
                                 : "bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-600"
-                            }`}
+                              }`}
                           >
                             {isInvited ? "Đã chọn" : "Chọn"}
                           </button>
@@ -599,9 +609,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                     })
                   )}
                 </div>
-
               </div>
-
             </div>
           )}
 
@@ -623,7 +631,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           </div>
 
           <div>
-            {step < 4 ? (
+            {step < 5 ? (
               <button
                 type="button"
                 onClick={handleNext}

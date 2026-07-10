@@ -15,6 +15,7 @@ export interface ScheduleRow {
   id: number;
   sessionName: string;
   groupName: string | null;
+  groupAvatarUrl?: string | null;
   scheduleType: ScheduleType;
   creatorName: string;
   creatorAvatar: string | null;
@@ -58,6 +59,7 @@ export interface AdminSessionRowResponse {
   title: string;
   subjectName: string | null;
   groupName: string | null;
+  groupAvatarUrl?: string | null;
   sessionType: ScheduleType;
   creatorName: string;
   startTime: string;

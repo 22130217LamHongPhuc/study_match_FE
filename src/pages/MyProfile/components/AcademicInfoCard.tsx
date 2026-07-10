@@ -1,4 +1,3 @@
-import { Box, Card, CardContent, Divider, Stack, Typography } from "@mui/material";
 import { ProfileViewModel } from "../types";
 
 interface AcademicInfoCardProps {
@@ -13,62 +12,35 @@ function MetricItem({
   value: string | number;
 }) {
   return (
-    <Stack spacing={0.5}>
-      <Typography variant="caption" sx={{ color: "#6b7280", fontWeight: 500 }}>
+    <div className="space-y-1">
+      <span className="block text-xs font-semibold text-gray-400">
         {label}
-      </Typography>
-      <Typography variant="body1" sx={{ fontWeight: 600, color: "#1f2937" }}>
+      </span>
+      <span className="block text-sm font-semibold text-gray-800">
         {value}
-      </Typography>
-    </Stack>
+      </span>
+    </div>
   );
 }
 
 export default function AcademicInfoCard({ profile }: AcademicInfoCardProps) {
   return (
-    <Card
-      sx={{
-        borderRadius: 3,
-        border: "1px solid #e5e7eb",
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-        background: "#ffffff",
-      }}
-    >
-      <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-        <Stack spacing={2.5}>
-          <Typography
-            variant="subtitle1"
-            sx={{ fontWeight: 700, color: "#1f2937" }}
-          >
-            Thông tin học tập
-          </Typography>
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="border-b border-gray-100 pb-3 mb-4">
+        <h3 className="text-base font-bold text-gray-800">Thông tin học tập</h3>
+      </div>
 
-          <MetricItem label="Học kỳ" value={profile.termLabel} />
-
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={3}>
-            <Box sx={{ flex: 1 }}>
-              <MetricItem label="Năm học" value={`Năm ${profile.studyYearNo}`} />
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <MetricItem label="Học kỳ thứ" value={profile.semesterNo} />
-            </Box>
-          </Stack>
-
-          <Divider sx={{ borderColor: "#f3f4f6" }} />
-
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={3}>
-            <Box sx={{ flex: 1 }}>
-              <MetricItem label="Điểm TB" value={profile.avgScore.toFixed(2)} />
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <MetricItem label="Tín chỉ đã học" value={profile.studiedCredits} />
-            </Box>
-          </Stack>
-
-          <MetricItem label="Trình độ" value={profile.studyGoal} />
-          <MetricItem label="Chế độ học" value={profile.studyModeLabel} />
-        </Stack>
-      </CardContent>
-    </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <MetricItem label="Học kỳ hiện tại" value={profile.termLabel} />
+        </div>
+        <MetricItem label="Năm học" value={`Năm ${profile.studyYearNo}`} />
+        <MetricItem label="Học kỳ thứ" value={profile.semesterNo} />
+        <MetricItem label="Điểm trung bình (GPA)" value={profile.avgScore.toFixed(2)} />
+        <MetricItem label="Tín chỉ tích lũy" value={`${profile.studiedCredits} tín chỉ`} />
+        <MetricItem label="Trình độ / Mục tiêu" value={profile.studyGoal} />
+        <MetricItem label="Chế độ học" value={profile.studyModeLabel} />
+      </div>
+    </div>
   );
 }

@@ -2301,7 +2301,7 @@ export default function ConversationPage() {
         }}
       >
         <DialogTitle sx={{ px: 3, py: 2, borderBottom: "1px solid #e2e8f0" }}>
-          <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>
             Tin nhắn đã ghim
           </Typography>
           <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25 }}>
@@ -2388,7 +2388,7 @@ export default function ConversationPage() {
         }}
       >
         <DialogTitle sx={{ px: 3, py: 2, borderBottom: "1px solid #e2e8f0" }}>
-          <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>
             Lịch học nhóm
           </Typography>
           <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.25 }}>
@@ -2424,7 +2424,7 @@ export default function ConversationPage() {
               >
                 <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, alignItems: "flex-start" }}>
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography sx={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>
                       {session.title}
                     </Typography>
                     <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.5 }}>

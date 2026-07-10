@@ -1,156 +1,91 @@
-import {
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
-import { ProfileViewModel, ScheduleClassVm } from "../types";
+import { ProfileViewModel } from "../types";
 
 interface ScheduleTableProps {
   profile: ProfileViewModel;
 }
 
-function classStyle(item: ScheduleClassVm) {
-  if (item.scheduleType === "MAIN_SUBJECT") {
-    return {
-      bgcolor: "#fff7ed",
-      color: "#ea580c",
-      border: "1px solid #ffedd5",
-      fontWeight: 600,
-    };
+function getClassBadgeClass(scheduleType: string) {
+  if (scheduleType === "MAIN_SUBJECT") {
+    return "bg-orange-50 text-orange-700 border border-orange-200 font-semibold";
   }
-  return {
-    bgcolor: "#f3f4f6",
-    color: "#4b5563",
-    border: "1px solid #e5e7eb",
-    fontWeight: 500,
-  };
+  return "bg-gray-100 text-gray-600 border border-gray-200 font-medium";
 }
 
 export default function ScheduleTable({ profile }: ScheduleTableProps) {
   return (
-    <Card
-      sx={{
-        borderRadius: 3,
-        border: "1px solid #e5e7eb",
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-        background: "#ffffff",
-      }}
-    >
-      <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-        <Stack spacing={2.5}>
-          <Typography
-            variant="subtitle1"
-            sx={{ fontWeight: 700, color: "#1f2937" }}
-          >
-            Thời khóa biểu
-          </Typography>
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="border-b border-gray-100 pb-3 mb-4">
+        <h3 className="text-base font-bold text-gray-800">Thời khóa biểu tuần</h3>
+      </div>
 
-          <TableContainer sx={{ borderRadius: 2, border: "1px solid #e5e7eb" }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ bgcolor: "#f9fafb" }}>
-                  <TableCell
-                    sx={{
-                      minWidth: 130,
-                      fontWeight: 700,
-                      color: "#374151",
-                      py: 1.5,
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 min-w-[130px]">
+                Khung giờ
+              </th>
+              {profile.dayHeaders.map((day) => (
+                <th
+                  key={day.id}
+                  className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-gray-500 min-w-[140px]"
+                >
+                  {day.short}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {profile.scheduleRows.map((row) => (
+              <tr
+                key={row.slot.id}
+                className="hover:bg-orange-50/10 transition-colors"
+              >
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="font-bold text-gray-800">
+                    {row.slot.label}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    {row.slot.time}
+                  </div>
+                </td>
+
+                {row.cells.map((cell) => (
+                  <td
+                    key={`${row.slot.id}-${cell.dayId}`}
+                    className="px-4 py-3 text-center"
                   >
-                    Khung giờ
-                  </TableCell>
-                  {profile.dayHeaders.map((day) => (
-                    <TableCell
-                      key={day.id}
-                      align="center"
-                      sx={{
-                        fontWeight: 700,
-                        minWidth: 140,
-                        color: "#374151",
-                        py: 1.5,
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
-                      {day.short}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {profile.scheduleRows.map((row) => (
-                  <TableRow
-                    key={row.slot.id}
-                    sx={{ "&:hover": { bgcolor: "#fafafa" } }}
-                  >
-                    <TableCell sx={{ py: 1.5, borderBottom: "1px solid #f3f4f6" }}>
-                      <Stack spacing={0.25}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: "#1f2937" }}>
-                          {row.slot.label}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: "#6b7280" }}>
-                          {row.slot.time}
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-
-                    {row.cells.map((cell) => (
-                      <TableCell
-                        key={`${row.slot.id}-${cell.dayId}`}
-                        sx={{ py: 1.5, borderBottom: "1px solid #f3f4f6" }}
-                      >
-                        <Stack
-                          direction="row"
-                          spacing={0.75}
-                          useFlexGap
-                          flexWrap="wrap"
-                          justifyContent="center"
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {cell.classes.map((item) => (
+                        <span
+                          key={item.id}
+                          title={item.subjectName}
+                          className={`inline-flex items-center rounded px-2 py-0.5 text-xs ${getClassBadgeClass(
+                            item.scheduleType
+                          )}`}
                         >
-                          {cell.classes.map((item) => (
-                            <Chip
-                              key={item.id}
-                              size="small"
-                              label={`${item.subjectCode}`}
-                              title={item.subjectName}
-                              sx={classStyle(item)}
-                            />
-                          ))}
-                          {cell.isFree && (
-                            <Chip
-                              size="small"
-                              label="Rảnh"
-                              sx={{
-                                bgcolor: "#f0fdf4",
-                                color: "#166534",
-                                border: "1px solid #dcfce7",
-                                fontWeight: 500,
-                              }}
-                            />
-                          )}
-                          {cell.classes.length === 0 && !cell.isFree && (
-                            <Typography variant="caption" sx={{ color: "#d1d5db" }}>
-                              -
-                            </Typography>
-                          )}
-                        </Stack>
-                      </TableCell>
-                    ))}
-                  </TableRow>
+                          {item.subjectCode}
+                        </span>
+                      ))}
+
+                      {cell.isFree && (
+                        <span className="inline-flex items-center rounded bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          Rảnh
+                        </span>
+                      )}
+
+                      {cell.classes.length === 0 && !cell.isFree && (
+                        <span className="text-gray-300">-</span>
+                      )}
+                    </div>
+                  </td>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Stack>
-      </CardContent>
-    </Card>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

@@ -10,7 +10,7 @@ import {
   getFriendsListService,
   type FriendListItem,
 } from "../../../services/FriendService";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { ChevronRight, Users, BookOpen } from "lucide-react";
 
 interface CreateSessionModalProps {
@@ -26,6 +26,7 @@ export function CreateSessionModal({
 }: CreateSessionModalProps) {
   const [sessionType, setSessionType] = useState<SessionType>("USER_PAIR");
   const [studyMode, setStudyMode] = useState<StudyMode>("ONLINE");
+  const [isCreating, setIsCreating] = useState(false);
 
   const [title, setTitle] = useState("");
   const [subjectName, setSubjectName] = useState("");
@@ -233,6 +234,7 @@ export function CreateSessionModal({
     setGroupSearchQuery("");
     setIsFriendDropdownOpen(false);
     setFriendSearchQuery("");
+    setIsCreating(false);
   };
 
   const handleSubmit = async () => {
@@ -246,6 +248,7 @@ export function CreateSessionModal({
       return;
     }
     const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
     const now = new Date();
 
     if (startDate <= now) {
@@ -253,13 +256,26 @@ export function CreateSessionModal({
       return;
     }
 
-    if (startTime >= endTime) {
+    if (startDate >= endDate) {
       toast.error("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc");
+      return;
+    }
+
+    const durationMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
+
+    if (durationMinutes < 5) {
+      toast.error("Buổi học phải kéo dài ít nhất 5 phút");
+      return;
+    }
+
+    if (durationMinutes > 8 * 60) {
+      toast.error("Buổi học không được kéo dài quá 8 tiếng");
       return;
     }
 
 
     try {
+      setIsCreating(true);
       if (sessionType === "USER_PAIR") {
         const friend = selectedFriend;
 
@@ -358,6 +374,8 @@ export function CreateSessionModal({
     } catch (error) {
       console.error(error);
       setGroupError("Tạo lịch học nhóm thất bại");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -378,7 +396,8 @@ export function CreateSessionModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+            disabled={isCreating}
+            className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Đóng
           </button>
@@ -627,19 +646,6 @@ export function CreateSessionModal({
             )}
           </div>
 
-          <label className="space-y-2 block">
-            <span className="text-sm font-semibold text-gray-700">
-              Tiêu đề buổi học
-            </span>
-
-            <input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              required
-              placeholder="Ví dụ: Ôn Java OOP"
-              className={inputClass}
-            />
-          </label>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-2">
@@ -704,7 +710,8 @@ export function CreateSessionModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+            disabled={isCreating}
+            className="rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
           >
             Hủy
           </button>
@@ -712,9 +719,17 @@ export function CreateSessionModal({
           <button
             type="button"
             onClick={handleSubmit}
-            className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 transition-colors"
+            disabled={isCreating}
+            className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-400 transition-colors flex items-center gap-2 justify-center"
           >
-            Tạo lịch
+            {isCreating ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                Đang tạo...
+              </>
+            ) : (
+              "Tạo lịch"
+            )}
           </button>
         </div>
       </div>

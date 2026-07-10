@@ -1,15 +1,3 @@
-import {
-  Avatar,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Typography,
-  IconButton,
-  Box,
-} from "@mui/material";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import EditIcon from "@mui/icons-material/Edit";
 import { useState } from "react";
 import { ProfileViewModel } from "../types";
 import UpdateProfileDialog from "./UpdateProfileDialog";
@@ -18,80 +6,83 @@ interface ProfileHeaderCardProps {
   profile: ProfileViewModel;
 }
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0][0]?.toUpperCase() ?? "?";
+}
+
+function getGenderLabel(gender: string): string {
+  const normalized = gender?.toLowerCase().trim();
+  if (normalized === "male" || normalized === "nam" || normalized === "m") {
+    return "Nam";
+  }
+  if (normalized === "female" || normalized === "nữ" || normalized === "nu" || normalized === "f") {
+    return "Nữ";
+  }
+  return gender || "Chưa xác định";
+}
+
 export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
   const [openEdit, setOpenEdit] = useState(false);
+  const avatarUrl = localStorage.getItem("avatarUrl");
+  const initials = getInitials(profile.fullName);
 
   return (
-    <Card
-      sx={{
-        borderRadius: 3,
-        border: "1px solid #e5e7eb",
-        background: "#ffffff",
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-      }}
-    >
-      <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={3}
-          alignItems={{ xs: "flex-start", sm: "center" }}
-        >
-          <Avatar
-            sx={{
-              width: 64,
-              height: 64,
-              bgcolor: "#2563eb",
-              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
-            }}
-          >
-            <PersonOutlineIcon sx={{ fontSize: 32 }} />
-          </Avatar>
-
-          <Stack spacing={0.5} sx={{ flex: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: "#1f2937" }}>
-              {profile.fullName}
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#4b5563" }}>
-              MSSV: {profile.studentCode}
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#6b7280" }}>
-              Giới tính: {profile.gender} • Độ tuổi: {profile.ageGroup} • Khu vực: {profile.region}
-            </Typography>
-          </Stack>
-
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <Chip
-              label={profile.cohortLabel}
-              sx={{
-                bgcolor: "#f0f7ff",
-                color: "#1d4ed8",
-                fontWeight: 600,
-                border: "1px solid #e0effe",
-              }}
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left w-full sm:w-auto">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={profile.fullName}
+              className="h-16 w-16 rounded-full object-cover border-2 border-orange-100 shadow-sm shrink-0"
             />
+          ) : (
+            <div className="h-16 w-16 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+              {initials}
+            </div>
+          )}
 
-            <IconButton
-              size="small"
-              onClick={() => setOpenEdit(true)}
-              sx={{
-                color: "#9ca3af",
-                "&:hover": {
-                  color: "#2563eb",
-                  bgcolor: "#f0f7ff",
-                },
-              }}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        </Stack>
-      </CardContent>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-gray-800">
+              {profile.fullName}
+            </h2>
+            <p className="text-sm font-semibold text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full inline-block">
+              MSSV: {profile.studentCode}
+            </p>
+            <div className="text-xs text-gray-500 mt-1 flex flex-wrap justify-center sm:justify-start gap-x-2 gap-y-1">
+              <span>Giới tính: <span className="font-medium text-gray-700">{getGenderLabel(profile.gender)}</span></span>
+              <span>•</span>
+              <span>Độ tuổi: <span className="font-medium text-gray-700">{profile.ageGroup}</span></span>
+              <span>•</span>
+              <span>Khu vực: <span className="font-medium text-gray-700">{profile.region}</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 self-center sm:self-auto shrink-0">
+          <span className="inline-flex items-center rounded-lg bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 border border-orange-100">
+            {profile.cohortLabel}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setOpenEdit(true)}
+            className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition rounded-lg border border-gray-200 hover:border-orange-100 cursor-pointer"
+          >
+            Chỉnh sửa
+          </button>
+        </div>
+      </div>
 
       <UpdateProfileDialog
         open={openEdit}
         onClose={() => setOpenEdit(false)}
         profile={profile}
       />
-    </Card>
+    </div>
   );
 }

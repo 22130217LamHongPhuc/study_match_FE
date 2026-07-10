@@ -141,7 +141,7 @@ export default function WelcomeSection() {
         <Typography
           sx={{
             fontSize: { xs: "26px", sm: "34px", md: "42px" },
-            fontWeight: 800,
+            fontWeight: 700,
             lineHeight: 1.25,
             color: "#0f172a",
           }}

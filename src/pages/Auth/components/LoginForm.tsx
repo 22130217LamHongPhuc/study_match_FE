@@ -14,6 +14,7 @@ export default function LoginForm() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const response: APIResponseData<AuthResponse> = await login(
@@ -46,6 +47,7 @@ export default function LoginForm() {
       }
     } catch (error) {
       console.error("Login error:", error);
+      setLoading(false);
     }
   };
 

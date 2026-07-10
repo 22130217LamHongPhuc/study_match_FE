@@ -1,6 +1,7 @@
 import { BookOpen, ChevronRight, Crown, Loader2, Plus, Send, UserPlus, UserX, Users, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CreateGroupModal from "./components/CreateGroupModal";
+import groupImg from "../../assets/img/group.png";
 import {
   getActiveGroupMembers,
   getActiveGroupMemberIds,
@@ -38,6 +39,26 @@ const getRoleLabel = (role?: string | null, isOwnerByGroupDetail = false) => {
   return "Thành viên";
 };
 
+const getInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+};
+
+const getAvatarBg = (id: number) => {
+  const colors = [
+    "from-orange-500 to-amber-500",
+    "from-rose-500 to-pink-500",
+    "from-blue-500 to-indigo-500",
+    "from-emerald-500 to-teal-500",
+    "from-violet-500 to-purple-500",
+  ];
+  return colors[id % colors.length];
+};
+
 function GroupPreviewCard({
   group,
   onOpenDetail,
@@ -63,13 +84,31 @@ function GroupPreviewCard({
           </span>
         </div>
 
-        <h3 className="text-base font-bold text-gray-900 group-hover:text-orange-500 transition-colors mb-2">
-          {group.name}
-        </h3>
-
-        <p className="text-sm text-gray-600 line-clamp-2 mb-6">
-          {group.description || "Không có mô tả cho nhóm học này."}
-        </p>
+        <div className="flex gap-4 items-start mb-6">
+          {group.avatarUrl ? (
+            <img
+              src={normalizeAvatarUrl(group.avatarUrl) || undefined}
+              alt={group.name}
+              className="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-100 shadow-sm"
+            />
+          ) : (
+            <div
+              className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getAvatarBg(
+                group.id
+              )} flex items-center justify-center text-white font-bold text-sm tracking-wider shadow-sm shrink-0`}
+            >
+              {getInitials(group.name)}
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold text-gray-900 group-hover:text-orange-500 transition-colors mb-2">
+              {group.name}
+            </h3>
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {group.description || "Không có mô tả cho nhóm học này."}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-500">
@@ -78,7 +117,6 @@ function GroupPreviewCard({
             <Users size={14} className="text-gray-400" />
             Tối đa {group.maxMembers}
           </span>
-
         </div>
 
         <span className="text-xs font-semibold text-orange-500 group-hover:underline inline-flex items-center gap-0.5">
@@ -347,27 +385,36 @@ export default function GroupPage() {
   }, [currentUserId, selectedGroup]);
 
   return (
-    <main className="px-6 py-8 sm:px-8 lg:px-10">
-      <div className="mx-auto w-full max-w-7xl">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-5 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Nhóm học của tôi
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Quản lý và chọn nhóm học tập phù hợp với lịch trình của bạn.
-            </p>
-          </div>
+    <main className="px-6 py-8 sm:px-8 lg:px-10 bg-orange-50/30 min-h-screen">
+      <div className="mx-auto w-full max-w-7xl flex flex-col gap-5">
+        <section className="rounded-xl border border-gray-200 bg-white p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <img
+                src={groupImg}
+                alt="Nhóm học"
+                className="h-28 w-auto object-contain mix-blend-multiply"
+              />
+              <div>
+                <h1 className="text-lg font-bold text-gray-800">Nhóm học của tôi</h1>
+                <p className="text-sm text-gray-500">
+                  Quản lý và chọn nhóm học tập phù hợp với lịch trình của bạn.
+                </p>
+              </div>
+            </div>
 
-          <button
-            onClick={goToCreateGroup}
-            className="inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600 transition-colors shrink-0"
-          >
-            <Plus size={16} />
-            Tạo nhóm mới
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={goToCreateGroup}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 shrink-0 cursor-pointer"
+            >
+              <Plus size={16} />
+              Tạo nhóm mới
+            </button>
+          </div>
+        </section>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 
         {loading ? (
           <div className="flex min-h-[240px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white p-8">

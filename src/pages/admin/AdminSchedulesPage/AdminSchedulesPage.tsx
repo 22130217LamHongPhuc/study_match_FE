@@ -87,6 +87,7 @@ function mapSessionToRow(session: AdminSessionRowResponse): ScheduleRow {
     id: session.id,
     sessionName: session.title,
     groupName: session.groupName,
+    groupAvatarUrl: session.groupAvatarUrl ?? null,
     scheduleType: session.sessionType,
     creatorName: session.creatorName,
     creatorAvatar: null,

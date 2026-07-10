@@ -18,10 +18,7 @@ const BenefitsSection: React.FC = () => {
     <section id="benefits" className="py-24" style={{ background: "#f7f5f0" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-14 space-y-3">
-          <div className="inline-flex items-center gap-2">
-            <span className="w-5 h-0.5 bg-[#f97316]" />
-            <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#f97316]">Lợi ích</span>
-          </div>
+
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1a3557] leading-tight">
             Giá trị thực sự cho<br />tất cả mọi người.
           </h2>

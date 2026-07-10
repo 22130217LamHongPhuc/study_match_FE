@@ -63,10 +63,7 @@ const HowItWorksSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
           <div className="lg:sticky lg:top-24 space-y-6">
-            <div className="inline-flex items-center gap-2">
-              <span className="w-5 h-0.5 bg-[#f97316]" />
-              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#f97316]">Quy trình</span>
-            </div>
+
             <h2 className="text-3xl sm:text-4xl font-bold text-[#1a3557] leading-tight">
               Chỉ 3 bước để bắt đầu học nhóm hiệu quả.
             </h2>
