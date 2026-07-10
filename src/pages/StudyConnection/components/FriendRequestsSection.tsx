@@ -324,20 +324,22 @@ export default function FriendRequestsSection() {
                         </button>
                       </>
                     ) : (
-                      <button
-                        onClick={() => handleCancel(req.id, displayName)}
-                        disabled={actionLoading !== null}
-                        className="flex-1 flex items-center justify-center h-9 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
-                      >
-                        Từ chối
-                      </button>
-                      <button
-                        onClick={() => handleAccept(req.id, displayName)}
-                        disabled={actionLoading !== null}
-                        className="flex-1 flex items-center justify-center h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
-                      >
-                        Chấp nhận
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleCancel(req.id, displayName)}
+                          disabled={actionLoading !== null}
+                          className="flex-1 flex items-center justify-center h-9 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
+                        >
+                          Từ chối
+                        </button>
+                        <button
+                          onClick={() => handleAccept(req.id, displayName)}
+                          disabled={actionLoading !== null}
+                          className="flex-1 flex items-center justify-center h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
+                        >
+                          Chấp nhận
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

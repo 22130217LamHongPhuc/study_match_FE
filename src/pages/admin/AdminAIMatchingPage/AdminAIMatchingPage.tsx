@@ -499,20 +499,15 @@ export default function AdminAIMatchingPage() {
         </div>
       )}
 
-      {(statisticsLoading ||
-        actionDistributionLoading ||
-        trendLoading ||
-        feedbackStatisticsLoading) && (
-        <div className="rounded-lg border border-sand-200 bg-white px-4 py-3 text-sm font-medium text-sand-500">
-          Đang tải thống kê matching...
-        </div>
-      )}
-
-      <AIMatchingStatCards stats={statistics} />
+      <AIMatchingStatCards
+        stats={statistics}
+        loading={statisticsLoading}
+      />
 
       <AIMatchingCharts
         distributionData={actionDistribution}
         trendData={trendData}
+        loading={actionDistributionLoading || trendLoading}
       />
 
       <AIMatchingTabs

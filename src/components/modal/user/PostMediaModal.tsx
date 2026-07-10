@@ -467,7 +467,7 @@ export default function PostMediaModal({
                       border: "1px solid #f1f5f9",
                     }}
                   >
-                    <Typography sx={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", mb: 0.5 }}>
+                    <Typography sx={{ fontSize: "13px", fontWeight: 700, color: "#1e293b", mb: 0.5 }}>
                       {comment.authorName}
                     </Typography>
                     <Typography sx={{ fontSize: "14px", color: "#334155", lineHeight: 1.4, wordBreak: "break-word" }}>

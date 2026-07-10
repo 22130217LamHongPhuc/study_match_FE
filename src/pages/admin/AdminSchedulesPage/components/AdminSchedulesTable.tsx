@@ -134,151 +134,171 @@ export function AdminSchedulesTable({
           </thead>
 
           <tbody>
-            {schedules.map((s) => {
-              const time = formatTimeRange(s.startTime, s.endTime);
-              return (
-                <tr
-                  key={s.id}
-                  className="border-b border-sand-100 transition-colors last:border-0 hover:bg-sand-50/50"
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-accent-50 text-accent-600">
-                        <CalendarDays size={15} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-sand-800">
-                          {s.sessionName}
-                        </p>
-                        {s.subject && (
-                          <p className="truncate text-xs text-sand-400">
-                            {s.subject}
+            {!loading &&
+              schedules.map((s) => {
+                const time = formatTimeRange(s.startTime, s.endTime);
+                return (
+                  <tr
+                    key={s.id}
+                    className="border-b border-sand-100 transition-colors last:border-0 hover:bg-sand-50/50"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-sand-800">
+                            {s.sessionName}
                           </p>
-                        )}
+                          {s.subject && (
+                            <p className="mt-0.5 truncate text-xs text-sand-500">
+                              Môn: {s.subject}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <div className="space-y-1">
-                      {s.groupName && (
-                        <p className="text-xs font-medium text-sand-700">
-                          {s.groupName}
+                    <td className="px-4 py-3">
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-sand-700">
+                          {s.groupName || "Nhóm công khai"}
                         </p>
-                      )}
-                      <ScheduleTypeBadge type={s.scheduleType} />
-                    </div>
-                  </td>
-
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sand-200 text-[9px] font-medium text-sand-600">
-                        {s.creatorName
-                          .split(" ")
-                          .map((w) => w[0])
-                          .slice(-2)
-                          .join("")
-                          .toUpperCase()}
+                        <ScheduleTypeBadge type={s.scheduleType} />
                       </div>
-                      <span className="text-xs font-medium text-sand-700">
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <span className="text-xs font-medium text-sand-600">
                         {s.creatorName}
                       </span>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <p className="text-xs font-medium text-sand-700">
-                      {time.date}
-                    </p>
-                    <p className="text-[11px] text-sand-400">
-                      {time.startTime} – {time.endTime}
-                    </p>
-                  </td>
+                    <td className="px-4 py-3">
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-semibold text-sand-700">
+                          {time.date}
+                        </p>
+                        <p className="text-[11px] font-medium text-sand-500">
+                          {time.startTime} - {time.endTime}
+                        </p>
+                      </div>
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <StudyModeBadge mode={s.studyMode} />
-                  </td>
+                    <td className="px-4 py-3">
+                      <StudyModeBadge mode={s.studyMode} />
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      <Users2 size={13} className="text-sand-400" />
-                      <span className="text-xs font-medium text-sand-700">
-                        {s.memberCount}/{s.maxMembers}
+                    <td className="px-4 py-3">
+                      <span className="text-xs font-medium text-sand-600">
+                        {s.memberCount} / {s.maxMembers}
                       </span>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <ScheduleStatusBadge status={s.status} />
-                  </td>
+                    <td className="px-4 py-3">
+                      <ScheduleStatusBadge status={s.status} />
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        type="button"
-                        onClick={() => onViewDetail(s)}
-                        className="rounded p-1.5 text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-600"
-                        aria-label="Xem chi tiết"
-                      >
-                        <Eye size={15} />
-                      </button>
-
-                      <div
-                        className="relative"
-                        onMouseDown={(e) => e.stopPropagation()}
-                      >
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1">
                         <button
                           type="button"
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={() =>
-                            setOpenMenuId((prev) =>
-                              prev === s.id ? null : s.id,
-                            )
-                          }
-                          aria-haspopup="menu"
-                          aria-expanded={openMenuId === s.id}
-                          className="rounded p-1.5 text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-700"
+                          onClick={() => onViewDetail(s)}
+                          className="rounded p-1.5 text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-600"
+                          aria-label="Xem chi tiết lịch học"
                         >
-                          <MoreHorizontal size={15} />
+                          <Eye size={15} />
                         </button>
-
-                        {openMenuId === s.id && (
-                          <div
-                            role="menu"
-                            className="absolute right-0 top-[calc(100%+6px)] z-10 w-44 overflow-hidden rounded-lg border border-sand-200 bg-white shadow-lg"
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenMenuId((prev) => (prev === s.id ? null : s.id));
+                            }}
+                            aria-haspopup="menu"
+                            aria-expanded={openMenuId === s.id}
+                            className="rounded p-1.5 text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-700"
                           >
-                            <button
-                              type="button"
-                              role="menuitem"
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-sand-700 hover:bg-sand-50"
-                              onClick={() => {
-                                setOpenMenuId(null);
-                                onEdit?.(s.id);
-                              }}
+                            <MoreHorizontal size={15} />
+                          </button>
+
+                          {openMenuId === s.id && (
+                            <div
+                              role="menu"
+                              className="absolute right-0 top-[calc(100%+6px)] z-10 w-40 overflow-hidden rounded-lg border border-sand-200 bg-white shadow-lg"
                             >
-                              <Pencil size={14} className="text-sand-500" />
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
-                              onClick={() => {
-                                setOpenMenuId(null);
-                                onDelete?.(s);
-                              }}
-                            >
-                              <Trash2 size={14} className="text-rose-600" />
-                              Xóa lịch học
-                            </button>
-                          </div>
-                        )}
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-sand-700 hover:bg-sand-50"
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onEdit?.(s.id);
+                                }}
+                              >
+                                <Pencil size={14} className="text-sand-500" />
+                                Chỉnh sửa
+                              </button>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  onDelete?.(s);
+                                }}
+                              >
+                                <Trash2 size={14} className="text-rose-600" />
+                                Xóa lịch học
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
+                    </td>
+                  </tr>
+                );
+              })}
+
+            {loading &&
+              Array.from({ length: pageSize }).map((_, index) => (
+                <tr key={index} className="border-b border-sand-100 last:border-b-0 animate-pulse">
+                  <td className="px-4 py-3">
+                    <div className="space-y-1">
+                      <div className="h-4 w-36 bg-sand-200 rounded" />
+                      <div className="h-3 w-24 bg-sand-100 rounded" />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="space-y-1">
+                      <div className="h-4 w-28 bg-sand-200 rounded" />
+                      <div className="h-3.5 w-16 bg-sand-100 rounded-full" />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-24 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="space-y-1">
+                      <div className="h-4 w-20 bg-sand-200 rounded" />
+                      <div className="h-3 w-28 bg-sand-100 rounded" />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-5 w-16 bg-sand-200 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-12 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-5 w-20 bg-sand-200 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-1">
+                      <div className="h-7 w-7 bg-sand-100 rounded" />
+                      <div className="h-7 w-7 bg-sand-100 rounded" />
                     </div>
                   </td>
                 </tr>
-              );
-            })}
+              ))}
 
             {!loading && schedules.length === 0 && (
               <tr>
@@ -292,19 +312,6 @@ export function AdminSchedulesTable({
                     </p>
                     <p className="text-xs text-sand-400">
                       Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            )}
-
-            {loading && (
-              <tr>
-                <td colSpan={8} className="px-4 py-14 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-sand-300 border-t-sand-600" />
-                    <p className="text-sm font-medium text-sand-500">
-                      Đang tải dữ liệu...
                     </p>
                   </div>
                 </td>

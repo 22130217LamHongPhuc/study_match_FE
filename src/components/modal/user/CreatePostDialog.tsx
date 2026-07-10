@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
 import LockIcon from "@mui/icons-material/Lock";
+import { toast } from "react-toastify";
 import PeopleIcon from "@mui/icons-material/People";
 import PublicIcon from "@mui/icons-material/Public";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -165,19 +166,19 @@ export default function CreatePostDialog({
     });
 
     if (validFiles.length !== files.length) {
-      alert("Chỉ hỗ trợ đính kèm hình ảnh, video và tài liệu phổ biến (PDF, Word, Excel, PowerPoint, Text).");
+      toast.warning("Chỉ hỗ trợ đính kèm hình ảnh, video và tài liệu phổ biến (PDF, Word, Excel, PowerPoint, Text).");
     }
 
     setSelectedMediaItems((prev) => {
       const availableSlots = MAX_POST_MEDIA - prev.length;
       if (availableSlots <= 0) {
-        alert(`Chỉ được thêm tối đa ${MAX_POST_MEDIA} tệp đính kèm`);
+        toast.warning(`Chỉ được thêm tối đa ${MAX_POST_MEDIA} tệp đính kèm`);
         return prev;
       }
 
       const filesToAdd = validFiles.slice(0, availableSlots);
       if (validFiles.length > availableSlots) {
-        alert(`Chỉ được thêm tối đa ${MAX_POST_MEDIA} tệp đính kèm`);
+        toast.warning(`Chỉ được thêm tối đa ${MAX_POST_MEDIA} tệp đính kèm`);
       }
 
       return [
@@ -226,7 +227,7 @@ export default function CreatePostDialog({
       handleCloseCreatePost();
     } catch (error) {
       console.error(error);
-      alert("Không thể tạo bài viết");
+      toast.error("Không thể tạo bài viết");
     } finally {
       setPosting(false);
       onPostingChange?.(false);
@@ -240,7 +241,7 @@ export default function CreatePostDialog({
       fullWidth
       PaperProps={{ sx: { borderRadius: "16px", p: 0.5, width: 550, maxWidth: "92%" } }}
     >
-      <DialogTitle sx={{ textAlign: "center", fontSize: 20, fontWeight: 800, position: "relative", py: 2, color: "#0f172a" }}>
+      <DialogTitle sx={{ textAlign: "center", fontSize: 20, fontWeight: 700, position: "relative", py: 2, color: "#0f172a" }}>
         Tạo bài viết
         <IconButton
           onClick={handleCloseCreatePost}
@@ -321,7 +322,7 @@ export default function CreatePostDialog({
                 </Menu>
               </Box>
             </Box>
- 
+
             {selectedBgId === "none" ? (
               <TextField
                 fullWidth
@@ -358,7 +359,7 @@ export default function CreatePostDialog({
                     disableUnderline: true,
                     sx: {
                       fontSize: "20px",
-                      fontWeight: 800,
+                      fontWeight: 700,
                       color: POST_BACKGROUNDS.find(bg => bg.id === selectedBgId)?.style.color || "white",
                       textAlign: "center",
                       lineHeight: 1.4,
@@ -419,7 +420,7 @@ export default function CreatePostDialog({
                 ))}
               </Box>
             )}
- 
+
             {selectedMediaItems.length > 0 && (
               <Box
                 sx={{
@@ -606,7 +607,7 @@ export default function CreatePostDialog({
                 })()}
               </Box>
             )}
- 
+
             <Box sx={{ mt: 2, p: 1.5, border: "1px solid #e2e8f0", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1.5 }}>
               <Typography sx={{ fontWeight: 700, fontSize: 13, color: "#475569" }}>Thêm đính kèm ({selectedMediaItems.length}/{MAX_POST_MEDIA})</Typography>
               <Button
@@ -629,22 +630,22 @@ export default function CreatePostDialog({
                 />
               </Button>
             </Box>
- 
+
             <Button
               fullWidth
               disabled={posting || (!postContent.trim() && selectedMediaItems.length === 0)}
               variant="contained"
               onClick={handleCreatePost}
-              sx={{ 
-                mt: 2.5, 
-                py: 1, 
-                textTransform: "none", 
-                fontWeight: 700, 
-                fontSize: 15, 
-                borderRadius: "20px", 
+              sx={{
+                mt: 2.5,
+                py: 1,
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: 15,
+                borderRadius: "20px",
                 background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
                 boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
-                "&:hover": { 
+                "&:hover": {
                   background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                   boxShadow: '0 6px 16px rgba(59, 130, 246, 0.3)',
                 },

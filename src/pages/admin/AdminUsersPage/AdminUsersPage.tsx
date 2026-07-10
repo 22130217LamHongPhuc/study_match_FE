@@ -134,18 +134,13 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {loading && (
-        <div className="rounded-lg border border-sand-200 bg-white px-4 py-3 text-sm font-medium text-sand-500">
-          Đang tải danh sách người dùng...
-        </div>
-      )}
-
       <AdminUsersTable
         users={users}
         page={page}
         totalPages={totalPages}
         totalItems={totalItems}
         pageSize={ADMIN_USER_PAGE_SIZE}
+        loading={loading}
         onPageChange={setPage}
         onStatusUpdated={handleStatusUpdated}
         onViewUser={(userId) => {

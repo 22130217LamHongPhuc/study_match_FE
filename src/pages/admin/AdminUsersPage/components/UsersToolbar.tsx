@@ -5,20 +5,20 @@ const statusOptions: Array<{
   label: string;
   value: AdminUserStatus | null;
 }> = [
-  { label: "Tất cả", value: null },
-  { label: "Hoạt động", value: "ACTIVE" },
-  { label: "Không hoạt động", value: "INACTIVE" },
-  { label: "Đã xóa", value: "DELETED" },
-];
+    { label: "Tất cả", value: null },
+    { label: "Hoạt động", value: "ACTIVE" },
+    { label: "Không hoạt động", value: "INACTIVE" },
+    { label: "Đã xóa", value: "DELETED" },
+  ];
 
 const roleOptions: Array<{
   label: string;
   value: AdminUserRole | null;
 }> = [
-  { label: "Tất cả vai trò", value: null },
-  { label: "Sinh viên", value: "student" },
-  { label: "Quản trị viên", value: "admin" },
-];
+    { label: "Tất cả vai trò", value: null },
+    { label: "Sinh viên", value: "student" },
+    { label: "Quản trị viên", value: "admin" },
+  ];
 
 type UsersToolbarProps = {
   query: string;
@@ -48,10 +48,10 @@ export function UsersToolbar({
             Quản lý tài khoản người dùng, vai trò và trạng thái hoạt động
           </p>
         </div>
-
+        {/* 
         <button className="rounded-lg border border-sand-300 bg-white px-4 py-2 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50">
           Xuất dữ liệu
-        </button>
+        </button> */}
       </div>
 
       <div className="rounded-lg border border-sand-200 bg-white p-3">
@@ -75,11 +75,10 @@ export function UsersToolbar({
                 key={option.value ?? "all"}
                 type="button"
                 onClick={() => onStatusChange(option.value)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  statusFilter === option.value
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === option.value
                     ? "border-sand-800 bg-sand-900 text-white"
                     : "border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
-                }`}
+                  }`}
               >
                 {option.label}
               </button>

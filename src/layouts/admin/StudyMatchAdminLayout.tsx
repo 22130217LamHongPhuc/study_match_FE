@@ -29,11 +29,11 @@ const menuItems = [
     icon: Users,
     path: "/admin/users",
   },
-  {
-    label: "Hồ sơ học tập",
-    icon: GraduationCap,
-    path: "/admin/profiles",
-  },
+  // {
+  //   label: "Hồ sơ học tập",
+  //   icon: GraduationCap,
+  //   path: "/admin/profiles",
+  // },
   {
     label: "Nhóm học",
     icon: BookOpenCheck,
@@ -49,16 +49,16 @@ const menuItems = [
     icon: BrainCircuit,
     path: "/admin/matching",
   },
-  {
-    label: "Phản hồi",
-    icon: MessageSquareWarning,
-    path: "/admin/feedbacks",
-  },
-  {
-    label: "Chat & Video",
-    icon: Video,
-    path: "/admin/communication",
-  },
+  // {
+  //   label: "Phản hồi",
+  //   icon: MessageSquareWarning,
+  //   path: "/admin/feedbacks",
+  // },
+  // {
+  //   label: "Chat & Video",
+  //   icon: Video,
+  //   path: "/admin/communication",
+  // },
   {
     label: "Báo cáo",
     icon: BarChart3,
@@ -94,10 +94,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               to={item.path}
               onClick={onNavigate}
               className={({ isActive }) =>
-                `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-sand-200/70 text-sand-900"
-                    : "text-sand-600 hover:bg-sand-100 hover:text-sand-800"
+                `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+                  ? "bg-sand-200/70 text-sand-900"
+                  : "text-sand-600 hover:bg-sand-100 hover:text-sand-800"
                 }`
               }
             >
@@ -108,29 +107,28 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="border-t border-sand-200 p-3">
+      {/* <div className="border-t border-sand-200 p-3">
         <NavLink
           to="/admin/settings"
           onClick={onNavigate}
           className={({ isActive }) =>
-            `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-              isActive
-                ? "bg-sand-200/70 text-sand-900"
-                : "text-sand-500 hover:bg-sand-100 hover:text-sand-800"
+            `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+              ? "bg-sand-200/70 text-sand-900"
+              : "text-sand-500 hover:bg-sand-100 hover:text-sand-800"
             }`
           }
         >
           <Settings size={16} />
           <span>Cài đặt hệ thống</span>
         </NavLink>
-      </div>
+      </div> */}
     </>
   );
 }
 
 function Sidebar() {
   return (
-    <aside className="hidden h-screen w-64 shrink-0 border-r border-sand-200 bg-sand-100 lg:flex lg:flex-col">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-sand-200 bg-sand-100 lg:flex lg:flex-col">
       <SidebarContent />
     </aside>
   );
@@ -146,16 +144,14 @@ function MobileDrawer({
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-black/30 transition-opacity lg:hidden ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`fixed inset-0 z-40 bg-black/30 transition-opacity lg:hidden ${open ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
         onClick={onClose}
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sand-100 transition-transform duration-200 ease-in-out lg:hidden ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sand-100 transition-transform duration-200 ease-in-out lg:hidden ${open ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <button
           onClick={onClose}

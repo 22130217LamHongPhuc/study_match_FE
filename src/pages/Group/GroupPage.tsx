@@ -1,5 +1,5 @@
 import { BookOpen, ChevronRight, Crown, Loader2, Plus, Send, UserPlus, UserX, Users, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import ReportModal from "../../components/modal/ReportModal";
 import CreateGroupModal from "./components/CreateGroupModal";
 import groupImg from "../../assets/img/group.png";
 import {
@@ -19,6 +19,7 @@ import {
   loadFriendProfilesService,
   normalizeAvatarUrl,
 } from "../../services/FriendService";
+import { toast } from "react-toastify";
 
 type GroupMemberProfile = FriendUser & {
   role?: string | null;
@@ -129,7 +130,6 @@ function GroupPreviewCard({
 }
 
 export default function GroupPage() {
-  const navigate = useNavigate();
   const [groupList, setGroupList] = useState<StudyGroupDetailResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -144,6 +144,7 @@ export default function GroupPage() {
   const [invitingUserIds, setInvitingUserIds] = useState<number[]>([]);
   const [invitedUserIds, setInvitedUserIds] = useState<number[]>([]);
   const [invitationStatusByUserId, setInvitationStatusByUserId] = useState<InvitationStatusByUserId>({});
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const currentUserId = Number(localStorage.getItem("userId"));
 
   const fetchGroups = async () => {
@@ -152,7 +153,7 @@ export default function GroupPage() {
     if (res.success) {
       setGroupList(res.data);
     } else {
-      alert("Lấy nhóm thất bại: " + (res.message || "Lỗi không xác định"));
+      toast.error("Lấy nhóm thất bại: " + (res.message || "Lỗi không xác định"));
     }
     setLoading(false);
   };
@@ -181,6 +182,7 @@ export default function GroupPage() {
     setInviteSearch("");
     setInvitedUserIds([]);
     setInvitationStatusByUserId({});
+    setReportModalOpen(false);
     setMembersLoading(true);
 
     try {
@@ -199,7 +201,7 @@ export default function GroupPage() {
       } else {
         const membersRes = await getActiveGroupMemberIds(group.id);
         if (!membersRes.success) {
-          alert(membersRes.message || "Không thể lấy danh sách thành viên.");
+          toast.error(membersRes.message || "Không thể lấy danh sách thành viên.");
           return;
         }
         memberIds = membersRes.data || [];
@@ -231,7 +233,7 @@ export default function GroupPage() {
       }
     } catch (error) {
       console.error("Load group members failed:", error);
-      alert("Đã xảy ra lỗi khi lấy danh sách thành viên.");
+      toast.error("Đã xảy ra lỗi khi lấy danh sách thành viên.");
     } finally {
       setMembersLoading(false);
     }
@@ -247,6 +249,7 @@ export default function GroupPage() {
     setInvitingUserIds([]);
     setInvitedUserIds([]);
     setInvitationStatusByUserId({});
+    setReportModalOpen(false);
   };
 
   const loadInvitationStatuses = async (groupId: number) => {
@@ -475,6 +478,15 @@ export default function GroupPage() {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
+                {selectedGroup.ownerUserId !== currentUserId && (
+                  <button
+                    type="button"
+                    onClick={() => setReportModalOpen(true)}
+                    className="inline-flex h-9 items-center rounded-md border border-orange-200 bg-orange-50 px-3 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-100"
+                  >
+                    Báo cáo
+                  </button>
+                )}
                 {canInviteMembers && (
                   <button
                     type="button"
@@ -650,6 +662,14 @@ export default function GroupPage() {
           </section>
         </div>
       )}
+
+      <ReportModal
+        open={reportModalOpen && Boolean(selectedGroup)}
+        onClose={() => setReportModalOpen(false)}
+        targetType="GROUP"
+        targetId={selectedGroup?.id || 0}
+        targetName={selectedGroup?.name}
+      />
 
       <CreateGroupModal
         open={createModalOpen}

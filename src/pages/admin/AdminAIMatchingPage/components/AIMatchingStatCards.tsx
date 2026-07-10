@@ -78,9 +78,34 @@ const cardConfigs: StatCardConfig[] = [
 
 export function AIMatchingStatCards({
   stats,
+  loading,
 }: {
   stats: MatchingStatisticsResponse;
+  loading?: boolean;
 }) {
+  if (loading) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cardConfigs.map((cfg) => (
+          <div
+            key={cfg.key}
+            className="rounded-lg border border-sand-200 bg-white p-5 animate-pulse"
+          >
+            <div className="flex items-center justify-between">
+              <div className="h-4 w-24 bg-sand-200 rounded" />
+              <div className="h-4 w-4 bg-sand-200 rounded" />
+            </div>
+
+            <div className="mt-3 flex items-baseline gap-2">
+              <div className="h-8 w-16 bg-sand-200 rounded" />
+              <div className="h-4 w-24 bg-sand-100 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cardConfigs.map((cfg) => {

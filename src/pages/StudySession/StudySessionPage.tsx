@@ -394,13 +394,15 @@ export default function StudySessionPage() {
 
     try {
       const response = await getStudySessionById(sessionId, currentUserId);
-      const updatedSession = mapSessionToVm(response.data, new Map());
+      if (response.data) {
+        const updatedSession = mapSessionToVm(response.data, new Map());
 
-      setSessions((prev) => applySessionUpdate(prev, updatedSession, filter));
-      setCalendarSessions((prev) =>
-        applySessionUpdate(prev, updatedSession, filter),
-      );
-      setSelectedSession(updatedSession);
+        setSessions((prev) => applySessionUpdate(prev, updatedSession, filter));
+        setCalendarSessions((prev) =>
+          applySessionUpdate(prev, updatedSession, filter),
+        );
+        setSelectedSession(updatedSession);
+      }
     } catch {
     }
 

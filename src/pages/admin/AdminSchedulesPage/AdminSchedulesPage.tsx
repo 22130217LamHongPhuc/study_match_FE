@@ -254,20 +254,13 @@ export default function AdminSchedulesPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statsLoading
-          ? mockScheduleStats.map((stat) => (
-              <ScheduleStatCardView
-                key={stat.title}
-                card={{
-                  ...stat,
-                  value: "--",
-                  change: "Đang tải...",
-                }}
-              />
-            ))
-          : stats.map((stat) => (
-              <ScheduleStatCardView key={stat.title} card={stat} />
-            ))}
+        {(statsLoading ? mockScheduleStats : stats).map((stat) => (
+          <ScheduleStatCardView
+            key={stat.title}
+            card={stat}
+            loading={statsLoading}
+          />
+        ))}
       </div>
 
       <SchedulesFilterBar

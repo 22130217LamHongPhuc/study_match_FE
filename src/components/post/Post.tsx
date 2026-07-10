@@ -4,7 +4,6 @@ import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import {
   Avatar,
   Box,
-  Button,
   IconButton,
   Menu,
   MenuItem,
@@ -22,9 +21,9 @@ import {
   PostComment,
   SocialPost,
   togglePostLike,
-  updatePost,
 } from "../../services/SocialPostService";
 import { parsePostContent, POST_BACKGROUNDS } from "../modal/user/CreatePostDialog";
+import ReportModal from "../modal/ReportModal";
 import EditPostDialog from "../modal/user/EditPostDialog";
 import PostMediaModal from "../modal/user/PostMediaModal";
 import PostReactionsModal from "../modal/user/PostReactionsModal";
@@ -260,7 +259,7 @@ function SharedPostCard({
           >
             <Typography
               sx={{
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: 15,
                 color: spBg?.style.color || "white",
                 textAlign: "center",
@@ -521,6 +520,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
   const [showReactionsPopup, setShowReactionsPopup] = useState(false);
   const [reactionsModalOpen, setReactionsModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const isOwner = currentUserId === post.authorId;
   const mediaItems = post.media || [];
   const visibility = getVisibilityOption(post.visibility);
@@ -801,14 +801,28 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
             </Box>
           </Box>
         </Box>
-        {isOwner && (
+        {(isOwner || post.authorId !== currentUserId) && (
           <>
             <IconButton size="small" onClick={(event) => setAnchorEl(event.currentTarget)}>
               <MoreHoriz />
             </IconButton>
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-              <MenuItem onClick={() => { setEditing(true); setAnchorEl(null); }}>Sửa bài</MenuItem>
-              <MenuItem onClick={handleDelete}>Xóa bài</MenuItem>
+              {!isOwner && (
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    setReportModalOpen(true);
+                  }}
+                >
+                  Báo cáo bài viết
+                </MenuItem>
+              )}
+              {isOwner && (
+                <>
+                  <MenuItem onClick={() => { setEditing(true); setAnchorEl(null); }}>Sửa bài</MenuItem>
+                  <MenuItem onClick={handleDelete}>Xóa bài</MenuItem>
+                </>
+              )}
             </Menu>
           </>
         )}
@@ -833,7 +847,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
             <Typography
               sx={{
                 fontSize: "20px",
-                fontWeight: 800,
+                fontWeight: 700,
                 color: currentBg?.style.color || "white",
                 lineHeight: 1.4,
                 wordBreak: "break-word",
@@ -1091,6 +1105,14 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
           onPostCreated?.(newPost);
           setShareModalOpen(false);
         }}
+      />
+
+      <ReportModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetType="POST"
+        targetId={post.id}
+        targetName={post.authorName ? `Bài viết của ${post.authorName}` : undefined}
       />
     </Box>
   );

@@ -27,27 +27,51 @@ import AdminGroupsPage from "../pages/admin/AdminGroupsPage/AdminGroupsPage";
 import AdminUsersPage from "../pages/admin/AdminUsersPage/AdminUsersPage";
 import AdminSchedulesPage from "../pages/admin/AdminSchedulesPage/AdminSchedulesPage";
 import AdminAIMatchingPage from "../pages/admin/AdminAIMatchingPage/AdminAIMatchingPage";
+import AdminReportsPage from "../pages/admin/AdminReportsPage/AdminReportsPage";
 import StudySessionPage from "../pages/StudySession/StudySessionPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
 import LandingPage from "../pages/Landing/LandingPage";
+import AdminLoginPage from "../pages/admin/AdminLoginPage";
+import MyReportsPage from "../pages/MyReports/MyReportsPage";
 
+
+function getRoleFromToken(token: string | null): "admin" | "student" | null {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const role = String(payload.role ?? "").toLowerCase();
+    if (role === "admin" || role === "student") return role;
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 const ProtectedRoute = () => {
-  const token = localStorage.getItem("accessToken");
-  console.log("ProtectedRoute token:", token);
+  const role = getRoleFromToken(localStorage.getItem("accessToken"));
+  if (!role) return <Navigate to="/" replace />;
+  if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  return <Outlet />;
+};
 
-  if (!token) {
-    return <Navigate to="/" replace />;
-  }
+const AdminProtectedRoute = () => {
+  const role = getRoleFromToken(localStorage.getItem("accessToken"));
+  if (role !== "admin") return <Navigate to="/admin/login" replace />;
   return <Outlet />;
 };
 
 const PublicLayout = () => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    return <Navigate to="/home" replace />;
-  }
+  const role = getRoleFromToken(localStorage.getItem("accessToken"));
+  if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  if (role === "student") return <Navigate to="/home" replace />;
   return <Outlet />;
+};
+
+const NotFoundRedirect = () => {
+  const role = getRoleFromToken(localStorage.getItem("accessToken"));
+  if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  if (role === "student") return <Navigate to="/home" replace />;
+  return <Navigate to="/" replace />;
 };
 
 export const router = createBrowserRouter([
@@ -106,6 +130,8 @@ export const router = createBrowserRouter([
           { path: "/recommendation", element: <StudyConnectionPage /> },
           { path: "/groups", element: <GroupPage /> },
           { path: "/search", element: <SearchPage /> },
+          { path: "/reports/my", element: <MyReportsPage /> },
+          { path: "/report", element: <Navigate to="/reports/my" replace /> },
         ],
       },
     ],
@@ -117,34 +143,51 @@ export const router = createBrowserRouter([
   },
 
   {
+    path: "/admin/login",
+    element: <AdminLoginPage />,
+  },
+
+  {
     path: "/admin",
-    element: <StudyMatchAdminLayout />,
+    element: <AdminProtectedRoute />,
     children: [
       {
-        index: true,
-        element: <Navigate to="/admin/dashboard" replace />,
-      },
-      {
-        path: "dashboard",
-        element: <AdminDashboardPage />,
-      },
-      {
-        path: "users",
-        element: <AdminUsersPage />,
-      },
-      {
-        path: "groups",
-        element: <AdminGroupsPage />,
-      },
-      {
-        path: "schedules",
-        element: <AdminSchedulesPage />,
-      },
-      {
-        path: "matching",
-        element: <AdminAIMatchingPage />,
+        element: <StudyMatchAdminLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/admin/dashboard" replace />,
+          },
+          {
+            path: "dashboard",
+            element: <AdminDashboardPage />,
+          },
+          {
+            path: "users",
+            element: <AdminUsersPage />,
+          },
+          {
+            path: "groups",
+            element: <AdminGroupsPage />,
+          },
+          {
+            path: "schedules",
+            element: <AdminSchedulesPage />,
+          },
+          {
+            path: "matching",
+            element: <AdminAIMatchingPage />,
+          },
+          {
+            path: "reports",
+            element: <AdminReportsPage />,
+          },
+        ],
       },
     ],
   },
-
+  {
+    path: "*",
+    element: <NotFoundRedirect />,
+  },
 ]);

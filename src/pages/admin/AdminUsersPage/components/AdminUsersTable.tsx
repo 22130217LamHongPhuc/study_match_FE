@@ -33,6 +33,7 @@ type AdminUsersTableProps = {
   totalPages: number;
   totalItems: number;
   pageSize: number;
+  loading: boolean;
   onPageChange: (page: number) => void;
   onStatusUpdated?: (userId: number, status: AdminUserStatus) => void;
   onViewUser?: (userId: number) => void;
@@ -132,6 +133,7 @@ export function AdminUsersTable({
   totalPages,
   totalItems,
   pageSize,
+  loading,
   onPageChange,
   onStatusUpdated,
   onViewUser,
@@ -276,7 +278,40 @@ export function AdminUsersTable({
           </thead>
 
           <tbody>
-            {users.length === 0 && (
+            {loading &&
+              Array.from({ length: pageSize }).map((_, index) => (
+                <tr key={index} className="border-b border-sand-100 last:border-b-0 animate-pulse">
+                  <td className="px-4 py-3">
+                    <div className="space-y-1">
+                      <div className="h-4 w-32 bg-sand-200 rounded" />
+                      <div className="h-3 w-48 bg-sand-100 rounded" />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-5 w-16 bg-sand-200 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-6 w-20 bg-sand-200 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-40 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-32 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-32 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                      <div className="h-7 w-7 bg-sand-100 rounded" />
+                      <div className="h-7 w-7 bg-sand-100 rounded" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+            {!loading && users.length === 0 && (
               <tr>
                 <td
                   colSpan={8}
@@ -287,7 +322,7 @@ export function AdminUsersTable({
               </tr>
             )}
 
-            {users.map((user) => {
+            {!loading && users.map((user) => {
               const status = user.status as AdminUserStatus;
               const isDeleted = status === "DELETED";
               const toggleDisabled = !canToggleStatus(status);

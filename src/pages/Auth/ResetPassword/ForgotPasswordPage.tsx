@@ -4,6 +4,7 @@ import { Mail } from "lucide-react";
 import { LoadingSkeleton } from "../../../components/modal/basic/LoadingSkeleton";
 import { forgetPassword } from "../../../services/AuthService";
 import BackgroundLayer from "../components/BackgroundLayer";
+import { toast } from "react-toastify";
 
 
 export default function ForgotPasswordPage() {
@@ -21,10 +22,10 @@ export default function ForgotPasswordPage() {
         navigate("/check-email");
         return;
       } else {
-        alert("Gửi yêu cầu thất bại: " + (res.message || "Lỗi không xác định"));
+        toast.error("Gửi yêu cầu thất bại: " + (res.message || "Lỗi không xác định"));
       }
     } catch (error) {
-      alert("Đã xảy ra lỗi khi gửi yêu cầu");
+      toast.error("Đã xảy ra lỗi khi gửi yêu cầu");
     } finally {
       setLoading(false);
     }

@@ -285,7 +285,7 @@ export function AdminGroupsTable({
           </thead>
 
           <tbody>
-            {formattedRows.map((group) => (
+            {!loading && formattedRows.map((group) => (
               <tr
                 key={group.id}
                 className="border-b border-sand-100 transition-colors last:border-0 hover:bg-sand-50/50"
@@ -448,6 +448,37 @@ export function AdminGroupsTable({
               </tr>
             ))}
 
+            {loading &&
+              Array.from({ length: pageSize }).map((_, index) => (
+                <tr key={index} className="border-b border-sand-100 last:border-b-0 animate-pulse">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded bg-sand-200" />
+                      <div className="h-4 w-32 bg-sand-200 rounded" />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-5 w-20 bg-sand-200 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-28 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-5 w-20 bg-sand-200 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-32 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-1">
+                      <div className="h-7 w-7 bg-sand-100 rounded" />
+                      <div className="h-7 w-7 bg-sand-100 rounded" />
+                      <div className="h-7 w-7 bg-sand-100 rounded" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
             {!loading && formattedRows.length === 0 && (
               <tr>
                 <td
@@ -455,17 +486,6 @@ export function AdminGroupsTable({
                   className="px-4 py-10 text-center text-sm font-medium text-sand-500"
                 >
                   Không có nhóm học nào.
-                </td>
-              </tr>
-            )}
-
-            {loading && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-4 py-10 text-center text-sm font-medium text-sand-500"
-                >
-                  Đang tải dữ liệu...
                 </td>
               </tr>
             )}

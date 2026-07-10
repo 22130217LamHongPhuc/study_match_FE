@@ -13,6 +13,7 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import InfoIcon from "@mui/icons-material/Info";
 import StopCircleIcon from "@mui/icons-material/StopCircle";
+import { toast } from "react-toastify";
 import {
   Avatar,
   Box,
@@ -1327,7 +1328,7 @@ export default function ConversationPage() {
       .catch((error: any) => {
         console.error("[Conversation][pin-message-error]", error);
         updateMessagePinnedLocally(message.messageId, previousPinned);
-        alert(pinned ? "Không thể ghim tin nhắn" : "Không thể bỏ ghim tin nhắn");
+        toast.error(pinned ? "Không thể ghim tin nhắn" : "Không thể bỏ ghim tin nhắn");
       });
   }, [updateMessagePinnedLocally]);
 
@@ -1344,11 +1345,11 @@ export default function ConversationPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
-      alert("Chi duoc chon anh hoac video");
+      toast.warning("Chỉ được chọn ảnh hoặc video");
       return;
     }
     if (file.type.startsWith("video/") && file.size > 50 * 1024 * 1024) {
-      alert("Video khong duoc vuot qua 50MB");
+      toast.warning("Video không được vượt quá 50MB");
       return;
     }
 
@@ -1362,7 +1363,7 @@ export default function ConversationPage() {
     if (!file) return;
 
     if (file.size > 25 * 1024 * 1024) {
-      alert("File không được vượt quá 25MB");
+      toast.warning("File không được vượt quá 25MB");
       event.target.value = "";
       return;
     }
@@ -1416,7 +1417,7 @@ export default function ConversationPage() {
 
   const startAudioRecording = async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      alert("Trình duyệt không hỗ trợ ghi âm.");
+      toast.warning("Trình duyệt không hỗ trợ ghi âm.");
       return;
     }
 
@@ -1462,7 +1463,7 @@ export default function ConversationPage() {
     } catch (error) {
       console.error("[Conversation][audio-record-error]", error);
       stopAudioRecordingResources();
-      alert("Không thể truy cập micro. Vui lòng kiểm tra quyền ghi âm.");
+      toast.error("Không thể truy cập micro. Vui lòng kiểm tra quyền ghi âm.");
     }
   };
 
@@ -1606,7 +1607,7 @@ export default function ConversationPage() {
       }));
     } catch (error) {
       console.error("[Conversation][start-call-error]", error);
-      alert(error instanceof Error ? error.message : "Khong the bat dau cuoc goi");
+      toast.error(error instanceof Error ? error.message : "Không thể bắt đầu cuộc gọi");
     } finally {
       setVideoCallLoading(false);
     }
@@ -1631,7 +1632,7 @@ export default function ConversationPage() {
       setWaitingVideoCall(null);
     } catch (error) {
       console.error("[Conversation][cancel-call-error]", error);
-      alert(error instanceof Error ? error.message : "Khong the huy cuoc goi");
+      toast.error(error instanceof Error ? error.message : "Không thể huỷ cuộc gọi");
     } finally {
       setCancelCallLoading(false);
     }

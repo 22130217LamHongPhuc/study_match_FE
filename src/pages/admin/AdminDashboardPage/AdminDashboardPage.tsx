@@ -664,7 +664,11 @@ export default function AdminDashboardPage() {
                     {card.title}
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-sand-900">
-                    {loading ? "..." : card.value}
+                    {loading ? (
+                      <span className="inline-block h-8 w-24 animate-pulse rounded bg-sand-200" />
+                    ) : (
+                      card.value
+                    )}
                   </p>
                 </div>
                 <div
@@ -673,7 +677,11 @@ export default function AdminDashboardPage() {
                   <Icon size={18} />
                 </div>
               </div>
-              <p className="mt-3 text-xs text-sand-500">{card.helper}</p>
+              {loading ? (
+                <div className="mt-3 h-4 w-32 animate-pulse rounded bg-sand-100" />
+              ) : (
+                <p className="mt-3 text-xs text-sand-500">{card.helper}</p>
+              )}
             </div>
           );
         })}

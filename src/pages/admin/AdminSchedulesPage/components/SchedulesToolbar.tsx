@@ -26,13 +26,13 @@ export function SchedulesToolbar({ onRefresh }: SchedulesToolbarProps) {
           <RefreshCw size={14} />
           Làm mới
         </button>
-        <button
+        {/* <button
           type="button"
           className="flex items-center gap-1.5 rounded-lg bg-sand-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-sand-800"
         >
           <FileDown size={14} />
           Xuất báo cáo
-        </button>
+        </button> */}
       </div>
     </div>
   );

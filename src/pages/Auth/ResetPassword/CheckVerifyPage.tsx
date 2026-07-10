@@ -4,6 +4,7 @@ import { resetEmailVerification } from "../../../services/AuthService";
 import { useState } from "react";
 import { LoadingSkeleton } from "../../../components/modal/basic/LoadingSkeleton";
 import BackgroundLayer from "../components/BackgroundLayer";
+import { toast } from "react-toastify";
 
 
 export default function CheckVerifyEmailPage() {
@@ -13,18 +14,18 @@ export default function CheckVerifyEmailPage() {
   const [loading, setLoading] = useState(false);
   const handleSubmit = async () => {
     if (!email) {
-      alert("Email không hợp lệ. Vui lòng thử lại.");
+      toast.error("Email không hợp lệ. Vui lòng thử lại.");
       return;
     }
     setLoading(true);
     const res = await resetEmailVerification(email || "");
 
     if (res.success) {
-      alert(
+      toast.success(
         "Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư của bạn.",
       );
     } else {
-      alert(
+      toast.error(
         "Gửi lại email xác thực thất bại: " +
           (res.message || "Lỗi không xác định"),
       );

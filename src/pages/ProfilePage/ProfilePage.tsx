@@ -17,6 +17,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import ReplyIcon from "@mui/icons-material/Reply";
+import { toast } from "react-toastify";
 import {
   Avatar,
   Box,
@@ -43,6 +44,7 @@ import {
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import ReportModal from "../../components/modal/ReportModal";
 import EditProfileModal from "../../components/modal/user/EditProfileModal";
 import { ProfileStatus } from "../../enum/Profile";
 import { UserProfile } from "../../model/UserModel";
@@ -381,6 +383,7 @@ export default function ProfilePage() {
   const [friendsSearchQuery, setFriendsSearchQuery] = useState("");
   const [mutualFriendsMap, setMutualFriendsMap] = useState<Record<number, number>>({});
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   // Inline Media Viewer States
   const [activeViewingPost, setActiveViewingPost] = useState<SocialPost | null>(null);
@@ -624,7 +627,7 @@ export default function ProfilePage() {
 
     const response = await requestFriendService(profileUserId);
     if (response.code !== "201" && response.code !== 201) {
-      alert("Gửi lời mời thất bại");
+      toast.error("Gửi lời mời thất bại");
       return;
     }
 
@@ -651,11 +654,11 @@ export default function ProfilePage() {
         const statData = await loadProfileSocialStats(profileUserId);
         setStats(statData);
       } else {
-        alert("Hủy kết bạn thất bại: " + (response.message || "Lỗi không xác định"));
+        toast.error("Hủy kết bạn thất bại: " + (response.message || "Lỗi không xác định"));
       }
     } catch (error) {
       console.error("Failed to unfriend", error);
-      alert("Đã xảy ra lỗi khi hủy kết bạn.");
+      toast.error("Đã xảy ra lỗi khi hủy kết bạn.");
     }
   };
 
@@ -1289,7 +1292,7 @@ export default function ProfilePage() {
                   {comment.authorName?.charAt(0)?.toUpperCase()}
                 </Avatar>
                 <Box sx={{ bgcolor: "white", p: 1, borderRadius: "8px", maxWidth: "80%", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                  <Typography sx={{ fontSize: "11px", fontWeight: 800, color: "#1e293b", mb: 0.25 }}>
+                  <Typography sx={{ fontSize: "11px", fontWeight: 700, color: "#1e293b", mb: 0.25 }}>
                     {comment.authorName}
                   </Typography>
                   <Typography sx={{ fontSize: "12px", color: "#334155", wordBreak: "break-word", lineHeight: 1.3 }}>
@@ -1839,11 +1842,11 @@ export default function ProfilePage() {
               pb: 2,
               width: "100%"
             }}>
-              <Box sx={{ 
+              <Box sx={{
                 display: "inline-flex",
-                bgcolor: "#f1f5f9", 
-                p: "4px", 
-                borderRadius: "30px", 
+                bgcolor: "#f1f5f9",
+                p: "4px",
+                borderRadius: "30px",
                 border: "1px solid #e2e8f0",
                 gap: "4px"
               }}>
@@ -2034,10 +2037,10 @@ export default function ProfilePage() {
                   </Box>
 
                   <Box sx={{ mt: "60px" }}>
-                    <Typography sx={{ fontWeight: 800, fontSize: "1.25rem", color: "#0f172a", lineHeight: 1.2 }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "1.25rem", color: "#0f172a", lineHeight: 1.2 }}>
                       {profile?.fullName}
                     </Typography>
-                    
+
                     {profile?.bio && (
                       <Box sx={{ mt: 1.5, p: "10px 14px", borderRadius: "8px", backgroundColor: "#f8fafc", color: "#475569", fontSize: "13.5px" }}>
                         {profile.bio}
@@ -2070,191 +2073,213 @@ export default function ProfilePage() {
                         Chỉnh sửa hồ sơ
                       </Button>
                     ) : (
-                      <Box display="flex" mt="20px">
-                        {profile?.friend && (
+                      <>
+                        <Box display="flex" mt="20px">
+                          {profile?.friend && (
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              sx={{
+                                borderRadius: "8px",
+                                py: 1,
+                                textTransform: "none",
+                                fontWeight: "bold",
+                                width: "50%",
+                                mr: 2,
+                                fontSize: "14px",
+                                borderColor: "error.main",
+                                "&:hover": {
+                                  backgroundColor: "rgba(211, 47, 47, 0.04)",
+                                  borderColor: "error.dark",
+                                }
+                              }}
+                              onClick={() => setUnfriendConfirmOpen(true)}
+                            >
+                              Hủy kết bạn
+                            </Button>
+                          )}
+                          {!profile?.friend && profile?.statusFriend !== ProfileStatus.PENDING && (
+                            <Button
+                              sx={{
+                                borderRadius: "8px",
+                                py: 1,
+                                textTransform: "none",
+                                fontWeight: "bold",
+                                background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
+                                color: "white",
+                                width: "50%",
+                                mr: 2,
+                                fontSize: "14px",
+                              }}
+                              onClick={requestFriend}
+                            >
+                              Kết bạn
+                            </Button>
+                          )}
+                          {!profile?.friend && profile?.statusFriend === ProfileStatus.PENDING && (
+                            <Button disabled sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", mr: 2, fontSize: "14px" }}>
+                              Đã gửi lời mời
+                            </Button>
+                          )}
                           <Button
                             variant="outlined"
-                            color="error"
-                            sx={{
-                              borderRadius: "8px",
-                              py: 1,
-                              textTransform: "none",
-                              fontWeight: "bold",
-                              width: "50%",
-                              mr: 2,
-                              fontSize: "14px",
-                              borderColor: "error.main",
-                              "&:hover": {
-                                backgroundColor: "rgba(211, 47, 47, 0.04)",
-                                borderColor: "error.dark",
-                              }
-                            }}
-                            onClick={() => setUnfriendConfirmOpen(true)}
+                            sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", fontSize: "14px" }}
+                            onClick={sendMess}
                           >
-                            Hủy kết bạn
+                            Nhắn tin
                           </Button>
-                        )}
-                        {!profile?.friend && profile?.statusFriend !== ProfileStatus.PENDING && (
-                          <Button
-                            sx={{
-                              borderRadius: "8px",
-                              py: 1,
-                              textTransform: "none",
-                              fontWeight: "bold",
-                              background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
-                              color: "white",
-                              width: "50%",
-                              mr: 2,
-                              fontSize: "14px",
-                            }}
-                            onClick={requestFriend}
-                          >
-                            Kết bạn
-                          </Button>
-                        )}
-                        {!profile?.friend && profile?.statusFriend === ProfileStatus.PENDING && (
-                          <Button disabled sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", mr: 2, fontSize: "14px" }}>
-                            Đã gửi lời mời
-                          </Button>
-                        )}
+                        </Box>
                         <Button
                           variant="outlined"
-                          sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", fontSize: "14px" }}
-                          onClick={sendMess}
+                          fullWidth
+                          sx={{
+                            mt: 1.5,
+                            borderRadius: "8px",
+                            py: 1,
+                            textTransform: "none",
+                            fontSize: "14px",
+                            borderColor: "#fdba74",
+                            color: "#ea580c",
+                            "&:hover": {
+                              borderColor: "#fb923c",
+                              backgroundColor: "rgba(249, 115, 22, 0.06)",
+                            },
+                          }}
+                          onClick={() => setReportModalOpen(true)}
                         >
-                          Nhắn tin
+                          Báo cáo người dùng
                         </Button>
-                      </Box>
+                      </>
                     )}
                   </Box>
                 </Box>
               </Box>
 
-          {/* Friends Preview Card */}
-          {profile && (
-            <Box
-              sx={{
-                width: "100%",
-                bgcolor: "white",
-                border: "1px solid #e2e8f0",
-                borderRadius: "16px",
-                p: "16px",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-              }}
-            >
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
-                <Typography sx={{ fontWeight: 800, fontSize: "16px", color: "#0f172a" }}>
-                  Bạn bè
-                </Typography>
-                <Typography
-                  onClick={() => setActiveTab(1)}
+              {/* Friends Preview Card */}
+              {profile && (
+                <Box
                   sx={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#2563eb",
-                    cursor: "pointer",
-                    "&:hover": {
-                      textDecoration: "underline",
-                    },
+                    width: "100%",
+                    bgcolor: "white",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "16px",
+                    p: "16px",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
                   }}
                 >
-                  Xem tất cả bạn bè
-                </Typography>
-              </Box>
-              <Typography sx={{ color: "#64748b", fontSize: "13px", mb: 2 }}>
-                {profile.numberFriend ?? 0} người bạn
-              </Typography>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "16px", color: "#0f172a" }}>
+                      Bạn bè
+                    </Typography>
+                    <Typography
+                      onClick={() => setActiveTab(1)}
+                      sx={{
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: "#2563eb",
+                        cursor: "pointer",
+                        "&:hover": {
+                          textDecoration: "underline",
+                        },
+                      }}
+                    >
+                      Xem tất cả bạn bè
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ color: "#64748b", fontSize: "13px", mb: 2 }}>
+                    {profile.numberFriend ?? 0} người bạn
+                  </Typography>
 
-              {friends.length === 0 ? (
-                <Typography sx={{ color: "#94a3b8", fontSize: "13px", textAlign: "center", py: 2 }}>
-                  Chưa có bạn bè nào
-                </Typography>
-              ) : (
-                <Grid container spacing={1.5}>
-                  {friends.slice(0, 9).map((friend) => {
-                    const mutualCount = mutualFriendsMap[friend.userId];
-                    const showMutual = mutualCount !== undefined && mutualCount > 0 && !isOwnProfile;
+                  {friends.length === 0 ? (
+                    <Typography sx={{ color: "#94a3b8", fontSize: "13px", textAlign: "center", py: 2 }}>
+                      Chưa có bạn bè nào
+                    </Typography>
+                  ) : (
+                    <Grid container spacing={1.5}>
+                      {friends.slice(0, 9).map((friend) => {
+                        const mutualCount = mutualFriendsMap[friend.userId];
+                        const showMutual = mutualCount !== undefined && mutualCount > 0 && !isOwnProfile;
 
-                    return (
-                      <Grid size={{ xs: 4 }} key={friend.userId} sx={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }} onClick={() => navigate(`/profile/${friend.userId}`)}>
-                        <Box
-                          sx={{
-                            width: "100%",
-                            aspectRatio: "1/1",
-                            borderRadius: "8px",
-                            overflow: "hidden",
-                            border: "1px solid #f1f5f9",
-                            bgcolor: "#f8fafc",
-                            mb: 0.5,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                        >
-                          {friend.avatarUrl ? (
+                        return (
+                          <Grid size={{ xs: 4 }} key={friend.userId} sx={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }} onClick={() => navigate(`/profile/${friend.userId}`)}>
                             <Box
-                              component="img"
-                              src={friend.avatarUrl}
-                              alt={friend.fullName}
                               sx={{
                                 width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : (
-                            <Avatar
-                              variant="rounded"
-                              sx={{
-                                width: "100%",
-                                height: "100%",
+                                aspectRatio: "1/1",
                                 borderRadius: "8px",
-                                bgcolor: "#3b82f6",
-                                fontSize: "28px",
-                                fontWeight: "bold"
+                                overflow: "hidden",
+                                border: "1px solid #f1f5f9",
+                                bgcolor: "#f8fafc",
+                                mb: 0.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
                               }}
                             >
-                              {friend.fullName.charAt(0).toUpperCase()}
-                            </Avatar>
-                          )}
-                        </Box>
-                        <Typography
-                          sx={{
-                            fontWeight: 700,
-                            fontSize: "13px",
-                            color: "#1e293b",
-                            width: "100%",
-                            textAlign: "center",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {friend.fullName}
-                        </Typography>
-                        {showMutual && (
-                          <Typography
-                            sx={{
-                              fontSize: "11px",
-                              color: "#64748b",
-                              width: "100%",
-                              textAlign: "center",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {mutualCount} bạn chung
-                          </Typography>
-                        )}
-                      </Grid>
-                    );
-                  })}
-                </Grid>
+                              {friend.avatarUrl ? (
+                                <Box
+                                  component="img"
+                                  src={friend.avatarUrl}
+                                  alt={friend.fullName}
+                                  sx={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                              ) : (
+                                <Avatar
+                                  variant="rounded"
+                                  sx={{
+                                    width: "100%",
+                                    height: "100%",
+                                    borderRadius: "8px",
+                                    bgcolor: "#3b82f6",
+                                    fontSize: "28px",
+                                    fontWeight: "bold"
+                                  }}
+                                >
+                                  {friend.fullName.charAt(0).toUpperCase()}
+                                </Avatar>
+                              )}
+                            </Box>
+                            <Typography
+                              sx={{
+                                fontWeight: 700,
+                                fontSize: "13px",
+                                color: "#1e293b",
+                                width: "100%",
+                                textAlign: "center",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {friend.fullName}
+                            </Typography>
+                            {showMutual && (
+                              <Typography
+                                sx={{
+                                  fontSize: "11px",
+                                  color: "#64748b",
+                                  width: "100%",
+                                  textAlign: "center",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {mutualCount} bạn chung
+                              </Typography>
+                            )}
+                          </Grid>
+                        );
+                      })}
+                    </Grid>
+                  )}
+                </Box>
               )}
-            </Box>
-          )}
-          </>
+            </>
           )}
         </Box>
 
@@ -2269,59 +2294,59 @@ export default function ProfilePage() {
             pb: 2,
             width: "100%"
           }}>
-            <Box sx={{ 
+            <Box sx={{
               display: "inline-flex",
-              backgroundColor: "#f1f5f9", 
-              borderRadius: "30px", 
-              p: "4px", 
+              backgroundColor: "#f1f5f9",
+              borderRadius: "30px",
+              p: "4px",
               border: "1px solid #e2e8f0",
               maxWidth: "100%",
               overflowX: "auto"
             }}>
-            <Tabs
-              value={activeTab}
-              onChange={(_, value) => setActiveTab(value)}
-              variant="scrollable"
-              scrollButtons="auto"
-              allowScrollButtonsMobile
-              sx={{
-                minHeight: "auto",
-                "& .MuiTabs-indicator": {
-                  display: "none",
-                },
-                "& .MuiTabs-flexContainer": {
-                  gap: "4px",
-                },
-                "& .MuiTab-root": {
-                  fontSize: "13.5px",
-                  fontWeight: 600,
-                  textTransform: "none",
-                  color: "#64748b",
-                  minWidth: "auto",
+              <Tabs
+                value={activeTab}
+                onChange={(_, value) => setActiveTab(value)}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+                sx={{
                   minHeight: "auto",
-                  px: 2.5,
-                  py: 1,
-                  borderRadius: "20px",
-                  transition: "all 0.2s ease",
-                  "&.Mui-selected": {
-                    color: "#2563eb",
-                    backgroundColor: "#ffffff",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+                  "& .MuiTabs-indicator": {
+                    display: "none",
                   },
-                  "&:hover:not(.Mui-selected)": {
-                    color: "#1e293b",
-                    backgroundColor: "rgba(255,255,255,0.4)",
+                  "& .MuiTabs-flexContainer": {
+                    gap: "4px",
                   },
-                },
-              }}
-            >
-              <Tab label="Bài viết" />
-              <Tab label="Bạn bè" />
-              <Tab label="Ảnh" />
-              <Tab label="Video" />
-              <Tab label="Hồ sơ học tập" />
-            </Tabs>
-          </Box>
+                  "& .MuiTab-root": {
+                    fontSize: "13.5px",
+                    fontWeight: 600,
+                    textTransform: "none",
+                    color: "#64748b",
+                    minWidth: "auto",
+                    minHeight: "auto",
+                    px: 2.5,
+                    py: 1,
+                    borderRadius: "20px",
+                    transition: "all 0.2s ease",
+                    "&.Mui-selected": {
+                      color: "#2563eb",
+                      backgroundColor: "#ffffff",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+                    },
+                    "&:hover:not(.Mui-selected)": {
+                      color: "#1e293b",
+                      backgroundColor: "rgba(255,255,255,0.4)",
+                    },
+                  },
+                }}
+              >
+                <Tab label="Bài viết" />
+                <Tab label="Bạn bè" />
+                <Tab label="Ảnh" />
+                <Tab label="Video" />
+                <Tab label="Hồ sơ học tập" />
+              </Tabs>
+            </Box>
           </Box>
           <Box sx={{
             bgcolor: "white",
@@ -2421,6 +2446,14 @@ export default function ProfilePage() {
         onClose={() => setReactionsModalOpen(false)}
         postId={activeViewingPost?.id || 0}
         currentUserId={currentUserId}
+      />
+
+      <ReportModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetType="USER"
+        targetId={profileUserId}
+        targetName={profile?.fullName}
       />
     </ThemeProvider>
   );

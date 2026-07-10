@@ -13,9 +13,9 @@ export function GroupsToolbar({ onOpenCreate }: { onOpenCreate: () => void }) {
       </div>
 
       <div className="flex gap-2">
-        <button className="rounded-lg border border-sand-300 bg-white px-4 py-2 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50">
+        {/* <button className="rounded-lg border border-sand-300 bg-white px-4 py-2 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50">
           Xuất dữ liệu
-        </button>
+        </button> */}
         <button
           type="button"
           onClick={onOpenCreate}
@@ -62,11 +62,10 @@ export function GroupsFilterBar({
           {filters.map((item, index) => (
             <button
               key={item.title}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                selectedFilter.title === item.title
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${selectedFilter.title === item.title
                   ? "bg-sand-900 text-white shadow-sm"
                   : "border border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
-              }`}
+                }`}
               onClick={() => onFilterChange(item)}
             >
               {item.title}

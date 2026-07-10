@@ -14,6 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { UserProfile } from '../../../model/UserModel';
 import { updateUserProfileService } from '../../../services/FriendService';
 import { uploadPostMedia } from '../../../services/SocialPostService';
+import { toast } from 'react-toastify';
 
 type EditProfileModalProps = {
     stateModal: boolean;
@@ -28,45 +29,28 @@ export default function EditProfileModal({
     profile,
     onProfileUpdated,
 }: EditProfileModalProps) {
-    const [fullName, setFullName] = useState('');
-    const [bio, setBio] = useState('');
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const avatarUrl = profile?.avatarUrl ?? '';
+    const bannerUrl = profile?.bannerUrl ?? '';
+
+    const [fullName, setFullName] = useState(profile?.fullName ?? '');
+    const [bio, setBio] = useState(profile?.bio ?? '');
+
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-    const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string>('');
     const [bannerFile, setBannerFile] = useState<File | null>(null);
-    const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+    const [bannerPreview, setBannerPreview] = useState<string>('');
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        if (!stateModal) return;
-        setFullName(profile?.fullName || '');
-        setBio(profile?.bio || '');
-        setAvatarUrl(profile?.avatarUrl || null);
-        setAvatarFile(null);
-        setAvatarPreview((prev) => {
-            if (prev) URL.revokeObjectURL(prev);
-            return null;
-        });
-        setBannerUrl(profile?.bannerUrl || null);
-        setBannerFile(null);
-        setBannerPreview((prev) => {
-            if (prev) URL.revokeObjectURL(prev);
-            return null;
-        });
+        if (stateModal) {
+            setFullName(profile?.fullName ?? '');
+            setBio(profile?.bio ?? '');
+            setAvatarPreview(profile?.avatarUrl ?? '');
+            setBannerPreview(profile?.bannerUrl ?? '');
+            setAvatarFile(null);
+            setBannerFile(null);
+        }
     }, [stateModal, profile]);
-
-    useEffect(() => {
-        return () => {
-            if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-        };
-    }, [avatarPreview]);
-
-    useEffect(() => {
-        return () => {
-            if (bannerPreview) URL.revokeObjectURL(bannerPreview);
-        };
-    }, [bannerPreview]);
 
     const handleClose = () => {
         if (saving) return;
@@ -76,10 +60,10 @@ export default function EditProfileModal({
     const handleSelectAvatar = (file: File | null) => {
         if (!file) return;
         if (!file.type.startsWith('image/')) {
-            alert('Chỉ chọn ảnh đại diện dạng hình ảnh');
+            toast.warning('Chỉ chọn ảnh đại diện dạng hình ảnh');
             return;
         }
-        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        if (avatarPreview && !avatarPreview.startsWith('http')) URL.revokeObjectURL(avatarPreview);
         setAvatarFile(file);
         setAvatarPreview(URL.createObjectURL(file));
     };
@@ -87,10 +71,10 @@ export default function EditProfileModal({
     const handleSelectBanner = (file: File | null) => {
         if (!file) return;
         if (!file.type.startsWith('image/')) {
-            alert('Chỉ chọn ảnh bìa dạng hình ảnh');
+            toast.warning('Chỉ chọn ảnh bìa dạng hình ảnh');
             return;
         }
-        if (bannerPreview) URL.revokeObjectURL(bannerPreview);
+        if (bannerPreview && !bannerPreview.startsWith('http')) URL.revokeObjectURL(bannerPreview);
         setBannerFile(file);
         setBannerPreview(URL.createObjectURL(file));
     };
@@ -98,11 +82,11 @@ export default function EditProfileModal({
     const handleSave = async () => {
         const userId = Number(localStorage.getItem('userId'));
         if (!userId) {
-            alert('Không tìm thấy userId. Vui lòng đăng nhập lại.');
+            toast.error('Không tìm thấy userId. Vui lòng đăng nhập lại.');
             return;
         }
         if (!fullName.trim()) {
-            alert('Họ và tên không được để trống');
+            toast.warning('Họ và tên không được để trống');
             return;
         }
 
@@ -127,7 +111,7 @@ export default function EditProfileModal({
             setModalEdit(false);
         } catch (error) {
             console.error(error);
-            alert('Không thể cập nhật hồ sơ');
+            toast.error('Không thể cập nhật hồ sơ');
         } finally {
             setSaving(false);
         }

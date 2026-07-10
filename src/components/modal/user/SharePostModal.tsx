@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import { sharePost, SocialPost } from "../../../services/SocialPostService";
 import { parsePostContent, POST_BACKGROUNDS } from "./CreatePostDialog";
+import { toast } from "react-toastify";
 
 interface SharePostModalProps {
   open: boolean;
@@ -87,7 +88,7 @@ const PostPreviewCard = ({ post }: { post: SocialPost }) => {
         >
           <Typography
             sx={{
-              fontWeight: 800,
+              fontWeight: 700,
               fontSize: 16,
               color: bg?.style.color || "white",
               textAlign: "center",
@@ -225,7 +226,7 @@ export default function SharePostModal({
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Không thể chia sẻ bài viết. Vui lòng thử lại.");
+      toast.error("Không thể chia sẻ bài viết. Vui lòng thử lại.");
     } finally {
       setSharing(false);
     }
@@ -249,7 +250,7 @@ export default function SharePostModal({
         sx={{
           textAlign: "center",
           fontSize: 20,
-          fontWeight: 800,
+          fontWeight: 700,
           py: 2,
           color: "#0f172a",
           position: "relative",

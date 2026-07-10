@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
+import { toast } from "react-toastify";
 import DescriptionIcon from "@mui/icons-material/Description";
 import {
   Avatar,
@@ -99,7 +100,7 @@ export default function EditPostDialog({
         try {
           const parts = m.mediaUrl.split("/");
           name = parts[parts.length - 1] || "Tệp tin";
-        } catch (e) {}
+        } catch (e) { }
 
         return {
           id: m.id,
@@ -142,19 +143,19 @@ export default function EditPostDialog({
     });
 
     if (validFiles.length !== files.length) {
-      alert("Chỉ hỗ trợ đính kèm hình ảnh, video và tài liệu phổ biến (PDF, Word, Excel, PowerPoint, Text).");
+      toast.warning("Chỉ hỗ trợ đính kèm hình ảnh, video và tài liệu phổ biến (PDF, Word, Excel, PowerPoint, Text).");
     }
 
     setSelectedMediaItems((prev) => {
       const availableSlots = MAX_POST_MEDIA - prev.length;
       if (availableSlots <= 0) {
-        alert(`Chỉ được thêm tối đa ${MAX_POST_MEDIA} tệp đính kèm`);
+        toast.warning(`Chỉ được thêm tối đa ${MAX_POST_MEDIA} tệp đính kèm`);
         return prev;
       }
 
       const filesToAdd = validFiles.slice(0, availableSlots);
       if (validFiles.length > availableSlots) {
-        alert(`Chỉ được thêm tối đa ${MAX_POST_MEDIA} tệp đính kèm`);
+        toast.warning(`Chỉ được thêm tối đa ${MAX_POST_MEDIA} tệp đính kèm`);
       }
 
       return [
@@ -221,7 +222,7 @@ export default function EditPostDialog({
       handleCloseEditPost();
     } catch (error) {
       console.error(error);
-      alert("Không thể cập nhật bài viết");
+      toast.error("Không thể cập nhật bài viết");
     } finally {
       setPosting(false);
       onPostingChange?.(false);
@@ -235,7 +236,7 @@ export default function EditPostDialog({
       fullWidth
       PaperProps={{ sx: { borderRadius: "16px", p: 0.5, width: 550, maxWidth: "92%" } }}
     >
-      <DialogTitle sx={{ textAlign: "center", fontSize: 20, fontWeight: 800, position: "relative", py: 2, color: "#0f172a" }}>
+      <DialogTitle sx={{ textAlign: "center", fontSize: 20, fontWeight: 700, position: "relative", py: 2, color: "#0f172a" }}>
         Chỉnh sửa bài viết
         <IconButton
           onClick={handleCloseEditPost}
@@ -353,7 +354,7 @@ export default function EditPostDialog({
                     disableUnderline: true,
                     sx: {
                       fontSize: "20px",
-                      fontWeight: 800,
+                      fontWeight: 700,
                       color: POST_BACKGROUNDS.find(bg => bg.id === selectedBgId)?.style.color || "white",
                       textAlign: "center",
                       lineHeight: 1.4,
@@ -630,16 +631,16 @@ export default function EditPostDialog({
               disabled={posting || (!postContent.trim() && selectedMediaItems.length === 0)}
               variant="contained"
               onClick={handleUpdatePost}
-              sx={{ 
-                mt: 2.5, 
-                py: 1, 
-                textTransform: "none", 
-                fontWeight: 700, 
-                fontSize: 15, 
-                borderRadius: "20px", 
+              sx={{
+                mt: 2.5,
+                py: 1,
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: 15,
+                borderRadius: "20px",
                 background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
                 boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
-                "&:hover": { 
+                "&:hover": {
                   background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                   boxShadow: '0 6px 16px rgba(59, 130, 246, 0.3)',
                 },

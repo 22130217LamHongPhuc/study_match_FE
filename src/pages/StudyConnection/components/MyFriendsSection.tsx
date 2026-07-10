@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { toast } from "react-toastify";
-import { Search, MessageSquare, UserMinus, GraduationCap, Users, BookOpen, ChevronDown } from "lucide-react";
+import { Search, MessageSquare, UserMinus, ChevronDown } from "lucide-react";
 import { Avatar, Dialog, DialogTitle, DialogContent, Typography, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -135,8 +135,8 @@ export default function MyFriendsSection() {
             <button
               onClick={() => setActiveFilter("all")}
               className={`flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${activeFilter === "all"
-                  ? "bg-orange-500 text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:bg-orange-50 hover:text-orange-600"
+                ? "bg-orange-500 text-white"
+                : "bg-white border border-gray-200 text-gray-600 hover:bg-orange-50 hover:text-orange-600"
                 }`}
             >
               Tất cả
@@ -144,8 +144,8 @@ export default function MyFriendsSection() {
             <button
               onClick={() => setActiveFilter("online")}
               className={`flex items-center px-4 py-2 text-sm font-semibold rounded-lg border transition-colors ${activeFilter === "online"
-                  ? "bg-orange-500 text-white border-orange-500"
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-orange-50 hover:text-orange-600"
+                ? "bg-orange-500 text-white border-orange-500"
+                : "bg-white border-gray-200 text-gray-600 hover:bg-orange-50 hover:text-orange-600"
                 }`}
             >
               <span className={`w-2 h-2 rounded-full mr-2 ${activeFilter === "online" ? "bg-white" : "bg-green-500"}`} />
@@ -195,34 +195,16 @@ export default function MyFriendsSection() {
             {filteredFriends.map((friend) => {
               const displayName = friend.fullName || "Người dùng StudyMatch";
 
-            return (
-              <div
-                key={friend.userId}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-orange-200 hover:shadow-md"
-              >
-                {/* Profile detail section */}
-                <div className="flex items-start gap-4">
-                  <div
-                    onClick={() => handleGoProfile(friend.userId)}
-                    className="relative cursor-pointer transition-transform hover:scale-105"
-                  >
-                    <Avatar
-                      src={friend.avatarUrl || undefined}
-                      alt={displayName}
-                      className="h-12 w-12 border-2 border-orange-500/10"
-                      sx={{ width: 48, height: 48 }}
-                    />
-                    {/* Status Dot */}
-                    <span
-                      className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white ${
-                        friend.online ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3
+              return (
+                <div
+                  key={friend.userId}
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-orange-200 hover:shadow-md"
+                >
+                  {/* Profile detail section */}
+                  <div className="flex items-start gap-4">
+                    <div
                       onClick={() => handleGoProfile(friend.userId)}
-                      className="relative cursor-pointer transition-transform hover:scale-105"
+                      className="relative cursor-pointer transition-transform hover:scale-105 shrink-0"
                     >
                       <Avatar
                         src={friend.avatarUrl || undefined}
@@ -257,24 +239,25 @@ export default function MyFriendsSection() {
                   {/* Divider */}
                   <div className="my-4 border-t border-gray-100" />
 
-                {/* Actions */}
-                <div className="flex gap-2.5">
-                  <button
-                    onClick={() => handleUnfriendClick(friend.userId, displayName)}
-                    disabled={actionLoading !== null}
-                    className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
-                  >
-                    <UserMinus size={14} />
-                    Hủy kết bạn
-                  </button>
-                  <button
-                    onClick={() => handleChat(friend)}
-                    disabled={actionLoading !== null}
-                    className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
-                  >
-                    <MessageSquare size={14} />
-                    Nhắn tin
-                  </button>
+                  {/* Actions */}
+                  <div className="flex gap-2.5">
+                    <button
+                      onClick={() => handleUnfriendClick(friend.userId, displayName)}
+                      disabled={actionLoading !== null}
+                      className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
+                    >
+                      <UserMinus size={14} />
+                      Hủy kết bạn
+                    </button>
+                    <button
+                      onClick={() => handleChat(friend)}
+                      disabled={actionLoading !== null}
+                      className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
+                    >
+                      <MessageSquare size={14} />
+                      Nhắn tin
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -295,7 +278,7 @@ export default function MyFriendsSection() {
             padding: "10px",
           }
         }}
-      >
+      >LeaveStudySessionResponse
         <DialogTitle sx={{ fontWeight: "bold", textAlign: "center" }}>
           Hủy kết bạn
         </DialogTitle>

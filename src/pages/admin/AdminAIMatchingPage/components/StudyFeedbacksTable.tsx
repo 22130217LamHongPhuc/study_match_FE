@@ -133,15 +133,49 @@ export function StudyFeedbacksTable({
             </thead>
 
             <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={12} className="px-4 py-14 text-center">
-                    <p className="text-sm font-medium text-sand-500">
-                      Đang tải phản hồi học tập...
-                    </p>
-                  </td>
-                </tr>
-              )}
+              {loading &&
+                Array.from({ length: 8 }).map((_, index) => (
+                  <tr key={index} className="border-b border-sand-100 last:border-0 animate-pulse">
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-28 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-28 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-12 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-5 w-16 bg-sand-200 rounded-full" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-20 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-24 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-8 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-8 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-8 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-5 w-14 bg-sand-200 rounded-full" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-24 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end">
+                        <div className="h-7 w-7 bg-sand-100 rounded" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
 
               {!loading &&
                 feedbacks.map((feedback) => (

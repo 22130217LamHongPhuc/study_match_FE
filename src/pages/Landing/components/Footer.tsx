@@ -1,5 +1,6 @@
 import React from "react";
-import { BookOpen, Mail, Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
+import logo from "../../../assets/img/logo.png";
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -38,9 +39,11 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-2 space-y-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#d4a017] flex items-center justify-center">
-                <BookOpen className="w-4 h-4 text-[#1a3557]" />
-              </div>
+              <img
+                src={logo}
+                alt="StudyMatch Logo"
+                className="w-8 h-8 object-cover rounded-full flex-shrink-0"
+              />
               <span className="text-lg font-bold text-white tracking-tight">StudyMatch</span>
             </div>
 

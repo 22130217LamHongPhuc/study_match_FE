@@ -513,7 +513,7 @@ export default function MainLayout() {
       .catch((error) => {
         console.error("Cannot join video call", error);
 
-        alert(
+        toast.error(
           error instanceof Error
             ? error.message
             : "Không thể tham gia cuộc gọi video",

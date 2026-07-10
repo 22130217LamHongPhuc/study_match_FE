@@ -35,13 +35,13 @@ export function AIMatchingHeader({
           onFilter={onFilter}
         />
 
-        <button
+        {/* <button
           type="button"
           className="flex items-center gap-1.5 rounded-lg border border-sand-300 bg-white px-4 py-2 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50"
         >
           <FileDown size={14} />
           Xuất dữ liệu
-        </button>
+        </button> */}
       </div>
     </div>
   );

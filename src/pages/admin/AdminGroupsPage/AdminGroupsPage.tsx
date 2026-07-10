@@ -183,8 +183,7 @@ export default function AdminGroupsPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <GroupRatioCard />
-        <RecentActivityCard />
-      </div>
+        xu      </div>
 
       <CommunityCreateModal
         open={createOpen}

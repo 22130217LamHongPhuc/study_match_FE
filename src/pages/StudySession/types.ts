@@ -114,14 +114,23 @@ export interface JoinStudySessionResponse {
   joinedAt: string;
 }
 
-export type AttendanceStatus = "COMPLETED" | "PARTIAL" | "ABSENT";
+export type AttendanceStatus =
+  | "COMPLETED"
+  | "PARTIAL"
+  | "ABSENT"
+  | "NOT_JOINED"
+  | "JOINED_SHORT"
+  | "JOINED_PARTIAL";
 
 export interface LeaveStudySessionResponse {
   sessionId: number;
   userId: number;
-  leaveTime: string;
+  attendanceLogId?: number;
+  joinedAt?: string;
+  leftAt: string;
   durationSeconds: number;
   totalDurationSeconds: number;
+  joinCount?: number;
   attendanceStatus: AttendanceStatus;
 }
 

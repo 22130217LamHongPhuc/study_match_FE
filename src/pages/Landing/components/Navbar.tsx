@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "../../../assets/img/logo.png";
 
 const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -39,9 +40,11 @@ const Navbar: React.FC = () => {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="flex items-center gap-2.5 group"
           >
-            <div className="w-8 h-8 rounded-lg bg-[#1a3557] flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-white" />
-            </div>
+            <img
+              src={logo}
+              alt="StudyMatch Logo"
+              className="w-8 h-8 object-cover rounded-full flex-shrink-0"
+            />
             <span className="text-lg font-bold text-[#1a3557] tracking-tight">
               StudyMatch
             </span>

@@ -14,6 +14,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/img/logo.png";
+import { Report } from "@mui/icons-material";
 
 interface NavItem {
   label: string;
@@ -33,7 +34,7 @@ const navItems: NavItem[] = [
     path: "/conversation",
   },
   { label: "Nhóm", icon: <Diversity2Icon />, path: "/groups" },
-  // { label: "Phản hồi", icon: <FeedbackIcon />, path: "/feedback" },
+  { label: "Báo cáo của tôi", icon: <Report />, path: "/reports/my" },
 ];
 
 interface SideBarProps {

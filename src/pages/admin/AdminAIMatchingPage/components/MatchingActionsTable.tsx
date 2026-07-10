@@ -114,15 +114,43 @@ export function MatchingActionsTable({
             </thead>
 
             <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-14 text-center">
-                    <p className="text-sm font-medium text-sand-500">
-                      Đang tải hoạt động ghép đôi...
-                    </p>
+              {loading &&
+              Array.from({ length: 8 }).map((_, index) => (
+                <tr key={index} className="border-b border-sand-100 last:border-b-0 animate-pulse">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-9 w-9 rounded-full bg-sand-200" />
+                      <div className="space-y-1">
+                        <div className="h-3.5 w-24 bg-sand-200 rounded" />
+                        <div className="h-3 w-32 bg-sand-100 rounded" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-9 w-9 rounded-full bg-sand-200" />
+                      <div className="space-y-1">
+                        <div className="h-3.5 w-24 bg-sand-200 rounded" />
+                        <div className="h-3 w-32 bg-sand-100 rounded" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-5 w-20 bg-sand-200 rounded-full" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-28 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-28 bg-sand-200 rounded" />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end">
+                      <div className="h-7 w-7 bg-sand-100 rounded" />
+                    </div>
                   </td>
                 </tr>
-              )}
+              ))}
 
               {!loading &&
                 actions.map((action) => (
