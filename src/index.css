@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide Video Speed Controller extension overlays on video players */
+.vsc-controller,
+.vsc-controller-shadow {
+  display: none !important;
+}
+
 @layer base {
   body {
     font-family:

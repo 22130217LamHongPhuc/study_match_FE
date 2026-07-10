@@ -89,6 +89,7 @@ export interface BrowseGroupResponse {
   updatedAt: string;
   memberCount?: number | null;
   member?: boolean;
+  joinRequestPending?: boolean;
 }
 
 export type AdminGroupType = "COMMUNITY" | "STUDY";
@@ -272,7 +273,6 @@ export async function browseGroups(
 
   const userId = localStorage.getItem("userId");
   const params = new URLSearchParams();
-  // if (type) params.set("type", type);
   if (typeof subject === "number") params.set("subject", String(subject));
   params.set("page", String(page));
   params.set("limit", String(limit));
@@ -360,6 +360,23 @@ export async function joinMemberIntoGroup(
     {
       method: "POST",
       body: JSON.stringify({ userId }),
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
+export async function requestJoinGroup(
+  groupId: number,
+  userId: number,
+  message: string,
+): Promise<APIResponseData<GroupInvitationResponse>> {
+  const response = await apiFetch<GroupInvitationResponse>(
+    `/api/groups/${groupId}/members`,
+    {
+      method: "POST",
+      body: JSON.stringify({ userId, message }),
     },
     API_BASE_URL_GROUP,
   );

@@ -138,6 +138,7 @@ const SidebarSkeleton = () => (
 
 export default function ListFriends() {
     const navigate = useNavigate();
+    const autoRedirectedRef = React.useRef(false);
     const location = useLocation();
     const dispatch = useDispatch();
     const [friends, setFriends] = useState<FriendUser[]>([]);
@@ -305,7 +306,7 @@ export default function ListFriends() {
                 }
 
                 if (shouldLoadGroups) {
-                    void loadPendingRequests(currentUserId, finalGroups);
+                    await loadPendingRequests(currentUserId, finalGroups);
                 }
 
                 if (friendResult.status === "rejected" || groupResult.status === "rejected") {
@@ -685,7 +686,8 @@ export default function ListFriends() {
     useEffect(() => {
         if (location.pathname !== "/conversation") return;
 
-        if (!loading && !hasActiveChat && unifiedConversations.length > 0) {
+        if (!loading && !hasActiveChat && unifiedConversations.length > 0 && !autoRedirectedRef.current) {
+            autoRedirectedRef.current = true;
             const firstConv = unifiedConversations[0];
             setSelectedItemKey(firstConv.id);
             if (firstConv.type === "PRIVATE") {

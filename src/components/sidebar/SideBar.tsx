@@ -13,6 +13,7 @@ import SchoolIcon from "@mui/icons-material/School";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useLocation, useNavigate } from "react-router-dom";
+import logo from "../../assets/img/logo.png";
 
 interface NavItem {
   label: string;
@@ -104,6 +105,7 @@ export default function SideBar({ collapsed = false, onToggle }: SideBarProps) {
       )}
 
       <Box
+        onClick={() => navigate("/home")}
         sx={{
           px: collapsed ? 1.5 : 2.5,
           py: 2.5,
@@ -114,29 +116,36 @@ export default function SideBar({ collapsed = false, onToggle }: SideBarProps) {
           borderBottom: "1px solid #e2e8f0",
           height: "64px",
           boxSizing: "border-box",
+          cursor: "pointer",
+          transition: "opacity 0.2s ease",
+          "&:hover": {
+            opacity: 0.8,
+            "& img": {
+              transform: "scale(1.08)",
+            }
+          }
         }}
       >
         <Box
+          component="img"
+          src={logo}
+          alt="StudyMatch Logo"
           sx={{
             width: 36,
             height: 36,
-            borderRadius: "10px",
-            background: "#2563eb",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            objectFit: "cover",
+            borderRadius: "50%",
             flexShrink: 0,
+            transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
-        >
-          <SchoolIcon sx={{ color: "#fff", fontSize: 20 }} />
-        </Box>
+        />
         {!collapsed && (
           <Box sx={{ minWidth: 0 }}>
             <Box
               component="span"
               sx={{
                 fontWeight: 700,
-                fontSize: 15,
+                fontSize: 16,
                 color: "#1f2937",
                 letterSpacing: "-0.2px",
                 display: "block",
@@ -147,20 +156,6 @@ export default function SideBar({ collapsed = false, onToggle }: SideBarProps) {
               }}
             >
               StudyMatch
-            </Box>
-            <Box
-              component="span"
-              sx={{
-                fontSize: 11,
-                color: "#9ca3af",
-                fontWeight: 500,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                display: "block",
-              }}
-            >
-              Kết nối học tập
             </Box>
           </Box>
         )}

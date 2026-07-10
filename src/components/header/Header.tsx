@@ -69,6 +69,19 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   const user = useSelector((state: RootState) => state.user);
   const newMess = useSelector((state: RootState) => state.chat.newMess);
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   const isLoggedIn = localStorage.getItem("accessToken") ? true : false;
   const [currentUserProfile, setCurrentUserProfile] = useState<FriendUser | null>(null);
@@ -445,7 +458,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               sx={{ display: "flex", width: "100%", alignItems: "center" }}
             >
               <Box
-                sx={{ width: "75%", display: "flex", alignItems: "center" }}
+                sx={{ width: "75%", display: "flex", alignItems: "center", gap: "24px" }}
               >
                 <Typography
                   sx={{
@@ -453,10 +466,49 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     fontWeight: 700,
                     color: "#1f2937",
                     letterSpacing: "-0.2px",
+                    cursor: "pointer",
                   }}
+                  onClick={() => navigate("/home")}
                 >
                   Trang chủ
                 </Typography>
+                <TextField
+                  placeholder="Tìm kiếm bạn học, nhóm học..."
+                  variant="outlined"
+                  size="small"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IconButton onClick={handleSearch} size="small" sx={{ p: 0 }}>
+                          <SearchIcon sx={{ color: "#9ca3af", fontSize: "18px" }} />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      width: "320px",
+                      height: "36px",
+                      borderRadius: "10px",
+                      backgroundColor: "#f3f4f6",
+                      "& fieldset": { border: "none" },
+                      "&:hover fieldset": { border: "none" },
+                      "&.Mui-focused": {
+                        backgroundColor: "#ffffff",
+                        boxShadow: "0 0 0 2px rgba(37, 99, 235, 0.2)",
+                        "& fieldset": { border: "1px solid #2563eb" },
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      fontSize: "13px",
+                      color: "#1f2937",
+                      padding: "0px",
+                    },
+                  }}
+                />
               </Box>
 
               <Box
@@ -525,17 +577,58 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           </>
         ) : (
           <>
-            <Typography
-              component={"h1"}
-              sx={{
-                marginY: "auto",
-                fontSize: "16px",
-                fontWeight: 700,
-                color: "#1f2937",
-              }}
-            >
-              Trang chủ
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: "24px" }}>
+              <Typography
+                component={"h1"}
+                sx={{
+                  marginY: "auto",
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  color: "#1f2937",
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate("/")}
+              >
+                Trang chủ
+              </Typography>
+              <TextField
+                placeholder="Tìm kiếm bạn học, nhóm học..."
+                variant="outlined"
+                size="small"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton onClick={handleSearch} size="small" sx={{ p: 0 }}>
+                        <SearchIcon sx={{ color: "#9ca3af", fontSize: "18px" }} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    width: "320px",
+                    height: "36px",
+                    borderRadius: "10px",
+                    backgroundColor: "#f3f4f6",
+                    "& fieldset": { border: "none" },
+                    "&:hover fieldset": { border: "none" },
+                    "&.Mui-focused": {
+                      backgroundColor: "#ffffff",
+                      boxShadow: "0 0 0 2px rgba(37, 99, 235, 0.2)",
+                      "& fieldset": { border: "1px solid #2563eb" },
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    fontSize: "13px",
+                    color: "#1f2937",
+                    padding: "0px",
+                  },
+                }}
+              />
+            </Box>
             <Box>
               <Button
                 onClick={handleOpenMenu}
@@ -817,21 +910,21 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
-                    padding: "10px",
+                    padding: "10px 12px",
                     borderRadius: "8px",
-                    backgroundColor: "#fef2f2",
-                    border: "1px solid #fecaca",
+                    backgroundColor: "#fff5f5",
+                    border: "1px solid #fee2e2",
                   }}
                 >
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                     <Typography
                       sx={{
-                        fontSize: "12px",
-                        color: "#991b1b",
-                        fontWeight: 600,
+                        fontSize: "12.5px",
+                        color: "#475569",
+                        lineHeight: 1.4,
                       }}
                     >
-                      <strong>{rej.inviteeName}</strong> đã từ chối lời mời vào nhóm <strong>{rej.groupName}</strong>
+                      <strong style={{ color: "#0f172a", fontWeight: 700 }}>{rej.inviteeName}</strong> đã từ chối lời mời vào nhóm <strong style={{ color: "#0f172a", fontWeight: 700 }}>{rej.groupName}</strong>
                     </Typography>
                   </Box>
                   <Button

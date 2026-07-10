@@ -371,7 +371,9 @@ export default function ConversationPage() {
   const [privateSenderProfiles, setPrivateSenderProfiles] = useState<Record<number, FriendUser>>({});
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [loadingConversation, setLoadingConversation] = useState(false);
+  const [loadingConversation, setLoadingConversation] = useState(() => {
+    return selectedConversationKey !== "none";
+  });
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [waitingVideoCall, setWaitingVideoCall] = useState<VideoCallInfo | null>(null);
@@ -668,6 +670,26 @@ export default function ConversationPage() {
           return;
         }
 
+        if (!isGroupConversation && targetUserId) {
+          try {
+            const profiles = await loadFriendProfilesService([targetUserId]);
+            if (activeConversationKeyRef.current === loadKey && profiles && profiles.length > 0) {
+              const peerProfile = profiles[0];
+              setPrivateSenderProfiles((prev) => ({
+                ...prev,
+                [targetUserId]: {
+                  ...prev[targetUserId],
+                  ...peerProfile,
+                  fullName: peerProfile.fullName || `User ${targetUserId}`,
+                },
+              }));
+              loadedPrivateProfileIdsRef.current.add(targetUserId);
+            }
+          } catch (e) {
+            console.error("Failed to pre-load peer profile", e);
+          }
+        }
+
         conversationId.current = result.data.conversationId;
         dispatch(updateCurrentConverId({ currentConversationId: result.data.conversationId }));
 
@@ -717,7 +739,7 @@ export default function ConversationPage() {
     };
 
     loadMess();
-  }, [selectedConversationKey, targetUserId, groupId, isGroupConversation, fallbackConversationId, currentUserId, dispatch, markLatestIncomingSeen]);
+  }, [selectedConversationKey, currentUserId, dispatch, markLatestIncomingSeen]);
 
   useEffect(() => {
     loadedPrivateProfileIdsRef.current.clear();
@@ -1780,7 +1802,55 @@ export default function ConversationPage() {
           </Box>
         </Box>
 
-        {pinnedMessages.length > 0 && (
+        {loadingConversation ? (
+          <Box
+            sx={{
+              height: 44,
+              flexShrink: 0,
+              width: "100%",
+              px: 2.25,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1.5,
+              borderBottom: "1px solid rgba(15,23,42,0.08)",
+              bgcolor: "#fbfcff",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", minWidth: 0, gap: 1, flex: 1 }}>
+              <Skeleton
+                variant="rectangular"
+                width={28}
+                height={28}
+                animation="wave"
+                sx={{ borderRadius: "6px", bgcolor: "rgba(15, 23, 42, 0.06)", flexShrink: 0 }}
+              />
+              <Box sx={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                <Skeleton
+                  variant="rectangular"
+                  width="40%"
+                  height={14}
+                  animation="wave"
+                  sx={{ borderRadius: "4px", bgcolor: "rgba(15, 23, 42, 0.06)" }}
+                />
+                <Skeleton
+                  variant="rectangular"
+                  width="20%"
+                  height={11}
+                  animation="wave"
+                  sx={{ borderRadius: "4px", bgcolor: "rgba(15, 23, 42, 0.04)" }}
+                />
+              </Box>
+            </Box>
+            <Skeleton
+              variant="rectangular"
+              width={22}
+              height={14}
+              animation="wave"
+              sx={{ borderRadius: "4px", bgcolor: "rgba(15, 23, 42, 0.06)", flexShrink: 0 }}
+            />
+          </Box>
+        ) : pinnedMessages.length > 0 ? (
           <Box
             component="button"
             type="button"
@@ -1835,7 +1905,7 @@ export default function ConversationPage() {
             </Box>
             <MoreHorizIcon sx={{ color: "#475569", fontSize: 22, flexShrink: 0 }} />
           </Box>
-        )}
+        ) : null}
 
         {loadingConversation ? (
           <ConversationSkeleton />
@@ -1908,8 +1978,8 @@ export default function ConversationPage() {
                         width: 36,
                         height: 36,
                         borderRadius: 1.5,
-                        bgcolor: "#fee2e2",
-                        color: "#a40000",
+                        bgcolor: "#f0f7ff",
+                        color: "#2563eb",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -1968,11 +2038,11 @@ export default function ConversationPage() {
                 aria-label={isRecordingAudio ? "Dừng ghi âm và gửi" : "Ghi âm"}
                 onClick={handleAudioRecordClick}
                 sx={{
-                  color: isRecordingAudio ? "#fff" : "#a40000",
-                  bgcolor: isRecordingAudio ? "#dc2626" : "transparent",
+                  color: isRecordingAudio ? "#fff" : "#2563eb",
+                  bgcolor: isRecordingAudio ? "#ef4444" : "transparent",
                   p: 0.5,
                   "&:hover": {
-                    bgcolor: isRecordingAudio ? "#b91c1c" : "rgba(164,0,0,0.08)",
+                    bgcolor: isRecordingAudio ? "#dc2626" : "rgba(37,99,235,0.08)",
                   },
                 }}
               >
@@ -1993,11 +2063,11 @@ export default function ConversationPage() {
               )}
             </Box>
 
-            <IconButton sx={{ color: "#a40000", p: 0.5 }} onClick={handleOpenFile}>
+            <IconButton sx={{ color: "#2563eb", p: 0.5 }} onClick={handleOpenFile}>
               <ImageIcon />
             </IconButton>
 
-            <IconButton sx={{ color: "#a40000", p: 0.5 }} onClick={handleOpenDocument}>
+            <IconButton sx={{ color: "#2563eb", p: 0.5 }} onClick={handleOpenDocument}>
               <AttachFileIcon />
             </IconButton>
 
@@ -2027,7 +2097,7 @@ export default function ConversationPage() {
                 borderRadius: "22px",
                 px: 2,
                 py: 0.75,
-                bgcolor: "#f6e3de",
+                bgcolor: "#f0f7ff",
                 overflow: "hidden",
               }}
             >
@@ -2119,7 +2189,7 @@ export default function ConversationPage() {
                   </Box>
                 )}
 
-                <IconButton onClick={() => setShowEmojiPicker((prev) => !prev)} sx={{ color: "#a40000", p: 0.5, mb: 0.15 }}>
+                <IconButton onClick={() => setShowEmojiPicker((prev) => !prev)} sx={{ color: "#2563eb", p: 0.5, mb: 0.15 }}>
                   <SentimentSatisfiedAltIcon />
                 </IconButton>
               </Box>
@@ -2128,10 +2198,10 @@ export default function ConversationPage() {
             <IconButton
               onClick={sendMessage}
               sx={{
-                bgcolor: "#a40000",
+                bgcolor: "#2563eb",
                 color: "#fff",
                 p: 1.2,
-                "&:hover": { bgcolor: "#8a0000" },
+                "&:hover": { bgcolor: "#1d4ed8" },
                 flexShrink: 0,
               }}
             >

@@ -118,7 +118,6 @@ export default function FriendRequestsSection() {
       if (res && res.code && Number(res.code) >= 400) {
         throw new Error(res.message || "Failed to accept request");
       }
-      toast.success(name ? `Đã đồng ý kết bạn với ${name}` : "Đã đồng ý kết bạn");
 
       // Emit socket event to notify other user in real-time
       const currentUserId = Number(localStorage.getItem("userId"));
@@ -312,17 +311,15 @@ export default function FriendRequestsSection() {
                       <button
                         onClick={() => handleDecline(req.id, displayName)}
                         disabled={actionLoading !== null}
-                        className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center h-9 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
                       >
-                        <X size={14} />
                         Từ chối
                       </button>
                       <button
                         onClick={() => handleAccept(req.id, displayName)}
                         disabled={actionLoading !== null}
-                        className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
                       >
-                        <Check size={14} />
                         Chấp nhận
                       </button>
                     </>

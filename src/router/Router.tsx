@@ -14,6 +14,7 @@ import { Navigate } from "react-router-dom";
 import { Login } from "@mui/icons-material";
 import CreateGroupPage from "../pages/CreateGroup/CreateGroupPage";
 import GroupPage from "../pages/Group/GroupPage";
+import SearchPage from "../pages/Search/SearchPage";
 import ForgotPasswordPage from "../pages/Auth/ResetPassword/ForgotPasswordPage";
 import CheckEmailPage from "../pages/Auth/ResetPassword/CheckEmailPage";
 import ResetPasswordPage from "../pages/Auth/ResetPassword/ResetPasswordPage";
@@ -104,6 +105,7 @@ export const router = createBrowserRouter([
           { path: "/conversation", element: <ConversationPage /> },
           { path: "/recommendation", element: <StudyConnectionPage /> },
           { path: "/groups", element: <GroupPage /> },
+          { path: "/search", element: <SearchPage /> },
         ],
       },
     ],
