@@ -31,6 +31,7 @@ export interface StudySessionVm {
   participantStatus: ParticipantStatus;
   partnerName?: string;
   groupName?: string;
+  groupAvatarUrl?: string | null;
   membersCount?: number;
   subjectName?: string;
 }
@@ -77,6 +78,7 @@ export interface StudySessionResponse {
   partnerName: string | null;
   partnerUserName?: string | null;
   groupName: string | null;
+  groupAvatarUrl?: string | null;
   membersCount: number | null;
   subjectName: string | null;
   createdAt: string;

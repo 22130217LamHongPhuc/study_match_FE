@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import WelcomeBanner from "../components/home/WelcomeBanner";
 import QuickStats from "../components/home/QuickStats";
 import SuggestedStudents, { SuggestedStudentVm } from "../components/home/SuggestedStudents";
 import StudyPosts from "../components/home/StudyPosts";
-import UpcomingScheduleCard, { ScheduleItem } from "../components/home/UpcomingScheduleCard";
+import UpcomingScheduleCard from "../components/home/UpcomingScheduleCard";
+import { StudySessionResponse } from "./StudySession/types";
+import { getTopUpcomingSessions } from "../services/StudySessionService";
+import { useNavigate } from "react-router-dom";
 import CreatePostDialog from "../components/modal/user/CreatePostDialog";
 import { SocialPost, loadFeedPosts } from "../services/SocialPostService";
 import { useProfileData } from "./MyProfile/hooks/useProfileData";
@@ -16,6 +19,7 @@ import { STUDY_MODE_LABELS } from "./StudyConnection/constants";
 export default function HomePage() {
   const userId = Number(localStorage.getItem("userId"));
   useProfileData(userId);
+  const navigate = useNavigate();
 
   const [hasData, setHasData] = useState(true);
   const [showAddPostModal, setShowAddPostModal] = useState(false);
@@ -36,15 +40,15 @@ export default function HomePage() {
     setLoadingPosts(true);
     try {
       const res = await loadFeedPosts(pageNum, 10, userId);
-      if (res && res.content) {
+      if (res && res.items) {
         if (isLoadMore) {
           setPosts((prev) => {
             const existingIds = new Set(prev.map((p) => p.id));
-            const newPosts = res.content.filter((p) => !existingIds.has(p.id));
+            const newPosts = res.items.filter((p) => !existingIds.has(p.id));
             return [...prev, ...newPosts];
           });
         } else {
-          setPosts(res.content);
+          setPosts(res.items);
         }
         setPage(pageNum);
         setTotalPages(res.totalPages);
@@ -60,7 +64,7 @@ export default function HomePage() {
     if (!userId) return;
     setLoadingRecommendations(true);
     try {
-      const res = await getRecommendedUsers(userId, 1, 3);
+      const res = await getRecommendedUsers(userId, 1, 2);
       if (res && res.success && res.recommendations) {
         const mapped = res.recommendations.map((item) => {
           const friendRequest = item.friend_request;
@@ -76,13 +80,18 @@ export default function HomePage() {
             avgScore: item.avg_score,
             sharedSubjectCount: item.n_shared_subjects,
             studiedCredits: item.studied_credits,
+            mainSubjectName: item.main_subject_name,
+            avatarUrl: item.avatar_url,
+            commonGroups: item.common_groups,
+            studyGoal: item.study_goal,
+            region: item.region,
             friendRequest: friendRequest
               ? {
-                  id: friendRequest.id,
-                  senderId: normalizeOptionalUserId(friendRequest.senderId ?? friendRequest.sender_id),
-                  receiverId: normalizeOptionalUserId(friendRequest.receiverId ?? friendRequest.receiver_id),
-                  status: friendRequest.status,
-                }
+                id: friendRequest.id,
+                senderId: normalizeOptionalUserId(friendRequest.senderId ?? friendRequest.sender_id),
+                receiverId: normalizeOptionalUserId(friendRequest.receiverId ?? friendRequest.receiver_id),
+                status: friendRequest.status,
+              }
               : null,
           };
         });
@@ -116,6 +125,7 @@ export default function HomePage() {
       });
       fetchPosts(0, false);
       fetchRecommendations();
+      fetchUpcomingSchedules();
     }
   }, [userId]);
 
@@ -131,22 +141,23 @@ export default function HomePage() {
     setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
-  const [schedules, setSchedules] = useState<ScheduleItem[]>([
-    {
-      id: 1,
-      title: "Nhóm tự học Thuật toán & Giải thuật",
-      dateTime: "Hôm nay, 19:30 - 21:30",
-      isOnline: true,
-      locationOrUrl: "meet.google.com/abc-xyz-jkl",
-    },
-    {
-      id: 2,
-      title: "Học nhóm Toán rời rạc tại Thư viện",
-      dateTime: "Ngày mai, 09:00 - 11:30",
-      isOnline: false,
-      locationOrUrl: "Phòng Tự học 3, Thư viện tầng 2",
-    },
-  ]);
+  const [schedules, setSchedules] = useState<StudySessionResponse[]>([]);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
+
+  const fetchUpcomingSchedules = async () => {
+    if (!userId) return;
+    setLoadingSchedules(true);
+    try {
+      const res = await getTopUpcomingSessions(userId);
+      if (res && res.success && res.data) {
+        setSchedules(res.data);
+      }
+    } catch (err) {
+      console.error("Error loading upcoming schedules:", err);
+    } finally {
+      setLoadingSchedules(false);
+    }
+  };
 
 
   const handleAcceptRequest = async (request: any) => {
@@ -169,6 +180,7 @@ export default function HomePage() {
       toast.success("Đã đồng ý lời mời kết bạn!");
     }
   };
+
 
   const handleSendRequest = async (targetUserId: number) => {
     const res = await requestFriendService(targetUserId);
@@ -200,20 +212,19 @@ export default function HomePage() {
 
         <WelcomeBanner
           onFindMatch={() => {
-            toast.info("Đang chuyển hướng đến bộ lọc tìm bạn học...");
+            navigate("/recommendation")
           }}
           onPostGroup={() => {
             setShowAddPostModal(true);
           }}
         />
 
-         <QuickStats
+        <QuickStats
           friendsCount={hasData ? friendCount : 0}
           friendRequestsCount={hasData ? pendingReceivedRequestCount : 0}
           groupsCount={hasData ? joinedGroupCount : 0}
           groupInvitesCount={hasData ? pendingInvitationCount : 0}
           onStatClick={(type) => {
-            toast.info(`Xem chi tiết chỉ số: ${type}`);
           }}
           loading={loadingStats}
         />
@@ -250,28 +261,17 @@ export default function HomePage() {
             <UpcomingScheduleCard
               schedules={hasData ? schedules : []}
               onViewCalendar={() => {
-                toast.info("Chuyển hướng đến trang Lịch học...");
+                navigate("/schedule");
               }}
-              onViewDetails={(id) => {
-                toast.info("Chi tiết buổi học #" + id);
+              onViewDetails={(session) => {
+                navigate(`/schedule?sessionId=${session.id}`);
               }}
             />
           </div>
         </div>
       </div>
 
-      <CreatePostDialog
-        open={showAddPostModal}
-        onClose={() => setShowAddPostModal(false)}
-        currentUserId={userId}
-        authorName="StudyMatching"
-        showSubjectSelect={true}
-        onPostCreated={(newPost) => {
-          setPosts((prev) => [newPost, ...prev]);
-          toast.success("Đăng bài viết học tập thành công!");
-        }}
-        onPostingChange={setIsPosting}
-      />
+
     </main>
   );
 }
