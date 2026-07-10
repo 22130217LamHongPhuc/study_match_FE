@@ -4,7 +4,7 @@ import SocialAuthGroup from "./SocialLoginGroup";
 import { AuthResponse, register } from "../../../services/AuthService";
 import { useState } from "react";
 import { APIResponseData } from "../../../config/APIResponse";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LoadingSkeleton } from "../../../components/modal/basic/LoadingSkeleton";
 
 export default function RegisterForm() {
@@ -159,14 +159,14 @@ export default function RegisterForm() {
 
 
           <div className="mt-6 text-center">
-            <p className="text-xs text-slate-500">
+            <p className="mt-10 text-center text-sm text-slate-500 md:text-base">
               Đã có tài khoản?
-              <a
-                href="#"
-                className="ml-1 font-bold text-green-700 hover:underline"
+              <Link
+                to="/login"
+                className="ml-1 font-bold text-green-700 cursor-pointer hover:text-green-800 transition-colors"
               >
                 Đăng nhập ngay
-              </a>
+              </Link>
             </p>
           </div>
         </>

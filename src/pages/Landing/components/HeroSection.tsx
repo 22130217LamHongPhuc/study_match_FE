@@ -25,19 +25,10 @@ const HeroSection: React.FC = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-center">
           <div className="space-y-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2">
-              <span className="w-6 h-0.5 bg-[#2563eb]" />
-              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#2563eb]">
-                Nền tảng học tập thông minh
-              </span>
-            </div>
+
 
             <div className="space-y-4">
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-[#1a3557] leading-[1.05] tracking-tight">
-                Tìm bạn học<br />
-                phù hợp<br />
-                bằng AI.
-              </h1>
+
               <p className="text-base text-gray-600 leading-relaxed max-w-md">
                 StudyMatch kết nối sinh viên dựa trên mục tiêu, môn học, kỹ năng và lịch rảnh — không còn tìm bạn nhóm theo kiểu may rủi.
               </p>
@@ -152,16 +143,7 @@ const HeroSection: React.FC = () => {
               </div>
             </div>
 
-            <div className="absolute -right-4 top-1/3 hidden lg:flex flex-col items-center gap-2">
-              <div className="w-px h-16 bg-[#d4a017]/40" />
-              <span
-                className="text-[10px] font-bold uppercase tracking-widest text-[#d4a017]"
-                style={{ writingMode: "vertical-rl" }}
-              >
-                Smart Matching
-              </span>
-              <div className="w-px h-16 bg-[#d4a017]/40" />
-            </div>
+
           </div>
         </div>
       </div>

@@ -11,10 +11,6 @@ const CTASection: React.FC = () => {
           style={{ background: "#1a3557" }}
         >
           <div className="space-y-5 max-w-lg">
-            <div className="inline-flex items-center gap-2">
-              <span className="w-4 h-0.5 bg-[#f97316]" />
-              <span className="text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">Bắt đầu ngay</span>
-            </div>
 
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
               Sẵn sàng tìm người học phù hợp với bạn?

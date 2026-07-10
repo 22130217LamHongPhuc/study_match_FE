@@ -48,16 +48,7 @@ const Footer: React.FC = () => {
               Nền tảng học tập thông minh kết nối sinh viên với bạn học và nhóm học phù hợp bằng AI. Học đúng người, đúng mục tiêu.
             </p>
 
-            <div className="space-y-2">
-              <a href="mailto:hello@studymatch.vn" className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#d4a017] transition-colors">
-                <Mail className="w-3.5 h-3.5" />
-                hello@studymatch.vn
-              </a>
-              <a href="tel:+84000000000" className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#d4a017] transition-colors">
-                <Phone className="w-3.5 h-3.5" />
-                +84 000 000 000
-              </a>
-            </div>
+
           </div>
 
           {footerLinks.map((group) => (
@@ -88,7 +79,7 @@ const Footer: React.FC = () => {
             © {currentYear} StudyMatch. Tất cả quyền được bảo lưu.
           </p>
           <p className="text-xs text-gray-600">
-            Được xây dựng với ♥ dành cho sinh viên Việt Nam
+            Được xây dựng với ♥ dành cho sinh viên NLU
           </p>
         </div>
       </div>

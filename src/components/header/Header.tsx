@@ -447,16 +447,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               <Box
                 sx={{ width: "75%", display: "flex", alignItems: "center" }}
               >
-                <Typography
-                  sx={{
-                    fontSize: "16px",
-                    fontWeight: 700,
-                    color: "#1f2937",
-                    letterSpacing: "-0.2px",
-                  }}
-                >
-                  Trang chủ
-                </Typography>
+
               </Box>
 
               <Box

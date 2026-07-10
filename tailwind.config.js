@@ -16,7 +16,7 @@ module.exports = {
           500: '#2563eb', // Royal Blue primary brand color
           600: '#1d4ed8', // Darker Blue hover state
           700: '#1e40af',
-          800: '#1e3a8a',
+          800: '#375ec9ff',
           900: '#0f172a',
         },
         sand: {

@@ -1,17 +1,31 @@
-import React from "react";
-import { Eye, UserPlus, Check, Clock, AlertCircle } from "lucide-react";
-import { FriendRequestVm } from "../../pages/StudyConnection/types";
+import React, { useState, useEffect, useCallback } from "react";
+import { AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { FriendRequestVm, RecommendationCardVm, RecommendationSecondaryAction } from "../../pages/StudyConnection/types";
+import RecommendationCard from "../../pages/StudyConnection/components/RecommendationCard";
+import RejectRecommendationModal, { RejectRecommendationSubmitValue } from "../../pages/StudyConnection/components/RejectRecommendationModal";
+import { matchingItemApi } from "../../services/matchingItemApi";
+import { requestFriendService, updateFriendRequestStatusBySenderAndReceiverService, skipUserService } from "../../services/FriendService";
 
 export interface SuggestedStudentVm {
   userId: number;
   fullName: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   studyModeLabel: string;
   matchPercentage: number;
   avgScore: number;
   sharedSubjectCount: number;
   studiedCredits: number;
+  mainSubjectName?: string;
+  commonGroups?: {
+    id: number;
+    name: string;
+    avatarUrl: string | null;
+  }[];
   friendRequest?: FriendRequestVm | null;
+  studyGoal?: string;
+  region?: string;
 }
 
 interface SuggestedStudentsProps {
@@ -45,50 +59,23 @@ export function SuggestedStudentSkeleton() {
   );
 }
 
-const AVATAR_COLORS = [
-  "bg-orange-400",
-  "bg-rose-400",
-  "bg-amber-500",
-  "bg-lime-500",
-  "bg-pink-400",
-  "bg-red-400",
-  "bg-yellow-500",
-  "bg-emerald-500",
-];
-
-function getAvatarColor(userId: number) {
-  return AVATAR_COLORS[userId % AVATAR_COLORS.length];
+function isSuccessCode(code: number | string | undefined) {
+  const responseCode = Number(code);
+  return responseCode >= 200 && responseCode < 300;
 }
 
-function getInitials(name: string | undefined): string {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+function buildRejectReasonText({
+  selectedReasons,
+  note,
+}: RejectRecommendationSubmitValue) {
+  const lines = ["Lý do từ chối:"];
+  selectedReasons.forEach((reason) => {
+    lines.push(`- ${reason}`);
+  });
+  if (note.trim()) {
+    lines.push(`Ghi chú thêm: ${note.trim()}`);
   }
-  return parts[0][0]?.toUpperCase() ?? "?";
-}
-
-function getMatchColor(match: number) {
-  if (match >= 70) {
-    return {
-      text: "text-emerald-600",
-      bg: "bg-emerald-500",
-      track: "bg-emerald-100",
-    };
-  }
-  if (match >= 50) {
-    return {
-      text: "text-orange-600",
-      bg: "bg-orange-500",
-      track: "bg-orange-100",
-    };
-  }
-  return {
-    text: "text-amber-600",
-    bg: "bg-amber-500",
-    track: "bg-amber-100",
-  };
+  return lines.join("\n");
 }
 
 export default function SuggestedStudents({
@@ -99,14 +86,319 @@ export default function SuggestedStudents({
   currentUserId,
   loading = false,
 }: SuggestedStudentsProps) {
+  const navigate = useNavigate();
+  const [localStudents, setLocalStudents] = useState<SuggestedStudentVm[]>(students);
+
+  useEffect(() => {
+    setLocalStudents(students);
+  }, [students]);
+
+  const [connectingUserId, setConnectingUserId] = useState<number | null>(null);
+  const [acceptingRequestId, setAcceptingRequestId] = useState<number | null>(null);
+  const [rejectingUserId, setRejectingUserId] = useState<number | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<RecommendationCardVm | null>(null);
+  const [rejectActionStatus, setRejectActionStatus] = useState<"REJECTED" | "SKIPPED">("REJECTED");
+
+  const handleViewProfile = useCallback(
+    (recommendation: RecommendationCardVm) => {
+      navigate(`/profile/${recommendation.userId}`);
+    },
+    [navigate],
+  );
+
+  const handleCloseRejectModal = useCallback(() => {
+    if (rejectingUserId !== null) return;
+    setRejectTarget(null);
+  }, [rejectingUserId]);
+
+  const handleConnect = useCallback(
+    async (targetUserId: number) => {
+      if (!currentUserId) {
+        toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+        return;
+      }
+      if (currentUserId === targetUserId) {
+        toast.error("Bạn không thể gửi lời mời cho chính mình.");
+        return;
+      }
+      if (connectingUserId === targetUserId) return;
+
+      setConnectingUserId(targetUserId);
+
+      try {
+        const response = await requestFriendService(targetUserId);
+
+        if (isSuccessCode(response.code)) {
+          try {
+            await matchingItemApi.updateStatus({
+              userId: currentUserId,
+              recommendedUserId: targetUserId,
+              actionStatus: "FRIEND_REQUEST_SENT",
+              finalScore: undefined,
+            });
+          } catch (trackingError) {
+            console.error("Track matching FRIEND_REQUEST_SENT failed", trackingError);
+          }
+
+          toast.success("Đã gửi lời mời kết bạn.");
+
+          setLocalStudents((prev) =>
+            prev.map((student) => {
+              if (student.userId === targetUserId) {
+                return {
+                  ...student,
+                  friendRequest: {
+                    id: (response.data as any)?.id || Date.now(),
+                    senderId: currentUserId,
+                    receiverId: targetUserId,
+                    status: "FRIEND_REQUEST_SENT",
+                  },
+                };
+              }
+              return student;
+            })
+          );
+
+          if (onConnect) onConnect(targetUserId);
+        } else {
+          toast.error(response.message || "Gửi lời mời kết bạn thất bại.");
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        toast.error(message);
+      } finally {
+        setConnectingUserId(null);
+      }
+    },
+    [connectingUserId, currentUserId, onConnect],
+  );
+
+  const handleAcceptFriendRequest = useCallback(
+    async (request: FriendRequestVm) => {
+      const requestId = request.id;
+      const senderId = request.senderId;
+      const receiverId = request.receiverId;
+
+      if (!currentUserId || !senderId || !receiverId) return;
+      if (currentUserId === senderId) return;
+      if (acceptingRequestId === requestId) return;
+
+      setAcceptingRequestId(requestId);
+
+      try {
+        const response = await updateFriendRequestStatusBySenderAndReceiverService(
+          senderId,
+          receiverId,
+          "APPROVED",
+        );
+
+        if (isSuccessCode(response.code)) {
+          try {
+            await matchingItemApi.updateStatus({
+              userId: currentUserId,
+              recommendedUserId: senderId,
+              actionStatus: "ACCEPTED",
+              finalScore: undefined,
+            });
+          } catch (trackingError) {
+            console.error("Track matching ACCEPTED failed", trackingError);
+          }
+
+          toast.success("Đã chấp nhận lời mời kết bạn.");
+
+          setLocalStudents((prev) =>
+            prev.map((student) => {
+              if (student.friendRequest && student.friendRequest.id === requestId) {
+                return {
+                  ...student,
+                  friendRequest: {
+                    ...student.friendRequest,
+                    status: "ACCEPTED",
+                  },
+                };
+              }
+              return student;
+            })
+          );
+
+          if (onAccept) onAccept(request);
+        } else {
+          toast.error(response.message || "Chấp nhận lời mời thất bại.");
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        toast.error(message);
+      } finally {
+        setAcceptingRequestId(null);
+      }
+    },
+    [acceptingRequestId, currentUserId, onAccept],
+  );
+
+  const handleCancelFriendRequest = useCallback(
+    async (recommendation: RecommendationCardVm) => {
+      const friendRequest = recommendation.friendRequest;
+      const targetUserId = recommendation.userId;
+
+      if (!currentUserId) {
+        toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+        return;
+      }
+
+      if (
+        !friendRequest?.senderId ||
+        !friendRequest?.receiverId ||
+        (friendRequest.status !== "FRIEND_REQUEST_SENT" && friendRequest.status !== "PENDING") ||
+        friendRequest.senderId !== currentUserId
+      ) {
+        return;
+      }
+
+      if (rejectingUserId === targetUserId) return;
+
+      setRejectingUserId(targetUserId);
+
+      try {
+        const response = await updateFriendRequestStatusBySenderAndReceiverService(
+          friendRequest.senderId,
+          friendRequest.receiverId,
+          "REJECTED",
+        );
+
+        if (!isSuccessCode(response.code)) {
+          throw new Error(response.message || "Không thể hủy lời mời kết bạn.");
+        }
+
+        toast.success("Đã hủy lời mời kết bạn.");
+
+        setLocalStudents((prev) =>
+          prev.map((student) => {
+            if (student.userId === targetUserId) {
+              return {
+                ...student,
+                friendRequest: null,
+              };
+            }
+            return student;
+          })
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        toast.error(message);
+      } finally {
+        setRejectingUserId(null);
+      }
+    },
+    [currentUserId, rejectingUserId],
+  );
+
+  const handleSecondaryAction = useCallback(
+    (recommendation: RecommendationCardVm, action: RecommendationSecondaryAction) => {
+      if (action === "CANCEL_REQUEST") {
+        void handleCancelFriendRequest(recommendation);
+        return;
+      }
+
+      setRejectTarget(recommendation);
+      setRejectActionStatus(action);
+    },
+    [handleCancelFriendRequest],
+  );
+
+  const handleRejectRecommendation = useCallback(
+    async ({ selectedReasons, note }: RejectRecommendationSubmitValue) => {
+      if (!rejectTarget) return;
+
+      if (!currentUserId) {
+        toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+        return;
+      }
+
+      const targetUserId = rejectTarget.userId;
+
+      if (rejectingUserId === targetUserId) return;
+
+      setRejectingUserId(targetUserId);
+
+      const reasonText = buildRejectReasonText({ selectedReasons, note });
+      const friendRequest = rejectTarget.friendRequest;
+      const isPendingReceivedRequest =
+        (friendRequest?.status === "FRIEND_REQUEST_SENT" || friendRequest?.status === "PENDING") &&
+        friendRequest.receiverId === currentUserId;
+
+      try {
+        if (rejectActionStatus === "SKIPPED") {
+          const response = await skipUserService(currentUserId, targetUserId);
+
+          if (response.code !== 200 && response.code !== "200") {
+            throw new Error(response.message || "Không thể bỏ qua người dùng.");
+          }
+
+          try {
+            await matchingItemApi.createActionSkip({
+              userId: currentUserId,
+              recommendedUserId: targetUserId,
+              actionStatus: "SKIPPED",
+              finalScore: undefined,
+              reasonText,
+              isRecommendation: true,
+            });
+          } catch (trackingError) {
+            console.error("Track matching SKIPPED failed", trackingError);
+          }
+
+          toast.success("Đã bỏ qua gợi ý.");
+        } else {
+          if (isPendingReceivedRequest && friendRequest?.senderId && friendRequest?.receiverId) {
+            const friendResponse = await updateFriendRequestStatusBySenderAndReceiverService(
+              friendRequest.senderId,
+              friendRequest.receiverId,
+              "REJECTED",
+            );
+
+            if (!isSuccessCode(friendResponse.code)) {
+              throw new Error(friendResponse.message || "Không thể từ chối lời mời kết bạn.");
+            }
+          }
+
+          const matchingResponse = await matchingItemApi.updateStatus({
+            userId: currentUserId,
+            recommendedUserId: targetUserId,
+            actionStatus: "REJECTED",
+            finalScore: undefined,
+            reasonText,
+          });
+
+          if (!matchingResponse.success && !isPendingReceivedRequest) {
+            throw new Error(matchingResponse.message || "Không thể gửi phản hồi cho gợi ý này.");
+          }
+
+          if (!matchingResponse.success && isPendingReceivedRequest) {
+            toast.success("Đã từ chối kết nối, nhưng phản hồi gợi ý chưa được lưu.");
+          } else {
+            toast.success("Đã gửi phản hồi từ chối.");
+          }
+        }
+
+        setLocalStudents((prev) => prev.filter((student) => student.userId !== targetUserId));
+        setRejectTarget(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
+        toast.error(message);
+      } finally {
+        setRejectingUserId(null);
+      }
+    },
+    [currentUserId, rejectTarget, rejectingUserId, rejectActionStatus],
+  );
+
   if (loading) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-gray-800">Gợi ý học tập hôm nay</h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <SuggestedStudentSkeleton />
+        <div className="grid gap-4 sm:grid-cols-2">
           <SuggestedStudentSkeleton />
           <SuggestedStudentSkeleton />
         </div>
@@ -114,7 +406,7 @@ export default function SuggestedStudents({
     );
   }
 
-  if (students.length === 0) {
+  if (localStudents.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
@@ -133,166 +425,51 @@ export default function SuggestedStudents({
         <h2 className="text-base font-bold text-gray-800">Gợi ý học tập hôm nay</h2>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {students.map((student) => {
-          const match = Number(student.matchPercentage.toFixed(1));
-          const safeMatch = Math.min(100, Math.max(0, match));
-          const color = getMatchColor(match);
-          const friendRequest = student.friendRequest;
-          const initials = getInitials(student.fullName);
-          const avatarBg = getAvatarColor(student.userId);
-
-          const status = friendRequest?.status;
-          const isAccepted = status === "ACCEPTED";
-          const isFriendRequestSent = status === "FRIEND_REQUEST_SENT";
-          const isSentByCurrentUser =
-            friendRequest?.senderId != null &&
-            currentUserId !== undefined &&
-            friendRequest.senderId === currentUserId;
-          const isReceivedByCurrentUser =
-            friendRequest?.receiverId != null &&
-            currentUserId !== undefined &&
-            friendRequest.receiverId === currentUserId;
-
-          const canSendFriendRequest =
-            !friendRequest ||
-            status === "NONE" ||
-            status === "REJECTED" ||
-            status === "SKIPPED" ||
-            status === "VIEWED";
-          const canAcceptFriendRequest = isFriendRequestSent && isReceivedByCurrentUser;
-
-          const actionButton = (() => {
-            if (isAccepted) {
-              return {
-                label: "Đã kết bạn",
-                icon: <Check size={14} />,
-                disabled: true,
-                className: "border border-emerald-200 bg-emerald-50 text-emerald-600",
-              };
-            }
-
-            if (isFriendRequestSent && isSentByCurrentUser) {
-              return {
-                label: "Đã gửi",
-                icon: <Clock size={14} />,
-                disabled: true,
-                className: "border border-amber-200 bg-amber-50 text-amber-600",
-              };
-            }
-
-            if (isFriendRequestSent && isReceivedByCurrentUser) {
-              return {
-                label: "Chấp nhận",
-                icon: <Check size={14} />,
-                disabled: false,
-                className: "bg-emerald-500 text-white hover:bg-emerald-600",
-              };
-            }
-
-            return {
-              label: "Kết bạn",
-              icon: <UserPlus size={14} />,
-              disabled: false,
-              className: "bg-orange-500 text-white hover:bg-orange-600",
-            };
-          })();
+      <div className="grid gap-4 sm:grid-cols-2">
+        {localStudents.map((student) => {
+          const rec: RecommendationCardVm = {
+            userId: student.userId,
+            fullName: student.fullName,
+            avatarUrl: student.avatarUrl || null,
+            region: student.region || "",
+            matchPercentage: student.matchPercentage,
+            mainSubjectName: student.mainSubjectName || "",
+            avgScore: student.avgScore,
+            studiedCredits: student.studiedCredits,
+            gender: "",
+            similarityScore: 0,
+            sharedSubjectScore: 0,
+            sharedSubjectCount: student.sharedSubjectCount,
+            studyGoal: student.studyGoal || "",
+            studyModeLabel: student.studyModeLabel || "",
+            friendRequest: student.friendRequest || null,
+            commonGroups: student.commonGroups || [],
+          };
 
           return (
-            <article
+            <RecommendationCard
               key={student.userId}
-              className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                {student.avatarUrl ? (
-                  <img
-                    src={student.avatarUrl}
-                    alt={student.fullName}
-                    className="h-11 w-11 shrink-0 rounded-full object-cover border border-gray-100"
-                  />
-                ) : (
-                  <div
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${avatarBg} text-sm font-bold text-white`}
-                  >
-                    {initials}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-sm font-bold text-gray-800">
-                    {student.fullName}
-                  </h3>
-                  <p className="mt-0.5 truncate text-xs text-gray-500 font-medium">
-                    {student.studyModeLabel}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-400">Phù hợp</span>
-                  <span className={`text-xs font-bold ${color.text}`}>{match}%</span>
-                </div>
-                <div className={`h-1.5 overflow-hidden rounded-full ${color.track}`}>
-                  <div
-                    className={`h-full rounded-full ${color.bg} transition-all duration-500`}
-                    style={{ width: `${safeMatch}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="mb-4 grid grid-cols-3 gap-2">
-                <div className="rounded-xl bg-orange-50 px-2 py-2 text-center">
-                  <p className="text-[9px] font-bold text-orange-400 uppercase tracking-wider">Điểm TB</p>
-                  <p className="mt-0.5 text-xs font-extrabold text-gray-700">
-                    {student.avgScore.toFixed(1)}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-green-50 px-2 py-2 text-center">
-                  <p className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Môn chung</p>
-                  <p className="mt-0.5 text-xs font-extrabold text-gray-700">
-                    {student.sharedSubjectCount}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-amber-50 px-2 py-2 text-center">
-                  <p className="text-[9px] font-bold text-amber-500 uppercase tracking-wider">Tín chỉ</p>
-                  <p className="mt-0.5 text-xs font-extrabold text-gray-700">
-                    {student.studiedCredits}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-auto space-y-2">
-                <button
-                  type="button"
-                  onClick={() => onViewProfile?.(student)}
-                  className="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
-                >
-                  <Eye size={13} />
-                  Xem hồ sơ
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (canAcceptFriendRequest && friendRequest) {
-                      onAccept?.(friendRequest);
-                      return;
-                    }
-                    if (canSendFriendRequest) {
-                      onConnect?.(student.userId);
-                    }
-                  }}
-                  disabled={actionButton.disabled}
-                  className={`flex h-9 w-full items-center justify-center gap-1.5 rounded-xl text-xs font-semibold transition-colors ${actionButton.className}`}
-                >
-                  {actionButton.icon}
-                  {actionButton.label}
-                </button>
-              </div>
-            </article>
+              recommendation={rec}
+              onViewProfile={handleViewProfile}
+              onConnect={handleConnect}
+              onAccept={handleAcceptFriendRequest}
+              onSecondaryAction={handleSecondaryAction}
+              isConnecting={connectingUserId === student.userId}
+              isAccepting={acceptingRequestId === student.friendRequest?.id}
+              isRejecting={rejectingUserId === student.userId}
+              currentUserId={currentUserId}
+            />
           );
         })}
       </div>
+
+      <RejectRecommendationModal
+        open={!!rejectTarget}
+        recommendationName={rejectTarget?.fullName}
+        submitting={rejectingUserId === rejectTarget?.userId}
+        onClose={handleCloseRejectModal}
+        onSubmit={handleRejectRecommendation}
+      />
     </div>
   );
 }
