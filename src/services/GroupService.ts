@@ -510,15 +510,15 @@ export async function rejectGroupInvitation(
   return response;
 }
 
-export interface GroupStatsResponse {
+export interface UserGroupStatsResponse {
   joinedGroupCount: number;
   pendingInvitationCount: number;
 }
 
 export async function getUserGroupStats(
   userId: number,
-): Promise<APIResponseData<GroupStatsResponse>> {
-  const response = await apiFetch<GroupStatsResponse>(
+): Promise<APIResponseData<UserGroupStatsResponse>> {
+  const response = await apiFetch<UserGroupStatsResponse>(
     `/api/groups/user/${userId}/stats`,
     {
       method: "GET",

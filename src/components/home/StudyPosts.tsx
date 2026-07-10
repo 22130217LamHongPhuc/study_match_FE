@@ -1,7 +1,7 @@
 import React from "react";
-import { Plus, AlertCircle } from "lucide-react";
 import { SocialPost } from "../../services/SocialPostService";
 import Post, { PostSkeleton } from "../post/Post";
+import noPostImg from "../../assets/img/no-post.png";
 
 interface StudyPostsProps {
   posts: SocialPost[];
@@ -35,10 +35,12 @@ export default function StudyPosts({
         </div>
 
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-            <AlertCircle size={24} />
-          </div>
-          <p className="mt-4 text-sm font-medium text-gray-700">
+          <img
+            src={noPostImg}
+            alt="Chưa có bài đăng"
+            className="mx-auto mb-3 h-28 w-auto object-contain mix-blend-multiply"
+          />
+          <p className="text-sm font-medium text-gray-500">
             Chưa có bài đăng học tập nào. Hãy tạo bài đăng đầu tiên.
           </p>
         </div>

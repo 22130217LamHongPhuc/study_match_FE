@@ -12,35 +12,45 @@ type FormLogin = {
   email: string;
   password: string;
 };
-export const loginRequest = async (form: FormLogin) => {
-  const url = BASE_URL + "/users/login";
-  console.log(url);
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+export const loginRequest = async (form: FormLogin): Promise<any> => {
+  const data = await apiFetch<any>(
+    "/users/login",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password,
+      }),
     },
-    body: JSON.stringify({
-      email: form.email,
-      password: form.password,
-    }),
-  });
-  const data = await res.json();
-
-  console.log(data);
-
+    BASE_URL,
+  );
   return data;
 };
 
-type ApiResponse<T> = {
-  success: boolean;
-  code: string;
-  message: string;
-  data: T;
-};
+export interface UserBasicInfo {
+  userId: number;
+  fullName: string | null;
+  avatarUrl: string | null;
+  email: string;
+  username: string | null;
+}
 
-const API_BASE_URL_USER = "http://localhost:8085";
+const API_BASE_URL_USER = "http://localhost:8080";
+
+export async function getUserById(
+  userId: number,
+): Promise<UserBasicInfo | null> {
+  try {
+    const res = await apiFetch<UserBasicInfo>(
+      `/api/admin/${userId}`,
+      { method: "GET" },
+      API_BASE_URL_USER,
+    );
+    return res.success ? res.data : null;
+  } catch {
+    return null;
+  }
+}
 
 type UpdateAdminUserStatusResponse = {
   userId: number;

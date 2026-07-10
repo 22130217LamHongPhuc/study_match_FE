@@ -26,6 +26,7 @@ import {
   setIsOnboardingCompleted,
 } from "../../services/OnboardingService";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../../config/apiClient";
 
 const API_BASE_URL = "http://localhost:8082/api";
 
@@ -88,11 +89,11 @@ export default function OnboardingFlow() {
     setCohortsLoading(true);
     setCohortsError("");
     try {
-      const res = await fetch(`${API_BASE_URL}/cohorts`);
-      if (!res.ok) {
-        throw new Error(`Không tải được danh sách khóa học (${res.status})`);
+      const res = await apiFetch<Cohort[]>("/cohorts", { method: "GET" }, API_BASE_URL);
+      if (!res.success) {
+        throw new Error(res.message || `Không tải được danh sách khóa học`);
       }
-      const json: Cohort[] = await res.json();
+      const json = res.data;
       console.log("Cohorts loaded:", json);
       setCohorts(Array.isArray(json) ? json : []);
     } catch (error) {
@@ -119,16 +120,17 @@ export default function OnboardingFlow() {
       setStudyPlanLoading(true);
       setStudyPlanError("");
       try {
-        const res = await fetch(
-          `${API_BASE_URL}/cohorts/${cohortCode}/study-plan/current`,
+        const res = await apiFetch<StudyPlan>(
+          `/cohorts/${cohortCode}/study-plan/current`,
+          { method: "GET" },
+          API_BASE_URL
         );
-        if (!res.ok) {
+        if (!res.success) {
           throw new Error(
-            `Không tải được môn học của khóa ${cohortCode} (${res.status})`,
+            res.message || `Không tải được môn học của khóa ${cohortCode}`,
           );
         }
-        const json: StudyPlan = await res.json();
-        setStudyPlan(json);
+        setStudyPlan(res.data);
         setData((prev) => ({
           ...prev,
           mainModule: "",
@@ -167,17 +169,18 @@ export default function OnboardingFlow() {
       setStudyPlanOptionsLoading(true);
       setStudyPlanOptionsError("");
       try {
-        const res = await fetch(
-          `${API_BASE_URL}/cohorts/${cohortCode}/study-plan-options`,
+        const res = await apiFetch<StudyPlanOptions>(
+          `/cohorts/${cohortCode}/study-plan-options`,
+          { method: "GET" },
+          API_BASE_URL
         );
-        if (!res.ok) {
+        if (!res.success) {
           throw new Error(
-            `Không tải được danh sách học kỳ của khóa ${cohortCode} (${res.status})`,
+            res.message || `Không tải được danh sách học kỳ của khóa ${cohortCode}`,
           );
         }
 
-        const json: StudyPlanOptions = await res.json();
-        setStudyPlanOptions(json);
+        setStudyPlanOptions(res.data);
       } catch (error) {
         setStudyPlanOptions(null);
         setStudyPlanOptionsError(
@@ -204,16 +207,17 @@ export default function OnboardingFlow() {
         endYearTerm: String(selection.endYearTerm),
       });
 
-      const res = await fetch(
-        `${API_BASE_URL}/cohorts/${cohortCode}/study-plan-options/subject?${params.toString()}`,
+      const res = await apiFetch<StudyPlan>(
+        `/cohorts/${cohortCode}/study-plan-options/subject?${params.toString()}`,
+        { method: "GET" },
+        API_BASE_URL
       );
-      if (!res.ok) {
+      if (!res.success) {
         throw new Error(
-          `Không tải được môn học theo học kỳ đã chọn (${res.status})`,
+          res.message || `Không tải được môn học theo học kỳ đã chọn`,
         );
       }
-      const json: StudyPlan = await res.json();
-      return json;
+      return res.data;
     },
     [],
   );

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FriendRequestVm, RecommendationCardVm, RecommendationSecondaryAction } from "../../pages/StudyConnection/types";
@@ -7,6 +6,7 @@ import RecommendationCard from "../../pages/StudyConnection/components/Recommend
 import RejectRecommendationModal, { RejectRecommendationSubmitValue } from "../../pages/StudyConnection/components/RejectRecommendationModal";
 import { matchingItemApi } from "../../services/matchingItemApi";
 import { requestFriendService, updateFriendRequestStatusBySenderAndReceiverService, skipUserService } from "../../services/FriendService";
+import noFriendImg from "../../assets/img/no-friend.png";
 
 export interface SuggestedStudentVm {
   userId: number;
@@ -409,10 +409,12 @@ export default function SuggestedStudents({
   if (localStudents.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-          <AlertCircle size={24} />
-        </div>
-        <p className="mt-4 text-sm font-medium text-gray-700">
+        <img
+          src={noFriendImg}
+          alt="Không có gợi ý"
+          className="mx-auto mb-3 h-28 w-auto object-contain mix-blend-multiply"
+        />
+        <p className="text-sm font-medium text-gray-500">
           Hãy hoàn thiện hồ sơ để nhận gợi ý phù hợp hơn.
         </p>
       </div>

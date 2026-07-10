@@ -37,6 +37,7 @@ import {
   createSubjectCodeToIdMap,
 } from "../../../services/OnboardingService";
 import { updateProfile } from "../../../services/ProfileService";
+import { apiFetch } from "../../../config/apiClient";
 const API_BASE_URL = "http://localhost:8082/api";
 
 function convertFreeTimeFromProfile(profile: ProfileViewModel): FreeTime {
@@ -320,10 +321,9 @@ export default function UpdateProfileDialog({
     setCohortsLoading(true);
     setCohortsError("");
     try {
-      const res = await fetch(`${API_BASE_URL}/cohorts`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setCohorts(Array.isArray(json) ? json : []);
+      const res = await apiFetch<Cohort[]>("/cohorts", { method: "GET" }, API_BASE_URL);
+      if (!res.success) throw new Error(res.message || "Failed to load cohorts");
+      setCohorts(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       setCohorts([]);
       setCohortsError(
@@ -350,12 +350,13 @@ export default function UpdateProfileDialog({
     setStudyPlanLoading(true);
     setStudyPlanError("");
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/cohorts/${cohortCode}/study-plan/current`,
+      const res = await apiFetch<StudyPlan>(
+        `/cohorts/${cohortCode}/study-plan/current`,
+        { method: "GET" },
+        API_BASE_URL
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setStudyPlan(json);
+      if (!res.success) throw new Error(res.message || "Failed to load study plan");
+      setStudyPlan(res.data);
     } catch (error) {
       setStudyPlan(null);
       setStudyPlanError(
@@ -379,12 +380,13 @@ export default function UpdateProfileDialog({
     setStudyPlanOptionsLoading(true);
     setStudyPlanOptionsError("");
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/cohorts/${cohortCode}/study-plan-options`,
+      const res = await apiFetch<StudyPlanOptions>(
+        `/cohorts/${cohortCode}/study-plan-options`,
+        { method: "GET" },
+        API_BASE_URL
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setStudyPlanOptions(json);
+      if (!res.success) throw new Error(res.message || "Failed to load options");
+      setStudyPlanOptions(res.data);
     } catch (error) {
       setStudyPlanOptions(null);
       setStudyPlanOptionsError(
@@ -413,11 +415,13 @@ export default function UpdateProfileDialog({
         endYearTerm: String(selection.endYearTerm),
       });
 
-      const res = await fetch(
-        `${API_BASE_URL}/cohorts/${cohortCode}/study-plan-options/subject?${params.toString()}`,
+      const res = await apiFetch<StudyPlan>(
+        `/cohorts/${cohortCode}/study-plan-options/subject?${params.toString()}`,
+        { method: "GET" },
+        API_BASE_URL
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
+      if (!res.success) throw new Error(res.message || "Failed to load subjects");
+      return res.data;
     },
     [],
   );

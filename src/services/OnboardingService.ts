@@ -10,7 +10,6 @@ import {
   SlotId,
 } from "../pages/Onboarding/components/types";
 
-const API_BASE_URL = "http://localhost:8081/api";
 const API_BASE_URL2 = "http://localhost:8082/api";
 
 export interface SubjectScheduleSlot {
@@ -164,26 +163,24 @@ export async function submitOnboardingForm(
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
   try {
     const userId = localStorage.getItem("userId");
-    const response = await fetch(`${API_BASE_URL2}/onboarding/submit`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(userId && { "X-User-Id": userId }),
+    const res = await apiFetch<any>(
+      "/onboarding/submit",
+      {
+        method: "POST",
+        headers: {
+          ...(userId && { "X-User-Id": userId }),
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+      API_BASE_URL2
+    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message ||
-          `API Error: ${response.status} ${response.statusText}`,
-      );
+    if (!res || res.success === false) {
+      throw new Error(res?.message || "API Error submitting onboarding form");
     }
 
-    const data = await response.json();
     console.log("Onboarding form submitted with payload:", payload);
-    console.log("API response:", data);
+    console.log("API response:", res);
     return {
       success: true,
       data: { message: "Form submitted successfully (mocked response)" },

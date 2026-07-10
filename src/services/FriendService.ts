@@ -1,13 +1,14 @@
-import { BASE_CHAT_SERVICE, BASE_SOCIAL_SERVICE, BASE_USER_SERVICE, BASE_URL } from "../config/BaseConfig";
+import { BASE_CHAT_SERVICE, BASE_USER_SERVICE, BASE_URL } from "../config/BaseConfig";
 import { FriendRequestStatus } from "../pages/StudyConnection/types";
 import WebSocketManager from "../socket/WebSocketManager";
+import { apiFetch } from "../config/apiClient";
 
 export interface FriendUser {
     userId: number;
     fullName: string;
     avatarUrl?: string | null;
-    email?: string | null;
     online?: boolean;
+    email?: string | null;
 }
 
 type SocialFriendItem = {
@@ -38,59 +39,19 @@ export const getFriendsListService = async (
         throw new Error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
     }
 
-    const token = localStorage.getItem('accessToken');
-    const url = `${BASE_URL}/social/friends/${resolvedUserId}/list`;
-    const res = await fetch(url, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (data) {
-        return data as FriendsListResponse;
-    }
+    const res = await apiFetch<FriendListItem[]>(
+        `/social/friends/${resolvedUserId}/list`,
+        { method: "GET" },
+        BASE_URL
+    );
 
     return {
-        code: res.status,
-        message: res.statusText,
-        data: [],
+        code: res.code,
+        message: res.message,
+        data: res.data || [],
         timestamp: new Date().toISOString(),
-    };
+    } as any;
 };
-
-const readJson = async (res: Response) => {
-    const text = await res.text();
-    if (!text) return null;
-
-    try {
-        return JSON.parse(text);
-    } catch {
-        return null;
-    }
-}
-
-// export const requestFriendService = async (targetUserId: number) => {
-//     const url = BASE_SOCIAL_SERVICE + '/social/friend-requests/'
-//     console.log(url)
-//     const res = await fetch(url, {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify({
-//             sender_id: localStorage.getItem('userId'),
-//             receiver_id: targetUserId
-//         })
-//     });
-//     const data = await readJson(res);
-//     console.log(data);
-//     return data;
-// }
-
 
 export type FriendRequestResponse<T = unknown> = {
     code?: number | string;
@@ -108,8 +69,6 @@ export type FriendListItem = {
     avatar_url: string | null;
 };
 
-export type FriendsListResponse = FriendRequestResponse<FriendListItem[]>;
-
 export const requestFriendService = async (
     targetUserId: number,
 ): Promise<FriendRequestResponse> => {
@@ -121,22 +80,19 @@ export const requestFriendService = async (
         );
     }
 
-    const url = `${BASE_URL}/social/friend-requests/`;
-    const res = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
+    const res = await apiFetch<any>(
+        `/social/friend-requests/`,
+        {
+            method: "POST",
+            body: JSON.stringify({
+                sender_id: senderId,
+                receiver_id: targetUserId,
+            }),
         },
-        body: JSON.stringify({
-            sender_id: senderId,
-            receiver_id: targetUserId,
-        }),
-    });
+        BASE_URL
+    );
 
-    const data = await res.json().catch(() => null);
-
-    console.log("Friend request response:", { status: res.status, data });
-    if (res.status === 201 || (data && (data.code === 201 || data.code === "CREATED"))) {
+    if (res.success) {
         try {
             WebSocketManager.getInstance().sendMessage("/chat/send", {
                 event: "FRIEND_REQUEST",
@@ -150,118 +106,86 @@ export const requestFriendService = async (
         }
     }
 
-    if (data) {
-        return data as FriendRequestResponse;
-    }
-
     return {
-        code: res.status,
-        message: res.statusText,
-        data: null,
+        code: res.code,
+        message: res.message,
+        data: res.data,
         timestamp: new Date().toISOString(),
-    };
+    } as any;
 };
 
 export const updateFriendRequestStatusService = async (
     requestId: number,
     status: FriendRequestStatus,
 ): Promise<UpdateFriendRequestStatusResponse> => {
-    const url = `${BASE_URL}/social/friend-requests/${requestId}/status`;
-    const res = await fetch(url, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
+    const res = await apiFetch<any>(
+        `/social/friend-requests/${requestId}/status`,
+        {
+            method: "PATCH",
+            body: JSON.stringify({ status }),
         },
-        body: JSON.stringify({ status }),
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (data) {
-        return data as UpdateFriendRequestStatusResponse;
-    }
+        BASE_URL
+    );
 
     return {
-        code: res.status,
-        message: res.statusText,
-        data: null,
+        code: res.code,
+        message: res.message,
+        data: res.data,
         timestamp: new Date().toISOString(),
-    };
+    } as any;
 };
-
-
-
-
 
 export const updateFriendRequestStatusBySenderAndReceiverService = async (
     sender_id: number,
     receiver_id: number,
     status: FriendRequestStatus,
 ): Promise<UpdateFriendRequestStatusResponse> => {
-    const url = `${BASE_URL}/social/friend-requests/sender/${sender_id}/receiver/${receiver_id}/status`;
-    const res = await fetch(url, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
+    const res = await apiFetch<any>(
+        `/social/friend-requests/sender/${sender_id}/receiver/${receiver_id}/status`,
+        {
+            method: "PATCH",
+            body: JSON.stringify({ status }),
         },
-        body: JSON.stringify({ status }),
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (data) {
-        return data as UpdateFriendRequestStatusResponse;
-    }
+        BASE_URL
+    );
 
     return {
-        code: res.status,
-        message: res.statusText,
-        data: null,
+        code: res.code,
+        message: res.message,
+        data: res.data,
         timestamp: new Date().toISOString(),
-    };
+    } as any;
 };
 
 export const loadProfileService = async (targetUserId: number) => {
     const user = localStorage.getItem('userId');
-    const url = BASE_USER_SERVICE + `/users/friends/${user}/mutual?targetUserId=${targetUserId}`;
-    console.log(url)
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-    });
-    if (!res.ok) {
-        throw new Error(`Cannot load profile. HTTP ${res.status}`);
+    const res = await apiFetch<any>(
+        `/users/friends/${user}/mutual?targetUserId=${targetUserId}`,
+        { method: 'GET' },
+        BASE_USER_SERVICE
+    );
+    if (!res.success) {
+        throw new Error(`Cannot load profile. ${res.message}`);
     }
-
-    const data = await readJson(res);
-    console.log(data);
-    return data;
-
+    return res.data;
 }
 
 export const updateUserProfileService = async (
     userId: number,
     payload: { fullName: string; bio: string; avatarUrl?: string | null; bannerUrl?: string | null },
 ) => {
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(BASE_USER_SERVICE + `/users/${userId}/profile`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
+    const res = await apiFetch<any>(
+        `/users/${userId}/profile`,
+        {
+            method: 'PUT',
+            body: JSON.stringify(payload)
         },
-        body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-        throw new Error(`Cannot update profile. HTTP ${res.status}`);
+        BASE_USER_SERVICE
+    );
+    if (!res.success) {
+        throw new Error(`Cannot update profile. ${res.message}`);
     }
-
-    return readJson(res);
+    return res.data;
 }
 
 const unwrapPayload = (payload: any) => payload?.data ?? payload?.result ?? payload;
@@ -299,20 +223,15 @@ export const loadFriendListService = async (userId?: number): Promise<FriendUser
     const currentUserId = userId ?? Number(localStorage.getItem('userId'));
     if (!currentUserId) return [];
 
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(`${BASE_URL}/social/friends/${currentUserId}/list`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-    });
+    const res = await apiFetch<any>(
+        `/social/friends/${currentUserId}/list`,
+        { method: 'GET' },
+        BASE_URL
+    );
 
-    if (!res.ok) {
-        throw new Error(`Cannot load friends. HTTP ${res.status}`);
-    }
+    if (!res.success || !res.data) return [];
 
-    const payload = unwrapPayload(await readJson(res));
+    const payload = unwrapPayload(res.data);
     if (!Array.isArray(payload)) return [];
 
     return (payload as SocialFriendItem[])
@@ -326,20 +245,15 @@ export const loadFriendProfilesService = async (friendIds: number[]): Promise<Fr
     const params = new URLSearchParams();
     friendIds.forEach((id) => params.append('ids', String(id)));
 
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(BASE_USER_SERVICE + `/users/batch?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-    });
+    const res = await apiFetch<any>(
+        `/users/batch?${params.toString()}`,
+        { method: 'GET' },
+        BASE_USER_SERVICE
+    );
 
-    if (!res.ok) {
-        throw new Error(`Cannot load friend profiles. HTTP ${res.status}`);
-    }
+    if (!res.success || !res.data) return [];
 
-    const payload = unwrapPayload(await readJson(res));
+    const payload = unwrapPayload(res.data);
     if (!Array.isArray(payload)) return [];
 
     return payload
@@ -354,22 +268,19 @@ export const loadFriendOnlineStatusesService = async (friendIds: number[]): Prom
         userIds: friendIds.join(",")
     });
 
-    const token = localStorage.getItem('accessToken');
     try {
-        const res = await fetch(BASE_CHAT_SERVICE + `/messages/presence/online?${params.toString()}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { Authorization: `Bearer ${token}` } : {})
-            }
-        });
+        const res = await apiFetch<any>(
+            `/messages/presence/online?${params.toString()}`,
+            { method: 'GET' },
+            BASE_CHAT_SERVICE
+        );
 
-        if (!res.ok) {
-            console.error(`Cannot load online statuses. HTTP ${res.status}`);
+        if (!res.success || !res.data) {
+            console.error(`Cannot load online statuses. ${res.message}`);
             return {};
         }
 
-        return unwrapPayload(await readJson(res)) ?? {};
+        return unwrapPayload(res.data) ?? {};
     } catch (err) {
         console.error(err);
         return {};
@@ -400,26 +311,25 @@ export interface AllFriendRequestsDto {
     received: FriendRequestDto[];
 }
 
+export type FriendsListResponse = FriendRequestResponse<FriendListItem[]>;
+
 export const loadFriendRequestsService = async (
     userId?: number,
 ): Promise<AllFriendRequestsDto> => {
     const currentUserId = userId ?? Number(localStorage.getItem('userId'));
     if (!currentUserId) return { sent: [], received: [] };
 
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(`${BASE_URL}/social/friend-requests/${currentUserId}?size=100`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-    });
+    const res = await apiFetch<any>(
+        `/social/friend-requests/${currentUserId}?size=100`,
+        { method: 'GET' },
+        BASE_URL
+    );
 
-    if (!res.ok) {
-        throw new Error(`Cannot load friend requests. HTTP ${res.status}`);
+    if (!res.success || !res.data) {
+        throw new Error(`Cannot load friend requests. ${res.message}`);
     }
 
-    const payload = unwrapPayload(await readJson(res));
+    const payload = unwrapPayload(res.data);
     return {
         sent: Array.isArray(payload?.sent) ? payload.sent : [],
         received: Array.isArray(payload?.received) ? payload.received : [],
@@ -430,28 +340,18 @@ export const unfriendService = async (
     userId: number,
     friendId: number,
 ): Promise<FriendRequestResponse> => {
-    const url = `${BASE_URL}/social/friends/unfriend?userId=${userId}&friendId=${friendId}`;
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(url, {
-        method: "DELETE",
-        headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (data) {
-        return data as FriendRequestResponse;
-    }
+    const res = await apiFetch<any>(
+        `/social/friends/unfriend?userId=${userId}&friendId=${friendId}`,
+        { method: "DELETE" },
+        BASE_URL
+    );
 
     return {
-        code: res.status,
-        message: res.statusText,
-        data: null,
+        code: res.code,
+        message: res.message,
+        data: res.data,
         timestamp: new Date().toISOString(),
-    };
+    } as any;
 };
 
 export interface FriendStatsResponse {
@@ -468,60 +368,34 @@ export const getFriendStatsService = async (
         throw new Error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
     }
 
-    const url = `${BASE_URL}/social/friends/${resolvedUserId}/stats`;
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(url, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (data) {
-        return data as FriendRequestResponse<FriendStatsResponse>;
-    }
+    const res = await apiFetch<FriendStatsResponse>(
+        `/social/friends/${resolvedUserId}/stats`,
+        { method: "GET" },
+        BASE_URL
+    );
 
     return {
-        code: res.status,
-        message: res.statusText,
-        data: {
-            friendCount: 0,
-            pendingReceivedRequestCount: 0,
-        },
+        code: res.code,
+        message: res.message,
+        data: res.data || { friendCount: 0, pendingReceivedRequestCount: 0 },
         timestamp: new Date().toISOString(),
-    };
+    } as any;
 };
 
 export const skipUserService = async (
     userId: number,
     skippedUserId: number,
 ): Promise<FriendRequestResponse> => {
-    const url = `${BASE_URL}/social/friends/skip?userId=${userId}&skippedUserId=${skippedUserId}`;
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (data) {
-        return data as FriendRequestResponse;
-    }
+    const res = await apiFetch<any>(
+        `/social/friends/skip?userId=${userId}&skippedUserId=${skippedUserId}`,
+        { method: "POST" },
+        BASE_URL
+    );
 
     return {
-        code: res.status,
-        message: res.statusText,
-        data: null,
+        code: res.code,
+        message: res.message,
+        data: res.data,
         timestamp: new Date().toISOString(),
-    };
+    } as any;
 };
-
-
-

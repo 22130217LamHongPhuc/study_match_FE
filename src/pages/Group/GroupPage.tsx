@@ -129,6 +129,38 @@ function GroupPreviewCard({
   );
 }
 
+function GroupPreviewCardSkeleton() {
+  return (
+    <div className="animate-pulse flex flex-col justify-between rounded-xl border border-gray-200 bg-white p-6 min-h-[180px]">
+      <div>
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <div className="h-4 w-20 bg-gray-200 rounded" />
+          <div className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-gray-200" />
+            <div className="h-3 w-12 bg-gray-200 rounded" />
+          </div>
+        </div>
+
+        <div className="flex gap-4 items-start mb-6">
+          <div className="w-12 h-12 rounded-xl bg-gray-200 shrink-0" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-5 w-2/3 bg-gray-200 rounded" />
+            <div className="h-3 w-full bg-gray-200 rounded" />
+            <div className="h-3 w-5/6 bg-gray-200 rounded" />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+        <div className="flex items-center gap-1.5">
+          <div className="h-3.5 w-16 bg-gray-200 rounded" />
+        </div>
+        <div className="h-3.5 w-12 bg-gray-200 rounded" />
+      </div>
+    </div>
+  );
+}
+
 export default function GroupPage() {
   const [groupList, setGroupList] = useState<StudyGroupDetailResponse[]>([]);
   const [loading, setLoading] = useState(false);
@@ -420,11 +452,10 @@ export default function GroupPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 
         {loading ? (
-          <div className="flex min-h-[240px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white p-8">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
-              <p className="text-sm text-gray-500">Đang tải danh sách nhóm học...</p>
-            </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <GroupPreviewCardSkeleton key={index} />
+            ))}
           </div>
         ) : groupList.length === 0 ? (
           <div className="flex min-h-[350px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white p-8 text-center">
@@ -460,7 +491,7 @@ export default function GroupPage() {
         </div>
       </div>
 
-      {selectedGroup && (
+      {selectedGroup && !reportModalOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-4 py-6">
           <section className="w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
             <header className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 py-5">
@@ -525,8 +556,22 @@ export default function GroupPage() {
 
                   <div className="mt-4 max-h-64 space-y-2 overflow-y-auto">
                     {friendsLoading ? (
-                      <div className="flex min-h-[96px] items-center justify-center">
-                        <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                      <div className="space-y-2">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                          <div
+                            key={index}
+                            className="animate-pulse flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-white p-3"
+                          >
+                            <div className="flex min-w-0 items-center gap-3 flex-1">
+                              <div className="h-10 w-10 rounded-full bg-gray-200 shrink-0" />
+                              <div className="min-w-0 flex-1 space-y-2">
+                                <div className="h-4 w-1/3 bg-gray-200 rounded" />
+                                <div className="h-3 w-1/2 bg-gray-200 rounded" />
+                              </div>
+                            </div>
+                            <div className="h-9 w-16 bg-gray-200 rounded-md shrink-0" />
+                          </div>
+                        ))}
                       </div>
                     ) : visibleInviteCandidates.length === 0 ? (
                       <div className="rounded-md border border-dashed border-orange-200 bg-white/70 p-4 text-center text-sm text-gray-500">
@@ -588,8 +633,21 @@ export default function GroupPage() {
               )}
 
               {membersLoading ? (
-                <div className="flex min-h-[180px] items-center justify-center">
-                  <Loader2 className="h-7 w-7 animate-spin text-orange-500" />
+                <div className="space-y-3">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="animate-pulse flex items-center justify-between gap-4 rounded-lg border border-gray-200 p-4"
+                    >
+                      <div className="flex min-w-0 items-center gap-3 flex-1">
+                        <div className="h-11 w-11 rounded-full bg-gray-200 shrink-0" />
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="h-4 w-1/4 bg-gray-200 rounded" />
+                          <div className="h-3 w-1/6 bg-gray-200 rounded" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : members.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500">
@@ -665,7 +723,10 @@ export default function GroupPage() {
 
       <ReportModal
         open={reportModalOpen && Boolean(selectedGroup)}
-        onClose={() => setReportModalOpen(false)}
+        onClose={() => {
+          setReportModalOpen(false);
+          setSelectedGroup(null);
+        }}
         targetType="GROUP"
         targetId={selectedGroup?.id || 0}
         targetName={selectedGroup?.name}

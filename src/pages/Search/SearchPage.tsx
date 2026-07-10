@@ -9,6 +9,7 @@ import { searchStudents, StudentSearchItem } from "../../services/UserService";
 import { browseGroups, requestJoinGroup, BrowseGroupResponse, getGroupsByUserId } from "../../services/GroupService";
 import { requestFriendService, loadFriendRequestsService, normalizeAvatarUrl } from "../../services/FriendService";
 import { BASE_USER_SERVICE } from "../../config/BaseConfig";
+import { apiFetch } from "../../config/apiClient";
 
 import CommunityGroupCard, { CommunityGroup } from "../StudyConnection/components/CommunityGroupCard";
 import JoinGroupRequestModal from "../StudyConnection/components/JoinGroupRequestModal";
@@ -128,18 +129,13 @@ function isJoinRequestPendingConflict(message?: string): boolean {
 
 async function fetchMutualCount(currentUserId: number, targetUserId: number): Promise<number> {
   try {
-    const token = localStorage.getItem("accessToken");
-    const res = await fetch(
-      `${BASE_USER_SERVICE}/api/users/friends/${currentUserId}/mutual?targetUserId=${targetUserId}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      },
+    const res = await apiFetch<any>(
+      `/api/users/friends/${currentUserId}/mutual?targetUserId=${targetUserId}`,
+      { method: "GET" },
+      BASE_USER_SERVICE
     );
-    if (!res.ok) return 0;
-    const data = await res.json();
+    if (!res.success) return 0;
+    const data = res.data;
     return Number(data?.mutualFriend ?? data?.mutualFriends ?? 0);
   } catch {
     return 0;

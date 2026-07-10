@@ -22,6 +22,17 @@ export async function login(
   return response;
 }
 
+export async function adminLogin(
+  email: string,
+  password: string,
+): Promise<APIResponseData<AuthResponse>> {
+  const response = await apiFetch<AuthResponse>("/auth/admin/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  return response;
+}
+
 export async function loginWithGoogle(
   idToken: string,
 ): Promise<APIResponseData<AuthResponse>> {

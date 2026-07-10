@@ -1,24 +1,26 @@
 import { ProfileApiResponse } from "../pages/MyProfile/types";
 import type { OnboardingSubmissionPayload } from "./OnboardingService";
+import { apiFetch } from "../config/apiClient";
 
 const PROFILE_API_BASE_URL = "http://localhost:8082/api";
 
 export async function getProfileByUserId(
   userId: number,
 ): Promise<ProfileApiResponse> {
-  const response = await fetch(
-    `${PROFILE_API_BASE_URL}/onboarding/profile/${userId}`,
+  const res = await apiFetch<any>(
+    `/onboarding/profile/${userId}`,
+    { method: "GET" },
+    PROFILE_API_BASE_URL
   );
 
-  if (!response.ok) {
-    const errorPayload = await response.json().catch(() => null);
+  if (!res || res.success === false) {
     const message =
-      errorPayload?.message ||
-      `Khong tai duoc profile. HTTP ${response.status} ${response.statusText}`;
+      res?.message ||
+      `Khong tai duoc profile.`;
     throw new Error(message);
   }
 
-  return (await response.json()) as ProfileApiResponse;
+  return res as unknown as ProfileApiResponse;
 }
 
 export async function updateProfile(
@@ -27,32 +29,28 @@ export async function updateProfile(
   try {
     console.log("Payload sent to API:", payload);
     const userId = localStorage.getItem("userId");
-    const response = await fetch(`${PROFILE_API_BASE_URL}/profile/update`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...(userId && { "X-User-Id": userId }),
+    const res = await apiFetch<any>(
+      `/profile/update`,
+      {
+        method: "PUT",
+        headers: {
+          ...(userId && { "X-User-Id": userId }),
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+      PROFILE_API_BASE_URL
+    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+    if (!res || res.success === false) {
       throw new Error(
-        errorData.message ||
-          `API Error: ${response.status} ${response.statusText}`,
+        res?.message ||
+          `API Error updating profile`,
       );
     }
 
-    const data = await response.json().catch(() => null);
     return {
       success: true,
-      data,
-    };
-
-    return {
-      success: true,
-      data: null,
+      data: res,
     };
   } catch (error) {
     const message =

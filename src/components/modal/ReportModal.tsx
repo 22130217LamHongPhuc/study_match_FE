@@ -168,8 +168,8 @@ export default function ReportModal({
             px: 1.5,
             py: 0.75,
             borderRadius: "999px",
-            bgcolor: "#fff7ed",
-            color: "#ea580c",
+            bgcolor: "#f0f7ff",
+            color: "#2563eb",
             fontSize: 12,
             fontWeight: 700,
           }}
@@ -225,8 +225,8 @@ export default function ReportModal({
             sx={{
               mb: 2.5,
               borderRadius: "12px",
-              border: "1px solid #fed7aa",
-              bgcolor: "#fff7ed",
+              border: "1px solid #bae2fd",
+              bgcolor: "#f0f7ff",
               px: 2,
               py: 1.5,
             }}
@@ -235,7 +235,7 @@ export default function ReportModal({
               sx={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: "#c2410c",
+                color: "#1e40af",
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
               }}
@@ -247,7 +247,7 @@ export default function ReportModal({
                 mt: 0.5,
                 fontSize: 14,
                 fontWeight: 700,
-                color: "#7c2d12",
+                color: "#1e3a8a",
                 wordBreak: "break-word",
               }}
             >
@@ -275,8 +275,8 @@ export default function ReportModal({
               borderRadius: "12px",
               bgcolor: "#fff",
               "& fieldset": { borderColor: "#e2e8f0" },
-              "&:hover fieldset": { borderColor: "#fb923c" },
-              "&.Mui-focused fieldset": { borderColor: "#f97316" },
+              "&:hover fieldset": { borderColor: "#38bdf8" },
+              "&.Mui-focused fieldset": { borderColor: "#2563eb" },
             },
           }}
         >
@@ -316,9 +316,9 @@ export default function ReportModal({
                 alignItems: "flex-start",
                 bgcolor: "#f8fafc",
                 "& fieldset": { borderColor: "#e2e8f0" },
-                "&:hover fieldset": { borderColor: "#fb923c" },
+                "&:hover fieldset": { borderColor: "#38bdf8" },
                 "&.Mui-focused fieldset": {
-                  borderColor: "#f97316",
+                  borderColor: "#2563eb",
                   bgcolor: "#fff",
                 },
               },
@@ -384,14 +384,14 @@ export default function ReportModal({
           sx={{
             minWidth: 140,
             borderRadius: "10px",
-            bgcolor: "#f97316",
+            bgcolor: "#2563eb",
             color: "#fff",
             fontWeight: 700,
             textTransform: "none",
-            boxShadow: "0 10px 20px rgba(249,115,22,0.18)",
-            "&:hover": { bgcolor: "#ea580c" },
+            boxShadow: "0 10px 20px rgba(37,99,235,0.18)",
+            "&:hover": { bgcolor: "#1d4ed8" },
             "&.Mui-disabled": {
-              bgcolor: "#fdba74",
+              bgcolor: "#bae2fd",
               color: "#fff",
             },
           }}

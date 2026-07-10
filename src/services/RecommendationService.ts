@@ -1,7 +1,6 @@
 import { RECOMMEND_USERS_URL } from "../pages/StudyConnection/constants";
-import {
-  RecommendUsersApiResponse,
-} from "../pages/StudyConnection/types";
+import { RecommendUsersApiResponse } from "../pages/StudyConnection/types";
+import { apiFetch } from "../config/apiClient";
 
 export async function getRecommendedUsers(
   userId: number,
@@ -10,20 +9,18 @@ export async function getRecommendedUsers(
 ): Promise<RecommendUsersApiResponse> {
   const pageParam = page !== undefined ? `&page=${page}` : "";
   const limitParam = limit !== undefined ? `&limit=${limit}` : "";
-  const response = await fetch(`${RECOMMEND_USERS_URL}?user_id=${userId}${pageParam}${limitParam}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  
+  const res = await apiFetch<any>(
+    `${RECOMMEND_USERS_URL}?user_id=${userId}${pageParam}${limitParam}`,
+    { method: "GET" }
+  );
 
-  if (!response.ok) {
-    const errorPayload = await response.json().catch(() => null);
+  if (!res || res.success === false) {
     const message =
-      errorPayload?.message ||
-      `Không tải được danh sách gợi ý. HTTP ${response.status} ${response.statusText}`;
+      res?.message ||
+      `Không tải được danh sách gợi ý.`;
     throw new Error(message);
   }
 
-  return (await response.json()) as RecommendUsersApiResponse;
+  return res as unknown as RecommendUsersApiResponse;
 }
