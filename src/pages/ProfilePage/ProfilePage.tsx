@@ -42,16 +42,27 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ReportModal from "../../components/modal/ReportModal";
 import EditProfileModal from "../../components/modal/user/EditProfileModal";
 import { ProfileStatus } from "../../enum/Profile";
+import { SocketEvent } from "../../enum/SocketEvent";
 import { UserProfile } from "../../model/UserModel";
+import { RootState } from "../../redux/store";
 import { getProfileByUserId } from "../../services/ProfileService";
 import { ProfileApiResponse } from "../MyProfile/types";
 
-import { loadProfileService, requestFriendService, unfriendService, loadFriendListService, FriendUser } from "../../services/FriendService";
+import {
+  FriendUser,
+  loadFriendListService,
+  loadFriendRequestsService,
+  loadProfileService,
+  requestFriendService,
+  unfriendService,
+  updateFriendRequestStatusService,
+} from "../../services/FriendService";
 import PostReactionsModal from "../../components/modal/user/PostReactionsModal";
 import { matchingItemApi } from "../../services/matchingItemApi";
 import {
@@ -73,11 +84,17 @@ import noPostImg from "../../assets/img/no-post.png";
 import noFriendImg from "../../assets/img/no-friend.png";
 import noImgImg from "../../assets/img/no-img.png";
 import noVideoImg from "../../assets/img/no-video.png";
+import WebSocketManager from "../../socket/WebSocketManager";
 type RecommendationState = {
   fromRecommendation?: boolean;
   finalScore?: number;
   reasonText?: string;
 };
+
+type PendingProfileFriendRequest = {
+  id: number;
+  direction: "sent" | "received";
+} | null;
 
 const isImageUrl = (url: string) => {
   const lower = url.toLowerCase();
@@ -360,8 +377,11 @@ export default function ProfilePage() {
     if (!currentUserId) return;
     try {
       await unfriendService(currentUserId, friendId);
+      emitFriendCancelSocket(friendId);
       setFriends((prev) => prev.filter((f) => f.userId !== friendId));
       setProfile((prev) => prev ? { ...prev, numberFriend: Math.max(0, (prev.numberFriend ?? 1) - 1) } : prev);
+      refreshFriendshipData();
+      window.dispatchEvent(new Event("friend_status_updated"));
       handleFriendMenuClose();
     } catch (error) {
       console.error("Failed to unfriend", error);
@@ -375,7 +395,12 @@ export default function ProfilePage() {
   const [reactionsModalOpen, setReactionsModalOpen] = useState(false);
   const [studyProfile, setStudyProfile] = useState<ProfileApiResponse | null>(null);
   const [loadingStudyProfile, setLoadingStudyProfile] = useState(false);
+  const [studyProfileError, setStudyProfileError] = useState<string | null>(null);
+  const [studyProfileRetry, setStudyProfileRetry] = useState(0);
   const [isPosting, setIsPosting] = useState(false);
+  const [pendingProfileFriendRequest, setPendingProfileFriendRequest] =
+    useState<PendingProfileFriendRequest>(null);
+  const [friendRequestActionLoading, setFriendRequestActionLoading] = useState(false);
 
   // New States
   const [friends, setFriends] = useState<FriendUser[]>([]);
@@ -396,10 +421,107 @@ export default function ProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const trackedViewKeyRef = useRef<string | null>(null);
+  const socketMessage = useSelector((state: RootState) => state.chat.newMess);
 
   const currentUserId = Number(localStorage.getItem("userId"));
   const profileUserId = Number(id);
   const isOwnProfile = currentUserId === profileUserId;
+
+  const refreshProfileOverview = useCallback(() => {
+    if (!profileUserId) return;
+    loadProfileService(profileUserId)
+      .then((response: UserProfile) => setProfile(response))
+      .catch((error) => console.error("Cannot load profile", error));
+  }, [profileUserId]);
+
+  const refreshPendingFriendRequest = useCallback(() => {
+    if (!currentUserId || !profileUserId || currentUserId === profileUserId) {
+      setPendingProfileFriendRequest(null);
+      return;
+    }
+
+    loadFriendRequestsService(currentUserId)
+      .then(({ sent, received }) => {
+        const sentRequest = sent.find(
+          (request) =>
+            request.status === ProfileStatus.PENDING &&
+            Number(request.receiverId) === profileUserId,
+        );
+        if (sentRequest) {
+          setPendingProfileFriendRequest({ id: sentRequest.id, direction: "sent" });
+          return;
+        }
+
+        const receivedRequest = received.find(
+          (request) =>
+            request.status === ProfileStatus.PENDING &&
+            Number(request.senderId) === profileUserId,
+        );
+        if (receivedRequest) {
+          setPendingProfileFriendRequest({ id: receivedRequest.id, direction: "received" });
+          return;
+        }
+
+        setPendingProfileFriendRequest(null);
+      })
+      .catch((error) => {
+        console.error("Cannot load pending friend request", error);
+        setPendingProfileFriendRequest(null);
+      });
+  }, [currentUserId, profileUserId]);
+
+  const refreshProfileFriends = useCallback(() => {
+    if (!profileUserId) {
+      setFriends([]);
+      return;
+    }
+
+    setLoadingFriends(true);
+    loadFriendListService(profileUserId)
+      .then((data) => {
+        setFriends(data);
+      })
+      .catch((error) => {
+        console.error("Cannot load friends list", error);
+      })
+      .finally(() => {
+        setLoadingFriends(false);
+      });
+  }, [profileUserId]);
+
+  const refreshProfileStats = useCallback(() => {
+    if (!profileUserId) return;
+    loadProfileSocialStats(profileUserId)
+      .then((statData) => setStats(statData))
+      .catch((error) => console.error("Cannot load profile social stats", error));
+  }, [profileUserId]);
+
+  const refreshFriendshipData = useCallback(() => {
+    refreshProfileOverview();
+    refreshPendingFriendRequest();
+    refreshProfileFriends();
+    refreshProfileStats();
+  }, [
+    refreshPendingFriendRequest,
+    refreshProfileFriends,
+    refreshProfileOverview,
+    refreshProfileStats,
+  ]);
+
+  const emitFriendCancelSocket = useCallback((receiverId: number) => {
+    if (!currentUserId || !receiverId) return;
+    try {
+      WebSocketManager.getInstance().sendMessage("/chat/send", {
+        event: SocketEvent.FRIEND_REQUEST_CANCEL,
+        data: {
+          senderId: currentUserId,
+          receiverId,
+        },
+      });
+    } catch (socketErr) {
+      console.error("Failed to emit FRIEND_REQUEST_CANCEL socket event", socketErr);
+    }
+  }, [currentUserId]);
 
   // Extract photos and videos from posts
   const photos = useMemo(() => {
@@ -434,17 +556,17 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!profileUserId) return;
     setActiveTab(0);
-    loadProfileService(profileUserId)
-      .then((response: UserProfile) => setProfile(response))
-      .catch((error) => console.error("Cannot load profile", error));
-  }, [profileUserId]);
+    refreshFriendshipData();
+  }, [profileUserId, refreshFriendshipData]);
 
   useEffect(() => {
     if (!profileUserId) {
       setStudyProfile(null);
+      setStudyProfileError(null);
       return;
     }
     setLoadingStudyProfile(true);
+    setStudyProfileError(null);
     getProfileByUserId(profileUserId)
       .then((data) => {
         setStudyProfile(data);
@@ -452,26 +574,20 @@ export default function ProfilePage() {
       .catch((error) => {
         console.error("Cannot load study profile", error);
         setStudyProfile(null);
+        setStudyProfileError(
+          error instanceof Error && error.message
+            ? error.message
+            : "Không thể tải hồ sơ học tập. Vui lòng thử lại sau."
+        );
       })
       .finally(() => {
         setLoadingStudyProfile(false);
       });
-  }, [profileUserId]);
+  }, [profileUserId, studyProfileRetry]);
 
   useEffect(() => {
-    if (!profileUserId) return;
-    setLoadingFriends(true);
-    loadFriendListService(profileUserId)
-      .then((data) => {
-        setFriends(data);
-      })
-      .catch((error) => {
-        console.error("Cannot load friends list", error);
-      })
-      .finally(() => {
-        setLoadingFriends(false);
-      });
-  }, [profileUserId]);
+    refreshProfileFriends();
+  }, [refreshProfileFriends]);
 
   useEffect(() => {
     if (friends.length === 0 || !currentUserId) return;
@@ -599,9 +715,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const handleStatusUpdate = () => {
       if (!profileUserId) return;
-      loadProfileService(profileUserId)
-        .then((response: UserProfile) => setProfile(response))
-        .catch((error) => console.error("Cannot load profile", error));
+      refreshFriendshipData();
 
       Promise.all([
         loadProfilePosts(profileUserId, currentUserId),
@@ -617,8 +731,39 @@ export default function ProfilePage() {
     };
 
     window.addEventListener("friend_status_updated", handleStatusUpdate);
-    return () => window.removeEventListener("friend_status_updated", handleStatusUpdate);
-  }, [profileUserId, currentUserId]);
+    return () => {
+      window.removeEventListener("friend_status_updated", handleStatusUpdate);
+    };
+  }, [profileUserId, currentUserId, refreshFriendshipData]);
+
+  useEffect(() => {
+    const friendEvents = new Set<string | null>([
+      SocketEvent.FRIEND_REQUEST_RECEIVE,
+      SocketEvent.FRIEND_REQUEST_ACCEPT_RECEIVE,
+      SocketEvent.FRIEND_REQUEST_CANCEL_RECEIVE,
+    ]);
+
+    if (!socketMessage || !friendEvents.has(socketMessage.event)) return;
+
+    const data = socketMessage.data as {
+      senderId?: number | string;
+      sender_id?: number | string;
+      receiverId?: number | string;
+      receiver_id?: number | string;
+    } | null;
+    const senderId = Number(data?.senderId ?? data?.sender_id);
+    const receiverId = Number(data?.receiverId ?? data?.receiver_id);
+    const isRelatedToOpenProfile =
+      Number.isFinite(profileUserId) &&
+      (senderId === profileUserId || receiverId === profileUserId);
+    const isRelatedToCurrentUser =
+      Number.isFinite(currentUserId) &&
+      (senderId === currentUserId || receiverId === currentUserId);
+
+    if (isRelatedToOpenProfile && isRelatedToCurrentUser) {
+      refreshFriendshipData();
+    }
+  }, [currentUserId, profileUserId, refreshFriendshipData, socketMessage]);
 
 
   const requestFriend = async () => {
@@ -642,6 +787,72 @@ export default function ProfilePage() {
     }
 
     setProfile((prev) => (prev ? { ...prev, statusFriend: ProfileStatus.PENDING } : prev));
+    setPendingProfileFriendRequest({
+      id: Number((response.data as any)?.id || 0),
+      direction: "sent",
+    });
+    refreshPendingFriendRequest();
+  };
+
+  const handleAcceptProfileFriendRequest = async () => {
+    if (!pendingProfileFriendRequest || pendingProfileFriendRequest.direction !== "received") return;
+
+    try {
+      setFriendRequestActionLoading(true);
+      const response = await updateFriendRequestStatusService(
+        pendingProfileFriendRequest.id,
+        "APPROVED",
+      );
+      if (response.code && Number(response.code) >= 400) {
+        throw new Error(response.message || "Accept request failed");
+      }
+
+      try {
+        WebSocketManager.getInstance().sendMessage("/chat/send", {
+          event: SocketEvent.FRIEND_REQUEST_ACCEPT,
+          data: {
+            senderId: currentUserId,
+            receiverId: profileUserId,
+          },
+        });
+      } catch (socketErr) {
+        console.error("Failed to emit FRIEND_REQUEST_ACCEPT socket event", socketErr);
+      }
+
+      setPendingProfileFriendRequest(null);
+      refreshFriendshipData();
+      window.dispatchEvent(new Event("friend_status_updated"));
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể chấp nhận lời mời kết bạn");
+    } finally {
+      setFriendRequestActionLoading(false);
+    }
+  };
+
+  const handleDeclineProfileFriendRequest = async () => {
+    if (!pendingProfileFriendRequest || pendingProfileFriendRequest.direction !== "received") return;
+
+    try {
+      setFriendRequestActionLoading(true);
+      const response = await updateFriendRequestStatusService(
+        pendingProfileFriendRequest.id,
+        "REJECTED",
+      );
+      if (response.code && Number(response.code) >= 400) {
+        throw new Error(response.message || "Decline request failed");
+      }
+
+      emitFriendCancelSocket(profileUserId);
+      setPendingProfileFriendRequest(null);
+      refreshFriendshipData();
+      window.dispatchEvent(new Event("friend_status_updated"));
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể từ chối lời mời kết bạn");
+    } finally {
+      setFriendRequestActionLoading(false);
+    }
   };
 
   const handleUnfriend = async () => {
@@ -649,10 +860,11 @@ export default function ProfilePage() {
     try {
       const response = await unfriendService(currentUserId, profileUserId);
       if (response.code === 200 || response.code === "200") {
+        emitFriendCancelSocket(profileUserId);
         setProfile((prev) => prev ? { ...prev, friend: false, statusFriend: undefined } : prev);
         setUnfriendConfirmOpen(false);
-        const statData = await loadProfileSocialStats(profileUserId);
-        setStats(statData);
+        refreshFriendshipData();
+        window.dispatchEvent(new Event("friend_status_updated"));
       } else {
         toast.error("Hủy kết bạn thất bại: " + (response.message || "Lỗi không xác định"));
       }
@@ -1530,6 +1742,36 @@ export default function ProfilePage() {
       );
     }
 
+    if (studyProfileError) {
+      return (
+        <Box
+          role="alert"
+          sx={{
+            p: 4,
+            mt: 2,
+            textAlign: "center",
+            bgcolor: "#fff7ed",
+            border: "1px solid #fed7aa",
+            borderRadius: "12px",
+          }}
+        >
+          <Typography sx={{ color: "#c2410c", fontWeight: 700, mb: 1 }}>
+            Không thể tải hồ sơ học tập
+          </Typography>
+          <Typography sx={{ color: "#9a3412", mb: 2, overflowWrap: "anywhere" }}>
+            {studyProfileError}
+          </Typography>
+          <Button
+            variant="outlined"
+            color="warning"
+            onClick={() => setStudyProfileRetry((value) => value + 1)}
+          >
+            Thử lại
+          </Button>
+        </Box>
+      );
+    }
+
     if (!studyProfile) {
       return (
         <Box sx={{ p: 4, textAlign: "center", bgcolor: "#f8fafc", borderRadius: "8px", mt: 2 }}>
@@ -2098,6 +2340,41 @@ export default function ProfilePage() {
                               Hủy kết bạn
                             </Button>
                           )}
+                          {!profile?.friend &&
+                            profile?.statusFriend === ProfileStatus.PENDING &&
+                            pendingProfileFriendRequest?.direction === "received" && (
+                              <>
+                                <Button
+                                  variant="outlined"
+                                  color="error"
+                                  disabled={friendRequestActionLoading}
+                                  sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", flex: 1, mr: 2, fontSize: "14px" }}
+                                  onClick={handleDeclineProfileFriendRequest}
+                                >
+                                  Từ chối
+                                </Button>
+                                <Button
+                                  variant="contained"
+                                  disabled={friendRequestActionLoading}
+                                  sx={{
+                                    borderRadius: "8px",
+                                    py: 1,
+                                    textTransform: "none",
+                                    fontWeight: "bold",
+                                    background: "linear-gradient(90deg, #4f8dfd, #3b82f6)",
+                                    color: "white",
+                                    flex: 1,
+                                    fontSize: "14px",
+                                    "&:hover": {
+                                      background: "linear-gradient(90deg, #3b82f6, #2563eb)",
+                                    },
+                                  }}
+                                  onClick={handleAcceptProfileFriendRequest}
+                                >
+                                  Chấp nhận
+                                </Button>
+                              </>
+                            )}
                           {!profile?.friend && profile?.statusFriend !== ProfileStatus.PENDING && (
                             <Button
                               sx={{
@@ -2116,11 +2393,14 @@ export default function ProfilePage() {
                               Kết bạn
                             </Button>
                           )}
-                          {!profile?.friend && profile?.statusFriend === ProfileStatus.PENDING && (
+                          {!profile?.friend &&
+                            profile?.statusFriend === ProfileStatus.PENDING &&
+                            pendingProfileFriendRequest?.direction === "sent" && (
                             <Button disabled sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", mr: 2, fontSize: "14px" }}>
                               Đã gửi lời mời
                             </Button>
                           )}
+                          {pendingProfileFriendRequest?.direction !== "received" && (
                           <Button
                             variant="outlined"
                             sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", fontSize: "14px" }}
@@ -2128,6 +2408,7 @@ export default function ProfilePage() {
                           >
                             Nhắn tin
                           </Button>
+                          )}
                         </Box>
                         <Button
                           variant="outlined"

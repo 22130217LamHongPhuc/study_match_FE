@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Lock, Mail, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -8,7 +8,16 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const msg = localStorage.getItem("session_locked_message");
+    if (msg) {
+      toast.error(msg);
+      localStorage.removeItem("session_locked_message");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,12 +27,14 @@ export default function AdminLoginPage() {
     }
 
     setLoading(true);
+    setErrorMsg(null);
 
     try {
       const response = await adminLogin(email.trim(), password);
 
       if (!response.success) {
         console.error("Admin login API error response:", response);
+        setErrorMsg(response.message || "Đăng nhập thất bại. Vui lòng thử lại");
         toast.error(response.message || "Đăng nhập thất bại. Vui lòng thử lại");
         setLoading(false);
         return;
@@ -42,6 +53,7 @@ export default function AdminLoginPage() {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userId");
       localStorage.removeItem("isAdmin");
+      setErrorMsg("Có lỗi xảy ra trong quá trình đăng nhập");
       toast.error("Có lỗi xảy ra trong quá trình đăng nhập");
     } finally {
       setLoading(false);
@@ -65,6 +77,11 @@ export default function AdminLoginPage() {
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          {errorMsg && (
+            <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-600 font-medium">
+              {errorMsg}
+            </div>
+          )}
           <div className="space-y-4">
             {/* Email Field */}
             <div>

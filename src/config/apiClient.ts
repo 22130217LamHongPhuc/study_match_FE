@@ -43,6 +43,14 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     const resData = response.data;
+
+    if (resData && (resData.code === StatusCode.USER_LOCKED || resData.code === "USER_LOCKED")) {
+      const isLoginRequest = response.config.url?.includes("/auth/login") || response.config.url?.includes("/auth/admin/login") || response.config.url?.includes("/auth/google");
+      if (!isLoginRequest) {
+        handleForcedLogout(resData.message || "Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động bởi quản trị viên.");
+      }
+    }
+
     if (resData && resData.code === StatusCode.INVALID_TOKEN) {
       const originalRequest = response.config;
 
@@ -97,6 +105,14 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
     const resData = error.response?.data as any;
 
+    if (resData && (resData.code === StatusCode.USER_LOCKED || resData.code === "USER_LOCKED")) {
+      const isLoginRequest = originalRequest && (originalRequest.url?.includes("/auth/login") || originalRequest.url?.includes("/auth/admin/login") || originalRequest.url?.includes("/auth/google"));
+      if (!isLoginRequest) {
+        handleForcedLogout(resData.message || "Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động bởi quản trị viên.");
+      }
+      return Promise.reject(error);
+    }
+
     const isTokenExpired =
       status === 401 || (resData && resData.code === StatusCode.INVALID_TOKEN);
 
@@ -149,9 +165,28 @@ apiClient.interceptors.response.use(
   }
 );
 
+export function handleForcedLogout(reason: string) {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("fullName");
+  localStorage.removeItem("avatarUrl");
+  localStorage.setItem("session_locked_message", reason);
+  
+  const currentPath = window.location.pathname;
+  if (currentPath.startsWith("/admin")) {
+    window.location.href = "/admin/login";
+  } else {
+    window.location.href = "/login";
+  }
+}
+
 function handleLogout() {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("fullName");
+  localStorage.removeItem("avatarUrl");
   
   const currentPath = window.location.pathname;
   if (currentPath.startsWith("/admin")) {
@@ -218,6 +253,10 @@ export async function apiFetch<T>(
       data = JSON.parse(data);
     } catch (e) {
     }
+  }
+
+  if (data instanceof FormData) {
+    headers["Content-Type"] = undefined as any;
   }
 
   try {

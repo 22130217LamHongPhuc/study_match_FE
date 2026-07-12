@@ -6,7 +6,7 @@ import { Search, Users, GraduationCap, UserPlus, MessageCircle, UserMinus, Clock
 
 import { RootState } from "../../redux/store";
 import { searchStudents, StudentSearchItem } from "../../services/UserService";
-import { browseGroups, requestJoinGroup, BrowseGroupResponse, getGroupsByUserId } from "../../services/GroupService";
+import { browseGroups, requestJoinGroup, BrowseGroupResponse, getGroupsByUserId, rejectGroupInvitation, getSentPendingGroupJoinRequests } from "../../services/GroupService";
 import { requestFriendService, loadFriendRequestsService, normalizeAvatarUrl } from "../../services/FriendService";
 import { BASE_USER_SERVICE } from "../../config/BaseConfig";
 import { apiFetch } from "../../config/apiClient";
@@ -119,7 +119,9 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
     visibility: (item.visibility as any) || "COMMUNITY",
     createdAt: item.createdAt,
     isMember: item.member || false,
+    avatarUrl: item.avatarUrl,
     isJoinRequestPending: item.joinRequestPending || false,
+    description: item.description,
   };
 }
 
@@ -693,6 +695,28 @@ export default function SearchPage() {
     [currentUserId, joiningGroupId, selectedJoinGroup],
   );
 
+  const handleCancelJoinRequest = useCallback(
+    async (groupId: number) => {
+      try {
+        const res = await getSentPendingGroupJoinRequests();
+        const pending = (res.data ?? []).find((inv) => inv.groupId === groupId);
+        if (!pending) {
+          toast.error("Không tìm thấy yêu cầu tham gia.");
+          return;
+        }
+        await rejectGroupInvitation(pending.invitationId);
+        setGroups((prev) =>
+          prev.map((g) => g.id === groupId ? { ...g, isJoinRequestPending: false } : g)
+        );
+        toast.success("Đã hủy yêu cầu tham gia nhóm.");
+        window.dispatchEvent(new Event("group_invitations_updated"));
+      } catch (err) {
+        toast.error("Hủy yêu cầu thất bại.");
+      }
+    },
+    [],
+  );
+
 
   return (
     <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
@@ -817,7 +841,7 @@ export default function SearchPage() {
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {sortedGroups.map((group: CommunityGroup) => (
-                    <CommunityGroupCard key={group.id} group={group} onJoin={handleOpenJoinModal} />
+                    <CommunityGroupCard key={group.id} group={group} onJoin={handleOpenJoinModal} onCancel={handleCancelJoinRequest} />
                   ))}
                 </div>
               )}

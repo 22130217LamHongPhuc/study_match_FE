@@ -7,9 +7,11 @@ import {
   Send,
   ShieldX,
   UserPlus,
+  Users,
   MapPin,
   BookOpen,
 } from "lucide-react";
+import { getGroupAvatarUrl } from "../../../services/GroupService";
 import {
   FriendRequestVm,
   RecommendationCardVm,
@@ -267,18 +269,21 @@ export default function RecommendationCard({
 
         <span className="font-bold text-gray-700">Nhóm học chung ({recommendation.commonGroups?.length || 0})</span>
         <div className="flex flex-wrap gap-1.5 items-center">
-          {recommendation.commonGroups?.slice(0, 2).map((group) => (
-            <div key={group.id} className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-2 py-0.5 border border-gray-100">
-              {group.avatarUrl ? (
-                <img src={group.avatarUrl} alt={group.name} className="h-4 w-4 rounded-full object-cover shrink-0" />
-              ) : (
-                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-200 text-[8px] font-bold text-gray-500 shrink-0">
-                  G
-                </div>
-              )}
-              <span className="text-[10px] text-gray-600 truncate max-w-[80px]" title={group.name}>{group.name}</span>
-            </div>
-          ))}
+          {recommendation.commonGroups?.slice(0, 2).map((group) => {
+            const groupAvatarUrl = getGroupAvatarUrl(group);
+            return (
+              <div key={group.id} className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-2 py-0.5 border border-gray-100">
+                {groupAvatarUrl ? (
+                  <img src={groupAvatarUrl} alt={group.name} className="h-4 w-4 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="flex h-4 w-4 items-center justify-center rounded-full bg-[#4285f4] text-white shrink-0">
+                    <Users size={10} strokeWidth={2.4} />
+                  </div>
+                )}
+                <span className="text-[10px] text-gray-600 truncate max-w-[80px]" title={group.name}>{group.name}</span>
+              </div>
+            );
+          })}
           {recommendation.commonGroups && recommendation.commonGroups.length > 2 && (
             <span className="rounded-lg bg-orange-50 px-1.5 py-0.5 text-[9px] font-bold text-orange-600">
               +{recommendation.commonGroups.length - 2}

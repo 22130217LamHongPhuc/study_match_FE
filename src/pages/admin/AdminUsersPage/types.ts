@@ -1,5 +1,5 @@
 export type AdminUserRole = "student" | "admin";
-export type AdminUserStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "DELETED";
+export type AdminUserStatus = "ACTIVE" | "LOCKED" | "DELETED" | "PENDING";
 
 export interface AdminUserDbRow {
   user_id: number;
@@ -7,7 +7,7 @@ export interface AdminUserDbRow {
   full_name: string | null;
   avatar_url: string | null;
   role: "student" | "admin";
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "DELETED";
+  status: AdminUserStatus;
   is_onboarding_completed: boolean;
   last_login_at: string | null;
   created_at: string;

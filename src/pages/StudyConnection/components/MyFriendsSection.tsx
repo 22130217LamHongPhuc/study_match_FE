@@ -4,11 +4,13 @@ import { Search, MessageSquare, UserMinus, ChevronDown } from "lucide-react";
 import { Avatar, Dialog, DialogTitle, DialogContent, Typography, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { SocketEvent } from "../../../enum/SocketEvent";
 import {
   loadAllFriendsService,
   unfriendService,
   FriendUser
 } from "../../../services/FriendService";
+import WebSocketManager from "../../../socket/WebSocketManager";
 import { LoadingState, EmptyState } from "./SharedStates";
 import { RootState } from "../../../redux/store";
 
@@ -80,6 +82,18 @@ export default function MyFriendsSection() {
       const res = await unfriendService(currentUserId, friendId);
       if (res && res.code && Number(res.code) >= 400) {
         throw new Error(res.message || "Failed to unfriend");
+      }
+
+      try {
+        WebSocketManager.getInstance().sendMessage("/chat/send", {
+          event: SocketEvent.FRIEND_REQUEST_CANCEL,
+          data: {
+            senderId: currentUserId,
+            receiverId: friendId,
+          },
+        });
+      } catch (socketErr) {
+        console.error("Failed to emit FRIEND_REQUEST_CANCEL socket event", socketErr);
       }
 
       setFriends((prev) => prev.filter((f) => f.userId !== friendId));

@@ -7,8 +7,9 @@ const statusOptions: Array<{
 }> = [
     { label: "Tất cả", value: null },
     { label: "Hoạt động", value: "ACTIVE" },
-    { label: "Không hoạt động", value: "INACTIVE" },
+    { label: "Bị khóa", value: "LOCKED" },
     { label: "Đã xóa", value: "DELETED" },
+    { label: "Chờ xác thực", value: "PENDING" },
   ];
 
 const roleOptions: Array<{

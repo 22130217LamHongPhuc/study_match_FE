@@ -11,6 +11,8 @@ import {
   BrowseGroupResponse,
   getAllSubjects,
   requestJoinGroup,
+  rejectGroupInvitation,
+  getSentPendingGroupJoinRequests,
   Subject,
 } from "../../../services/GroupService";
 import { RootState } from "../../../redux/store";
@@ -31,6 +33,7 @@ export interface CommunityGroup {
   isMember: boolean;
   avatarUrl?: string | null;
   isJoinRequestPending?: boolean;
+  description?: string | null;
 }
 
 function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGroup {
@@ -47,9 +50,8 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
     createdAt: item.createdAt,
     isMember: item.member || false,
     avatarUrl: item.avatarUrl,
-            isJoinRequestPending: item.joinRequestPending || false,
-
-
+    isJoinRequestPending: item.joinRequestPending || false,
+    description: item.description,
   };
 }
 
@@ -186,6 +188,32 @@ export default function SuggestedGroupsSection() {
     [currentUserId, joiningGroupId, selectedJoinGroup],
   );
 
+  const handleCancelJoinRequest = useCallback(
+    async (groupId: number) => {
+      try {
+        const res = await getSentPendingGroupJoinRequests();
+        const pending = (res.data ?? []).find((inv) => inv.groupId === groupId);
+        if (!pending) {
+          toast.error("Không tìm thấy yêu cầu tham gia.");
+          return;
+        }
+        await rejectGroupInvitation(pending.invitationId);
+        setRecommendedGroups((prev) =>
+          prev.map((g) => g.id === groupId ? { ...g, isJoinRequestPending: false } : g)
+        );
+        setSelectedOtherGroups((prev) =>
+          prev.map((g) => g.id === groupId ? { ...g, isJoinRequestPending: false } : g)
+        );
+        toast.success("Đã hủy yêu cầu tham gia nhóm.");
+        window.dispatchEvent(new Event("group_invitations_updated"));
+      } catch (err) {
+        toast.error("Hủy yêu cầu thất bại.");
+      }
+    },
+    [],
+  );
+
+
   const otherSubjects = useMemo(() => {
     if (subjects.length === 0) return [];
 
@@ -319,7 +347,7 @@ export default function SuggestedGroupsSection() {
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {recommendedGroups.map((group) => (
-            <CommunityGroupCard key={group.id} group={group} recommended onJoin={handleOpenJoinModal} />
+            <CommunityGroupCard key={group.id} group={group} recommended onJoin={handleOpenJoinModal} onCancel={handleCancelJoinRequest} />
           ))}
         </div>
       )}
@@ -399,7 +427,7 @@ export default function SuggestedGroupsSection() {
         {!selectedOtherGroupsLoading && selectedOtherGroups.length > 0 && (
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {selectedOtherGroups.map((group) => (
-              <CommunityGroupCard key={group.id} group={group} onJoin={handleOpenJoinModal} />
+              <CommunityGroupCard key={group.id} group={group} onJoin={handleOpenJoinModal} onCancel={handleCancelJoinRequest} />
             ))}
           </div>
         )}

@@ -818,10 +818,10 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
                 </MenuItem>
               )}
               {isOwner && (
-                <>
+                <Box sx={{ display: "contents" }}>
                   <MenuItem onClick={() => { setEditing(true); setAnchorEl(null); }}>Sửa bài</MenuItem>
                   <MenuItem onClick={handleDelete}>Xóa bài</MenuItem>
-                </>
+                </Box>
               )}
             </Menu>
           </>

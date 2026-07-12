@@ -3,7 +3,7 @@ import { GraduationCap } from "lucide-react";
 
 import ConnectionTabs from "./components/ConnectionTabs";
 import SuggestedFriendsSection from "./components/SuggestedFriendsSection";
-import SuggestedGroupsSection from "./components/SuggestedGroupsSection";
+import StudyGroupsSection from "./components/StudyGroupsSection";
 import FriendRequestsSection from "./components/FriendRequestsSection";
 import MyFriendsSection from "./components/MyFriendsSection";
 import connectFriendImg from "../../assets/img/connect_friend.png";
@@ -16,7 +16,7 @@ export default function StudyConnectionPage() {
       case "suggested-friends":
         return <SuggestedFriendsSection />;
       case "suggested-groups":
-        return <SuggestedGroupsSection />;
+        return <StudyGroupsSection />;
       case "friend-requests":
         return <FriendRequestsSection />;
       case "my-friends":
