@@ -160,23 +160,7 @@ export default function ReportModal({
           position: "relative",
         }}
       >
-        <Box
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 1,
-            px: 1.5,
-            py: 0.75,
-            borderRadius: "999px",
-            bgcolor: "#f0f7ff",
-            color: "#2563eb",
-            fontSize: 12,
-            fontWeight: 700,
-          }}
-        >
-          <ReportProblemOutlinedIcon sx={{ fontSize: 16 }} />
-          Báo cáo
-        </Box>
+
         <Typography
           sx={{
             mt: 1.5,
@@ -274,9 +258,13 @@ export default function ReportModal({
             "& .MuiOutlinedInput-root": {
               borderRadius: "12px",
               bgcolor: "#fff",
+              color: "#0f172a",
               "& fieldset": { borderColor: "#e2e8f0" },
               "&:hover fieldset": { borderColor: "#38bdf8" },
               "&.Mui-focused fieldset": { borderColor: "#2563eb" },
+            },
+            "& .MuiSelect-select": {
+              color: "#0f172a",
             },
           }}
         >
@@ -315,12 +303,18 @@ export default function ReportModal({
                 borderRadius: "14px",
                 alignItems: "flex-start",
                 bgcolor: "#f8fafc",
+                color: "#0f172a",
                 "& fieldset": { borderColor: "#e2e8f0" },
                 "&:hover fieldset": { borderColor: "#38bdf8" },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#2563eb",
+                "&.Mui-focused": {
                   bgcolor: "#fff",
                 },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#2563eb",
+                },
+              },
+              "& .MuiInputBase-input": {
+                color: "#0f172a",
               },
             }}
           />

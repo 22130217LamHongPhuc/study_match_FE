@@ -578,7 +578,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         ) : (
           <>
             <Box sx={{ display: "flex", alignItems: "center", gap: "24px" }}>
-              <Typography
+              {/* <Typography
                 component={"h1"}
                 sx={{
                   marginY: "auto",
@@ -588,9 +588,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   cursor: "pointer",
                 }}
                 onClick={() => navigate("/")}
-              >
-                Trang chủ
-              </Typography>
+              > */}
+              {/* Trang chủ */}
+              {/* </Typography>
               <TextField
                 placeholder="Tìm kiếm bạn học, nhóm học..."
                 variant="outlined"
@@ -627,7 +627,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     padding: "0px",
                   },
                 }}
-              />
+              /> */}
             </Box>
             <Box>
               <Button

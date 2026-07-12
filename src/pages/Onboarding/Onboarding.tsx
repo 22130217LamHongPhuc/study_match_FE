@@ -85,17 +85,16 @@ export default function OnboardingFlow() {
     studiedCredits: "",
   });
 
-  const loadCohorts = useCallback(async (): Promise<void> => {
+  const loadCohorts = useCallback(async () => {
     setCohortsLoading(true);
     setCohortsError("");
     try {
       const res = await apiFetch<Cohort[]>("/cohorts", { method: "GET" }, API_BASE_URL);
-      if (!res.success) {
-        throw new Error(res.message || `Không tải được danh sách khóa học`);
-      }
-      const json = res.data;
-      console.log("Cohorts loaded:", json);
-      setCohorts(Array.isArray(json) ? json : []);
+      const isRawArray = Array.isArray(res);
+      const success = isRawArray ? true : res.success;
+      const cohortsData = isRawArray ? (res as any) : res.data;
+      if (!success) throw new Error((res as any).message || "Failed to load cohorts");
+      setCohorts(Array.isArray(cohortsData) ? cohortsData : []);
     } catch (error) {
       setCohorts([]);
       setCohortsError(
@@ -108,92 +107,76 @@ export default function OnboardingFlow() {
     }
   }, []);
 
-  const loadStudyPlan = useCallback(
-    async (cohortCode: string): Promise<void> => {
-      if (!cohortCode) {
-        setStudyPlan(null);
-        setStudyPlanError("");
-        setStudyPlanLoading(false);
-        return;
-      }
+  const loadStudyPlan = useCallback(async (cohortCode: string) => {
+    if (!cohortCode) {
+      setStudyPlan(null);
+      return;
+    }
 
-      setStudyPlanLoading(true);
-      setStudyPlanError("");
-      try {
-        const res = await apiFetch<StudyPlan>(
-          `/cohorts/${cohortCode}/study-plan/current`,
-          { method: "GET" },
-          API_BASE_URL
-        );
-        if (!res.success) {
-          throw new Error(
-            res.message || `Không tải được môn học của khóa ${cohortCode}`,
-          );
-        }
-        setStudyPlan(res.data);
-        setData((prev) => ({
-          ...prev,
-          mainModule: "",
-          enrolledModules: [],
-          moduleSlots: {},
-        }));
-      } catch (error) {
-        setStudyPlan(null);
-        setData((prev) => ({
-          ...prev,
-          mainModule: "",
-          enrolledModules: [],
-          moduleSlots: {},
-        }));
-        setStudyPlanError(
-          error instanceof Error
-            ? error.message
-            : "Không tải được môn học hiện tại",
-        );
-      } finally {
-        setStudyPlanLoading(false);
-      }
-    },
-    [],
-  );
+    setStudyPlanLoading(true);
+    setStudyPlanError("");
+    try {
+      const res = await apiFetch<StudyPlan>(
+        `/cohorts/${cohortCode}/study-plan/current`,
+        { method: "GET" },
+        API_BASE_URL
+      );
+      const isRawObject = res && (res as any).success === undefined;
+      const success = isRawObject ? true : res.success;
+      const planData = (isRawObject ? res : res.data) as StudyPlan;
+      if (!success) throw new Error((res as any).message || "Failed to load study plan");
+      setStudyPlan(planData);
+      setData((prev) => ({
+        ...prev,
+        mainModule: "",
+        enrolledModules: [],
+        moduleSlots: {},
+      }));
+    } catch (error) {
+      setStudyPlan(null);
+      setData((prev) => ({
+        ...prev,
+        mainModule: "",
+        enrolledModules: [],
+        moduleSlots: {},
+      }));
+      setStudyPlanError(
+        error instanceof Error ? error.message : "Không tải được môn học hiện tại",
+      );
+    } finally {
+      setStudyPlanLoading(false);
+    }
+  }, []);
 
-  const loadStudyPlanOptions = useCallback(
-    async (cohortCode: string): Promise<void> => {
-      if (!cohortCode) {
-        setStudyPlanOptions(null);
-        setStudyPlanOptionsError("");
-        setStudyPlanOptionsLoading(false);
-        return;
-      }
+  const loadStudyPlanOptions = useCallback(async (cohortCode: string) => {
+    if (!cohortCode) {
+      setStudyPlanOptions(null);
+      return;
+    }
 
-      setStudyPlanOptionsLoading(true);
-      setStudyPlanOptionsError("");
-      try {
-        const res = await apiFetch<StudyPlanOptions>(
-          `/cohorts/${cohortCode}/study-plan-options`,
-          { method: "GET" },
-          API_BASE_URL
-        );
-        if (!res.success) {
-          throw new Error(
-            res.message || `Không tải được danh sách học kỳ của khóa ${cohortCode}`,
-          );
-        }
-
-        setStudyPlanOptions(res.data);
-      } catch (error) {
-        setStudyPlanOptions(null);
-        setStudyPlanOptionsError(
-          error instanceof Error
-            ? error.message
-            : "Không tải được danh sách học kỳ",
-        );
-      } finally {
-        setStudyPlanOptionsLoading(false);
-      }
-    },
-    [],
-  );
+    setStudyPlanOptionsLoading(true);
+    setStudyPlanOptionsError("");
+    try {
+      const res = await apiFetch<StudyPlanOptions>(
+        `/cohorts/${cohortCode}/study-plan-options`,
+        { method: "GET" },
+        API_BASE_URL
+      );
+      const success = res ? res.success : false;
+      const optionsData = (res && (res as any).data !== undefined ? (res as any).data : res) as StudyPlanOptions;
+      if (!success) throw new Error((res as any).message || "Failed to load options");
+      setStudyPlanOptions(optionsData);
+    } catch (error) {
+      setStudyPlanOptions(null);
+      setStudyPlanOptionsError(
+        error instanceof Error
+          ? error.message
+          : "Không tải được danh sách học kỳ",
+      );
+    } finally {
+      setStudyPlanOptionsLoading(false);
+    }
+  }, []);
 
   const loadStudyPlanByTerm = useCallback(
     async (
@@ -212,12 +195,11 @@ export default function OnboardingFlow() {
         { method: "GET" },
         API_BASE_URL
       );
-      if (!res.success) {
-        throw new Error(
-          res.message || `Không tải được môn học theo học kỳ đã chọn`,
-        );
-      }
-      return res.data;
+      const isRawObject = res && (res as any).success === undefined;
+      const success = isRawObject ? true : res.success;
+      const planData = (isRawObject ? res : res.data) as StudyPlan;
+      if (!success) throw new Error((res as any).message || "Failed to load subjects");
+      return planData;
     },
     [],
   );
@@ -548,20 +530,35 @@ export default function OnboardingFlow() {
     }
   };
 
-  const microStep = step <= 2 ? step : step === 3 ? 2 + goalSub : step + 1;
-  const progress = Math.round(((microStep - 1) / 7) * 100);
+  const DIALOG_STEPS = [
+    { id: 1, name: "Bắt đầu" },
+    { id: 2, name: "Cá nhân" },
+    { id: 3, name: "Mục tiêu" },
+    { id: 4, name: "Môn học" },
+    { id: 5, name: "Lịch học" },
+    { id: 6, name: "Kết quả" },
+    { id: 7, name: "Xem lại" },
+  ];
+
+  const stepSubtitles: Record<number, string> = {
+    1: "Bắt đầu cập nhật hồ sơ",
+    2: "Thông tin cá nhân cơ bản",
+    3: goalSub === 1 ? "Thiết lập mục tiêu học tập" : "Lựa chọn phương thức ghép nhóm",
+    4: "Kế hoạch học tập & Môn học học kỳ này",
+    5: "Thời gian rảnh của bạn trong tuần",
+    6: "Điểm trung bình tích lũy & Số tín chỉ",
+    7: "Xem lại tất cả thông tin",
+  };
 
   if (submissionLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="bg-white rounded-3xl p-10 max-w-sm w-full mx-4 text-center shadow-sm border border-blue-100">
-          <Loader className="w-12 h-12 mx-auto text-blue-600 animate-spin mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Đang gửi dữ liệu...
-          </h2>
-          <p className="text-sm text-gray-500">
-            Vui lòng đợi trong khi chúng tôi xử lý hồ sơ của bạn
-          </p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50/50">
+        <div className="bg-white rounded-3xl p-10 max-w-sm w-full mx-4 text-center shadow-xl border border-gray-100 flex flex-col items-center justify-center gap-4">
+          <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">Đang gửi dữ liệu...</h2>
+            <p className="text-xs text-gray-500 mt-1">Vui lòng đợi trong khi chúng tôi xử lý hồ sơ của bạn</p>
+          </div>
         </div>
       </div>
     );
@@ -569,138 +566,135 @@ export default function OnboardingFlow() {
 
   return (
     <div
-      className="min-h-screen flex bg-gray-50"
+      className="min-h-screen flex items-center justify-center p-4 md:p-6 relative overflow-hidden bg-[#f7f5f0]"
       style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
     >
-      <aside className="w-56 bg-gray-900 flex flex-col shrink-0 sticky top-0 h-screen">
-        <div className="px-5 pt-6 pb-4 border-b border-gray-800">
-          <div className="text-lg font-bold text-white tracking-tight">
-            Study<span className="text-blue-400">Match</span>
-          </div>
-          <div className="text-xs text-gray-500 mt-0.5">
-            Nông Lâm · Khoa CNTT
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03] z-0"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            -45deg,
+            #1a3557 0px,
+            #1a3557 1px,
+            transparent 1px,
+            transparent 12px
+          )`,
+        }}
+      />
+
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-400/20 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-orange-400/10 blur-[130px] pointer-events-none z-0" />
+      <div className="absolute top-[40%] right-[20%] w-[350px] h-[350px] rounded-full bg-indigo-300/15 blur-[100px] pointer-events-none z-0" />
+
+      <div className="w-full max-w-3xl bg-white/80 backdrop-blur-md rounded-[24px] border border-white/60 shadow-2xl flex flex-col overflow-hidden max-h-[90vh] relative z-10">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-white/90 px-6 py-4 shrink-0 relative">
+          <h2 className="text-lg font-bold text-gray-800">Thiết lập hồ sơ ban đầu</h2>
+        </div>
+
+        <div className="border-b border-gray-100 bg-gray-50/50 py-3 shrink-0 select-none">
+          <div className="mx-auto max-w-xl px-10 relative">
+            <div className="absolute top-[14px] left-[40px] right-[40px] h-0.5 bg-gray-200 z-0" />
+            <div
+              className="absolute top-[14px] left-[40px] h-0.5 bg-orange-500 transition-all duration-300 z-0"
+              style={{
+                width: `calc(${(step - 1) / 6} * (100% - 80px))`,
+              }}
+            />
+
+            <div className="flex justify-between items-center relative z-10">
+              {DIALOG_STEPS.map((s) => {
+                const active = step === s.id;
+                const completed = step > s.id;
+                return (
+                  <div key={s.id} className="flex flex-col items-center gap-1">
+                    <span
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${active
+                          ? "bg-orange-500 text-white scale-105 shadow-sm ring-4 ring-orange-100"
+                          : completed
+                            ? "bg-orange-100 text-orange-600 font-bold"
+                            : "bg-white border border-gray-300 text-gray-400"
+                        }`}
+                    >
+                      {s.id}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold transition-colors duration-300 ${active
+                          ? "text-orange-600 font-bold"
+                          : completed
+                            ? "text-gray-600"
+                            : "text-gray-400"
+                        }`}
+                    >
+                      {s.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {STEPS_META.map((s) => {
-            const active = s.id === step;
-            const Icon = s.icon;
-            return (
-              <div
-                key={s.id}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all ${active ? "bg-blue-600 bg-opacity-20" : "hover:bg-gray-800"}`}
-              >
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${s.id < step
-                    ? "bg-green-500 text-white"
-                    : active
-                      ? "bg-blue-500 text-white ring-2 ring-blue-400 ring-opacity-40"
-                      : "bg-gray-800 text-gray-500"
-                    }`}
-                >
-                  {s.id < step ? (
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                  ) : (
-                    <Icon className="w-4 h-4" />
-                  )}
-                </div>
-                <span
-                  className={`text-xs font-medium transition-colors ${active
-                    ? "text-white"
-                    : s.id < step
-                      ? "text-gray-400"
-                      : "text-gray-600"
-                    }`}
-                >
-                  {s.label}
-                </span>
-              </div>
-            );
-          })}
-        </nav>
-
-        <div className="px-5 py-4 border-t border-gray-800">
-          <div className="flex justify-between text-xs mb-1.5">
-            <span className="text-gray-500">Tiến độ</span>
-            <span className="text-blue-400 font-semibold">{progress}%</span>
+        <div className="px-6 py-3.5 bg-white/90 border-b border-gray-100 flex items-center justify-between shrink-0">
+          <div>
+            <span className="text-xs font-bold text-orange-600 uppercase tracking-wider">
+              {step === 3 && goalSub === 2 ? "Bước 3 - Phần 2 / 7" : `Bước ${step} / 7`}
+            </span>
+            <h3 className="text-sm font-bold text-gray-700 mt-0.5">
+              {stepTitle()}
+            </h3>
           </div>
-          <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
+          <div className="text-[11px] text-gray-500 bg-gray-50 border border-gray-200 px-3 py-1 rounded-xl font-medium">
+            {stepSubtitles[step]}
           </div>
         </div>
-      </aside>
 
-      <main className="flex-1 flex items-start justify-center py-10 px-6 overflow-y-auto">
-        <div className="w-full max-w-xl">
-          <div className="h-1 bg-gray-200 rounded-full mb-8 overflow-hidden">
-            <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          {subStepLabel() && (
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
-                {subStepLabel()}
-              </span>
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+          {submissionError && (
+            <div className="flex items-center gap-2.5 p-4 mb-4 text-sm text-red-800 border border-red-200 rounded-2xl bg-red-50 font-medium">
+              <span>{submissionError}</span>
             </div>
           )}
-
-          <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">
-            Bước {step} / {STEPS_META.length}
-          </p>
-
-          <h1 className="text-xl font-bold text-gray-800 mb-1 leading-snug">
-            {stepTitle()}
-          </h1>
-          <p className="text-sm text-gray-400 mb-6">
-            {STEPS_META[step - 1]?.label}
-          </p>
-
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6">
             {renderContent()}
           </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleBack}
-              className={`px-6 py-3 rounded-xl border text-sm font-medium transition-all ${"border-gray-200 text-gray-600 bg-white hover:bg-gray-50 hover:border-gray-300"}`}
-            >
-              {isBackDisabled ? "Thoát" : "← Trở lại"}
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={!canProceed() || submissionLoading}
-              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!canProceed() || submissionLoading
-                ? "bg-blue-100 text-blue-300 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                }`}
-            >
-              {submissionLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader className="w-4 h-4 animate-spin" />
-                  Đang gửi...
-                </span>
-              ) : step === 7 ? (
-                "Hoàn tất & Tìm bạn học"
-              ) : (
-                "Tiếp theo →"
-              )}
-            </button>
-          </div>
-
           {step < 7 && (
-            <p className="text-center text-xs text-gray-300 mt-3">
-              Dữ liệu bạn nhập giúp mô hình gợi ý chính xác hơn
+            <p className="text-center text-xs text-gray-400 mt-4">
+              Dữ liệu bạn nhập giúp mô hình gợi ý bạn học chính xác hơn
             </p>
           )}
         </div>
-      </main>
+
+        <div className="px-6 pt-5 pb-6 border-t border-gray-150 flex items-center justify-between bg-white/90 shrink-0">
+          <button
+            type="button"
+            onClick={handleBack}
+            disabled={submissionLoading}
+            className="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all"
+          >
+            {isBackDisabled ? "Thoát" : "Quay lại"}
+          </button>
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!canProceed() || submissionLoading}
+            className={`px-6 py-2.5 text-sm font-bold text-white rounded-xl shadow-sm transition-all flex items-center gap-2 ${!canProceed() || submissionLoading
+                ? "bg-blue-200 text-white cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+              }`}
+          >
+            {submissionLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Đang gửi...
+              </span>
+            ) : step === 7 ? (
+              "Hoàn tất & Tìm bạn học"
+            ) : (
+              "Tiếp theo"
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

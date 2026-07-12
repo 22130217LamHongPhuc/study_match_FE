@@ -184,6 +184,21 @@ export async function joinStudySession(
   return response;
 }
 
+export async function cancelStudySession(
+  sessionId: number,
+  userId: number,
+): Promise<APIResponseData<void>> {
+  const response = await apiFetch<void>(
+    `/api/study-sessions/${sessionId}?userId=${userId}`,
+    {
+      method: "DELETE",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
 export async function leaveStudySession(
   sessionId: number,
   userId: number,

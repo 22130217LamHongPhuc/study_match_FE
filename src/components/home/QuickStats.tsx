@@ -62,7 +62,7 @@ export default function QuickStats({
             className="rounded-xl border border-gray-200 bg-white p-5 text-left transition-all duration-200 hover:shadow-sm cursor-pointer"
           >
             <div
-              className={`mb-4 inline-flex rounded-lg px-3 py-1.5 text-xs font-semibold ${stat.bg} ${stat.text}`}
+              className="mb-4 inline-flex rounded-lg px-3 py-1.5 text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200"
             >
               {stat.title}
             </div>

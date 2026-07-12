@@ -59,7 +59,7 @@ export function MyReportDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+      className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-label="Chi tiết báo cáo"
@@ -74,9 +74,6 @@ export function MyReportDetailModal({
       <div className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
         <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
-              <FileWarning size={20} />
-            </div>
 
             <div className="min-w-0">
               <h3 className="text-lg font-semibold text-gray-800">
@@ -146,7 +143,7 @@ export function MyReportDetailModal({
                     label="Loại đối tượng"
                     value={getTargetTypeLabel(targetType)}
                   />
-                  <InfoItem
+                  {/* <InfoItem
                     icon={<Hash size={16} />}
                     label="ID đối tượng"
                     value={
@@ -154,7 +151,7 @@ export function MyReportDetailModal({
                         ? "--"
                         : `#${getTargetIdValue(report)}`
                     }
-                  />
+                  /> */}
                   <InfoItem
                     icon={<Flag size={16} />}
                     label="Lý do"

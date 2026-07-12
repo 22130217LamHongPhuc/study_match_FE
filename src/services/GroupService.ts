@@ -148,6 +148,17 @@ export interface AdminGroupDetailResponse {
   createdAt: string;
   updatedAt: string;
   freeTimeSlots?: AdminGroupFreeTimeSlot[] | null;
+  members?: AdminGroupMemberInfo[] | null;
+}
+
+export interface AdminGroupMemberInfo {
+  userId: number;
+  fullName: string;
+  email: string;
+  avatarUrl?: string | null;
+  role: string;
+  status: string;
+  joinedAt: string;
 }
 
 export type GroupMemberRole = "OWNER" | "ADMIN" | "MEMBER" | (string & {});
@@ -348,6 +359,36 @@ export async function updateAdminGroupStatus(
     {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
+export async function removeAdminGroupMember(
+  groupId: number,
+  userId: number,
+): Promise<APIResponseData<void>> {
+  const response = await apiFetch<void>(
+    `/api/admin/groups/${groupId}/members/${userId}`,
+    {
+      method: "DELETE",
+    },
+    API_BASE_URL_GROUP,
+  );
+
+  return response;
+}
+
+export async function changeAdminGroupOwner(
+  groupId: number,
+  newOwnerUserId: number,
+): Promise<APIResponseData<void>> {
+  const response = await apiFetch<void>(
+    `/api/admin/groups/${groupId}/owner/${newOwnerUserId}`,
+    {
+      method: "PUT",
     },
     API_BASE_URL_GROUP,
   );

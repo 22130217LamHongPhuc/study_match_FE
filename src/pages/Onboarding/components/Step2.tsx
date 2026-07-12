@@ -65,7 +65,7 @@ export function Step2({ data, update }: Step2Props) {
 
       {cities.length > 0 ? (
         <div className="w-full max-w-md">
-          <FieldLabel>Chọn khu vực</FieldLabel>
+          <FieldLabel>Chọn quê quán</FieldLabel>
           <div className="relative mt-1">
             <select
               value={data.region || ""}
@@ -74,7 +74,7 @@ export function Step2({ data, update }: Step2Props) {
               title={data.region || ""}
             >
               <option value="" disabled>
-                -- Chọn khu vực --
+                -- Chọn quên quán --
               </option>
               {cities.map((c) => (
                 <option key={c} value={c} title={c}>

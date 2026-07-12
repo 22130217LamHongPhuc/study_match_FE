@@ -301,41 +301,48 @@ export function Step4CurrentPlan({
       </p>
 
       {!studyPlanLoading && !studyPlanError && studyPlan && (
-        <div className="space-y-3 rounded-2xl border border-amber-100 bg-amber-50 p-4">
+        <div className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/30 p-5 shadow-sm">
           <div>
-            <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest">
+            <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">
               Tùy chọn học kỳ
             </p>
-            <p className="text-xs text-amber-600 mt-1">
+            <p className="text-xs text-blue-500 mt-1 leading-relaxed">
               Bạn có thể chọn học kỳ riêng cho môn muốn học tập và các môn học trong học kỳ.
             </p>
           </div>
 
           {studyPlanOptionsLoading ? (
-            <div className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs text-amber-700">
+            <div className="rounded-xl border border-blue-200 bg-white px-3 py-2.5 text-xs text-blue-700">
               Đang tải danh sách học kỳ...
             </div>
           ) : studyPlanOptionsError ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-600">
               {studyPlanOptionsError}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="rounded-xl border border-amber-200 bg-white p-3 space-y-2">
-                <p className="text-xs font-semibold text-gray-600">Môn muốn học tập
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-gray-150 bg-white p-4 space-y-3 shadow-sm">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Môn muốn học tập</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={handleMainUseCurrentTerm}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${!mainTermSelection ? "border-amber-400 bg-amber-100 text-amber-800" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
+                      !mainTermSelection
+                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100/50"
+                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                    }`}
                   >
                     Học kỳ hiện tại
                   </button>
                   <button
                     type="button"
                     onClick={handleMainUseCustomTerm}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${mainTermSelection ? "border-amber-400 bg-amber-100 text-amber-800" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
+                      mainTermSelection
+                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100/50"
+                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                    }`}
                   >
                     Tùy chọn
                   </button>
@@ -344,7 +351,7 @@ export function Step4CurrentPlan({
                   <select
                     value={mainTermKey}
                     onChange={(e) => handleMainTermChange(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-700"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/50 transition-all"
                   >
                     {termOptions.map((option) => (
                       <option
@@ -358,20 +365,28 @@ export function Step4CurrentPlan({
                 )}
               </div>
 
-              <div className="rounded-xl border border-amber-200 bg-white p-3 space-y-2">
-                <p className="text-xs font-semibold text-gray-600">Môn học trong học kỳ</p>
+              <div className="rounded-2xl border border-gray-150 bg-white p-4 space-y-3 shadow-sm">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Môn học trong học kỳ</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={handleEnrolledUseCurrentTerm}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${!enrolledTermSelection ? "border-amber-400 bg-amber-100 text-amber-800" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
+                      !enrolledTermSelection
+                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100/50"
+                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                    }`}
                   >
                     Học kỳ hiện tại
                   </button>
                   <button
                     type="button"
                     onClick={handleEnrolledUseCustomTerm}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${enrolledTermSelection ? "border-amber-400 bg-amber-100 text-amber-800" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
+                      enrolledTermSelection
+                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100/50"
+                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                    }`}
                   >
                     Tùy chọn
                   </button>
@@ -380,7 +395,7 @@ export function Step4CurrentPlan({
                   <select
                     value={enrolledTermKey}
                     onChange={(e) => handleEnrolledTermChange(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-700"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/50 transition-all"
                   >
                     {termOptions.map((option) => (
                       <option
@@ -397,9 +412,8 @@ export function Step4CurrentPlan({
           )}
 
           {(mainTermSelection || enrolledTermSelection) && (
-            <p className="text-[11px] text-amber-700">
-              Đã bật chế độ tùy chọn học kỳ. Danh sách môn phía dưới đang được
-              tải theo học kỳ bạn chọn.
+            <p className="text-xs font-medium text-blue-600 bg-blue-100/50 border border-blue-200 px-3.5 py-2.5 rounded-xl">
+              Đã bật chế độ tùy chọn học kỳ. Danh sách môn phía dưới đang được tải theo học kỳ bạn chọn.
             </p>
           )}
         </div>
@@ -621,7 +635,7 @@ export function Step4CurrentPlan({
           )}
 
           {editingModuleCode && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4">
               <div
                 className="absolute inset-0 bg-black/40"
                 onClick={() => setEditingModuleCode(null)}

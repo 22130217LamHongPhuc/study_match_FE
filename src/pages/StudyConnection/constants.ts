@@ -1,4 +1,4 @@
-export const RECOMMEND_USERS_URL = "http://localhost:8000/api/recommend-users";
+export const RECOMMEND_USERS_URL = "http://localhost:8080/api/recommend-users";
 
 export const STUDY_MODE_LABELS: Record<string, string> = {
   mutual_support: "Học cùng người tương đồng",

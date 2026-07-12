@@ -82,9 +82,9 @@ export function MyReportsTable({
                     <td className="px-5 py-4">
                       <div className="h-6 w-24 rounded-full bg-gray-200" />
                     </td>
-                    <td className="px-5 py-4">
+                    {/* <td className="px-5 py-4">
                       <div className="h-4 w-16 rounded bg-gray-200" />
-                    </td>
+                    </td> */}
                     <td className="px-5 py-4">
                       <div className="h-6 w-28 rounded-full bg-gray-200" />
                     </td>
@@ -149,9 +149,9 @@ export function MyReportsTable({
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Loại đối tượng
                   </th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {/* <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     ID đối tượng
-                  </th>
+                  </th> */}
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Lý do
                   </th>
@@ -188,9 +188,9 @@ export function MyReportsTable({
                           {getTargetTypeLabel(targetType)}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-sm font-semibold text-gray-700">
+                      {/* <td className="px-5 py-4 text-sm font-semibold text-gray-700">
                         {targetId === null ? "--" : `#${targetId}`}
-                      </td>
+                      </td> */}
                       <td className="px-5 py-4">
                         <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700">
                           {getReasonLabel(reason)}
@@ -263,12 +263,12 @@ export function MyReportsTable({
                   </div>
 
                   <dl className="mt-4 space-y-2 text-sm">
-                    <div className="flex items-start justify-between gap-3">
+                    {/* <div className="flex items-start justify-between gap-3">
                       <dt className="text-gray-500">ID đối tượng</dt>
                       <dd className="font-semibold text-gray-700">
                         {targetId === null ? "--" : `#${targetId}`}
                       </dd>
-                    </div>
+                    </div> */}
                     <div className="flex items-start justify-between gap-3">
                       <dt className="text-gray-500">Lý do</dt>
                       <dd className="text-right font-medium text-gray-700">
@@ -350,11 +350,10 @@ function ReportsPagination({
               key={pageNumber}
               type="button"
               onClick={() => onPageChange(pageNumber)}
-              className={`h-9 min-w-9 rounded-lg px-3 text-sm font-medium transition ${
-                page === pageNumber
-                  ? "bg-orange-500 text-white"
-                  : "border border-gray-200 bg-white text-gray-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
-              }`}
+              className={`h-9 min-w-9 rounded-lg px-3 text-sm font-medium transition ${page === pageNumber
+                ? "bg-orange-500 text-white"
+                : "border border-gray-200 bg-white text-gray-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                }`}
             >
               {pageNumber}
             </button>

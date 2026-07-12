@@ -84,6 +84,9 @@ export function getReporterUserId(
 export function getReporterDisplay(
   report: ReportResponse | null | undefined,
 ): string {
+  const rootReporterName = toText(readValue(report, ["reporterName", "reporter_name"]));
+  if (rootReporterName) return rootReporterName;
+
   const reporter = readValue(report, ["reporter", "reportedBy", "reporterInfo"]);
   const reporterName = toText(
     readNestedValue(reporter, ["fullName", "name", "displayName", "username"]),

@@ -31,14 +31,8 @@ export default function RegisterForm() {
       setErrorFullName(null);
     }
 
-    if (!validateEmail(email)) {
-      setErrorEmail(
-        "Vui lòng nhập email hợp lệ (định dạng: 22130xxx@st.hcmuaf.edu.vn)",
-      );
-      return;
-    } else {
-      setErrorEmail(null);
-    }
+    setErrorEmail(null);
+
 
     if (!validatePassword(password)) {
       setErrorPassword("Vui lòng nhập mật khẩu hợp lệ (ít nhất 6 ký tự)");

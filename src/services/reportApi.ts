@@ -45,6 +45,7 @@ export interface ReportResponse {
   createdAt?: string;
   updatedAt?: string;
   reporterUserId?: number;
+  reporterName?: string;
   reviewerUserId?: number | null;
   [key: string]: unknown;
 }
@@ -127,7 +128,7 @@ export async function getMyReportDetail(
   reportId: number,
 ): Promise<APIResponseData<ReportResponse>> {
   return apiFetch<ReportResponse>(
-    `/api/reports/${reportId}`,
+    `/api/reports/my/${reportId}`,
     {
       method: "GET",
     },

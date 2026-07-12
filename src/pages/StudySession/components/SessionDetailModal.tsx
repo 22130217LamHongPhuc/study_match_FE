@@ -10,8 +10,21 @@ import {
   getConfirmationStats,
   respondToStudySession,
   joinStudySession,
+  cancelStudySession,
 } from "../../../services/StudySessionService";
 import { toast } from "react-toastify";
+import {
+  Clock,
+  MapPin,
+  Video,
+  BookOpen,
+  Users,
+  User,
+  X,
+  AlertCircle,
+  BarChart3,
+  ExternalLink
+} from "lucide-react";
 
 interface SessionDetailModalProps {
   session: StudySessionVm | null;
@@ -46,6 +59,14 @@ function getModeLabel(mode: string) {
   if (mode === "ONLINE") return "Online";
   if (mode === "OFFLINE") return "Trực tiếp";
   return "Kết hợp";
+}
+
+function getSessionStatusLabel(status?: string | null) {
+  if (status === "SCHEDULED") return "Đã lên lịch";
+  if (status === "ONGOING") return "Đang diễn ra";
+  if (status === "COMPLETED") return "Đã hoàn thành";
+  if (status === "CANCELLED") return "Đã hủy";
+  return status || "Chưa rõ";
 }
 
 function mapResponseToVm(
@@ -90,7 +111,6 @@ function getParticipantName(participant: {
 
 function formatRespondedAt(value?: string | null) {
   if (!value) return "";
-
   return new Date(value).toLocaleString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
@@ -102,18 +122,15 @@ function formatRespondedAt(value?: string | null) {
 
 function getStatusBadgeClass(status?: string | null) {
   if (status === "ACCEPTED" || status === "JOINED") {
-    return "bg-emerald-50 text-emerald-700";
+    return "bg-emerald-50 text-emerald-700 border-emerald-100";
   }
-
   if (status === "PENDING") {
-    return "bg-amber-50 text-amber-700";
+    return "bg-amber-50 text-amber-700 border-amber-100";
   }
-
   if (status === "DECLINED") {
-    return "bg-rose-50 text-rose-700";
+    return "bg-rose-50 text-rose-700 border-rose-100";
   }
-
-  return "bg-gray-100 text-gray-600";
+  return "bg-gray-50 text-gray-600 border-gray-100";
 }
 
 function hasSessionEnded(session: StudySessionVm | null) {
@@ -122,7 +139,6 @@ function hasSessionEnded(session: StudySessionVm | null) {
   const endTime = new Date(session.endTime);
   return now > endTime;
 }
-
 
 export function SessionDetailModal({
   session,
@@ -140,11 +156,18 @@ export function SessionDetailModal({
     null,
   );
   const [joining, setJoining] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
-
     async function loadDetail() {
       if (!session) {
         setDetail(null);
@@ -152,25 +175,18 @@ export function SessionDetailModal({
         setLoading(false);
         return;
       }
-
       setDetail(null);
       setError("");
-
       const userId = Number(localStorage.getItem("userId"));
-
       if (!Number.isFinite(userId) || userId <= 0) {
         setDetail(null);
         setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
         return;
       }
-
       try {
         setLoading(true);
-
         const response = await getStudySessionById(session.id, userId);
-
         if (!mounted) return;
-
         setDetail(response.data);
       } catch {
         if (!mounted) return;
@@ -182,9 +198,7 @@ export function SessionDetailModal({
         }
       }
     }
-
     loadDetail();
-
     return () => {
       mounted = false;
     };
@@ -192,37 +206,28 @@ export function SessionDetailModal({
 
   useEffect(() => {
     let mounted = true;
-
     async function loadStats() {
       if (!session) {
         setConfirmationStats(null);
         setLoadingStats(false);
         return;
       }
-
       const userId = Number(localStorage.getItem("userId"));
-
       if (!Number.isFinite(userId) || userId <= 0) {
         setConfirmationStats(null);
         return;
       }
-
       const canViewStats =
         session.sessionType === "USER_PAIR" ||
         session.createdByUserId === userId;
-
       if (!canViewStats) {
         setConfirmationStats(null);
         return;
       }
-
       try {
         setLoadingStats(true);
-
         const response = await getConfirmationStats(session.id, userId);
-
         if (!mounted) return;
-
         setConfirmationStats(response.data);
       } catch {
         if (!mounted) return;
@@ -233,9 +238,7 @@ export function SessionDetailModal({
         }
       }
     }
-
     loadStats();
-
     return () => {
       mounted = false;
     };
@@ -243,7 +246,6 @@ export function SessionDetailModal({
 
   const currentSession = useMemo<StudySessionVm | null>(() => {
     if (!detail || !session) return session;
-
     return {
       ...session,
       sessionType: detail.sessionType,
@@ -266,28 +268,37 @@ export function SessionDetailModal({
     };
   }, [detail, session]);
 
+  const userId = Number(localStorage.getItem("userId"));
+  const isCreator = (currentSession?.createdByUserId || session?.createdByUserId) === userId;
+  const isCancelled = (currentSession?.status || session?.status) === "CANCELLED";
+  const isCompleted = (currentSession?.status || session?.status) === "COMPLETED";
+  const startTimeVal = new Date(currentSession?.startTime || session?.startTime || 0).getTime();
+  const canCancel = startTimeVal - now >= 5 * 60 * 1000;
+
+  const showFooter =
+    (currentSession?.participantStatus === "PENDING" && !isCancelled) ||
+    (!hasSessionEnded(currentSession) &&
+      ["ACCEPTED", "JOINED"].includes(currentSession?.participantStatus || "") &&
+      currentSession?.studyMode !== "OFFLINE" &&
+      !isCancelled) ||
+    (isCreator && !isCancelled && !isCompleted && canCancel);
+
   const handleRespond = async (status: "ACCEPTED" | "DECLINED") => {
     if (!session) return;
-
-    const userId = Number(localStorage.getItem("userId"));
-
-    if (!Number.isFinite(userId) || userId <= 0) {
+    const userIdVal = Number(localStorage.getItem("userId"));
+    if (!Number.isFinite(userIdVal) || userIdVal <= 0) {
       setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
       return;
     }
-
     try {
       setResponding(status);
       setError("");
-
-      const response = await respondToStudySession(session.id, userId, status);
-
+      const response = await respondToStudySession(session.id, userIdVal, status);
       if (response.data) {
         setDetail(response.data);
         const updatedSession = mapResponseToVm(response.data, session);
         onSessionUpdated?.(updatedSession);
       }
-
       if (session) {
         const statsUserId = Number(localStorage.getItem("userId"));
         if (Number.isFinite(statsUserId) && statsUserId > 0) {
@@ -307,332 +318,387 @@ export function SessionDetailModal({
 
   const handleJoinSession = async () => {
     if (!session || joining) return;
-
-    const userId = Number(localStorage.getItem("userId"));
-    if (!Number.isFinite(userId) || userId <= 0) {
+    const userIdVal = Number(localStorage.getItem("userId"));
+    if (!Number.isFinite(userIdVal) || userIdVal <= 0) {
       setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
       return;
     }
-
-
     const startTime = new Date(session.startTime).getTime();
-    const now = Date.now();
+    const currentTime = Date.now();
     const fiveMinutes = 5 * 60 * 1000;
-
-    if (startTime - now > fiveMinutes) {
-      toast.warning("Chỉ được tham gia trước giờ học 5 phút hoặc khi buổi học đang diễn ra."); return;
+    if (startTime - currentTime > fiveMinutes) {
+      toast.warning("Chỉ được tham gia trước giờ học 5 phút hoặc khi buổi học đang diễn ra.");
+      return;
     }
-
-
-
     try {
-
-
       setJoining(true);
       setError("");
-      const response = await joinStudySession(session.id, userId);
+      const response = await joinStudySession(session.id, userIdVal);
       if (response.data) {
         onJoinSession?.(response.data);
       }
     } catch {
-      setError("Không thể tham gia phòng học");
+      setError("Không thể kết nối phòng học");
     } finally {
       setJoining(false);
     }
   };
 
+  const handleCancel = async () => {
+    if (!session || cancelling) return;
+    const userIdVal = Number(localStorage.getItem("userId"));
+    if (!Number.isFinite(userIdVal) || userIdVal <= 0) {
+      setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+      return;
+    }
+    const currentStartTime = new Date(currentSession?.startTime || session.startTime).getTime();
+    if (currentStartTime - Date.now() < 5 * 60 * 1000) {
+      toast.error("Không thể hủy lịch học trước giờ bắt đầu dưới 5 phút.");
+      return;
+    }
+    try {
+      setCancelling(true);
+      setError("");
+      await cancelStudySession(session.id, userIdVal);
+      toast.success("Hủy lịch học thành công.");
+      onSessionUpdated?.({
+        ...(currentSession || session),
+        status: "CANCELLED" as any,
+      });
+      onClose();
+    } catch {
+      setError("Không thể hủy lịch học");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   if (!session) return null;
+
+  const isGroup = (currentSession?.sessionType || session.sessionType) === "GROUP";
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 px-4 py-6">
-      <div className="w-full max-h-[calc(100vh-120px)] max-w-xl rounded-xl bg-white shadow-xl overflow-y-auto">
-        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
-          <div>
-            <div
-              className={`mb-2 inline-flex rounded-md px-3 py-1 text-xs font-bold ${session.sessionType === "GROUP"
-                ? "bg-rose-50 text-rose-600"
-                : "bg-emerald-50 text-emerald-600"
-                }`}
-            >
-              {session.sessionType === "GROUP"
-                ? "Lịch học nhóm"
-                : "Lịch học 1-1"}
+      <div className="relative w-full max-w-lg flex flex-col max-h-[90vh] bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden animate-scale-in">
+        <div className="flex items-start justify-between border-b border-gray-100 bg-white px-6 py-5 shrink-0">
+          <div className="flex items-start gap-4">
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+              isGroup ? "bg-indigo-50 text-indigo-600" : "bg-orange-50 text-orange-600"
+            }`}>
+              {isGroup ? <Users className="h-5 w-5" /> : <User className="h-5 w-5" />}
             </div>
-            <h2 className="text-xl font-bold text-gray-800">
-              {currentSession?.title || session.title}
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              {currentSession?.subjectName ||
-                session.subjectName ||
-                "Chưa cập nhật môn học"}
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
+                  {isGroup ? "Nhóm học" : "Cá nhân"}
+                </span>
+                {!isCancelled && (
+                  <span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
+                    {getParticipantStatusLabel(currentSession?.participantStatus || session.participantStatus)}
+                  </span>
+                )}
+                <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                  isCancelled
+                    ? "bg-red-50 border-red-100 text-red-600"
+                    : "bg-gray-50 border-gray-200 text-gray-600"
+                }`}>
+                  {getSessionStatusLabel(currentSession?.status || session.status)}
+                </span>
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 mt-1.5 leading-snug">
+                {currentSession?.title || session.title}
+              </h2>
+            </div>
           </div>
-
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+            className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+            aria-label="Đóng"
           >
-            Đóng
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="space-y-4 p-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-slate-50/50">
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {error}
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100 text-red-800 animate-fade-in">
+              <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
+              <div className="text-xs font-semibold">{error}</div>
             </div>
           )}
 
-          <div className="rounded-xl bg-gray-50 p-4">
-            <div className="text-sm font-semibold text-gray-500">Thời gian</div>
-            <div className="mt-1 font-bold text-gray-800">
-              {formatDateTime(currentSession?.startTime || session.startTime)}
+          {isCancelled && (
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100 text-red-800 animate-fade-in">
+              <AlertCircle className="h-5 w-5 shrink-0 text-red-600 mt-0.5" />
+              <div>
+                <div className="text-xs font-bold">Lịch học này đã bị hủy</div>
+                <div className="text-[10px] text-red-700 mt-1">Buổi học đã được hủy bởi người tạo lịch học.</div>
+              </div>
             </div>
-            <div className="mt-1 text-sm text-gray-500">
-              Kết thúc:{" "}
-              {formatDateTime(currentSession?.endTime || session.endTime)}
-            </div>
-          </div>
+          )}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-xl bg-gray-50 p-4">
-              <div className="text-sm font-semibold text-gray-500">
-                Hình thức
-              </div>
-              <div className="mt-1 font-bold text-gray-800">
-                {getModeLabel(currentSession?.studyMode || session.studyMode)}
-              </div>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-10 h-10 border-4 border-orange-100 border-t-orange-600 rounded-full animate-spin" />
+              <span className="text-sm font-semibold text-gray-500">Đang tải thông tin chi tiết...</span>
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Thời gian</span>
+                    <div className="mt-1 text-sm font-bold text-gray-800">
+                      {formatDateTime(currentSession?.startTime || session.startTime)}
+                    </div>
+                    <div className="mt-0.5 text-xs text-gray-500">
+                      Đến: {formatDateTime(currentSession?.endTime || session.endTime)}
+                    </div>
+                  </div>
+                </div>
 
-            <div className="rounded-xl bg-gray-50 p-4">
-              <div className="text-sm font-semibold text-gray-500">
-                Trạng thái tham gia
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                  {currentSession?.studyMode === "ONLINE" ? (
+                    <Video className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <MapPin className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hình thức</span>
+                    <div className="mt-1 text-sm font-bold text-gray-800">
+                      {getModeLabel(currentSession?.studyMode || session.studyMode)}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="mt-1 font-bold text-gray-800">
-                {getParticipantStatusLabel(
-                  currentSession?.participantStatus ||
-                  session.participantStatus,
+
+              <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                {isGroup ? (
+                  <Users className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                ) : (
+                  <User className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
                 )}
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    {isGroup ? "Nhóm học" : "Bạn học"}
+                  </span>
+                  <div className="mt-1 text-sm font-bold text-gray-800">
+                    {isGroup
+                      ? currentSession?.groupName || session.groupName || "Nhóm học"
+                      : currentSession?.partnerName || session.partnerName || "Bạn học"}
+                  </div>
+                  {isGroup && (
+                    <div className="mt-0.5 text-xs text-gray-500">
+                      Quy mô: {currentSession?.membersCount || session.membersCount || 0} thành viên
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="rounded-xl bg-gray-50 p-4">
-            <div className="text-sm font-semibold text-gray-500">
-              {currentSession?.sessionType === "GROUP" ||
-                session.sessionType === "GROUP"
-                ? "Nhóm học"
-                : "Bạn học"}
-            </div>
-            <div className="mt-1 font-bold text-gray-800">
-              {(currentSession?.sessionType || session.sessionType) === "GROUP"
-                ? currentSession?.groupName || session.groupName || "Nhóm học"
-                : currentSession?.partnerName ||
-                session.partnerName ||
-                "Bạn học"}
-            </div>
-            {(currentSession?.sessionType || session.sessionType) ===
-              "GROUP" && (
-                <div className="mt-1 text-sm text-gray-500">
-                  {currentSession?.membersCount || session.membersCount || 0}{" "}
-                  thành viên
+              {(currentSession?.location || currentSession?.meetingUrl || session.location || session.meetingUrl) && (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                  {currentSession?.studyMode === "ONLINE" ? (
+                    <Video className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <MapPin className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Địa điểm / Link học</span>
+                    {(currentSession?.location || session.location) && (
+                      <div className="mt-1 text-sm font-medium text-gray-800 break-words">
+                        {currentSession?.location || session.location}
+                      </div>
+                    )}
+                    {(currentSession?.meetingUrl || session.meetingUrl) && (
+                      <div className="mt-2">
+                        <a
+                          href={currentSession?.meetingUrl || session.meetingUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline"
+                        >
+                          Mở phòng học online
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
-          </div>
 
-          {(currentSession?.location ||
-            currentSession?.meetingUrl ||
-            session.location ||
-            session.meetingUrl) && (
-              <div className="rounded-xl bg-gray-50 p-4">
-                <div className="text-sm font-semibold text-gray-500">
-                  Địa điểm / Link học
-                </div>
-                {(currentSession?.location || session.location) && (
-                  <div className="mt-1 font-medium text-gray-800">
-                    {currentSession?.location || session.location}
+              {(currentSession?.description || session.description) && (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                  <BookOpen className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nội dung học</span>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 whitespace-pre-wrap">
+                      {currentSession?.description || session.description}
+                    </p>
                   </div>
-                )}
-                {(currentSession?.meetingUrl || session.meetingUrl) && (
-                  <a
-                    href={currentSession?.meetingUrl || session.meetingUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex text-sm font-semibold text-orange-600 hover:text-orange-700"
+                </div>
+              )}
+
+              {confirmationStats && (
+                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <div className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                          Trạng thái xác nhận
+                        </div>
+                        <div className="text-[10px] text-gray-500 mt-0.5">
+                          {confirmationStats.sessionType === "USER_PAIR"
+                            ? "Buổi học cá nhân 1-1"
+                            : "Danh sách xác nhận thành viên"}
+                        </div>
+                      </div>
+                    </div>
+                    {loadingStats && (
+                      <span className="flex h-1.5 w-1.5 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <StatCard
+                      label="Tham gia"
+                      value={confirmationStats.totalParticipants}
+                    />
+                    <StatCard
+                      label="Đồng ý"
+                      value={confirmationStats.acceptedCount}
+                    />
+                    <StatCard
+                      label="Chờ"
+                      value={confirmationStats.pendingCount}
+                    />
+                    <StatCard
+                      label="Từ chối"
+                      value={confirmationStats.declinedCount}
+                    />
+                  </div>
+
+                  <div className="space-y-2 mt-4">
+                    {confirmationStats.otherParticipants.length === 0 ? (
+                      <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-6 text-xs text-gray-400 text-center font-medium">
+                        Chưa có dữ liệu xác nhận
+                      </div>
+                    ) : (
+                      confirmationStats.otherParticipants.map((participant, index) => (
+                        <div
+                          key={`${participant.userId ?? participant.fullName ?? index}`}
+                          className="flex items-center justify-between rounded-xl bg-gray-50/40 border border-gray-100 px-4 py-3"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600">
+                              {getParticipantName(participant).charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-gray-800">
+                                {getParticipantName(participant)}
+                              </div>
+                              <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                                <span>
+                                  {participant.role === "PARTICIPANT" ? "Thành viên" : "Người tạo lịch"}
+                                </span>
+                                {participant.respondedAt && (
+                                  <>
+                                    <span className="text-gray-300">•</span>
+                                    <span>{formatRespondedAt(participant.respondedAt)}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${getStatusBadgeClass(participant.status)}`}>
+                            {getParticipantStatusLabel(participant.status || "")}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {showFooter && (
+          <div className="sticky bottom-0 z-10 border-t border-gray-100 bg-white px-6 py-4 flex flex-col gap-3 shrink-0">
+            {currentSession?.participantStatus === "PENDING" && !isCancelled && (
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {hasSessionEnded(currentSession) ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full rounded-xl bg-gray-100 border border-gray-200 px-5 py-2.5 text-xs font-bold text-gray-400 cursor-not-allowed"
                   >
-                    Mở phòng học online
-                  </a>
+                    Buổi học đã kết thúc
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleRespond("ACCEPTED")}
+                      disabled={responding !== null}
+                      className="flex-1 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-orange-700 disabled:opacity-50 transition-all shadow-sm shadow-orange-600/10"
+                    >
+                      {responding === "ACCEPTED" ? "Đang xử lý..." : "Xác nhận tham gia"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRespond("DECLINED")}
+                      disabled={responding !== null}
+                      className="flex-1 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-all"
+                    >
+                      {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
+                    </button>
+                  </>
                 )}
               </div>
             )}
 
-          {(currentSession?.description || session.description) && (
-            <div className="rounded-xl bg-gray-50 p-4">
-              <div className="text-sm font-semibold text-gray-500">
-                Nội dung học
-              </div>
-              <p className="mt-1 text-sm leading-6 text-gray-700">
-                {currentSession?.description || session.description}
-              </p>
-            </div>
-          )}
-
-          {confirmationStats && (
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-gray-500">
-                    Thống kê xác nhận
-                  </div>
-                  <div className="mt-1 text-sm text-gray-500">
-                    {confirmationStats.sessionType === "USER_PAIR"
-                      ? "Buổi học 1-1"
-                      : "Thống kê dành cho chủ nhóm"}
-                  </div>
-                </div>
-                {loadingStats && (
-                  <span className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
-                    Đang tải...
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatCard
-                  label="Tổng người tham gia"
-                  value={confirmationStats.totalParticipants}
-                />
-                <StatCard
-                  label="Đã xác nhận"
-                  value={confirmationStats.acceptedCount}
-                  tone="emerald"
-                />
-                <StatCard
-                  label="Chờ phản hồi"
-                  value={confirmationStats.pendingCount}
-                  tone="amber"
-                />
-                <StatCard
-                  label="Từ chối"
-                  value={confirmationStats.declinedCount}
-                  tone="rose"
-                />
-              </div>
-
-              <div className="mt-4 space-y-2">
-                {confirmationStats.otherParticipants.length === 0 ? (
-                  <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-500">
-                    Chưa có dữ liệu xác nhận
-                  </div>
-                ) : (
-                  confirmationStats.otherParticipants.map(
-                    (participant, index) => (
-                      <div
-                        key={`${participant.userId ?? participant.fullName ?? index}`}
-                        className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3"
-                      >
-                        <div>
-                          <div className="text-sm font-semibold text-gray-800">
-                            {getParticipantName(participant)}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {participant.role === "PARTICIPANT"
-                              ? "Thành viên"
-                              : "Người tạo lịch"}
-                          </div>
-                          {participant.respondedAt && (
-                            <div className="mt-1 text-xs text-gray-400">
-                              Phản hồi:{" "}
-                              {formatRespondedAt(participant.respondedAt)}
-                            </div>
-                          )}
-                        </div>
-                        <span
-                          className={`rounded-md px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(participant.status)}`}
-                        >
-                          {getParticipantStatusLabel(participant.status || "")}
-                        </span>
-                      </div>
-                    ),
-                  )
-                )}
-              </div>
-            </div>
-          )}
-
-        </div>
-
-        {((currentSession?.participantStatus === "PENDING") ||
-          (!hasSessionEnded(currentSession) &&
-            ["ACCEPTED", "JOINED"].includes(currentSession?.participantStatus || "") &&
-            currentSession?.studyMode !== "OFFLINE")) && (
-            <div className="sticky bottom-0 z-10 border-t border-gray-100 bg-white px-6 py-4">
-              {currentSession?.participantStatus === "PENDING" && (
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  {hasSessionEnded(currentSession) ? (
-                    <button
-                      type="button"
-                      disabled
-                      className="w-full rounded-lg bg-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-500 cursor-not-allowed"
-                    >
-                      Buổi học đã kết thúc
-                    </button>
+            {!hasSessionEnded(currentSession) &&
+              ["ACCEPTED", "JOINED"].includes(currentSession?.participantStatus || "") &&
+              currentSession?.studyMode !== "OFFLINE" &&
+              !isCancelled && (
+                <button
+                  type="button"
+                  onClick={handleJoinSession}
+                  disabled={joining}
+                  className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-xs font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50"
+                >
+                  {joining ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Đang kết nối...
+                    </span>
                   ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleRespond("ACCEPTED")}
-                        disabled={responding !== null}
-                        className="flex-1 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
-                      >
-                        {responding === "ACCEPTED" ? "Đang xử lý..." : "Xác nhận tham gia"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleRespond("DECLINED")}
-                        disabled={responding !== null}
-                        className="flex-1 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-                      >
-                        {responding === "DECLINED" ? "Đang xử lý..." : "Từ chối"}
-                      </button>
-                    </>
+                    <span className="flex items-center justify-center gap-2">
+                      <Video className="h-4 w-4" />
+                      Tham gia phòng học
+                    </span>
                   )}
-                </div>
+                </button>
               )}
 
-              {!hasSessionEnded(currentSession) &&
-                ["ACCEPTED", "JOINED"].includes(currentSession?.participantStatus || "") &&
-                currentSession?.studyMode !== "OFFLINE" && (
-                  <button
-                    type="button"
-                    onClick={handleJoinSession}
-                    disabled={joining}
-                    className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50"
-                  >
-                    {joining ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        Đang kết nối...
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="h-5 w-5"
-                        >
-                          <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
-                        </svg>
-                        Tham gia phòng học
-                      </span>
-                    )}
-                  </button>
-                )}
-            </div>
-          )}
+            {isCreator && !isCancelled && !isCompleted && canCancel && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="w-full rounded-xl px-5 py-2.5 text-xs font-bold transition-all border bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100/70"
+              >
+                {cancelling ? "Đang hủy..." : "Hủy buổi học"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -641,25 +707,14 @@ export function SessionDetailModal({
 function StatCard({
   label,
   value,
-  tone = "gray",
 }: {
   label: string;
   value: number;
-  tone?: "gray" | "emerald" | "amber" | "rose";
 }) {
-  const toneClass =
-    tone === "emerald"
-      ? "bg-emerald-50 text-emerald-700"
-      : tone === "amber"
-        ? "bg-amber-50 text-amber-700"
-        : tone === "rose"
-          ? "bg-rose-50 text-rose-700"
-          : "bg-gray-100 text-gray-700";
-
   return (
-    <div className={`rounded-xl px-3 py-3 ${toneClass}`}>
-      <div className="text-xs font-semibold">{label}</div>
-      <div className="mt-1 text-lg font-bold">{value}</div>
+    <div className="rounded-xl border border-gray-100 bg-gray-50/40 px-3 py-2 text-center text-gray-600">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{label}</div>
+      <div className="mt-1 text-base font-bold text-gray-800">{value}</div>
     </div>
   );
 }

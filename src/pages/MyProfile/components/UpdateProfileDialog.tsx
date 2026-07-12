@@ -1,14 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  CircularProgress,
-  Alert,
-} from "@mui/material";
+import { Dialog } from "@mui/material";
+import { X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { loadProfileByUserId } from "../../../redux/ProfileReducer";
 import { AppDispatch, RootState } from "../../../redux/store";
@@ -38,6 +30,7 @@ import {
 } from "../../../services/OnboardingService";
 import { updateProfile } from "../../../services/ProfileService";
 import { apiFetch } from "../../../config/apiClient";
+import { toast } from "react-toastify";
 const API_BASE_URL = "http://localhost:8082/api";
 
 function convertFreeTimeFromProfile(profile: ProfileViewModel): FreeTime {
@@ -261,7 +254,7 @@ export default function UpdateProfileDialog({
           .map((slot) => slot.subject.subjectCode)
           .concat(
             dataSource.enrollments?.map((item) => item.subject.subjectCode) ||
-              [],
+            [],
           ) || [],
       ),
     ).filter((code) => code && code !== mainSubjectCode);
@@ -322,8 +315,11 @@ export default function UpdateProfileDialog({
     setCohortsError("");
     try {
       const res = await apiFetch<Cohort[]>("/cohorts", { method: "GET" }, API_BASE_URL);
-      if (!res.success) throw new Error(res.message || "Failed to load cohorts");
-      setCohorts(Array.isArray(res.data) ? res.data : []);
+      const isRawArray = Array.isArray(res);
+      const success = isRawArray ? true : res.success;
+      const cohortsData = isRawArray ? (res as any) : res.data;
+      if (!success) throw new Error((res as any).message || "Failed to load cohorts");
+      setCohorts(Array.isArray(cohortsData) ? cohortsData : []);
     } catch (error) {
       setCohorts([]);
       setCohortsError(
@@ -355,8 +351,11 @@ export default function UpdateProfileDialog({
         { method: "GET" },
         API_BASE_URL
       );
-      if (!res.success) throw new Error(res.message || "Failed to load study plan");
-      setStudyPlan(res.data);
+      const isRawObject = res && (res as any).success === undefined;
+      const success = isRawObject ? true : res.success;
+      const planData = (isRawObject ? res : res.data) as StudyPlan;
+      if (!success) throw new Error((res as any).message || "Failed to load study plan");
+      setStudyPlan(planData);
     } catch (error) {
       setStudyPlan(null);
       setStudyPlanError(
@@ -385,8 +384,10 @@ export default function UpdateProfileDialog({
         { method: "GET" },
         API_BASE_URL
       );
-      if (!res.success) throw new Error(res.message || "Failed to load options");
-      setStudyPlanOptions(res.data);
+      const success = res ? res.success : false;
+      const optionsData = (res && (res as any).data !== undefined ? (res as any).data : res) as StudyPlanOptions;
+      if (!success) throw new Error((res as any).message || "Failed to load options");
+      setStudyPlanOptions(optionsData);
     } catch (error) {
       setStudyPlanOptions(null);
       setStudyPlanOptionsError(
@@ -420,8 +421,11 @@ export default function UpdateProfileDialog({
         { method: "GET" },
         API_BASE_URL
       );
-      if (!res.success) throw new Error(res.message || "Failed to load subjects");
-      return res.data;
+      const isRawObject = res && (res as any).success === undefined;
+      const success = isRawObject ? true : res.success;
+      const planData = (isRawObject ? res : res.data) as StudyPlan;
+      if (!success) throw new Error((res as any).message || "Failed to load subjects");
+      return planData;
     },
     [],
   );
@@ -503,9 +507,9 @@ export default function UpdateProfileDialog({
         if (key === "enrolledModules") {
           const normalizedEnrolledModules = Array.isArray(value)
             ? value.filter(
-                (moduleCode): moduleCode is string =>
-                  typeof moduleCode === "string",
-              )
+              (moduleCode): moduleCode is string =>
+                typeof moduleCode === "string",
+            )
             : [];
 
           const nextSelectedModules = [
@@ -590,9 +594,11 @@ export default function UpdateProfileDialog({
         if (result.success) {
           const userId = Number(localStorage.getItem("userId"));
           dispatch(loadProfileByUserId(userId));
+          toast.success("Cập nhật thông tin thành công");
           onClose();
         } else {
           setSubmitError(result.error || "Lỗi khi lưu dữ liệu");
+          toast.error(result.error || "Lỗi khi lưu dữ liệu");
         }
       } catch (error) {
         setSubmitting(false);
@@ -687,52 +693,163 @@ export default function UpdateProfileDialog({
     );
   };
 
+  const DIALOG_STEPS = [
+    { id: 1, name: "Bắt đầu" },
+    { id: 2, name: "Cá nhân" },
+    { id: 3, name: "Mục tiêu" },
+    { id: 4, name: "Môn học" },
+    { id: 5, name: "Lịch học" },
+    { id: 6, name: "Kết quả" },
+    { id: 7, name: "Xem lại" },
+  ];
+
+  const stepSubtitles: Record<number, string> = {
+    1: "Bắt đầu cập nhật hồ sơ",
+    2: "Thông tin cá nhân cơ bản",
+    3: goalSub === 1 ? "Thiết lập mục tiêu học tập" : "Lựa chọn phương thức ghép cặp",
+    4: "Kế hoạch học tập & Môn học học kỳ này",
+    5: "Thời gian rảnh của bạn trong tuần",
+    6: "Điểm trung bình tích lũy & Số tín chỉ",
+    7: "Xem lại tất cả thông tin",
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle sx={{ pb: 1 }}>
-        {stepTitle()}
-        {step === 3 && (
-          <Box sx={{ mt: 0.5, fontSize: "0.875rem", color: "#888" }}>
-            {goalSub === 1
-              ? "Bước 1/2 – Chọn trình độ"
-              : "Bước 2/2 – Chọn phương thức"}
-          </Box>
-        )}
-      </DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      PaperProps={{
+        sx: {
+          borderRadius: "24px",
+          overflow: "hidden",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)",
+        },
+      }}
+    >
+      <div className="flex flex-col max-h-[90vh] bg-slate-50/50">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4 shrink-0 relative">
+          <h2 className="text-lg font-bold text-gray-800">Cập nhật hồ sơ học tập</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-xl transition-all"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-      <DialogContent sx={{ minHeight: 400, py: 3 }}>
-        {submitting && (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-            <CircularProgress />
-          </Box>
-        )}
-        {submitError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {submitError}
-          </Alert>
-        )}
-        {!submitting && (
-          <Box sx={{ fontSize: "0.875rem" }}>{renderContent()}</Box>
-        )}
-      </DialogContent>
+        <div className="border-b border-gray-100 bg-gray-50/50 py-3 shrink-0 select-none">
+          <div className="mx-auto max-w-xl px-10 relative">
+            <div className="absolute top-[14px] left-[40px] right-[40px] h-0.5 bg-gray-200 z-0" />
+            <div
+              className="absolute top-[14px] left-[40px] h-0.5 bg-orange-500 transition-all duration-300 z-0"
+              style={{
+                width: `calc(${(step - 1) / 6} * (100% - 80px))`,
+              }}
+            />
 
-      <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button onClick={onClose} disabled={submitting}>
-          Huỷ
-        </Button>
-        {step > 1 && (
-          <Button onClick={handleBack} disabled={submitting}>
-            Quay lại
-          </Button>
-        )}
-        <Button
-          variant="contained"
-          onClick={handleNext}
-          disabled={!canProceed() || submitting}
-        >
-          {step === 7 ? "Lưu" : "Tiếp theo"}
-        </Button>
-      </DialogActions>
+            <div className="flex justify-between items-center relative z-10">
+              {DIALOG_STEPS.map((s) => {
+                const active = step === s.id;
+                const completed = step > s.id;
+                return (
+                  <div key={s.id} className="flex flex-col items-center gap-1">
+                    <span
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${active
+                        ? "bg-orange-500 text-white scale-105 shadow-sm ring-4 ring-orange-100"
+                        : completed
+                          ? "bg-orange-100 text-orange-600 font-bold"
+                          : "bg-white border border-gray-300 text-gray-400"
+                        }`}
+                    >
+                      {s.id}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold transition-colors duration-300 ${active
+                        ? "text-orange-600 font-bold"
+                        : completed
+                          ? "text-gray-600"
+                          : "text-gray-400"
+                        }`}
+                    >
+                      {s.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
+          <div>
+            <span className="text-xs font-bold text-orange-600 uppercase tracking-wider">
+              {step === 3 && goalSub === 2 ? "Bước 3 - Phần 2 / 7" : `Bước ${step} / 7`}
+            </span>
+            <h3 className="text-sm font-bold text-gray-700 mt-0.5">
+              {stepTitle()}
+            </h3>
+          </div>
+          <div className="text-[11px] text-gray-500 bg-gray-50 border border-gray-200 px-3 py-1 rounded-xl font-medium">
+            {stepSubtitles[step]}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 min-h-[350px]">
+          {submitting && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+              <span className="text-sm font-semibold text-gray-500">Đang xử lý hồ sơ...</span>
+            </div>
+          )}
+          {submitError && (
+            <div className="flex items-center gap-2.5 p-4 mb-4 text-sm text-red-800 border border-red-200 rounded-2xl bg-red-50 font-medium">
+              <span>{submitError}</span>
+            </div>
+          )}
+          {!submitting && (
+            <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6">
+              <div className="text-sm text-gray-800">{renderContent()}</div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 pt-5 pb-6 border-t border-gray-150 flex items-center justify-between bg-white shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all"
+          >
+            Huỷ
+          </button>
+          <div className="flex items-center gap-2">
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={submitting}
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-200 rounded-xl transition-all"
+              >
+                Quay lại
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!canProceed() || submitting}
+              className={`px-6 py-2.5 text-sm font-bold text-white rounded-xl shadow-sm transition-all flex items-center gap-2 ${!canProceed() || submitting
+                ? "bg-blue-200 text-white cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+                }`}
+            >
+              {step === 7 ? "Lưu thay đổi" : "Tiếp theo"}
+            </button>
+          </div>
+        </div>
+      </div>
     </Dialog>
   );
 }

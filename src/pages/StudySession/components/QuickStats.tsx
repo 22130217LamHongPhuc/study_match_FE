@@ -51,19 +51,21 @@ export function QuickStats({ sessions }: QuickStatsProps) {
   ];
 
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {stats.map((item) => (
         <div
           key={item.label}
-          className="rounded-xl border border-gray-200 bg-white p-5"
+          className="rounded-xl border border-gray-200 bg-white p-5 text-left transition-all duration-200 hover:shadow-sm"
         >
           <div
-            className={`mb-4 inline-flex rounded-lg px-3 py-1.5 text-sm font-semibold ${item.bg} ${item.text}`}
+            className="mb-4 inline-flex rounded-lg px-3 py-1.5 text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200"
           >
             {item.label}
           </div>
-          <div className="text-3xl font-bold text-gray-800">{item.value}</div>
-          <p className="mt-1 text-sm text-gray-500">{item.helper}</p>
+          <div>
+            <div className="text-3xl font-bold text-gray-800">{item.value}</div>
+            <p className="mt-1 text-sm text-gray-500">{item.helper}</p>
+          </div>
         </div>
       ))}
     </section>

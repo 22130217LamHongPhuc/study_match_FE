@@ -79,7 +79,7 @@ export function AdminReportDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+      className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-label="Chi tiết báo cáo"
@@ -94,9 +94,7 @@ export function AdminReportDetailModal({
       <div className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-sand-200 bg-white shadow-xl">
         <div className="flex shrink-0 items-start justify-between border-b border-sand-200 px-4 py-3">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-amber-50 text-amber-600">
-              <FileWarning size={18} />
-            </div>
+
 
             <div className="min-w-0">
               <h3 className="text-lg font-semibold text-sand-900">
