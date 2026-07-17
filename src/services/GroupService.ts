@@ -1,8 +1,10 @@
 import { apiFetch } from "../config/apiClient";
 import { APIResponseData, StatusCode } from "../config/APIResponse";
 
-const API_BASE_URL_PROFILE = "http://localhost:8082/api";
-const API_BASE_URL_GROUP = "http://localhost:8080";
+import { BASE_URL } from "../config/BaseConfig";
+
+const API_BASE_URL_PROFILE = BASE_URL + "/api";
+const API_BASE_URL_GROUP = BASE_URL;
 
 export type Subject = {
   subjectId: number;

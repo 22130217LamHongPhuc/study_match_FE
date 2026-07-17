@@ -1,8 +1,9 @@
 import { ProfileApiResponse } from "../pages/MyProfile/types";
 import type { OnboardingSubmissionPayload } from "./OnboardingService";
+import { BASE_URL } from "../config/BaseConfig";
 import { apiFetch } from "../config/apiClient";
 
-const PROFILE_API_BASE_URL = "http://localhost:8082/api";
+const PROFILE_API_BASE_URL = BASE_URL + "/api";
 
 export async function getProfileByUserId(
   userId: number,
@@ -44,7 +45,7 @@ export async function updateProfile(
     if (!res || res.success === false) {
       throw new Error(
         res?.message ||
-          `API Error updating profile`,
+        `API Error updating profile`,
       );
     }
 

@@ -1,0 +1,56 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'API_BASE_URL=${_API_BASE_URL}'
+      - '--build-arg'
+      - 'SOCKET_URL=${_SOCKET_URL}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_TAG}'
+      - '.'
+
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_TAG}'
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE}'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_TAG}'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--service-account'
+      - 'studymatch-runtime@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--port'
+      - '8080'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '2'
+      - '--allow-unauthenticated'
+      - '--quiet'
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_TAG}'
+
+substitutions:
+  _REGION: asia-southeast1
+  _REPOSITORY: studymatch-images
+  _SERVICE: studymatch-frontend
+  _TAG: latest
+  _API_BASE_URL: https://api-gateway-36417266010.asia-southeast1.run.app
+  _SOCKET_URL: wss://api-gateway-36417266010.asia-southeast1.run.app/ws
+
+options:
+  logging: CLOUD_LOGGING_ONLY

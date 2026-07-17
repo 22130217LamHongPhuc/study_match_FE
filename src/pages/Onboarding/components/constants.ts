@@ -36,8 +36,8 @@ export const LEARNING_LEVELS: GoalConfig[] = [
   {
     key: "Survivor",
     icon: Shield,
-    title: "Cần củng cố nền tảng",
-    desc: "Hiện tại bạn đang gặp khó khăn với môn học, cần nắm lại kiến thức cơ bản và tìm bạn học có thể hỗ trợ, giải thích khi cần.",
+    title: "Cần nắm lại kiến thức cơ bản",
+    desc: "Bạn muốn tập trung hiểu lại những phần quan trọng của môn học và cần sự hỗ trợ khi gặp khó khăn.",
     ring: "ring-red-400",
     bg: "bg-red-50",
     border: "border-red-300",
@@ -47,8 +47,8 @@ export const LEARNING_LEVELS: GoalConfig[] = [
   {
     key: "Passive Learner",
     icon: BookOpen,
-    title: "Học ở mức cơ bản",
-    desc: "Hiện tại bạn học theo lịch, chưa chủ động nhiều và cần bạn học cùng để nhắc nhở, tạo động lực, duy trì thói quen học tập.",
+    title: "Học ở mức vừa phải",
+    desc: "Bạn muốn học ổn định theo tiến độ và cần thêm động lực để duy trì thói quen học tập.",
     ring: "ring-yellow-400",
     bg: "bg-yellow-50",
     border: "border-yellow-300",
@@ -58,8 +58,8 @@ export const LEARNING_LEVELS: GoalConfig[] = [
   {
     key: "Standard Learner",
     icon: NotebookPen,
-    title: "Học ổn định",
-    desc: "Hiện tại bạn có nền tảng khá ổn, học đều đặn và muốn tìm bạn để cùng thảo luận, ôn tập, chia sẻ tài liệu và tiến bộ hơn.",
+    title: "Học chắc và tiến bộ",
+    desc: "Bạn muốn hiểu bài vững hơn, học đều đặn và cải thiện kết quả qua việc ôn tập và trao đổi.",
     ring: "ring-blue-400",
     bg: "bg-blue-50",
     border: "border-blue-300",
@@ -69,8 +69,8 @@ export const LEARNING_LEVELS: GoalConfig[] = [
   {
     key: "High Achiever",
     icon: Rocket,
-    title: "Học tốt / định hướng điểm cao",
-    desc: "Hiện tại bạn có năng lực học tập tốt, chủ động đặt mục tiêu cao và muốn kết nối với những bạn có cùng tinh thần phấn đấu.",
+    title: "Đặt mục tiêu điểm cao",
+    desc: "Bạn muốn học tốt hơn, chủ động đặt mục tiêu cao và phát triển tối đa khả năng của mình.",
     ring: "ring-green-400",
     bg: "bg-green-50",
     border: "border-green-300",
@@ -89,8 +89,8 @@ export const VALID_MODES: Record<StudyGoal, StudyMode[]> = {
 export const MODES: Record<StudyMode, ModeConfig> = {
   mutual_support: {
     icon: Handshake,
-    label: "Học cùng bạn ngang trình độ",
-    desc: "Ghép với những bạn có mức học tập gần giống bạn để dễ trao đổi, cùng ôn bài và tiến bộ từng bước.",
+    label: "Học cùng người ngang mức",
+    desc: "Bạn sẽ học với những người có mục tiêu và trình độ tương tự để dễ trao đổi, cùng ôn tập và tiến bộ từng bước.",
     bg: "bg-blue-50",
     border: "border-blue-300",
     text: "text-blue-700",
@@ -98,8 +98,8 @@ export const MODES: Record<StudyMode, ModeConfig> = {
 
   peer_support: {
     icon: TrendingUp,
-    label: "Học cùng bạn khá hơn",
-    desc: "Ghép với những bạn học tốt hơn một chút để bạn có thêm định hướng, được hỗ trợ và cải thiện kết quả học tập.",
+    label: "Học với người khá hơn",
+    desc: "Bạn sẽ học với những người tốt hơn một chút để được hướng dẫn và cải thiện kết quả học tập.",
     bg: "bg-violet-50",
     border: "border-violet-300",
     text: "text-violet-700",
@@ -107,8 +107,8 @@ export const MODES: Record<StudyMode, ModeConfig> = {
 
   challenge: {
     icon: Zap,
-    label: "Học cùng bạn học tốt",
-    desc: "Ghép với những bạn có năng lực học tập nổi bật để tạo động lực, đặt mục tiêu cao hơn và phát triển bản thân.",
+    label: "Học với người rất giỏi",
+    desc: "Bạn sẽ học cùng những người học tốt để tạo động lực, thử thách bản thân và phát triển nhanh hơn.",
     bg: "bg-orange-50",
     border: "border-orange-300",
     text: "text-orange-700",
@@ -116,8 +116,8 @@ export const MODES: Record<StudyMode, ModeConfig> = {
 
   support: {
     icon: Sprout,
-    label: "Hỗ trợ bạn khác",
-    desc: "Ghép với những bạn cần hỗ trợ hơn bạn, giúp bạn chia sẻ kiến thức, ôn lại bài và học chắc hơn.",
+    label: "Hỗ trợ người khác",
+    desc: "Bạn sẽ giúp đỡ những người cần hỗ trợ, qua đó ôn lại kiến thức và hiểu bài sâu hơn.",
     bg: "bg-teal-50",
     border: "border-teal-300",
     text: "text-teal-700",

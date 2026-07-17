@@ -23,7 +23,9 @@ import type {
   ScheduleType,
 } from "../pages/admin/AdminSchedulesPage/types";
 
-const API_BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../config/BaseConfig";
+
+const API_BASE_URL = BASE_URL;
 
 export interface PageResponse<T> {
   content: T[];
