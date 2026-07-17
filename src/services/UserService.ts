@@ -35,7 +35,7 @@ export interface UserBasicInfo {
   username: string | null;
 }
 
-const API_BASE_URL_USER = "http://localhost:8080";
+const API_BASE_URL_USER = BASE_URL;
 
 export async function getUserById(
   userId: number,

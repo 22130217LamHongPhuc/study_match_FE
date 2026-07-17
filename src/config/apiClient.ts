@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { APIResponseData, StatusCode } from "./APIResponse";
 
-const API_BASE_URL = "http://localhost:8085/api";
+const API_BASE_URL = (process.env.API_BASE_URL || process.env.REACT_APP_API_BASE_URL || "http://localhost:8080") + "/api";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

@@ -1,5 +1,5 @@
 "use strict";
-const API_BASE_URL2 = "http://localhost:8080"; // sửa lại nếu cần
+const API_BASE_URL2 = process.env.API_BASE_URL || process.env.REACT_APP_API_BASE_URL || "http://localhost:8080"; // sửa lại nếu cần
 const SUBJECT_POOL_YEAR4_SEM2_K48 = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69];
 const REGIONS = [
   "Thành phố Hồ Chí Minh",

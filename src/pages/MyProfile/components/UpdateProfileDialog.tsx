@@ -31,7 +31,9 @@ import {
 import { updateProfile } from "../../../services/ProfileService";
 import { apiFetch } from "../../../config/apiClient";
 import { toast } from "react-toastify";
-const API_BASE_URL = "http://localhost:8082/api";
+import { BASE_URL } from "../../../config/BaseConfig";
+
+const API_BASE_URL = BASE_URL + "/api";
 
 function convertFreeTimeFromProfile(profile: ProfileViewModel): FreeTime {
   const freeTime = initFreeTime();

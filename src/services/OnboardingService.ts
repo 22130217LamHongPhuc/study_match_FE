@@ -10,7 +10,9 @@ import {
   SlotId,
 } from "../pages/Onboarding/components/types";
 
-const API_BASE_URL2 = "http://localhost:8082/api";
+import { BASE_URL } from "../config/BaseConfig";
+
+const API_BASE_URL2 = BASE_URL + "/api";
 
 export interface SubjectScheduleSlot {
   subjectId: number | string;

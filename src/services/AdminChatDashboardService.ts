@@ -1,7 +1,9 @@
 import { apiFetch } from "../config/apiClient";
 import type { APIResponseData } from "../config/APIResponse";
 
-const CHAT_SERVICE_BASE_URL = "http://localhost:8089";
+import { BASE_URL } from "../config/BaseConfig";
+
+const CHAT_SERVICE_BASE_URL = BASE_URL;
 
 export type AdminChatSummary = {
   totalMessages: number;

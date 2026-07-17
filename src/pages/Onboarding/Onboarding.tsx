@@ -28,7 +28,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../../config/apiClient";
 
-const API_BASE_URL = "http://localhost:8082/api";
+import { BASE_URL } from "../../config/BaseConfig";
+
+const API_BASE_URL = BASE_URL + "/api";
 
 export default function OnboardingFlow() {
   const [step, setStep] = useState<number>(1);

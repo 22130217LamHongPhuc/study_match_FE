@@ -14,7 +14,9 @@ import type {
 import { apiFetch } from "../../../config/apiClient";
 import type { APIResponseData } from "../../../config/APIResponse";
 
-const API_BASE_URL_MATCHING = "http://localhost:8080";
+import { BASE_URL } from "../../../config/BaseConfig";
+
+const API_BASE_URL_MATCHING = BASE_URL;
 
 type MatchingApiResult<T> = APIResponseData<T> | T;
 
