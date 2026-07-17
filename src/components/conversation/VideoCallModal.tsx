@@ -68,7 +68,7 @@ export default function VideoCallModal({
                         }}
                     />
                     <Typography sx={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>
-                        {name || "Nguoi dung"}
+                        {name }
                     </Typography>
                     <Typography sx={{ mt: 0.75, fontSize: 14, color: "#64748b" }}>
                         {statusText(mode, callType)}

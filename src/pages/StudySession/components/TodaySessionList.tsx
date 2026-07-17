@@ -61,11 +61,11 @@ export function TodaySessionList({
             key={session.id}
             type="button"
             onClick={() => onSelectSession(session)}
-            className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-left transition hover:border-orange-200 hover:bg-orange-50/40"
+            className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-left transition hover:border-blue-200 hover:bg-blue-50/40"
           >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-bold text-orange-600">
+                <div className="text-sm font-bold text-blue-600">
                   {formatTimeRange(session.startTime, session.endTime)}
                 </div>
                 <div className="mt-1 text-base font-bold text-gray-800">

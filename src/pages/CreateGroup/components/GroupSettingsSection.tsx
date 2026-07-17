@@ -34,7 +34,7 @@ export default function GroupSettingsSection({
           </label>
 
           <input
-            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-orange-500"
+            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-blue-500"
             max={10}
             min={3}
             type="range"
@@ -47,7 +47,7 @@ export default function GroupSettingsSection({
               <span
                 key={num}
                 className={
-                  num === maxMembers ? "font-semibold text-orange-600" : ""
+                  num === maxMembers ? "font-semibold text-blue-600" : ""
                 }
               >
                 {num}
@@ -104,9 +104,9 @@ function VisibilityOption({
   onChange,
 }: VisibilityOptionProps) {
   return (
-    <label className="flex cursor-pointer items-center gap-4 rounded-xl border-2 border-slate-100 bg-slate-50/30 p-4 transition-colors hover:bg-slate-50 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+    <label className="flex cursor-pointer items-center gap-4 rounded-xl border-2 border-slate-100 bg-slate-50/30 p-4 transition-colors hover:bg-slate-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
       <input
-        className="text-orange-600 focus:ring-orange-200"
+        className="text-blue-600 focus:ring-blue-200"
         name="visibility"
         value={value}
         type="radio"

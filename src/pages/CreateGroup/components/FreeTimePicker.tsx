@@ -57,7 +57,7 @@ export default function FreeTimePicker({
           hợp.
         </p>
         {totalSelected > 0 && (
-          <span className="whitespace-nowrap rounded-full border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-700">
+          <span className="whitespace-nowrap rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">
             {totalSelected} slot
           </span>
         )}
@@ -80,9 +80,9 @@ export default function FreeTimePicker({
                     >
                       <Icon
                         size={18}
-                        className="text-slate-500 group-hover:text-orange-600"
+                        className="text-slate-500 group-hover:text-blue-600"
                       />
-                      <span className="text-xs font-semibold text-slate-700 group-hover:text-orange-600">
+                      <span className="text-xs font-semibold text-slate-700 group-hover:text-blue-600">
                         {s.label}
                       </span>
                       <span className="text-xs text-slate-400">{s.time}</span>
@@ -104,12 +104,12 @@ export default function FreeTimePicker({
                   <td className="py-2 pr-3">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`text-sm font-semibold ${isWeekend ? "text-orange-600" : "text-slate-700"}`}
+                        className={`text-sm font-semibold ${isWeekend ? "text-blue-600" : "text-slate-700"}`}
                       >
                         {d.short}
                       </span>
                       {dayCount > 0 && (
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-600 text-xs font-bold text-white">
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
                           {dayCount}
                         </span>
                       )}
@@ -126,8 +126,8 @@ export default function FreeTimePicker({
                           className={
                             "w-full rounded-xl border-2 py-2.5 text-xs font-semibold transition-colors " +
                             (active
-                              ? "border-orange-400 bg-orange-500 text-white"
-                              : "border-slate-200 bg-white text-slate-500 hover:border-orange-300 hover:bg-orange-50")
+                              ? "border-blue-400 bg-blue-500 text-white"
+                              : "border-slate-200 bg-white text-slate-500 hover:border-blue-300 hover:bg-blue-50")
                           }
                         >
                           {active ? "✓" : "—"}

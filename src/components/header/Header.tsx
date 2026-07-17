@@ -49,7 +49,9 @@ import {
   getPendingGroupInvitations,
   acceptGroupInvitation,
   rejectGroupInvitation,
-  GroupInvitationResponse
+  GroupInvitationResponse,
+  getGroupsByUserId,
+  getGroupInvitations
 } from "../../services/GroupService";
 
 interface HeaderProps {
@@ -62,6 +64,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   const [popoverAnchor, setPopoverAnchor] = useState<null | HTMLElement>(null);
   const [pendingRequests, setPendingRequests] = useState<(FriendRequestDto & { sender?: FriendUser })[]>([]);
   const [pendingGroupInvitations, setPendingGroupInvitations] = useState<GroupInvitationResponse[]>([]);
+  const [groupJoinRequests, setGroupJoinRequests] = useState<GroupInvitationResponse[]>([]);
   const [pendingSessions, setPendingSessions] = useState<StudySessionResponse[]>([]);
   const [rejectedInvitations, setRejectedInvitations] = useState<{ groupName: string; inviteeName: string; inviteeUserId: number; timestamp: number }[]>([]);
   const [kickModalOpen, setKickModalOpen] = useState(false);
@@ -121,6 +124,52 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     }
   };
 
+  const fetchGroupJoinRequests = async () => {
+    const currentUserId = Number(localStorage.getItem("userId"));
+    if (!currentUserId) return;
+    try {
+      const groupsRes = await getGroupsByUserId(currentUserId);
+      if (groupsRes.success && Array.isArray(groupsRes.data)) {
+        const groups = groupsRes.data;
+        const results = await Promise.allSettled(
+          groups.map((group) => getGroupInvitations(group.id)),
+        );
+        const nextRequests = results
+          .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
+          .flatMap((result) => result.value.data ?? [])
+          .filter(
+            (invitation) =>
+              invitation.status === "PENDING" &&
+              invitation.inviterUserId === invitation.inviteeUserId,
+          );
+
+        const requestsToPopulate = nextRequests.filter(r => !r.inviterName || !r.inviterAvatar);
+        if (requestsToPopulate.length > 0) {
+          const inviterIds = Array.from(new Set(requestsToPopulate.map(r => r.inviterUserId)));
+          try {
+            const profiles = await loadFriendProfilesService(inviterIds);
+            nextRequests.forEach(req => {
+              const p = profiles.find(profile => profile.userId === req.inviterUserId);
+              if (p) {
+                req.inviterName = p.fullName || req.inviterName;
+                req.inviterAvatar = p.avatarUrl || req.inviterAvatar;
+              }
+            });
+          } catch (profileErr) {
+            console.error("Failed to load request profiles in header:", profileErr);
+          }
+        }
+
+        setGroupJoinRequests(nextRequests);
+      } else {
+        setGroupJoinRequests([]);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách yêu cầu tham gia nhóm:", error);
+      setGroupJoinRequests([]);
+    }
+  };
+
   const fetchPendingRequests = async () => {
     try {
       const data = await loadFriendRequestsService();
@@ -163,16 +212,19 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     if (!isLoggedIn) {
       setPendingRequests([]);
       setPendingGroupInvitations([]);
+      setGroupJoinRequests([]);
       return;
     }
 
     fetchPendingRequests();
     fetchPendingGroupInvitations();
+    fetchGroupJoinRequests();
     fetchPendingSessions();
 
     const interval = setInterval(() => {
       fetchPendingRequests();
       fetchPendingGroupInvitations();
+      fetchGroupJoinRequests();
       fetchPendingSessions();
     }, 10000);
 
@@ -191,6 +243,34 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         window.dispatchEvent(new Event("friend_status_updated"));
       } else if (newMess.event === "GROUP_INVITATION_RECEIVE") {
         fetchPendingGroupInvitations();
+        fetchGroupJoinRequests();
+        window.dispatchEvent(new Event("group_invitations_updated"));
+
+        const data = newMess.data as any;
+        const inviterName = data?.inviterName || "";
+        const groupName = data?.groupName || "nhóm học";
+        const inviteeUserId = data?.inviteeUserId ? Number(data.inviteeUserId) : 0;
+        const currentUserId = Number(localStorage.getItem("userId"));
+
+        if (inviteeUserId && inviteeUserId === currentUserId) {
+          toast.info(
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <span style={{ fontWeight: 600 }}>Lời mời vào nhóm mới!</span>
+              <span style={{ fontSize: "13px" }}>
+                {inviterName} mời bạn tham gia nhóm {groupName}
+              </span>
+            </div>,
+            {
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            }
+          );
+        } else {
+
+        }
       } else if (newMess.event === "STUDY_SESSION_CREATED") {
         fetchPendingSessions();
         const data = newMess.data as any;
@@ -249,6 +329,12 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         if (window.location.pathname.includes("/conversation")) {
           navigate("/conversation", { replace: true });
         }
+      } else if (newMess.event === "FORCE_LOGOUT" || newMess.event === "USER_LOCKED") {
+        const d = newMess.data as any;
+        const reason = d?.reason || "Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động bởi quản trị viên.";
+        import("../../config/apiClient").then(({ handleForcedLogout }) => {
+          handleForcedLogout(reason);
+        });
       }
     }
   }, [newMess]);
@@ -350,7 +436,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       const res = await acceptGroupInvitation(invitationId);
       if (res.success) {
         fetchPendingGroupInvitations();
+        fetchGroupJoinRequests();
         window.dispatchEvent(new Event("group_list_updated"));
+        window.dispatchEvent(new Event("group_invitations_updated"));
       } else {
         console.error(res.message || "Không thể chấp nhận lời mời.");
       }
@@ -364,6 +452,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       const res = await rejectGroupInvitation(invitationId);
       if (res.success) {
         fetchPendingGroupInvitations();
+        fetchGroupJoinRequests();
+        window.dispatchEvent(new Event("group_invitations_updated"));
       } else {
         console.error(res.message || "Không thể từ chối lời mời.");
       }
@@ -531,7 +621,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     <Badge
                       color="error"
                       variant="dot"
-                      invisible={pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0}
+                      invisible={pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && groupJoinRequests.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0}
                     >
                       <NotificationsActiveIcon
                         sx={{ color: "#2563eb", fontSize: "20px" }}
@@ -777,7 +867,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#eff6ff", color: "#2563eb" },
               }}
             >
               <PersonOutlineIcon
@@ -792,7 +882,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#eff6ff", color: "#2563eb" },
               }}
             >
               <SettingsOutlinedIcon
@@ -807,7 +897,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#eff6ff", color: "#2563eb" },
               }}
             >
               <HelpOutlineIcon
@@ -864,7 +954,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           >
             Thông báo
           </Typography>
-          {(pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length + validPendingSessions.length) > 0 && (
+          {(pendingRequests.length + pendingGroupInvitations.length + groupJoinRequests.length + rejectedInvitations.length + validPendingSessions.length) > 0 && (
             <Box
               sx={{
                 backgroundColor: '#ef4444',
@@ -881,13 +971,13 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 lineHeight: 1,
               }}
             >
-              {pendingRequests.length + pendingGroupInvitations.length + rejectedInvitations.length + validPendingSessions.length}
+              {pendingRequests.length + pendingGroupInvitations.length + groupJoinRequests.length + rejectedInvitations.length + validPendingSessions.length}
             </Box>
           )}
         </Box>
         <Divider sx={{ mb: 1, borderColor: "#e2e8f0" }} />
         <Box sx={{ flexGrow: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
-          {(pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0) ? (
+          {(pendingRequests.length === 0 && pendingGroupInvitations.length === 0 && groupJoinRequests.length === 0 && rejectedInvitations.length === 0 && validPendingSessions.length === 0) ? (
             <Box
               sx={{
                 py: 4,
@@ -967,7 +1057,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {req.sender?.fullName || "Người dùng StudyMatch"}
+                        {req.sender?.fullName || ""}
                       </Typography>
                       <Typography
                         sx={{
@@ -1212,6 +1302,94 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                       size="small"
                       variant="contained"
                       onClick={() => handleAcceptGroupInvitation(inv.invitationId)}
+                      sx={{
+                        fontSize: "11px",
+                        textTransform: "none",
+                        backgroundColor: "#2563eb",
+                        color: "#ffffff",
+                        borderRadius: "6px",
+                        padding: "2px 8px",
+                        minWidth: "60px",
+                        boxShadow: "none",
+                        "&:hover": {
+                          backgroundColor: "#1d4ed8",
+                          boxShadow: "none",
+                        },
+                      }}
+                    >
+                      Đồng ý
+                    </Button>
+                  </Box>
+                </Box>
+              ))}
+
+              {/* Group join requests */}
+              {groupJoinRequests.map((req) => (
+                <Box
+                  key={`gjr-${req.invitationId}`}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    backgroundColor: "#fafaf8",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Avatar
+                      src={req.inviterAvatar || undefined}
+                      sx={{ width: 36, height: 36 }}
+                    />
+                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          color: "#1f2937",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {req.inviterName}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "11px",
+                          color: "#6b7280",
+                        }}
+                      >
+                        Yêu cầu tham gia nhóm <strong>{req.groupName}</strong>
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleRejectGroupInvitation(req.invitationId)}
+                      sx={{
+                        fontSize: "11px",
+                        textTransform: "none",
+                        color: "#ef4444",
+                        borderColor: "#fca5a5",
+                        borderRadius: "6px",
+                        padding: "2px 8px",
+                        minWidth: "60px",
+                        "&:hover": {
+                          backgroundColor: "#fef2f2",
+                          borderColor: "#ef4444",
+                        },
+                      }}
+                    >
+                      Từ chối
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => handleAcceptGroupInvitation(req.invitationId)}
                       sx={{
                         fontSize: "11px",
                         textTransform: "none",

@@ -26,7 +26,7 @@ const menuItems = [
     path: "/admin/dashboard",
   },
   {
-    label: "Người dùng",
+    label: "",
     icon: Users,
     path: "/admin/users",
   },

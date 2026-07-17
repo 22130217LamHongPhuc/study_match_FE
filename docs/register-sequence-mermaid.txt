@@ -1,0 +1,37 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (Register Page)
+    participant AC as AuthController<br/>@PostMapping(/register)
+    participant UR as UserRepository
+    participant EV as EmailVerificationTokenService
+    participant MS as MailService
+    participant VC as VerifyEmailController<br/>GET /confirm
+
+    User->>FE: Enter fullName, email, password
+    FE->>FE: Validate form (name, password >= 6, confirm match)
+    FE->>AC: POST /api/auth/register (fullName, email, password)
+    AC->>UR: existsByEmail(email)
+    UR-->>AC: false / EMAIL_ALREADY_IN_USE
+
+    alt Register success
+        AC->>AC: BCrypt encode password<br/>create User (role=student, status=ACTIVE,<br/>emailVerified=false, onboarding=false)
+        AC->>UR: save(user)
+        UR-->>AC: User saved
+        AC->>EV: saveVerificationToken(user)
+        EV-->>AC: EmailVerificationToken (UUID, 15 min)
+        AC->>MS: sendMailTo(email, verify-email, link)
+        MS-->>AC: Email sent
+        AC-->>FE: ApiResponse (success=true)
+        FE-->>User: navigate(/login)
+        Note over AC,MS: JWT not issued on register<br/>AuthResponse is placeholder only
+    else Register failed
+        AC-->>FE: Error EMAIL_ALREADY_IN_USE
+        FE-->>User: toast.error
+    end
+
+    User->>VC: Click link in email
+    VC->>VC: GET /api/verify-email/confirm?token=
+    VC->>EV: verifyEmail(token)
+    EV->>EV: check token valid / not used / not expired<br/>set emailVerified=true, used=true
+    EV->>UR: save(user) emailVerified=true
+    VC-->>User: HTML success page -> button to /login

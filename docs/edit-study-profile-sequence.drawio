@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Kilo" version="24.0.0" type="device">
+  <diagram id="edit-study-profile" name="Edit Study Profile Sequence">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1500" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="StudyMatch - Sequence: Cap nhat ho so hoc tap" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="450" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1380" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="Frontend&#xa;(MyProfile / UpdateProfileDialog)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="50" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="Frontend&#xa;(MyProfile / UpdateProfileDialog)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1380" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="ProfileController&#xa;profile_service :8082" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="50" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="ProfileController&#xa;profile_service :8082" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1380" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="ProfileUpdateService&#xa;/ ProfileLoadService" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="50" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="ProfileUpdateService&#xa;/ ProfileLoadService" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="1380" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="Repositories / DB&#xa;(student_* tables)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="Repositories / DB&#xa;(student_* tables)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="1380" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="AI Recommender&#xa;:8000" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="50" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="AI Recommender&#xa;:8000" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="1380" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ll1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="110" as="sourcePoint"/>
+            <mxPoint x="65" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll2" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="100" as="sourcePoint"/>
+            <mxPoint x="230" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll3" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="100" as="sourcePoint"/>
+            <mxPoint x="480" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll4" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="100" as="sourcePoint"/>
+            <mxPoint x="720" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll5" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="955" y="100" as="sourcePoint"/>
+            <mxPoint x="955" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll6" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1175" y="100" as="sourcePoint"/>
+            <mxPoint x="1175" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bar2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="223" y="150" width="14" height="1180" as="geometry"/>
+        </mxCell>
+        <mxCell id="bar3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="473" y="200" width="14" height="1050" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1" value="Open /my-profile" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="160" as="sourcePoint"/>
+            <mxPoint x="223" y="160" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="GET /api/onboarding/profile/{userId}" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="237" y="210" as="sourcePoint"/>
+            <mxPoint x="473" y="210" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="loadUserProfile(userId)" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="487" y="250" as="sourcePoint"/>
+            <mxPoint x="720" y="250" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="load student_profiles + term + enrollments&#xa;+ free_time + schedule_slots" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="300" as="sourcePoint"/>
+            <mxPoint x="955" y="300" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="UserProfileFullResponse" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="955" y="350" as="sourcePoint"/>
+            <mxPoint x="237" y="350" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="Click Chinh sua - open UpdateProfileDialog" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="400" as="sourcePoint"/>
+            <mxPoint x="223" y="400" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="prefill FormData + load cohorts/study-plan&#xa;Steps 1-7: info, personal, goal, subjects,&#xa;freeTime, academic, review" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="237" y="450" as="sourcePoint"/>
+            <mxPoint x="237" y="530" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="340" y="450"/>
+              <mxPoint x="340" y="530"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="Click Luu thay doi&#xa;transformFormDataToPayload()" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="570" as="sourcePoint"/>
+            <mxPoint x="223" y="570" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="PUT /api/profile/update&#xa;Header: X-User-Id&#xa;Body: OnboardingSubmitRequest" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="237" y="630" as="sourcePoint"/>
+            <mxPoint x="473" y="630" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="updateProfile(userId, request)" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="487" y="680" as="sourcePoint"/>
+            <mxPoint x="720" y="680" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="validateRequest&#xa;(studentCode, fullName, cohortId,&#xa;termId, studyYearNo, semesterNo)" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="730" as="sourcePoint"/>
+            <mxPoint x="720" y="800" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="820" y="730"/>
+              <mxPoint x="820" y="800"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="find Cohort + ACTIVE AcademicTerm" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="840" as="sourcePoint"/>
+            <mxPoint x="955" y="840" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="upsert StudentProfile&#xa;(studentCode, fullName, gender,&#xa;ageGroup, region, cohort)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="900" as="sourcePoint"/>
+            <mxPoint x="955" y="900" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="upsert StudentTermProfile&#xa;(year, semester, avgScore, credits,&#xa;goal, mode, mainSubjectId)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="970" as="sourcePoint"/>
+            <mxPoint x="955" y="970" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="replace enrollments + freeTimeSlots&#xa;+ subjectScheduleSlots (delete+insert)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="1040" as="sourcePoint"/>
+            <mxPoint x="955" y="1040" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m16" value="afterCommit: POST /api/reload-recommender?userId=" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="1100" as="sourcePoint"/>
+            <mxPoint x="1175" y="1100" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="loadUserProfile -&gt; UserProfileFullResponse" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="1150" as="sourcePoint"/>
+            <mxPoint x="237" y="1150" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m18" value="toast success + reload profile + close dialog" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="223" y="1200" as="sourcePoint"/>
+            <mxPoint x="65" y="1200" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="130" y="1240" as="sourcePoint"/>
+            <mxPoint x="1260" y="1240" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fail" value="[Failed]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="160" y="1250" width="80" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="Missing required fields&#xa;Cohort not found&#xa;No ACTIVE term&#xa;Subject ID invalid" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="880" y="1255" width="150" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="m19" value="Error response" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="473" y="1290" as="sourcePoint"/>
+            <mxPoint x="237" y="1290" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m20" value="toast error" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="223" y="1330" as="sourcePoint"/>
+            <mxPoint x="65" y="1330" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

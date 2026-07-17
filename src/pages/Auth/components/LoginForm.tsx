@@ -15,11 +15,13 @@ export default function LoginForm({
 }) {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg(null);
 
     try {
       const response: APIResponseData<AuthResponse> = await login(
@@ -48,16 +50,24 @@ export default function LoginForm({
         }
         navigate("/home");
       } else {
+        setErrorMsg(response.message || "Đăng nhập thất bại. Vui lòng thử lại");
         toast.error(response.message || "Đăng nhập thất bại. Vui lòng thử lại");
       }
     } catch (error) {
       console.error("Login error:", error);
+      setErrorMsg("Không thể kết nối đến máy chủ. Vui lòng thử lại sau.");
       setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {errorMsg && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600 font-medium animate-shake">
+          {errorMsg}
+        </div>
+      )}
+
       <InputField
         id="email"
         label="Email"
@@ -76,7 +86,7 @@ export default function LoginForm({
 
       <button
         type="submit"
-        className="w-full rounded-lg bg-green-600 py-3 text-base font-medium text-white transition hover:bg-green-700"
+        className="w-full rounded-lg bg-accent-500 py-3 text-base font-medium text-white transition hover:bg-accent-600"
       >
         Đăng nhập
       </button>

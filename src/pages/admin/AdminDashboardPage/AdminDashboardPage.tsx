@@ -111,7 +111,7 @@ function getGroupRisk(row: AdminChatGroupRisk) {
   if (row.hateMessages > 0 || rate >= 2) {
     return {
       label: "Cần theo dõi",
-      className: "bg-amber-50 text-amber-700 ring-amber-200",
+      className: "bg-blue-50 text-blue-700 ring-blue-200",
     };
   }
 
@@ -573,7 +573,7 @@ export default function AdminDashboardPage() {
       {
         label: "OFFENSIVE",
         value: summary.offensiveMessages,
-        color: "bg-amber-500",
+        color: "bg-blue-500",
       },
       {
         label: "HATE",
@@ -607,7 +607,7 @@ export default function AdminDashboardPage() {
       value: formatNumber(summary.groupsWithViolations),
       helper: `${formatNumber(summary.violatingMembers)} thành viên cần theo dõi`,
       icon: UsersRound,
-      className: "bg-amber-50 text-amber-700",
+      className: "bg-blue-50 text-blue-700",
     },
     {
       title: "HATE",
@@ -758,7 +758,7 @@ export default function AdminDashboardPage() {
                           {formatNumber(violations)} vi phạm
                         </div>
                       </td>
-                      <td className="py-3 pr-4 text-amber-700">
+                      <td className="py-3 pr-4 text-blue-700">
                         {formatNumber(group.offensiveMessages)}
                       </td>
                       <td className="py-3 pr-4 text-red-700">
@@ -836,7 +836,7 @@ export default function AdminDashboardPage() {
                     <div key={row.label} className="flex flex-1 flex-col gap-2">
                       <div className="flex h-24 items-end rounded bg-sand-50 px-1">
                         <div
-                          className="w-full rounded-t bg-amber-400"
+                          className="w-full rounded-t bg-blue-400"
                           style={{ height: `${height}%` }}
                         >
                           <div
@@ -982,7 +982,7 @@ export default function AdminDashboardPage() {
                                     <td className="py-2 pr-3 text-sand-700">
                                       {formatNumber(group.totalMessages)}
                                     </td>
-                                    <td className="py-2 pr-3 text-amber-700">
+                                    <td className="py-2 pr-3 text-blue-700">
                                       {formatNumber(group.offensiveMessages)}
                                     </td>
                                     <td className="py-2 pr-3 text-red-700">
@@ -1047,7 +1047,7 @@ export default function AdminDashboardPage() {
                         suggestion.includes("kick")
                           ? "bg-red-50 text-red-700"
                           : suggestion.includes("mute")
-                            ? "bg-amber-50 text-amber-700"
+                            ? "bg-blue-50 text-blue-700"
                             : "bg-sky-50 text-sky-700"
                       }`}
                     >
@@ -1062,11 +1062,11 @@ export default function AdminDashboardPage() {
                       </p>
                       <p className="text-[11px] text-sand-400">Tin</p>
                     </div>
-                    <div className="rounded bg-amber-50 px-2 py-2">
-                      <p className="text-sm font-semibold text-amber-700">
+                    <div className="rounded bg-blue-50 px-2 py-2">
+                      <p className="text-sm font-semibold text-blue-700">
                         {formatNumber(member.offensiveMessages)}
                       </p>
-                      <p className="text-[11px] text-amber-700">OFF</p>
+                      <p className="text-[11px] text-blue-700">OFF</p>
                     </div>
                     <div className="rounded bg-red-50 px-2 py-2">
                       <p className="text-sm font-semibold text-red-700">
@@ -1126,7 +1126,7 @@ export default function AdminDashboardPage() {
                     className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                       item.priority === "HIGH"
                         ? "bg-red-50 text-red-700"
-                        : "bg-amber-50 text-amber-700"
+                        : "bg-blue-50 text-blue-700"
                     }`}
                   >
                     {item.priority}
@@ -1193,7 +1193,7 @@ export default function AdminDashboardPage() {
                 groupsTab === tab
                   ? tab === "ACTIVE"
                     ? "border-emerald-500 text-emerald-700"
-                    : "border-amber-500 text-amber-700"
+                    : "border-blue-500 text-blue-700"
                   : "border-transparent text-sand-500 hover:text-sand-700"
               }`}
             >
@@ -1202,7 +1202,7 @@ export default function AdminDashboardPage() {
                 groupsTab === tab
                   ? tab === "ACTIVE"
                     ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700"
+                    : "bg-blue-100 text-blue-700"
                   : "bg-sand-100 text-sand-500"
               }`}>
                 {tab === "ACTIVE" ? activeGroupsCount : inactiveGroupsCount}
@@ -1294,9 +1294,9 @@ export default function AdminDashboardPage() {
                         <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
                           isActive
                             ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                            : "bg-amber-50 text-amber-700 ring-amber-200"
+                            : "bg-blue-50 text-blue-700 ring-blue-200"
                         }`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-amber-500"}`} />
+                          <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-blue-500"}`} />
                           {isActive ? "Hoạt động" : "Đã ẩn"}
                         </span>
                       </td>
@@ -1329,7 +1329,7 @@ export default function AdminDashboardPage() {
                                   );
                                 }
                               }}
-                              className="inline-flex h-7 items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100"
+                              className="inline-flex h-7 items-center gap-1 rounded-md border border-blue-300 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                               Ẩn
@@ -1538,7 +1538,7 @@ export default function AdminDashboardPage() {
                   <p className="text-xs font-medium uppercase text-sand-400">
                     OFFENSIVE
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-amber-700">
+                  <p className="mt-1 text-lg font-semibold text-blue-700">
                     {formatNumber(selectedViolationUser.offensiveMessages)}
                   </p>
                 </div>
@@ -1638,7 +1638,7 @@ export default function AdminDashboardPage() {
                               <td className="px-3 py-3 text-sand-700">
                                 {formatNumber(group.totalMessages)}
                               </td>
-                              <td className="px-3 py-3 text-amber-700">
+                              <td className="px-3 py-3 text-blue-700">
                                 {formatNumber(group.offensiveMessages)}
                               </td>
                               <td className="px-3 py-3 text-red-700">
@@ -1689,7 +1689,7 @@ export default function AdminDashboardPage() {
                     if (!s) return null;
                     const cfg: Record<string, string> = {
                       ACTIVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-                      INACTIVE: "bg-amber-50 text-amber-700 ring-amber-200",
+                      INACTIVE: "bg-blue-50 text-blue-700 ring-blue-200",
                       ARCHIVED: "bg-sand-100 text-sand-600 ring-sand-200",
                       DELETED: "bg-red-50 text-red-700 ring-red-200",
                     };
@@ -1731,7 +1731,7 @@ export default function AdminDashboardPage() {
                     type="button"
                     onClick={() => setConfirmDialog({ open: true, type: "hide" })}
                     disabled={groupHideLoading || groupDeleteLoading}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-3 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                     {groupHideLoading ? "Đang ẩn..." : "Ẩn nhóm"}
@@ -1770,15 +1770,15 @@ export default function AdminDashboardPage() {
               <div className={`mx-6 mt-4 flex items-start gap-3 rounded-lg border p-4 ${
                 confirmDialog.type === "delete"
                   ? "border-red-200 bg-red-50"
-                  : "border-amber-200 bg-amber-50"
+                  : "border-blue-200 bg-blue-50"
               }`}>
                 <div className="flex-1">
-                  <p className={`text-sm font-semibold ${confirmDialog.type === "delete" ? "text-red-800" : "text-amber-800"}`}>
+                  <p className={`text-sm font-semibold ${confirmDialog.type === "delete" ? "text-red-800" : "text-blue-800"}`}>
                     {confirmDialog.type === "delete"
                       ? `Xác nhận xóa nhóm "${selectedGroupDetail?.name || selectedGroupRisk.groupName}"?`
                       : `Xác nhận ẩn nhóm "${selectedGroupDetail?.name || selectedGroupRisk.groupName}"?`}
                   </p>
-                  <p className={`mt-1 text-xs ${confirmDialog.type === "delete" ? "text-red-600" : "text-amber-600"}`}>
+                  <p className={`mt-1 text-xs ${confirmDialog.type === "delete" ? "text-red-600" : "text-blue-600"}`}>
                     {confirmDialog.type === "delete"
                       ? "Hành động này không thể hoàn tác. Nhóm sẽ bị xóa vĩnh viễn."
                       : "Nhóm sẽ bị ẩn và thành viên không thể truy cập. Có thể kích hoạt lại sau."}
@@ -1796,7 +1796,7 @@ export default function AdminDashboardPage() {
                     type="button"
                     onClick={confirmDialog.type === "delete" ? handleDeleteSelectedGroup : handleHideSelectedGroup}
                     className={`h-8 rounded-lg px-3 text-xs font-medium text-white transition ${
-                      confirmDialog.type === "delete" ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700"
+                      confirmDialog.type === "delete" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
                     }`}
                   >
                     {confirmDialog.type === "delete" ? "Xóa" : "Ẩn nhóm"}
@@ -1830,21 +1830,21 @@ export default function AdminDashboardPage() {
                     {getViolationRate(getViolationCount(selectedGroupRisk), selectedGroupRisk.totalMessages)}%
                   </p>
                 </div>
-                <div className="rounded-lg bg-amber-50 p-3 text-center">
-                  <p className="text-[11px] font-medium uppercase text-amber-600">TV vi phạm</p>
-                  <p className="mt-1 text-xl font-bold text-amber-700">{formatNumber(selectedGroupRisk.violatingMembers)}</p>
+                <div className="rounded-lg bg-blue-50 p-3 text-center">
+                  <p className="text-[11px] font-medium uppercase text-blue-600">TV vi phạm</p>
+                  <p className="mt-1 text-xl font-bold text-blue-700">{formatNumber(selectedGroupRisk.violatingMembers)}</p>
                 </div>
               </div>
 
               {/* OFFENSIVE / HATE */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-3 rounded-lg border border-sand-200 px-4 py-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-50">
-                    <span className="text-xs font-bold text-amber-700">OFF</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-50">
+                    <span className="text-xs font-bold text-blue-700">OFF</span>
                   </div>
                   <div>
                     <p className="text-[11px] text-sand-400">OFFENSIVE</p>
-                    <p className="text-lg font-bold text-amber-700">{formatNumber(selectedGroupRisk.offensiveMessages)}</p>
+                    <p className="text-lg font-bold text-blue-700">{formatNumber(selectedGroupRisk.offensiveMessages)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-lg border border-sand-200 px-4 py-3">

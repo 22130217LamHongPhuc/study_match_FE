@@ -1,0 +1,18 @@
+sequenceDiagram
+    actor User
+    participant FE as FE (StudyConnectionPage<br/>/ useRecommendations)
+    participant GW as API Gateway :8080
+    participant URC as UserRecommendationController<br/>(ai_service)
+    participant AI as Python AI :8000
+
+    User->>FE: 1: open /recommendation<br/>tab suggested-friends
+    FE->>FE: 2: useRecommendations(userId)<br/>fetchRecommendations(page=1, limit=12)
+    FE->>GW: 3: GET /api/recommend-users<br/>?user_id={id}&page=1&limit=12
+    GW->>URC: 4: route AI-SERVICE
+    URC->>AI: 5: proxy GET<br/>http://localhost:8000/api/recommend-users<br/>?user_id=&page=&limit=
+    AI->>AI: 6: score candidates<br/>similarity_score, mode_bonus,<br/>shared_subject_score, final_score,<br/>match_percentage, reason_text
+    AI-->>FE: 7: { success, recommendations[], pagination }
+    FE->>FE: 8: mapToViewModel + sort by matchPercentage DESC<br/>render RecommendationCard grid
+    FE-->>User: 9: show suggested friends list
+
+    Note over FE,AI: Entry: /recommendation (limit=12)<br/>Home widget: same API (limit=2)<br/>Score engine: Python AI :8000 (external)

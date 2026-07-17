@@ -1,0 +1,18 @@
+sequenceDiagram
+    actor User
+    participant FE as FE (OnboardingFlow)
+    participant PS as profile_service
+    participant US as user_service
+    participant AI as AI :8000
+
+    User->>FE: 1: open /onboarding
+    FE->>PS: 2: GET /api/cohorts + study-plan
+    PS-->>FE: cohorts / studyPlan
+    FE->>FE: 3: fill wizard steps 1-7
+    FE->>PS: 4: POST /api/onboarding/submit
+    PS->>PS: 5: save StudentProfile + TermProfile<br/>+ enrollments + freeTime + schedules
+    PS->>AI: 6: POST /api/reload-recommender
+    PS-->>FE: success
+    FE->>US: 7: POST /api/auth/complete-onboarding/{userId}
+    US-->>FE: onboardingCompleted=true
+    FE-->>User: 8: navigate /home

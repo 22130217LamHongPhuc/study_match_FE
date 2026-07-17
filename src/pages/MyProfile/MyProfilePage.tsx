@@ -13,9 +13,9 @@ export default function MyProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-orange-50/30 px-4 py-5">
+      <div className="flex min-h-screen items-center justify-center bg-blue-50/30 px-4 py-5">
         <div className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-5">
-          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-orange-100 border-t-orange-500" />
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-100 border-t-blue-500" />
           <span className="text-sm font-medium text-gray-600">
             Đang tải hồ sơ học tập...
           </span>
@@ -26,7 +26,7 @@ export default function MyProfilePage() {
 
   if (!profileVm) {
     return (
-      <div className="min-h-screen bg-orange-50/30 px-4 py-5 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-blue-50/30 px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             Không có dữ liệu hồ sơ để hiển thị.
@@ -37,7 +37,7 @@ export default function MyProfilePage() {
   }
 
   return (
-    <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="min-h-full bg-blue-50/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-5xl space-y-6">
         <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

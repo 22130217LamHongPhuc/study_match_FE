@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Kilo" version="24.0.0" type="device">
+  <diagram id="create-session" name="Create Study Session Sequence">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1550" pageHeight="1550" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="StudyMatch - Sequence: Tao lich hoc (Study Session)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="480" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1420" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="Frontend&#xa;(CreateSessionModal)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="Frontend&#xa;(CreateSessionModal)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1420" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="StudySessionController&#xa;group_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="50" width="170" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="StudySessionController&#xa;group_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1420" width="170" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="StudySessionServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="StudySessionServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1420" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="DB&#xa;(study_sessions&#xa;+ participants)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="DB&#xa;(study_sessions&#xa;+ participants)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1420" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="ChatService&#xa;+ WebSocket" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="50" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="ChatService&#xa;+ WebSocket" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="1420" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g1" value="Invitee&#xa;(Header)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="50" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="Invitee&#xa;(Header)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1420" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ll1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="110" as="sourcePoint"/>
+            <mxPoint x="55" y="1420" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll2" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="100" as="sourcePoint"/>
+            <mxPoint x="195" y="1420" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll3" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="425" y="100" as="sourcePoint"/>
+            <mxPoint x="425" y="1420" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll4" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="100" as="sourcePoint"/>
+            <mxPoint x="655" y="1420" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll5" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="870" y="100" as="sourcePoint"/>
+            <mxPoint x="870" y="1420" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll6" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1075" y="100" as="sourcePoint"/>
+            <mxPoint x="1075" y="1420" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll7" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1260" y="100" as="sourcePoint"/>
+            <mxPoint x="1260" y="1420" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bar2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="188" y="150" width="14" height="1220" as="geometry"/>
+        </mxCell>
+        <mxCell id="bar4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="648" y="300" width="14" height="950" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1" value="Open /schedule - click + Tao lich" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="160" as="sourcePoint"/>
+            <mxPoint x="188" y="160" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="Load groups / friends list for picker" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="200" as="sourcePoint"/>
+            <mxPoint x="202" y="250" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="290" y="200"/>
+              <mxPoint x="290" y="250"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="Fill form: type, mode, title, time,&#xa;group/friend, location (if OFFLINE)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="290" as="sourcePoint"/>
+            <mxPoint x="188" y="290" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="FE validate: start &gt; now, end &gt; start,&#xa;duration 5min-8h, group/friend selected" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="340" as="sourcePoint"/>
+            <mxPoint x="202" y="400" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="300" y="340"/>
+              <mxPoint x="300" y="400"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alt" value="alt" style="shape=umlFrame;whiteSpace=wrap;html=1;width=50;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="430" width="1220" height="720" as="geometry"/>
+        </mxCell>
+        <mxCell id="altG" value="[GROUP - Hoc nhom]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="170" y="440" width="180" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m5" value="POST /api/study-sessions/group/{groupId}" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="480" as="sourcePoint"/>
+            <mxPoint x="425" y="480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="createSession(groupId, request)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="425" y="520" as="sourcePoint"/>
+            <mxPoint x="648" y="520" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="validateGroup: group exists, not DELETED,&#xa;creator ACTIVE member, end &gt; start" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="662" y="560" as="sourcePoint"/>
+            <mxPoint x="662" y="620" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="760" y="560"/>
+              <mxPoint x="760" y="620"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="save StudySession (status=SCHEDULED)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="662" y="660" as="sourcePoint"/>
+            <mxPoint x="870" y="660" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="createParticipantsForGroupSession&#xa;HOST=ACCEPTED, members=PENDING" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="662" y="720" as="sourcePoint"/>
+            <mxPoint x="870" y="720" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="notify-session-created (non-creators)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="662" y="770" as="sourcePoint"/>
+            <mxPoint x="1075" y="770" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="WS STUDY_SESSION_CREATED" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1075" y="810" as="sourcePoint"/>
+            <mxPoint x="1260" y="810" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div1" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="850" as="sourcePoint"/>
+            <mxPoint x="1330" y="850" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="altP" value="[USER_PAIR - Hoc 1-1]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="170" y="860" width="180" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m12" value="POST /api/study-sessions/pair" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="900" as="sourcePoint"/>
+            <mxPoint x="425" y="900" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="createPairSession(request)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="425" y="940" as="sourcePoint"/>
+            <mxPoint x="648" y="940" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="validate partner != self, end &gt; start" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="662" y="980" as="sourcePoint"/>
+            <mxPoint x="662" y="1020" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="760" y="980"/>
+              <mxPoint x="760" y="1020"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="save StudySession (groupId=null)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="662" y="1060" as="sourcePoint"/>
+            <mxPoint x="870" y="1060" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m16" value="HOST ACCEPTED + PARTNER PENDING" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="662" y="1100" as="sourcePoint"/>
+            <mxPoint x="870" y="1100" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="notify partner only" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="662" y="1140" as="sourcePoint"/>
+            <mxPoint x="1075" y="1140" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m18" value="StudySessionResponse" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="648" y="1190" as="sourcePoint"/>
+            <mxPoint x="202" y="1190" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m19" value="toast success + update list + close modal" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="188" y="1230" as="sourcePoint"/>
+            <mxPoint x="55" y="1230" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div2" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="1270" as="sourcePoint"/>
+            <mxPoint x="1330" y="1270" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fail" value="[Failed]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="170" y="1280" width="80" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="FE: invalid time/duration&#xa;BE: group not found / not member&#xa;partner self / end &lt;= start" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1285" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="m20" value="Error response" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="425" y="1320" as="sourcePoint"/>
+            <mxPoint x="202" y="1320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m21" value="toast / show error" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="188" y="1360" as="sourcePoint"/>
+            <mxPoint x="55" y="1360" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

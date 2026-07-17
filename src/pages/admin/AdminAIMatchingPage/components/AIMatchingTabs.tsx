@@ -241,7 +241,7 @@ export function AIMatchingTabs({
               <div className="space-y-3">
                 <DetailRow label="ID" value={detailAction.id} />
                 <DetailRow
-                  label="Người dùng"
+                  label=""
                   value={
                     <ActionUserDetail
                       userId={detailAction.userId}

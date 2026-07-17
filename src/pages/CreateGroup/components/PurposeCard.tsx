@@ -22,7 +22,7 @@ export default function PurposeCard({
   onChange,
 }: PurposeCardProps) {
   return (
-    <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-slate-100 p-3 text-center transition-colors hover:bg-slate-50 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 has-[:checked]:text-orange-700">
+    <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-slate-100 p-3 text-center transition-colors hover:bg-slate-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700">
       <input
         className="hidden"
         name={name}

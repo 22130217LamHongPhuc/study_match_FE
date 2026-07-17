@@ -1,0 +1,19 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (Post / Modal)
+    participant PC as PostController<br/>social_service
+    participant PS as PostService
+    participant DB as PostCommentRepo<br/>/ post_comments
+    participant USC as UserServiceClient
+
+    User->>FE: Type comment - Enter / Send
+    FE->>FE: trim content - reject if empty
+    FE->>PC: POST /social/posts/{postId}/comments<br/>{ authorId, content }
+    PC->>PS: addComment(postId, request)
+    PS->>PS: validate authorId + content<br/>getActivePost (not deleted)
+    PS->>DB: save PostComment<br/>(isDeleted=false, timestamps)
+    PS->>USC: getBasicUsers([authorId])
+    USC-->>PS: authorName, authorAvatarUrl
+    PS-->>FE: 201 PostCommentDto
+    FE->>FE: append list + clear input<br/>commentCount + 1 (optimistic)
+    FE-->>User: UI shows new comment

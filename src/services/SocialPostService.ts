@@ -1,7 +1,17 @@
 import { BASE_SOCIAL_SERVICE } from "../config/BaseConfig";
-import { apiFetch } from "../config/apiClient";
+import { apiFetch, isApiSuccess } from "../config/apiClient";
 
 const unwrap = (payload: any) => payload?.data ?? payload?.result ?? payload;
+
+const requireSocialOk = (res: any, label: string) => {
+  if (!isApiSuccess(res)) {
+    throw new Error(`${label}. ${res?.message ?? "Unknown error"}`);
+  }
+  if (res && typeof res === "object" && "data" in res) {
+    return unwrap(res.data);
+  }
+  return unwrap(res);
+};
 
 export type PostMedia = {
   id?: number;
@@ -55,8 +65,7 @@ export type Achievement = {
 export async function loadProfilePosts(userId: number, viewerId?: number): Promise<SocialPost[]> {
   const query = viewerId ? `?viewerId=${viewerId}` : "";
   const res = await apiFetch<any>(`${BASE_SOCIAL_SERVICE}/social/posts/user/${userId}${query}`);
-  if (!res.success) throw new Error(`Cannot load posts. ${res.message}`);
-  return unwrap(res.data) || [];
+  return requireSocialOk(res, "Cannot load posts") || [];
 }
 
 export async function createPost(payload: {
@@ -69,8 +78,7 @@ export async function createPost(payload: {
     method: "POST",
     body: JSON.stringify(payload),
   });
-  if (!res.success) throw new Error(`Cannot create post. ${res.message}`);
-  return unwrap(res.data);
+  return requireSocialOk(res, "Cannot create post");
 }
 
 export async function uploadPostMedia(file: File): Promise<{ mediaUrl: string; mediaType: string }> {
@@ -80,8 +88,7 @@ export async function uploadPostMedia(file: File): Promise<{ mediaUrl: string; m
     method: "POST",
     body: formData as any,
   });
-  if (!res.success) throw new Error(`Cannot upload post media. ${res.message}`);
-  return unwrap(res.data);
+  return requireSocialOk(res, "Cannot upload post media");
 }
 
 export async function updatePost(postId: number, payload: {
@@ -94,15 +101,14 @@ export async function updatePost(postId: number, payload: {
     method: "PUT",
     body: JSON.stringify(payload),
   });
-  if (!res.success) throw new Error(`Cannot update post. ${res.message}`);
-  return unwrap(res.data);
+  return requireSocialOk(res, "Cannot update post");
 }
 
 export async function deletePost(postId: number, actorId: number): Promise<void> {
   const res = await apiFetch<any>(`${BASE_SOCIAL_SERVICE}/social/posts/${postId}?actorId=${actorId}`, {
     method: "DELETE",
   });
-  if (!res.success) throw new Error(`Cannot delete post. ${res.message}`);
+  requireSocialOk(res, "Cannot delete post");
 }
 
 export async function togglePostLike(postId: number, userId: number, reactionType?: string): Promise<SocialPost> {
@@ -112,14 +118,12 @@ export async function togglePostLike(postId: number, userId: number, reactionTyp
   const res = await apiFetch<any>(url, {
     method: "POST",
   });
-  if (!res.success) throw new Error(`Cannot toggle like. ${res.message}`);
-  return unwrap(res.data);
+  return requireSocialOk(res, "Cannot toggle like");
 }
 
 export async function loadPostComments(postId: number): Promise<PostComment[]> {
   const res = await apiFetch<any>(`${BASE_SOCIAL_SERVICE}/social/posts/${postId}/comments`);
-  if (!res.success) throw new Error(`Cannot load comments. ${res.message}`);
-  return unwrap(res.data) || [];
+  return requireSocialOk(res, "Cannot load comments") || [];
 }
 
 export async function addPostComment(postId: number, authorId: number, content: string): Promise<PostComment> {
@@ -127,20 +131,17 @@ export async function addPostComment(postId: number, authorId: number, content: 
     method: "POST",
     body: JSON.stringify({ authorId, content }),
   });
-  if (!res.success) throw new Error(`Cannot add comment. ${res.message}`);
-  return unwrap(res.data);
+  return requireSocialOk(res, "Cannot add comment");
 }
 
 export async function loadProfileSocialStats(userId: number): Promise<ProfileSocialStats> {
   const res = await apiFetch<any>(`${BASE_SOCIAL_SERVICE}/social/users/${userId}/stats`);
-  if (!res.success) throw new Error(`Cannot load stats. ${res.message}`);
-  return unwrap(res.data);
+  return requireSocialOk(res, "Cannot load stats");
 }
 
 export async function loadAchievements(userId: number): Promise<Achievement[]> {
   const res = await apiFetch<any>(`${BASE_SOCIAL_SERVICE}/social/users/${userId}/achievements`);
-  if (!res.success) throw new Error(`Cannot load achievements. ${res.message}`);
-  return unwrap(res.data) || [];
+  return requireSocialOk(res, "Cannot load achievements") || [];
 }
 
 export interface PageResponse<T> {
@@ -172,8 +173,7 @@ export async function loadFeedPosts(
   const res = await apiFetch<any>(
     `${BASE_SOCIAL_SERVICE}/social/posts/feed?page=${page}&size=${size}&viewerId=${viewerId}`,
   );
-  if (!res.success) throw new Error(`Cannot load feed posts. ${res.message}`);
-  return unwrap(res.data);
+  return requireSocialOk(res, "Cannot load feed posts");
 }
 
 export type PostReactionUser = {
@@ -190,8 +190,7 @@ export async function loadPostReactions(postId: number, viewerId?: number): Prom
     ? `${BASE_SOCIAL_SERVICE}/social/posts/${postId}/reactions?viewerId=${viewerId}`
     : `${BASE_SOCIAL_SERVICE}/social/posts/${postId}/reactions`;
   const res = await apiFetch<any>(url);
-  if (!res.success) throw new Error(`Cannot load reactions. ${res.message}`);
-  return unwrap(res.data) || [];
+  return requireSocialOk(res, "Cannot load reactions") || [];
 }
 
 export async function sharePost(
@@ -208,6 +207,5 @@ export async function sharePost(
     method: "POST",
     body: JSON.stringify(payload),
   });
-  if (!res.success) throw new Error(`Cannot share post. ${res.message}`);
-  return unwrap(res.data);
+  return requireSocialOk(res, "Cannot share post");
 }

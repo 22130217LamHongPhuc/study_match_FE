@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Kilo" version="24.0.0" type="device">
+  <diagram id="respond-session" name="Respond Study Session">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="StudyMatch - Sequence: Respond to Study Session Invitation (Accept / Decline)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="280" y="10" width="620" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a1" value="Invitee&#xa;(User)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="Invitee&#xa;(User)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1080" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="FE&#xa;(Header / SessionDetailModal)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="50" width="170" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="FE&#xa;(Header / SessionDetailModal)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1080" width="170" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="StudySessionController&#xa;group_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="50" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="StudySessionController&#xa;group_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1080" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="StudySessionServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="StudySessionServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="1080" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="DB&#xa;study_session_participants" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="840" y="50" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="DB&#xa;study_session_participants" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="840" y="1080" width="160" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ll1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="110" as="sourcePoint"/>
+            <mxPoint x="65" y="1080" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll2" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="225" y="100" as="sourcePoint"/>
+            <mxPoint x="225" y="1080" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll3" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="100" as="sourcePoint"/>
+            <mxPoint x="460" y="1080" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll4" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="685" y="100" as="sourcePoint"/>
+            <mxPoint x="685" y="1080" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll5" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="920" y="100" as="sourcePoint"/>
+            <mxPoint x="920" y="1080" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="bar2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="218" y="150" width="14" height="880" as="geometry"/>
+        </mxCell>
+        <mxCell id="bar4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="678" y="300" width="14" height="600" as="geometry"/>
+        </mxCell>
+
+        <!-- Preload note -->
+        <mxCell id="pre" value="Pre: participant.status = PENDING&#xa;Entry A: Header pending invites&#xa;Entry B: /schedule SessionDetailModal" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="140" width="260" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="m1" value="1: click Accept or Decline" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="170" as="sourcePoint"/>
+            <mxPoint x="218" y="170" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="2: respondToStudySession&#xa;(sessionId, userId, ACCEPTED|DECLINED)" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="232" y="220" as="sourcePoint"/>
+            <mxPoint x="232" y="280" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="340" y="220"/>
+              <mxPoint x="340" y="280"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="3: PATCH /api/study-sessions/{sessionId}&#xa;/participants/{userId}/respond&#xa;body: { status: ACCEPTED | DECLINED }" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="232" y="340" as="sourcePoint"/>
+            <mxPoint x="460" y="340" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="4: respondToSession(sessionId, userId, status)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="400" as="sourcePoint"/>
+            <mxPoint x="678" y="400" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="5: validate status in {ACCEPTED, DECLINED}&#xa;session exists and not CANCELLED&#xa;participant exists and status = PENDING" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="692" y="460" as="sourcePoint"/>
+            <mxPoint x="692" y="540" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="820" y="460"/>
+              <mxPoint x="820" y="540"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="6: setStatus(ACCEPTED|DECLINED)&#xa;setRespondedAt(now) + save" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="692" y="600" as="sourcePoint"/>
+            <mxPoint x="920" y="600" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="7: StudySessionResponse&#xa;(participantStatus updated)" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="678" y="670" as="sourcePoint"/>
+            <mxPoint x="232" y="670" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="alt" value="alt" style="shape=umlFrame;whiteSpace=wrap;html=1;width=50;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="710" width="420" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="altA" value="[Accept - ACCEPTED]" style="text;html=1;align=left;fontStyle=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="190" y="720" width="160" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m8" value="toast success&#xa;Header: refresh pending list&#xa;Modal: update detail + stats" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="232" y="760" as="sourcePoint"/>
+            <mxPoint x="232" y="820" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="340" y="760"/>
+              <mxPoint x="340" y="820"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div1" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="130" y="840" as="sourcePoint"/>
+            <mxPoint x="550" y="840" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="altD" value="[Decline - DECLINED]" style="text;html=1;align=left;fontStyle=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="190" y="850" width="160" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m9" value="toast declined&#xa;remove from pending list" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="232" y="890" as="sourcePoint"/>
+            <mxPoint x="232" y="940" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="340" y="890"/>
+              <mxPoint x="340" y="940"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="m10" value="UI updated" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="218" y="1000" as="sourcePoint"/>
+            <mxPoint x="65" y="1000" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="note" value="State transition (participant only)&#xa;PENDING -&gt; ACCEPTED&#xa;PENDING -&gt; DECLINED&#xa;&#xa;Errors&#xa;- status not ACCEPTED/DECLINED&#xa;- session not found / CANCELLED&#xa;- not a participant&#xa;- already responded&#xa;&#xa;Note: no WebSocket on respond&#xa;(STUDY_SESSION_CREATED is invite only)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="240" width="280" height="180" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

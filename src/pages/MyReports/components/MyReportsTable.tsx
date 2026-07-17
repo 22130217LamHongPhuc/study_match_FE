@@ -52,7 +52,7 @@ export function MyReportsTable({
           <div className="hidden overflow-x-auto md:block">
             <table className="min-w-[880px] w-full">
               <thead>
-                <tr className="border-b border-gray-100 bg-orange-50/60 text-left">
+                <tr className="border-b border-gray-100 bg-blue-50/60 text-left">
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Loại đối tượng
                   </th>
@@ -129,8 +129,8 @@ export function MyReportsTable({
       ) : !hasReports ? (
         <div className="px-5 py-14">
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/70 px-4 py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
-              <FileWarning size={22} className="text-orange-500" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+              <FileWarning size={22} className="text-blue-500" />
             </div>
             <p className="mt-4 text-base font-semibold text-gray-700">
               Bạn chưa gửi báo cáo nào.
@@ -145,7 +145,7 @@ export function MyReportsTable({
           <div className="hidden overflow-x-auto md:block">
             <table className="min-w-[880px] w-full">
               <thead>
-                <tr className="border-b border-gray-100 bg-orange-50/60 text-left">
+                <tr className="border-b border-gray-100 bg-blue-50/60 text-left">
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Loại đối tượng
                   </th>
@@ -177,7 +177,7 @@ export function MyReportsTable({
                   return (
                     <tr
                       key={reportId || `my-report-row-${index}`}
-                      className="border-b border-gray-100 last:border-b-0 hover:bg-orange-50/30"
+                      className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30"
                     >
                       <td className="px-5 py-4">
                         <span
@@ -218,7 +218,7 @@ export function MyReportsTable({
                               }
                             }}
                             disabled={reportId === null}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-700 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             <Eye size={15} />
                             Xem chi tiết
@@ -291,7 +291,7 @@ export function MyReportsTable({
                       }
                     }}
                     disabled={reportId === null}
-                    className="mt-4 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-700 transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-4 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Eye size={15} />
                     Xem chi tiết
@@ -351,8 +351,8 @@ function ReportsPagination({
               type="button"
               onClick={() => onPageChange(pageNumber)}
               className={`h-9 min-w-9 rounded-lg px-3 text-sm font-medium transition ${page === pageNumber
-                ? "bg-orange-500 text-white"
-                : "border border-gray-200 bg-white text-gray-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                ? "bg-blue-500 text-white"
+                : "border border-gray-200 bg-white text-gray-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
                 }`}
             >
               {pageNumber}

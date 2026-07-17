@@ -26,8 +26,8 @@ export function FilterTabs({ activeFilter, onChange }: FilterTabsProps) {
               onClick={() => onChange(filter.value)}
               className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
                 active
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-600"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
               }`}
             >
               {filter.label}

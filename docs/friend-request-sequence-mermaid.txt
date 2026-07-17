@@ -1,0 +1,40 @@
+sequenceDiagram
+    actor UserA as UserA (Sender)
+    participant FEA as FE Sender<br/>(Profile/Search/...)
+    participant FC as FriendsController<br/>social_service
+    participant FRS as FriendRequestService<br/>+ FriendService
+    participant DB as DB<br/>friend_requests + friends
+    participant CC as ChatController<br/>(WS relay)
+    actor UserB as UserB (Receiver)
+
+    rect rgb(232, 245, 233)
+    Note over UserA,UserB: UC-1: Send friend request | Pre: UserA logged in | Post: status=PENDING
+    UserA->>FEA: 1: click Add Friend
+    FEA->>FC: 2: POST /social/friend-requests/<br/>{ sender_id, receiver_id }
+    FC->>FRS: 3: friendRequest(senderId, receiverId)
+    FRS->>DB: 4: INSERT friend_requests status=PENDING
+    FC-->>FEA: 5: 201 FriendRequest
+    FEA->>CC: 6: STOMP /chat/send<br/>event=FRIEND_REQUEST {senderId, receiverId}
+    CC->>UserB: 7: FRIEND_REQUEST_RECEIVE<br/>-> /user/queue/chat
+    end
+
+    rect rgb(227, 242, 253)
+    Note over UserA,UserB: UC-2: Accept | Pre: PENDING exists | Post: APPROVED + friends row
+    UserB->>FEA: 8: click Accept<br/>(Header / StudyConnection / Profile)
+    FEA->>FC: 9: PATCH /social/friend-requests/{id}/status<br/>{ status: APPROVED }
+    FC->>FRS: 10: updateStatus(id, APPROVED)
+    FRS->>DB: 11: UPDATE friend_requests=APPROVED<br/>INSERT friends if not exists
+    FC-->>FEA: 12: 200 FriendRequestDto
+    FEA->>CC: 13: STOMP FRIEND_REQUEST_ACCEPT
+    CC->>UserA: 14: FRIEND_REQUEST_ACCEPT_RECEIVE<br/>refresh friends / friend=true
+    end
+
+    rect rgb(255, 235, 238)
+    Note over UserA,UserB: UC-3: Reject | Pre: PENDING | Post: REJECTED (no friends row)
+    UserB->>FEA: 15: click Decline
+    FEA->>FC: 16: PATCH .../status { status: REJECTED }
+    FRS->>DB: 17: UPDATE friend_requests=REJECTED
+    FC-->>FEA: 18: remove from pending UI<br/>(optional: FRIEND_REQUEST_CANCEL)
+    end
+
+    Note over FEA,DB: Statuses: PENDING | APPROVED | REJECTED | CANCELLED<br/>Friendship created only on APPROVED<br/>Realtime via chat_service relay

@@ -89,7 +89,7 @@ export default function JoinGroupRequestModal({
             rows={5}
             maxLength={500}
             placeholder="Ví dụ: Mình muốn học cùng các bạn để cải thiện môn này và trao đổi bài tập thường xuyên."
-            className="mt-3 block min-h-[132px] w-full resize-none rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm leading-6 text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50 disabled:text-gray-500"
+            className="mt-3 block min-h-[132px] w-full resize-none rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm leading-6 text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-500"
           />
           <div className="mt-2 flex items-center justify-between gap-3 text-xs text-gray-500">
 
@@ -108,7 +108,7 @@ export default function JoinGroupRequestModal({
             <button
               type="submit"
               disabled={!canSubmit}
-              className="h-10 rounded-lg bg-orange-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-white"
+              className="h-10 rounded-lg bg-blue-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-white"
             >
               {submitting ? "Đang gửi..." : "Gửi yêu cầu"}
             </button>

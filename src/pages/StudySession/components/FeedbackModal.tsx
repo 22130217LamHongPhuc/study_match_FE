@@ -322,7 +322,7 @@ function StarRating({
       className={
         compact
           ? "rounded-xl border border-gray-100 bg-white px-3 py-3"
-          : "rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-4"
+          : "rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4"
       }
     >
       <div className="mb-2 flex items-center justify-between gap-3">
@@ -341,8 +341,8 @@ function StarRating({
               aria-label={`${score} sao`}
               className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
                 active
-                  ? "bg-amber-100 text-amber-500"
-                  : "bg-gray-100 text-gray-300 hover:bg-amber-50 hover:text-amber-400"
+                  ? "bg-blue-100 text-blue-500"
+                  : "bg-gray-100 text-gray-300 hover:bg-blue-50 hover:text-blue-400"
               }`}
             >
               <Star

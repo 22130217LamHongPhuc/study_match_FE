@@ -1,0 +1,30 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (CreatePostDialog)
+    participant PC as PostController<br/>social_service
+    participant Cloud as Cloudinary
+    participant PS as PostService
+    participant DB as PostRepo / MySQL<br/>(posts + post_media)
+    participant USC as UserServiceClient
+
+    User->>FE: Own Profile - click "Ban dang nghi gi?"
+    FE->>FE: CreatePostDialog open<br/>content / visibility / background / media
+    User->>FE: Click "Dang"<br/>FE: content or media required, max 10 files
+
+    loop each selected file
+        FE->>PC: POST /social/posts/media (multipart)
+        PC->>Cloud: upload folder=social_posts
+        Cloud-->>FE: { mediaUrl, mediaType }
+    end
+
+    FE->>PC: POST /social/posts?viewerId=authorId<br/>{ authorId, content, visibility, media[] }
+    PC->>PS: createPost(request, viewerId)
+    PS->>PS: validate authorId, visibility<br/>applyMedia max 10
+    PS->>DB: save Post + cascade PostMedia
+    PS->>USC: getBasicUsers([authorId])
+    USC-->>PS: authorName, authorAvatarUrl
+    PS-->>FE: 201 PostResponse<br/>(likeCount=0, commentCount=0)
+    FE->>FE: onPostCreated: prepend feed + postCount++<br/>close dialog
+    FE-->>User: Post appears on profile feed
+
+    Note over FE,DB: visibility: PUBLIC | FRIENDS | PRIVATE<br/>Home create post not fully wired<br/>no notification fan-out on create

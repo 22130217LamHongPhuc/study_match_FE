@@ -21,7 +21,7 @@ export async function getProfileByUserId(
     throw new Error(message);
   }
 
-  return res as unknown as ProfileApiResponse;
+  return (res.data ?? res) as ProfileApiResponse;
 }
 
 export async function updateProfile(

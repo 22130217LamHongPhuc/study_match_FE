@@ -36,7 +36,7 @@ function formatTimeRange(start: string, end: string) {
 
 function getStatusStyle(status: string) {
   if (status === "PENDING")
-    return "bg-amber-50 text-amber-700 border-amber-100";
+    return "bg-blue-50 text-blue-700 border-blue-100";
   if (status === "ACCEPTED")
     return "bg-emerald-50 text-emerald-700 border-emerald-100";
   if (status === "DECLINED") return "bg-rose-50 text-rose-700 border-rose-100";
@@ -83,7 +83,7 @@ export function AllSessionList({
             <select
               value={pageSize}
               onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
             >
               {pageSizeOptions.map((option) => (
                 <option key={option} value={option}>
@@ -92,7 +92,7 @@ export function AllSessionList({
               ))}
             </select>
           </label>
-          <span className="rounded-lg bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600">
+          <span className="rounded-lg bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-600">
             {totalElements} buổi
           </span>
         </div>
@@ -119,7 +119,7 @@ export function AllSessionList({
               key={session.id}
               type="button"
               onClick={() => onSelectSession(session)}
-              className="grid w-full grid-cols-1 gap-3 px-4 py-4 text-left transition hover:bg-orange-50/40 md:grid-cols-[1.1fr_1.5fr_1fr_1fr_1fr] md:items-center"
+              className="grid w-full grid-cols-1 gap-3 px-4 py-4 text-left transition hover:bg-blue-50/40 md:grid-cols-[1.1fr_1.5fr_1fr_1fr_1fr] md:items-center"
             >
               <div>
                 <div className="text-sm font-bold text-gray-800">
@@ -178,7 +178,7 @@ export function AllSessionList({
             type="button"
             disabled={!canGoPrevious}
             onClick={() => onPageChange(page - 1)}
-            className="rounded-lg border border-gray-200 px-3 py-2 font-semibold text-gray-700 transition hover:border-orange-200 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-gray-200 px-3 py-2 font-semibold text-gray-700 transition hover:border-blue-200 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Trước
           </button>
@@ -189,7 +189,7 @@ export function AllSessionList({
             type="button"
             disabled={!canGoNext}
             onClick={() => onPageChange(page + 1)}
-            className="rounded-lg border border-gray-200 px-3 py-2 font-semibold text-gray-700 transition hover:border-orange-200 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-gray-200 px-3 py-2 font-semibold text-gray-700 transition hover:border-blue-200 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Sau
           </button>

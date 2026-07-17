@@ -31,7 +31,7 @@ export default function UpcomingScheduleCard({
           </h3>
           <button
             onClick={onViewCalendar}
-            className="text-xs font-semibold text-orange-600 hover:text-orange-700 cursor-pointer"
+            className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
           >
             Xem lịch
           </button>
@@ -64,7 +64,7 @@ export default function UpcomingScheduleCard({
         </h3>
         <button
           onClick={onViewCalendar}
-          className="text-xs font-semibold text-orange-600 hover:text-orange-700 cursor-pointer"
+          className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
         >
           Xem lịch
         </button>

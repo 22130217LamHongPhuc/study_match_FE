@@ -24,7 +24,7 @@ export default function FreeTimeCard({ profile }: FreeTimeCardProps) {
               className="p-4 rounded-lg bg-gray-50 border border-gray-100 space-y-2"
             >
               <div className="border-b border-gray-200 pb-1 flex items-center gap-1.5">
-                <Calendar className="h-4 w-4 text-orange-500" />
+                <Calendar className="h-4 w-4 text-blue-500" />
                 <span className="text-xs font-bold text-gray-700">
                   {group.dayLabel}
                 </span>

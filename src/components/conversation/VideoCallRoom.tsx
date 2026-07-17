@@ -257,7 +257,7 @@ export default function VideoCallRoom({ call, peer, onClose }: VideoCallRoomProp
                         }}
                     />
                     <Typography sx={{ fontSize: 21, fontWeight: 700, color: "#111827" }}>
-                        {displayPeer?.fullName || "Nguoi dung"}
+                        {displayPeer?.fullName }
                     </Typography>
                     <Box
                         sx={{

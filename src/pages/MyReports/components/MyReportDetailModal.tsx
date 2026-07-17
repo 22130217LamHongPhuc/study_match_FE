@@ -132,7 +132,7 @@ export function MyReportDetailModal({
             </div>
           ) : (
             <div className="space-y-4">
-              <section className="rounded-xl border border-gray-200 bg-orange-50/40 p-4">
+              <section className="rounded-xl border border-gray-200 bg-blue-50/40 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
                   Thông tin báo cáo
                 </p>
@@ -211,7 +211,7 @@ export function MyReportDetailModal({
 function DetailSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="rounded-xl border border-gray-200 bg-orange-50/40 p-4">
+      <div className="rounded-xl border border-gray-200 bg-blue-50/40 p-4">
         <div className="h-3 w-28 rounded bg-gray-200" />
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -261,7 +261,7 @@ function InfoItem({
   return (
     <div className="rounded-xl border border-gray-200 bg-white px-3 py-3">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-        <span className="text-orange-500">{icon}</span>
+        <span className="text-blue-500">{icon}</span>
         {label}
       </div>
       <p className="mt-2 text-sm font-semibold text-gray-700">{value}</p>
@@ -279,7 +279,7 @@ function DateCard({
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-        <CalendarDays size={15} className="text-orange-500" />
+        <CalendarDays size={15} className="text-blue-500" />
         {label}
       </div>
       <p className="mt-3 text-sm font-medium text-gray-700">

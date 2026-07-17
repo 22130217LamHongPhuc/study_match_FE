@@ -6,7 +6,7 @@ import { Search, Users, GraduationCap, UserPlus, MessageCircle, UserMinus, Clock
 
 import { RootState } from "../../redux/store";
 import { searchStudents, StudentSearchItem } from "../../services/UserService";
-import { browseGroups, requestJoinGroup, BrowseGroupResponse, getGroupsByUserId } from "../../services/GroupService";
+import { browseGroups, requestJoinGroup, BrowseGroupResponse, getGroupsByUserId, rejectGroupInvitation, getSentPendingGroupJoinRequests } from "../../services/GroupService";
 import { requestFriendService, loadFriendRequestsService, normalizeAvatarUrl } from "../../services/FriendService";
 import { BASE_USER_SERVICE } from "../../config/BaseConfig";
 import { apiFetch } from "../../config/apiClient";
@@ -60,7 +60,7 @@ function SortDropdown({ value, onChange, options }: {
         onClick={() => setOpen((p) => !p)}
         className={`flex items-center gap-2 h-8 pl-3 pr-2.5 rounded-lg border text-xs font-medium transition-all ${
           open
-            ? "border-orange-400 bg-orange-50 text-orange-600 ring-2 ring-orange-100"
+            ? "border-blue-400 bg-blue-50 text-blue-600 ring-2 ring-blue-100"
             : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
         }`}
       >
@@ -68,7 +68,7 @@ function SortDropdown({ value, onChange, options }: {
         <ChevronDown
           size={14}
           className={`flex-shrink-0 transition-transform duration-200 ${
-            open ? "rotate-180 text-orange-500" : "text-gray-400"
+            open ? "rotate-180 text-blue-500" : "text-gray-400"
           }`}
         />
       </button>
@@ -81,12 +81,12 @@ function SortDropdown({ value, onChange, options }: {
               onClick={() => { onChange(opt.value); setOpen(false); }}
               className={`flex w-full items-center justify-between px-3 py-2 text-xs transition-colors ${
                 opt.value === value
-                  ? "bg-orange-50 text-orange-600 font-semibold"
+                  ? "bg-blue-50 text-blue-600 font-semibold"
                   : "text-gray-600 hover:bg-gray-50 font-medium"
               }`}
             >
               <span>{opt.label}</span>
-              {opt.value === value && <Check size={13} className="text-orange-500" />}
+              {opt.value === value && <Check size={13} className="text-blue-500" />}
             </button>
           ))}
         </div>
@@ -119,7 +119,9 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
     visibility: (item.visibility as any) || "COMMUNITY",
     createdAt: item.createdAt,
     isMember: item.member || false,
+    avatarUrl: item.avatarUrl,
     isJoinRequestPending: item.joinRequestPending || false,
+    description: item.description,
   };
 }
 
@@ -144,12 +146,12 @@ async function fetchMutualCount(currentUserId: number, targetUserId: number): Pr
 
 
 const AVATAR_COLORS = [
-  "from-orange-400 to-orange-600",
+  "from-blue-400 to-blue-600",
   "from-violet-400 to-violet-600",
   "from-blue-400 to-blue-600",
   "from-emerald-400 to-emerald-600",
   "from-rose-400 to-rose-600",
-  "from-amber-400 to-amber-600",
+  "from-blue-400 to-blue-600",
   "from-cyan-400 to-cyan-600",
 ];
 
@@ -250,7 +252,7 @@ function StudentCardComponent({ student, currentUserId, onViewProfile, onConnect
         <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
           <button
             disabled
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 py-2 text-xs font-medium text-orange-500 cursor-default"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 py-2 text-xs font-medium text-blue-500 cursor-default"
           >
             <Clock size={13} />
             Đã gửi lời mời
@@ -324,7 +326,7 @@ function StudentCardComponent({ student, currentUserId, onViewProfile, onConnect
           size={48}
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-gray-800 text-sm hover:text-orange-600 transition-colors">
+          <p className="truncate font-semibold text-gray-800 text-sm hover:text-blue-600 transition-colors">
             {student.fullName || "Không rõ tên"}
           </p>
           <div className="mt-0.5">{mutualBadge()}</div>
@@ -693,9 +695,31 @@ export default function SearchPage() {
     [currentUserId, joiningGroupId, selectedJoinGroup],
   );
 
+  const handleCancelJoinRequest = useCallback(
+    async (groupId: number) => {
+      try {
+        const res = await getSentPendingGroupJoinRequests();
+        const pending = (res.data ?? []).find((inv) => inv.groupId === groupId);
+        if (!pending) {
+          toast.error("Không tìm thấy yêu cầu tham gia.");
+          return;
+        }
+        await rejectGroupInvitation(pending.invitationId);
+        setGroups((prev) =>
+          prev.map((g) => g.id === groupId ? { ...g, isJoinRequestPending: false } : g)
+        );
+        toast.success("Đã hủy yêu cầu tham gia nhóm.");
+        window.dispatchEvent(new Event("group_invitations_updated"));
+      } catch (err) {
+        toast.error("Hủy yêu cầu thất bại.");
+      }
+    },
+    [],
+  );
+
 
   return (
-    <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="min-h-full bg-blue-50/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-6">
 
@@ -709,7 +733,7 @@ export default function SearchPage() {
                     {activeTab === "classmates" ? students.length : sortedGroups.length}
                   </span>{" "}
                   kết quả cho từ khóa{" "}
-                  <span className="font-semibold text-orange-600">&ldquo;{query}&rdquo;</span>
+                  <span className="font-semibold text-blue-600">&ldquo;{query}&rdquo;</span>
                 </p>
               )}
             </div>
@@ -720,9 +744,9 @@ export default function SearchPage() {
                 value={localQuery}
                 onChange={(e) => handleQueryChange(e.target.value)}
                 placeholder="Tìm bạn học, nhóm học..."
-                className="w-full h-10 pl-4 pr-10 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 outline-hidden focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                className="w-full h-10 pl-4 pr-10 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 outline-hidden focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
               />
-              <button type="submit" className="absolute right-3 top-2.5 text-gray-400 hover:text-orange-500">
+              <button type="submit" className="absolute right-3 top-2.5 text-gray-400 hover:text-blue-500">
                 <Search size={18} />
               </button>
             </form>
@@ -734,7 +758,7 @@ export default function SearchPage() {
                 onClick={() => setActiveTab("classmates")}
                 className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
                   activeTab === "classmates"
-                    ? "border-orange-500 text-orange-600"
+                    ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -745,7 +769,7 @@ export default function SearchPage() {
                 onClick={() => setActiveTab("groups")}
                 className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
                   activeTab === "groups"
-                    ? "border-orange-500 text-orange-600"
+                    ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -817,7 +841,7 @@ export default function SearchPage() {
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {sortedGroups.map((group: CommunityGroup) => (
-                    <CommunityGroupCard key={group.id} group={group} onJoin={handleOpenJoinModal} />
+                    <CommunityGroupCard key={group.id} group={group} onJoin={handleOpenJoinModal} onCancel={handleCancelJoinRequest} />
                   ))}
                 </div>
               )}

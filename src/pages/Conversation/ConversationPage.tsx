@@ -13,6 +13,7 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import InfoIcon from "@mui/icons-material/Info";
 import StopCircleIcon from "@mui/icons-material/StopCircle";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import { toast } from "react-toastify";
 import {
   Avatar,
@@ -30,7 +31,7 @@ import {
   Skeleton,
 } from "@mui/material";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { useDispatch, useSelector } from "react-redux";
 import WelcomeConversation from "../../components/conversation/WelcomeConversion";
@@ -60,7 +61,7 @@ import {
   updateConversationColor,
   updateConversationFont,
 } from "../../services/ChatService";
-import { getActiveGroupMemberIds, getGroupById } from "../../services/GroupService";
+import { getActiveGroupMemberIds, getGroupAvatarUrl, getGroupById } from "../../services/GroupService";
 import { FriendUser, loadFriendProfilesService, normalizeAvatarUrl, loadFriendOnlineStatusesService } from "../../services/FriendService";
 import { getGroupStudySessions } from "../../services/StudySessionService";
 import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
@@ -331,6 +332,7 @@ const formatRecordingTime = (elapsedMs: number) => {
 export default function ConversationPage() {
   const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const currentUserId = Number(localStorage.getItem("userId"));
   const currentUser = useSelector((state: RootState) => state.user);
   const currentConversationId = useSelector((state: RootState) => state.chat.currentConversationId);
@@ -353,8 +355,8 @@ export default function ConversationPage() {
   const routeAvatar = normalizeAvatarUrl(routeState?.avatar || null);
   const groupName = routeState?.groupName || null;
   const baseFullName = isGroupConversation
-    ? groupName || "Nhom hoc"
-    : routeState?.fullName || "Nguoi dung";
+    ? groupName
+    : routeState?.fullName;
 
   const selectedConversationKey = isGroupConversation
     ? routeState?.conversationKey || (groupId ? `group:${groupId}` : "none")
@@ -399,6 +401,9 @@ export default function ConversationPage() {
   const [seenStatuses, setSeenStatuses] = useState<Record<number, number>>({});
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [mediaFilesOpen, setMediaFilesOpen] = useState(false);
+  const [groupAvatar, setGroupAvatar] = useState<string | null>(
+    isGroupConversation ? routeAvatar : null,
+  );
   const [friendsPanelWidth, setFriendsPanelWidth] = useState(420);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [recordingElapsedMs, setRecordingElapsedMs] = useState(0);
@@ -428,6 +433,10 @@ export default function ConversationPage() {
   }, [conversation]);
 
   useEffect(() => {
+    setGroupAvatar(isGroupConversation ? routeAvatar : null);
+  }, [isGroupConversation, routeAvatar, selectedConversationKey]);
+
+  useEffect(() => {
     return () => {
       if (recordingTimerRef.current !== null) {
         window.clearInterval(recordingTimerRef.current);
@@ -440,7 +449,8 @@ export default function ConversationPage() {
   }, []);
 
   useEffect(() => {
-    if (!isGroupConversation || !groupId || groupVisibility !== null) return;
+    if (!isGroupConversation || !groupId) return;
+    if (groupVisibility !== null && groupAvatar) return;
 
     let cancelled = false;
     getGroupById(groupId)
@@ -448,6 +458,10 @@ export default function ConversationPage() {
         if (cancelled) return;
         if (response.success && response.data?.visibility) {
           setGroupVisibility(response.data.visibility);
+        }
+        const nextAvatar = getGroupAvatarUrl(response.data);
+        if (nextAvatar) {
+          setGroupAvatar(nextAvatar);
         }
       })
       .catch((error) => {
@@ -457,19 +471,27 @@ export default function ConversationPage() {
     return () => {
       cancelled = true;
     };
-  }, [groupId, isGroupConversation, groupVisibility]);
+  }, [groupAvatar, groupId, isGroupConversation, groupVisibility]);
 
   const privatePeerProfile = targetUserId
     ? privateSenderProfiles[targetUserId]
     : Object.values(privateSenderProfiles).find((profile) => profile.userId !== currentUserId);
+  const profileUserId = targetUserId || privatePeerProfile?.userId || null;
   const fullName = isGroupConversation
     ? baseFullName
     : privatePeerProfile?.fullName || baseFullName;
+  const displayName = fullName || (isGroupConversation ? "Nhóm học" : "");
   const avatar = isGroupConversation
-    ? routeAvatar
+    ? groupAvatar
     : normalizeAvatarUrl(privatePeerProfile?.avatarUrl || routeAvatar);
   const callTargetName = isGroupConversation ? groupName || "Nhóm hoc" : fullName;
+  const displayCallTargetName = callTargetName || displayName;
   const callTargetAvatar = isGroupConversation ? null : avatar;
+  const canOpenPeerProfile = !isGroupConversation && Boolean(profileUserId);
+  const handleOpenPeerProfile = useCallback(() => {
+    if (!canOpenPeerProfile || !profileUserId) return;
+    navigate(`/profile/${profileUserId}`);
+  }, [canOpenPeerProfile, navigate, profileUserId]);
   const pinnedMessages = useMemo(
     () => conversation.filter((message) => isMessagePinned(message) && !message.isDeleted),
     [conversation],
@@ -579,6 +601,10 @@ export default function ConversationPage() {
         if (cancelled) return;
         if (response.success && response.data?.visibility) {
           setGroupVisibility(response.data.visibility);
+        }
+        const nextAvatar = getGroupAvatarUrl(response.data);
+        if (nextAvatar) {
+          setGroupAvatar(nextAvatar);
         }
       })
       .catch((error) => {
@@ -771,7 +797,7 @@ export default function ConversationPage() {
           .map((memberId: number) => Number(memberId))
           .filter((memberId: number) => memberId !== currentUserId)
           .filter((memberId: number) => Number.isFinite(memberId) && memberId > 0);
-        
+
         memberIds = [...memberIds, ...activeMemberIds];
       } catch (error) {
         console.error("[Conversation][load-group-members-error]", error);
@@ -1725,7 +1751,33 @@ export default function ConversationPage() {
             bgcolor: "#fff",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
+          <Box
+            onClick={canOpenPeerProfile ? handleOpenPeerProfile : undefined}
+            onKeyDown={(event) => {
+              if (!canOpenPeerProfile) return;
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleOpenPeerProfile();
+              }
+            }}
+            role={canOpenPeerProfile ? "button" : undefined}
+            tabIndex={canOpenPeerProfile ? 0 : undefined}
+            title={canOpenPeerProfile ? "Xem hồ sơ" : undefined}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.25,
+              minWidth: 0,
+              borderRadius: "10px",
+              cursor: canOpenPeerProfile ? "pointer" : "default",
+              pr: 0,
+              transition: "background-color 0.15s ease, padding-right 0.15s ease",
+              "&:hover": canOpenPeerProfile ? { bgcolor: "rgba(15, 23, 42, 0.04)", pr: "20px" } : undefined,
+              "&:focus-visible": canOpenPeerProfile
+                ? { outline: "2px solid #2563eb", outlineOffset: 3 }
+                : undefined,
+            }}
+          >
             {loadingConversation ? (
               <>
                 <Skeleton
@@ -1748,7 +1800,20 @@ export default function ConversationPage() {
             ) : (
               <>
                 <Box sx={{ position: "relative", flexShrink: 0 }}>
-                  <Avatar src={avatar || undefined} sx={{ width: 44, height: 44 }} />
+                  <Avatar
+                    src={avatar || undefined}
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      bgcolor: isGroupConversation ? "#4285f4" : undefined,
+                    }}
+                  >
+                    {isGroupConversation ? (
+                      <GroupsRoundedIcon sx={{ fontSize: 22, color: "#fff" }} />
+                    ) : (
+                      displayName?.charAt(0)?.toUpperCase()
+                    )}
+                  </Avatar>
                   {!isGroupConversation && isOnline && (
                     <Box
                       title="Online"
@@ -1767,7 +1832,7 @@ export default function ConversationPage() {
                 </Box>
                 <Box>
                   <Typography sx={{ fontWeight: 750, fontSize: 16.5, color: "#111827", lineHeight: 1.25 }} noWrap>
-                    {fullName}
+                    {displayName}
                   </Typography>
                 </Box>
               </>
@@ -1784,10 +1849,10 @@ export default function ConversationPage() {
               <PaletteIcon sx={{ fontSize: 22 }} />
             </IconButton>
             {hasStudySchedule && (
-              <IconButton 
+              <IconButton
                 onClick={() => {
                   setStudyScheduleOpen(true);
-                }} 
+                }}
                 sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}
                 title="Lịch học nhóm"
               >
@@ -1934,7 +1999,7 @@ export default function ConversationPage() {
 
         {replymess && (
           <ReplyMessage
-            fullName={replymess.senderId === currentUserId ? "chính mình" : fullName}
+            fullName={replymess.senderId === currentUserId ? "chính mình" : displayName}
             mess={getReplyBarText(replymess)}
             setReplyMess={setReplyMess}
           />
@@ -2274,7 +2339,7 @@ export default function ConversationPage() {
       <VideoCallModal
         open={!!waitingVideoCall}
         mode="outgoing"
-        name={callTargetName}
+        name={displayCallTargetName}
         avatar={callTargetAvatar}
         callType={waitingVideoCall?.callType}
         loading={cancelCallLoading}
@@ -2283,7 +2348,7 @@ export default function ConversationPage() {
       <VideoCallModal
         open={rejectedVideoCall}
         mode="rejected"
-        name={callTargetName}
+        name={displayCallTargetName}
         avatar={callTargetAvatar}
         callType="AUDIO"
         onReject={() => setRejectedVideoCall(false)}
@@ -2531,7 +2596,7 @@ export default function ConversationPage() {
         <MediaFilesModal
           open={mediaFilesOpen}
           onClose={() => setMediaFilesOpen(false)}
-          fullName={fullName}
+          fullName={displayName}
           conversationId={conversationId.current}
           currentUserId={currentUserId}
           getPinnedSenderName={getPinnedSenderName}
