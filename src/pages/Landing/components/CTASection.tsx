@@ -33,7 +33,7 @@ const CTASection: React.FC = () => {
           <div className="flex flex-col gap-3 flex-shrink-0">
             <Link
               to="/register"
-              className="group inline-flex items-center gap-3 px-8 py-4 text-sm font-bold text-white bg-[#f97316] rounded-xl hover:bg-[#ea6c0a] transition-colors duration-200"
+              className="group inline-flex items-center gap-3 px-8 py-4 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#ea6c0a] transition-colors duration-200"
             >
               Bắt đầu ngay — Miễn phí
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

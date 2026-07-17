@@ -41,8 +41,8 @@ export default function CheckVerifyEmailPage() {
           <LoadingSkeleton />
         ) : (
           <div>
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
-              <MailCheck className="h-8 w-8 text-orange-600" />
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+              <MailCheck className="h-8 w-8 text-blue-600" />
             </div>
 
             <h1 className="text-2xl font-bold text-slate-800">
@@ -55,7 +55,7 @@ export default function CheckVerifyEmailPage() {
               và nhấn vào liên kết xác thực để tiếp tục đăng nhập.
             </p>
 
-            <p className="mt-4 rounded-xl bg-orange-50 px-4 py-3 text-sm text-orange-700">
+            <p className="mt-4 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
               Liên kết xác thực có thể hết hạn sau một khoảng thời gian. Nếu
               không thấy email, hãy kiểm tra mục Spam hoặc Thư rác.
             </p>
@@ -64,7 +64,7 @@ export default function CheckVerifyEmailPage() {
               <button
                 onClick={handleSubmit}
                 type="button"
-                className="w-full rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
+                className="w-full rounded-xl bg-blue-500 py-3 font-semibold text-white transition hover:bg-blue-600"
               >
                 Gửi lại email xác thực
               </button>

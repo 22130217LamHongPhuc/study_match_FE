@@ -1,0 +1,40 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (SocialLoginGroup)
+    participant GO as Google OAuth<br/>(@react-oauth/google)
+    participant AC as AuthController<br/>@PostMapping(/google)
+    participant GS as GoogleAuthService
+    participant UR as UserRepository
+    participant JT as JwtService + RefreshTokenService
+
+    User->>FE: Click Google Sign-in
+    FE->>GO: GoogleLogin onSuccess
+    GO-->>FE: credentialResponse.credential (idToken)
+    FE->>AC: POST /api/auth/google { idToken }
+    AC->>GS: verifyIdToken(idToken)
+    GS->>GS: GoogleIdTokenVerifier (audience=client-id)
+    GS-->>AC: Payload (email, name, picture) / INVALID_TOKEN
+    AC->>GS: findOrCreateGoogleUser(email, name, picture)
+    GS->>UR: findByEmail(email)
+
+    alt email exists
+        UR-->>GS: return existing User
+    else email not found - create new
+        GS->>UR: save(new User)
+        Note right of UR: role=student<br/>status=ACTIVE<br/>emailVerified=true<br/>passwordHash=""<br/>onboardingCompleted=false<br/>fullName, avatarUrl from Google
+        UR-->>GS: new User saved
+    end
+
+    GS-->>AC: User
+    AC->>AC: check status != LOCKED/DELETED
+
+    alt Login success
+        AC->>JT: generateToken(user)<br/>createRefreshToken(user)
+        JT-->>AC: accessToken + refreshToken
+        AC-->>FE: ApiResponse AuthResponse<br/>(emailVerified hardcode true)
+        FE->>FE: localStorage (accessToken, refreshToken, userId)
+        FE-->>User: Redirect /onboarding | /home
+    else Failed
+        Note over AC,GS: INVALID_TOKEN / USER_LOCKED
+        AC-->>FE: Error response
+    end

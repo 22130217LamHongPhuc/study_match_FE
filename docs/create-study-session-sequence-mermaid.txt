@@ -1,0 +1,35 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (CreateSessionModal)
+    participant Ctrl as StudySessionController<br/>group_service
+    participant Svc as StudySessionServiceImpl
+    participant DB as DB (study_sessions + participants)
+    participant Chat as ChatService + WebSocket
+    participant Inv as Invitee (Header)
+
+    User->>FE: Open /schedule - click "+ Tao lich"
+    FE->>FE: Load groups / friends list for picker
+    User->>FE: Fill form: type, mode, title, time,<br/>group/friend, location (if OFFLINE)
+    FE->>FE: FE validate: start > now, end > start,<br/>duration 5min-8h, group/friend selected
+
+    alt GROUP - Hoc nhom
+        FE->>Ctrl: POST /api/study-sessions/group/{groupId}
+        Ctrl->>Svc: createSession(groupId, request)
+        Svc->>Svc: validateGroup: group exists, not DELETED,<br/>creator ACTIVE member, end > start
+        Svc->>DB: save StudySession (status=SCHEDULED)
+        Svc->>DB: createParticipantsForGroupSession<br/>HOST=ACCEPTED, members=PENDING
+        Svc->>Chat: notify-session-created (non-creators)
+        Chat->>Inv: WS STUDY_SESSION_CREATED
+        Svc-->>FE: StudySessionResponse
+    else USER_PAIR - Hoc 1-1
+        FE->>Ctrl: POST /api/study-sessions/pair
+        Ctrl->>Svc: createPairSession(request)
+        Svc->>Svc: validate partner != self, end > start
+        Svc->>DB: save StudySession (groupId=null)
+        Svc->>DB: HOST ACCEPTED + PARTNER PENDING
+        Svc->>Chat: notify partner only
+        Chat->>Inv: WS STUDY_SESSION_CREATED
+        Svc-->>FE: StudySessionResponse
+    end
+
+    FE-->>User: toast success + update list + close modal

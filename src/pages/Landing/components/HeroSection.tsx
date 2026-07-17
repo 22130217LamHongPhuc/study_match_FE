@@ -79,7 +79,7 @@ const HeroSection: React.FC = () => {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
               <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
                 <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
               </div>
 

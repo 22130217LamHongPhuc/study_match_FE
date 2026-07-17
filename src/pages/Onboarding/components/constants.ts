@@ -109,9 +109,9 @@ export const MODES: Record<StudyMode, ModeConfig> = {
     icon: Zap,
     label: "Học cùng bạn học tốt",
     desc: "Ghép với những bạn có năng lực học tập nổi bật để tạo động lực, đặt mục tiêu cao hơn và phát triển bản thân.",
-    bg: "bg-orange-50",
-    border: "border-orange-300",
-    text: "text-orange-700",
+    bg: "bg-blue-50",
+    border: "border-blue-300",
+    text: "text-blue-700",
   },
 
   support: {

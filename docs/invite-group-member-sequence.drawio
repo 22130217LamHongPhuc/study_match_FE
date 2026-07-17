@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Kilo" version="24.0.0" type="device">
+  <diagram id="invite-member" name="Invite Group Member Sequence">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1550" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="StudyMatch - Sequence: Moi thanh vien vao nhom" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="450" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="Owner" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="Owner" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1430" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="Frontend&#xa;(GroupPage / Header)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="Frontend&#xa;(GroupPage / Header)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1430" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="GroupInvitationController&#xa;group_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="50" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="GroupInvitationController&#xa;group_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1430" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="StudyGroupServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="StudyGroupServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1430" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="DB&#xa;(group_invitations&#xa;+ group_members)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="DB&#xa;(group_invitations&#xa;+ group_members)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1430" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="ChatService&#xa;+ WebSocket" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="50" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="ChatService&#xa;+ WebSocket" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="1430" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g1" value="Invitee&#xa;(Header)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="50" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="Invitee&#xa;(Header)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="1430" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ll1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="110" as="sourcePoint"/>
+            <mxPoint x="55" y="1430" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll2" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="100" as="sourcePoint"/>
+            <mxPoint x="195" y="1430" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll3" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="100" as="sourcePoint"/>
+            <mxPoint x="430" y="1430" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll4" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="665" y="100" as="sourcePoint"/>
+            <mxPoint x="665" y="1430" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll5" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="880" y="100" as="sourcePoint"/>
+            <mxPoint x="880" y="1430" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll6" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1085" y="100" as="sourcePoint"/>
+            <mxPoint x="1085" y="1430" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll7" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1270" y="100" as="sourcePoint"/>
+            <mxPoint x="1270" y="1430" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bar2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="188" y="150" width="14" height="1220" as="geometry"/>
+        </mxCell>
+        <mxCell id="bar4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="658" y="250" width="14" height="1050" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1" value="Open group - click Moi thanh vien&#xa;select friend - click Moi" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="170" as="sourcePoint"/>
+            <mxPoint x="188" y="170" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="POST /api/groups/{groupId}/invitations&#xa;{ userId }" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="230" as="sourcePoint"/>
+            <mxPoint x="430" y="230" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="sendInvitation(groupId, inviteeUserId)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="280" as="sourcePoint"/>
+            <mxPoint x="658" y="280" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="validate: inviter OWNER/ADMIN,&#xa;invitee not member, no PENDING dup" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="672" y="330" as="sourcePoint"/>
+            <mxPoint x="672" y="400" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="780" y="330"/>
+              <mxPoint x="780" y="400"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="save GroupInvitation PENDING&#xa;(inviter != invitee)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="672" y="450" as="sourcePoint"/>
+            <mxPoint x="880" y="450" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="notify-group-invitation" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="672" y="500" as="sourcePoint"/>
+            <mxPoint x="1085" y="500" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="WS GROUP_INVITATION_RECEIVE" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1085" y="540" as="sourcePoint"/>
+            <mxPoint x="1270" y="540" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="toast + pending list in Header" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1270" y="580" as="sourcePoint"/>
+            <mxPoint x="1270" y="620" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="1350" y="580"/>
+              <mxPoint x="1350" y="620"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div1" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="660" as="sourcePoint"/>
+            <mxPoint x="1360" y="660" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="altA" value="alt [Invitee Accept]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="160" y="670" width="160" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m9" value="Click Dong y" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1270" y="710" as="sourcePoint"/>
+            <mxPoint x="202" y="710" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="POST /api/groups/invitations/{id}/accept" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="750" as="sourcePoint"/>
+            <mxPoint x="430" y="750" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="acceptInvitation" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="790" as="sourcePoint"/>
+            <mxPoint x="658" y="790" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="status=ACCEPTED&#xa;upsert GroupMember MEMBER ACTIVE&#xa;syncGroupParticipants (chat)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="672" y="850" as="sourcePoint"/>
+            <mxPoint x="880" y="850" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="success - refresh pending list" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="658" y="910" as="sourcePoint"/>
+            <mxPoint x="1270" y="910" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div2" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="950" as="sourcePoint"/>
+            <mxPoint x="1360" y="950" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="altR" value="alt [Invitee Reject / Owner Cancel]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="160" y="960" width="260" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m14" value="POST /api/groups/invitations/{id}/reject" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="1000" as="sourcePoint"/>
+            <mxPoint x="430" y="1000" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="rejectInvitation&#xa;invitee -&gt; REJECTED&#xa;inviter -&gt; CANCELLED" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="1060" as="sourcePoint"/>
+            <mxPoint x="658" y="1060" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m16" value="update invitation status" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="672" y="1120" as="sourcePoint"/>
+            <mxPoint x="880" y="1120" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="WS GROUP_INVITATION_REJECTED&#xa;(notify inviter if invitee rejected)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="672" y="1170" as="sourcePoint"/>
+            <mxPoint x="1085" y="1170" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m18" value="toast to Owner Header" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1085" y="1220" as="sourcePoint"/>
+            <mxPoint x="202" y="1220" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div3" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="1260" as="sourcePoint"/>
+            <mxPoint x="1360" y="1260" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fail" value="[Failed]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="160" y="1270" width="80" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="not OWNER/ADMIN&#xa;already member&#xa;duplicate PENDING&#xa;maxMembers full (on accept)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1275" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="m19" value="Error response" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="1310" as="sourcePoint"/>
+            <mxPoint x="202" y="1310" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m20" value="toast error" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="188" y="1350" as="sourcePoint"/>
+            <mxPoint x="55" y="1350" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note2" value="Note: Join request (user xin vao) dung chung bang&#xa;inviter==invitee. Invite that: inviter!=invitee.&#xa;UI moi: GroupPage + MediaFilesModal (OWNER only)." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1360" width="320" height="60" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

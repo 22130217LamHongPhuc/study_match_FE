@@ -1,7 +1,7 @@
 import { BASE_CHAT_SERVICE, BASE_USER_SERVICE, BASE_URL } from "../config/BaseConfig";
 import { FriendRequestStatus } from "../pages/StudyConnection/types";
 import WebSocketManager from "../socket/WebSocketManager";
-import { apiFetch } from "../config/apiClient";
+import { apiFetch, isApiSuccess } from "../config/apiClient";
 
 export interface FriendUser {
     userId: number;
@@ -157,24 +157,49 @@ export const updateFriendRequestStatusBySenderAndReceiverService = async (
     } as any;
 };
 
+const mapProfileDto = (raw: any) => ({
+    fullName: raw?.fullName ?? raw?.full_name ?? "",
+    avatarUrl: raw?.avatarUrl ?? raw?.avatar_url ?? "",
+    bannerUrl: raw?.bannerUrl ?? raw?.banner_url ?? undefined,
+    bio: raw?.bio ?? "",
+    mutualFriend: Number(raw?.mutualFriend ?? raw?.mutualFriends ?? 0),
+    numberFriend: Number(raw?.numberFriend ?? raw?.numberFriends ?? 0),
+    statusFriend: raw?.statusFriend ?? raw?.status_friend,
+    friend: Boolean(raw?.friend ?? raw?.isFriend),
+});
+
 export const loadProfileService = async (targetUserId: number) => {
     const user = localStorage.getItem('userId');
-    const res = await apiFetch<any>(
+    // BE returns ProfileDto directly, not {success,data}
+    const res: any = await apiFetch<any>(
         `/users/friends/${user}/mutual?targetUserId=${targetUserId}`,
         { method: 'GET' },
         BASE_USER_SERVICE
     );
-    if (!res.success) {
-        throw new Error(`Cannot load profile. ${res.message}`);
+    if (res == null) {
+        throw new Error("Cannot load profile.");
     }
-    return res.data;
+    if (typeof res.success === "boolean") {
+        if (!res.success) throw new Error(`Cannot load profile. ${res.message ?? ""}`);
+        return res.data ?? mapProfileDto(res);
+    }
+    if (
+        res.fullName !== undefined ||
+        res.full_name !== undefined ||
+        res.avatarUrl !== undefined ||
+        res.friend !== undefined ||
+        res.isFriend !== undefined
+    ) {
+        return mapProfileDto(res);
+    }
+    throw new Error(`Cannot load profile. ${res.message ?? "undefined"}`);
 }
 
 export const updateUserProfileService = async (
     userId: number,
     payload: { fullName: string; bio: string; avatarUrl?: string | null; bannerUrl?: string | null },
 ) => {
-    const res = await apiFetch<any>(
+    const res: any = await apiFetch<any>(
         `/users/${userId}/profile`,
         {
             method: 'PUT',
@@ -182,10 +207,15 @@ export const updateUserProfileService = async (
         },
         BASE_USER_SERVICE
     );
-    if (!res.success) {
-        throw new Error(`Cannot update profile. ${res.message}`);
+    if (res == null) throw new Error("Cannot update profile.");
+    if (typeof res.success === "boolean") {
+        if (!res.success) throw new Error(`Cannot update profile. ${res.message ?? ""}`);
+        return res.data ?? mapProfileDto(res);
     }
-    return res.data;
+    if (res.fullName !== undefined || res.avatarUrl !== undefined) {
+        return mapProfileDto(res);
+    }
+    throw new Error(`Cannot update profile. ${res.message ?? ""}`);
 }
 
 const unwrapPayload = (payload: any) => payload?.data ?? payload?.result ?? payload;
@@ -229,9 +259,9 @@ export const loadFriendListService = async (userId?: number): Promise<FriendUser
         BASE_URL
     );
 
-    if (!res.success || !res.data) return [];
+    if (!isApiSuccess(res)) return [];
 
-    const payload = unwrapPayload(res.data);
+    const payload = unwrapPayload(res.data !== undefined ? res.data : res);
     if (!Array.isArray(payload)) return [];
 
     return (payload as SocialFriendItem[])
@@ -275,12 +305,12 @@ export const loadFriendOnlineStatusesService = async (friendIds: number[]): Prom
             BASE_CHAT_SERVICE
         );
 
-        if (!res.success || !res.data) {
+        if (!isApiSuccess(res)) {
             console.error(`Cannot load online statuses. ${res.message}`);
             return {};
         }
 
-        return unwrapPayload(res.data) ?? {};
+        return unwrapPayload(res.data !== undefined ? res.data : res) ?? {};
     } catch (err) {
         console.error(err);
         return {};
@@ -325,11 +355,11 @@ export const loadFriendRequestsService = async (
         BASE_URL
     );
 
-    if (!res.success || !res.data) {
-        throw new Error(`Cannot load friend requests. ${res.message}`);
+    if (!isApiSuccess(res)) {
+        throw new Error(`Cannot load friend requests. ${res.message ?? ""}`);
     }
 
-    const payload = unwrapPayload(res.data);
+    const payload = unwrapPayload(res.data !== undefined ? res.data : res);
     return {
         sent: Array.isArray(payload?.sent) ? payload.sent : [],
         received: Array.isArray(payload?.received) ? payload.received : [],

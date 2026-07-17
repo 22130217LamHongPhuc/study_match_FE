@@ -1,0 +1,49 @@
+sequenceDiagram
+    actor UserA as UserA (Caller)
+    participant FEA as FE Caller<br/>(ConversationPage)
+    participant VC as VideoCallController<br/>chat_service
+    participant VS as VideoCallService<br/>+ ZegoToken
+    participant FEB as FE Callee<br/>(MainLayout)
+    actor UserB as UserB (Callee)
+    participant Zego as ZegoCloud (media)
+
+    rect rgb(232, 245, 233)
+    Note over UserA,Zego: UC-1: Start call | Post: session created, UserB receives VIDEO_CALL_INVITE
+    UserA->>FEA: 1: click Call / Video icon
+    FEA->>VC: 2: POST /video-calls/start<br/>{conversationId, callType, callerName, callerAvatar}
+    VC->>VS: 3: startCall - create session<br/>roomId=studymatch_call_{sessionId}<br/>generate Zego token (caller)
+    VC->>FEB: 4: STOMP VIDEO_CALL_INVITE<br/>-> /user/queue/chat
+    FEB->>UserB: VideoCallModal incoming
+    VC-->>FEA: 5: 200 VideoCallInfo (token)<br/>show VideoCallModal outgoing<br/>(not join Zego yet)
+    end
+
+    rect rgb(227, 242, 253)
+    Note over UserA,Zego: UC-2: Accept | Post: both join Zego room
+    UserB->>FEB: 6: click Accept
+    FEB->>VC: 7: POST /video-calls/{sessionId}/join
+    VC->>VS: 8: joinCall - token callee<br/>+ token caller
+    VC-->>FEA: 9: STOMP VIDEO_CALL_ACCEPTED<br/>(token for caller)
+    VC-->>FEB: 10: 200 VideoCallInfo (token callee)
+    FEA->>Zego: 11: VideoCallRoom joinRoom(roomId, token)
+    FEB->>Zego: 12: VideoCallRoom joinRoom(roomId, token)
+    Zego-->>FEA: 13: media A/V connected
+    Zego-->>FEB: media A/V connected
+    end
+
+    rect rgb(255, 243, 224)
+    Note over UserA,Zego: UC-3: Reject / Cancel | Post: MISSED + VIDEO_CALL_REJECTED
+    UserB->>FEB: 14a: click Reject<br/>(or UserA Cancel while waiting)
+    FEB->>VC: 15: POST /video-calls/{id}/reject
+    VC->>VS: endCall + saveCallHistory(MISSED)
+    VC-->>FEA: 16: VIDEO_CALL_REJECTED + NEW_MESSAGE
+    end
+
+    rect rgb(255, 235, 238)
+    Note over UserA,Zego: UC-4: End call | Post: COMPLETED + VIDEO_CALL_ENDED
+    UserA->>FEA: 17: click Hang up / onLeaveRoom
+    FEA->>VC: 18: POST /video-calls/{sessionId}/end
+    VC->>VS: 19: endCall + duration<br/>saveCallHistory(COMPLETED)
+    VC-->>FEB: 20: VIDEO_CALL_ENDED + NEW_MESSAGE<br/>(CALL_AUDIO | CALL_VIDEO)
+    end
+
+    Note over FEA,Zego: Media: ZegoUIKitPrebuilt (no raw WebRTC)<br/>Signaling: REST + STOMP<br/>callType: AUDIO | VIDEO

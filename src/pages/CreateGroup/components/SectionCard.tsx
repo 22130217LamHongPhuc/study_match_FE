@@ -16,7 +16,7 @@ export default function SectionCard({
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-2 flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
           {icon}
         </div>
         <h2 className="text-lg font-semibold text-slate-900 md:text-xl">

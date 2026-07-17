@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Kilo" version="24.0.0" type="device">
+  <diagram id="friend-request" name="Friend Request Sequence">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="StudyMatch - Sequence: Friend Request (Send / Accept / Reject)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="380" y="10" width="480" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a1" value="UserA&#xa;(Sender)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="UserA&#xa;(Sender)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1480" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="FE Sender&#xa;(Profile/Search/...)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="FE Sender&#xa;(Profile/Search/...)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1480" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="FriendsController&#xa;social_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="FriendsController&#xa;social_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1480" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="FriendRequestService&#xa;+ FriendService" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="FriendRequestService&#xa;+ FriendService" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="1480" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="DB&#xa;friend_requests&#xa;+ friends" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="780" y="50" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="DB&#xa;friend_requests&#xa;+ friends" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1480" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="ChatController&#xa;(WS relay)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="970" y="50" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="ChatController&#xa;(WS relay)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="970" y="1480" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g1" value="UserB&#xa;(Receiver)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="UserB&#xa;(Receiver)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="1480" width="30" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ll1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="110" as="sourcePoint"/>
+            <mxPoint x="55" y="1480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll2" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="100" as="sourcePoint"/>
+            <mxPoint x="195" y="1480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll3" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="415" y="100" as="sourcePoint"/>
+            <mxPoint x="415" y="1480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll4" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="635" y="100" as="sourcePoint"/>
+            <mxPoint x="635" y="1480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll5" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="845" y="100" as="sourcePoint"/>
+            <mxPoint x="845" y="1480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll6" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1030" y="100" as="sourcePoint"/>
+            <mxPoint x="1030" y="1480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll7" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1175" y="110" as="sourcePoint"/>
+            <mxPoint x="1175" y="1480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- UC-1 Send -->
+        <mxCell id="uc1" value="UC-1" style="shape=umlFrame;whiteSpace=wrap;html=1;width=50;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="140" width="1100" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc1t" value="UC-1: Send friend request  |  Pre: UserA logged in, not self  |  Post: status=PENDING" style="text;html=1;align=left;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="170" y="145" width="700" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1" value="1: click Add Friend" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="190" as="sourcePoint"/>
+            <mxPoint x="195" y="190" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="2: POST /social/friend-requests/&#xa;{ sender_id, receiver_id }" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="250" as="sourcePoint"/>
+            <mxPoint x="415" y="250" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="3: friendRequest(senderId, receiverId)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="415" y="310" as="sourcePoint"/>
+            <mxPoint x="635" y="310" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="4: INSERT friend_requests&#xa;status=PENDING" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="635" y="370" as="sourcePoint"/>
+            <mxPoint x="845" y="370" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="5: 201 FriendRequest" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="635" y="420" as="sourcePoint"/>
+            <mxPoint x="195" y="420" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="6: STOMP /chat/send&#xa;event=FRIEND_REQUEST&#xa;{senderId, receiverId}" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="470" as="sourcePoint"/>
+            <mxPoint x="1030" y="470" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="7: FRIEND_REQUEST_RECEIVE&#xa;-&gt; /user/queue/chat" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1030" y="480" as="sourcePoint"/>
+            <mxPoint x="1175" y="480" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- UC-2 Accept -->
+        <mxCell id="uc2" value="UC-2" style="shape=umlFrame;whiteSpace=wrap;html=1;width=50;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="550" width="1100" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc2t" value="UC-2: Accept friend request  |  Pre: PENDING request exists  |  Post: status=APPROVED + Friend row" style="text;html=1;align=left;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="170" y="555" width="750" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="m8" value="8: click Accept&#xa;(Header / StudyConnection / Profile)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1175" y="610" as="sourcePoint"/>
+            <mxPoint x="195" y="610" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="9: PATCH /social/friend-requests/{id}/status&#xa;{ status: APPROVED }" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="670" as="sourcePoint"/>
+            <mxPoint x="415" y="670" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="10: updateStatus(id, APPROVED)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="415" y="730" as="sourcePoint"/>
+            <mxPoint x="635" y="730" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="11: UPDATE friend_requests=APPROVED&#xa;INSERT friends if not exists" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="635" y="790" as="sourcePoint"/>
+            <mxPoint x="845" y="790" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="12: 200 FriendRequestDto" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="635" y="840" as="sourcePoint"/>
+            <mxPoint x="195" y="840" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="13: STOMP FRIEND_REQUEST_ACCEPT&#xa;-&gt; FRIEND_REQUEST_ACCEPT_RECEIVE to UserA" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="890" as="sourcePoint"/>
+            <mxPoint x="1030" y="890" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="14: refresh friends / UI friend=true" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1030" y="900" as="sourcePoint"/>
+            <mxPoint x="55" y="900" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- UC-3 Reject -->
+        <mxCell id="uc3" value="UC-3" style="shape=umlFrame;whiteSpace=wrap;html=1;width=50;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="960" width="1100" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc3t" value="UC-3: Reject friend request  |  Pre: PENDING  |  Post: status=REJECTED (no Friend row)" style="text;html=1;align=left;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="170" y="965" width="700" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="m15" value="15: click Decline" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1175" y="1020" as="sourcePoint"/>
+            <mxPoint x="195" y="1020" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m16" value="16: PATCH .../status { status: REJECTED }" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="1080" as="sourcePoint"/>
+            <mxPoint x="415" y="1080" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="17: UPDATE friend_requests=REJECTED" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="635" y="1140" as="sourcePoint"/>
+            <mxPoint x="845" y="1140" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m18" value="18: remove from pending UI&#xa;(optional: FRIEND_REQUEST_CANCEL)" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="415" y="1200" as="sourcePoint"/>
+            <mxPoint x="195" y="1200" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="note" value="Statuses&#xa;PENDING - request open&#xa;APPROVED - accepted + friends row&#xa;REJECTED - declined by receiver&#xa;CANCELLED - withdrawn by sender&#xa;&#xa;Notes&#xa;- Friendship created only on APPROVED&#xa;- Realtime via chat_service relay&#xa;- Unfriend: DELETE /social/friends/unfriend&#xa;- Entry: Profile, Search, StudyConnection, Header, Home" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1280" width="320" height="160" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -218,14 +218,14 @@ export default function FriendRequestsSection() {
           <button
             onClick={() => setActiveSubTab("received")}
             className={`flex items-center gap-2 px-6 py-3 text-sm font-semibold border-b-2 transition-all ${activeSubTab === "received"
-                ? "border-orange-500 text-orange-600"
+                ? "border-blue-500 text-blue-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
             <Mail size={16} />
             Lời mời đã nhận
             {receivedRequests.length > 0 && (
-              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-bold text-white">
+              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-500 px-1 text-xs font-bold text-white">
                 {receivedRequests.length}
               </span>
             )}
@@ -233,7 +233,7 @@ export default function FriendRequestsSection() {
           <button
             onClick={() => setActiveSubTab("sent")}
             className={`flex items-center gap-2 px-6 py-3 text-sm font-semibold border-b-2 transition-all ${activeSubTab === "sent"
-                ? "border-orange-500 text-orange-600"
+                ? "border-blue-500 text-blue-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
@@ -263,13 +263,13 @@ export default function FriendRequestsSection() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {activeRequests.map((req) => {
               const profile = req.userProfile;
-              const displayName = profile?.fullName || "Người dùng StudyMatch";
+              const displayName = profile?.fullName || "";
               const userId = activeSubTab === "received" ? req.senderId : req.receiverId;
 
               return (
                 <div
                   key={req.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
                 >
                   {/* Profile section */}
                   <div className="flex items-start gap-4">
@@ -280,14 +280,14 @@ export default function FriendRequestsSection() {
                       <Avatar
                         src={profile?.avatarUrl || undefined}
                         alt={displayName}
-                        className="h-12 w-12 border-2 border-orange-500/10"
+                        className="h-12 w-12 border-2 border-blue-500/10"
                         sx={{ width: 48, height: 48 }}
                       />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3
                         onClick={() => handleGoProfile(userId)}
-                        className="cursor-pointer text-sm font-bold text-gray-800 hover:text-orange-500 hover:underline line-clamp-1"
+                        className="cursor-pointer text-sm font-bold text-gray-800 hover:text-blue-500 hover:underline line-clamp-1"
                       >
                         {displayName}
                       </h3>
@@ -317,7 +317,7 @@ export default function FriendRequestsSection() {
                         <button
                           onClick={() => handleAccept(req.id, displayName)}
                           disabled={actionLoading !== null}
-                          className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
+                          className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-blue-500 text-xs font-semibold text-white transition-colors hover:bg-blue-600 shadow-sm shadow-blue-500/10 disabled:opacity-50"
                         >
                           <Check size={14} />
                           Chấp nhận
@@ -335,7 +335,7 @@ export default function FriendRequestsSection() {
                         <button
                           onClick={() => handleAccept(req.id, displayName)}
                           disabled={actionLoading !== null}
-                          className="flex-1 flex items-center justify-center h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
+                          className="flex-1 flex items-center justify-center h-9 rounded-lg bg-blue-500 text-xs font-semibold text-white transition-colors hover:bg-blue-600 shadow-sm shadow-blue-500/10 disabled:opacity-50"
                         >
                           Chấp nhận
                         </button>

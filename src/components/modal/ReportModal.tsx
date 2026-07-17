@@ -39,7 +39,7 @@ const REPORT_TITLES: Record<ReportTargetType, string> = {
 };
 
 const TARGET_LABELS: Record<ReportTargetType, string> = {
-  USER: "Người dùng",
+  USER: "",
   POST: "Bài viết",
   GROUP: "Nhóm",
 };

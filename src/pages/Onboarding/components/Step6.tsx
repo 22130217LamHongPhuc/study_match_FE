@@ -8,7 +8,7 @@ interface Step6Props {
 
 function getScoreLabel(score: number): { text: string; color: string } {
   if (score < 5.0) return { text: "Yếu", color: "text-red-500" };
-  if (score < 6.5) return { text: "Trung bình", color: "text-orange-500" };
+  if (score < 6.5) return { text: "Trung bình", color: "text-blue-500" };
   if (score < 8.0) return { text: "Khá", color: "text-yellow-600" };
   if (score < 9.0) return { text: "Giỏi", color: "text-blue-600" };
   return { text: "Xuất sắc", color: "text-green-600" };

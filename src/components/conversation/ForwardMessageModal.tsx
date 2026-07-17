@@ -25,7 +25,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { MessageInterface } from "../../model/Conversation";
 import { forwardMessage, loadConversation, loadGroupConversation } from "../../services/ChatService";
 import { FriendUser, loadAllFriendsService } from "../../services/FriendService";
-import { getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
+import { getGroupAvatarUrl, getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
 
 type RecipientType = "friend" | "group";
 
@@ -133,7 +133,7 @@ export default function ForwardMessageModal({
             type: "group" as const,
             id: group.id,
             name: group.name || `Nhóm ${group.id}`,
-            avatarUrl: null,
+            avatarUrl: getGroupAvatarUrl(group),
             subtitle: group.subjectName ? `Nhóm học: ${group.subjectName}` : "Nhóm đang tham gia",
         }));
 

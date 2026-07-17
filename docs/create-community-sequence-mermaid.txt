@@ -1,0 +1,19 @@
+sequenceDiagram
+    actor Admin
+    participant FE as FE (CommunityCreateModal)
+    participant Ctrl as StudyGroupController<br/>group_service
+    participant Svc as StudyGroupServiceImpl + DB
+    participant Cloud as Cloudinary (optional)
+
+    Admin->>FE: 1: open /admin/groups<br/>click Create Community
+    FE->>FE: 2: fill name, subject, description<br/>validate name + subject required
+    FE->>Ctrl: 3: POST /api/groups/community<br/>multipart request JSON<br/>{ ownerUserId, name, mainSubjectId, subjectName, description }
+    Ctrl->>Svc: 4: setTermId(8)<br/>createCommunityGroup(request, avatar)
+    opt avatar present
+        Svc->>Cloud: 5: upload avatar
+    end
+    Svc->>Svc: 6: save StudyGroup<br/>type=COMMUNITY, visibility=COMMUNITY, status=ACTIVE<br/>save GroupMember owner role=ADMIN
+    Svc-->>FE: 7: ApiResponse StudyGroupResponse
+    FE-->>Admin: 8: toast success + close modal
+
+    Note over FE,Svc: vs study group: /api/groups/community<br/>owner role=ADMIN, no freeTimeSlots<br/>community cannot be updated later

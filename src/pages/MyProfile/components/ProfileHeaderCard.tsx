@@ -38,10 +38,10 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
             <img
               src={avatarUrl}
               alt={profile.fullName}
-              className="h-16 w-16 rounded-full object-cover border-2 border-orange-100 shadow-sm shrink-0"
+              className="h-16 w-16 rounded-full object-cover border-2 border-blue-100 shadow-sm shrink-0"
             />
           ) : (
-            <div className="h-16 w-16 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+            <div className="h-16 w-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
               {initials}
             </div>
           )}
@@ -50,7 +50,7 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
             <h2 className="text-xl font-bold text-gray-800">
               {profile.fullName}
             </h2>
-            <p className="text-sm font-semibold text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full inline-block">
+            <p className="text-sm font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full inline-block">
               MSSV: {profile.studentCode}
             </p>
             <div className="text-xs text-gray-500 mt-1 flex flex-wrap justify-center sm:justify-start gap-x-2 gap-y-1">
@@ -64,14 +64,14 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
         </div>
 
         <div className="flex items-center gap-3 self-center sm:self-auto shrink-0">
-          <span className="inline-flex items-center rounded-lg bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 border border-orange-100">
+          <span className="inline-flex items-center rounded-lg bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600 border border-blue-100">
             {profile.cohortLabel}
           </span>
 
           <button
             type="button"
             onClick={() => setOpenEdit(true)}
-            className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition rounded-lg border border-gray-200 hover:border-orange-100 cursor-pointer"
+            className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition rounded-lg border border-gray-200 hover:border-blue-100 cursor-pointer"
           >
             Chỉnh sửa
           </button>

@@ -28,7 +28,7 @@ export default function WelcomeBanner({ onFindMatch, onPostGroup }: WelcomeBanne
 
         <button
           onClick={onFindMatch}
-          className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-orange-600 transition-colors cursor-pointer shrink-0"
+          className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-blue-600 transition-colors cursor-pointer shrink-0"
         >
           Tìm bạn học phù hợp
         </button>

@@ -185,15 +185,15 @@ export default function StudySessionReminderToast({
             py: 0.75,
             fontSize: 12,
             fontWeight: 600,
-            bgcolor: "#fff7ed",
-            color: "#ea580c",
-            border: "1px solid rgba(249, 115, 22, 0.15)",
+            bgcolor: "#eff6ff",
+            color: "#2563eb",
+            border: "1px solid rgba(37, 99, 235, 0.15)",
             boxShadow: "none",
             whiteSpace: "nowrap",
             "&:hover": {
-              bgcolor: "#ffedd5",
+              bgcolor: "#dbeafe",
               boxShadow: "none",
-              border: "1px solid rgba(249, 115, 22, 0.25)",
+              border: "1px solid rgba(37, 99, 235, 0.25)",
             },
           }}
         >

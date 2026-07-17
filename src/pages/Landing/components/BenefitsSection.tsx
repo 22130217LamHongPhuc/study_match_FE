@@ -27,7 +27,7 @@ const BenefitsSection: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
             <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
-              <div className="w-2 h-2 rounded-full bg-[#f97316]" />
+              <div className="w-2 h-2 rounded-full bg-[#2563eb]" />
               <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Dành cho sinh viên</span>
             </div>
             <div className="p-6 space-y-4">
@@ -40,8 +40,8 @@ const BenefitsSection: React.FC = () => {
               <ul className="space-y-3 pt-2">
                 {studentBenefits.map((b) => (
                   <li key={b} className="flex items-start gap-3">
-                    <div className="mt-0.5 w-5 h-5 rounded-full bg-[#f97316]/15 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3 h-3 text-[#f97316]" />
+                    <div className="mt-0.5 w-5 h-5 rounded-full bg-[#2563eb]/15 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-[#2563eb]" />
                     </div>
                     <span className="text-sm text-gray-700 leading-relaxed">{b}</span>
                   </li>

@@ -33,14 +33,14 @@ export function Step5({ data, update }: Step5Props) {
 
   const slotColors: Record<SlotId, { active: string; inactive: string }> = {
     ca1: {
-      active: "bg-blue-300 border-amber-400 text-white",
+      active: "bg-blue-300 border-blue-400 text-white",
       inactive:
-        "border-gray-200 bg-white text-gray-300 hover:border-amber-300 hover:bg-amber-50",
+        "border-gray-200 bg-white text-gray-300 hover:border-blue-300 hover:bg-blue-50",
     },
     ca2: {
-      active: "bg-blue-300 border-amber-400 text-white",
+      active: "bg-blue-300 border-blue-400 text-white",
       inactive:
-        "border-gray-200 bg-white text-gray-300 hover:border-amber-300 hover:bg-amber-50",
+        "border-gray-200 bg-white text-gray-300 hover:border-blue-300 hover:bg-blue-50",
     },
     ca3: {
       active: "bg-blue-400 border-blue-400 text-white",
@@ -118,7 +118,7 @@ export function Step5({ data, update }: Step5Props) {
                   <td className="py-2 pr-3">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`text-sm font-semibold ${isWeekend ? "text-orange-500" : "text-gray-700"}`}
+                        className={`text-sm font-semibold ${isWeekend ? "text-blue-500" : "text-gray-700"}`}
                       >
                         {d.short}
                       </span>

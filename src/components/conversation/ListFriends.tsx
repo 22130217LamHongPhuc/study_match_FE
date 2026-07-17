@@ -11,7 +11,7 @@ import { RootState } from "../../redux/store";
 import { updateCurrentConverId, setUnreads, upsertGroupMemberProfiles } from "../../redux/ChatReducer";
 import { loadAcceptedDirectConversations, loadConversation, loadGroupConversation, loadGroupConversationPins, loadMessageRequests, MessageRequestItem } from "../../services/ChatService";
 import { FriendUser, loadAllFriendsService, loadFriendOnlineStatusesService, loadFriendProfilesService } from "../../services/FriendService";
-import { getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
+import { getGroupAvatarUrl, getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
 
 type GroupConversationItem = StudyGroupDetailResponse & {
     conversationId?: number | null;
@@ -582,7 +582,7 @@ export default function ListFriends() {
                 id: `group-${group.id}`,
                 type: "GROUP" as const,
                 displayName: group.name || `Nhóm ${group.id}`,
-                avatarUrl: undefined,
+                avatarUrl: getGroupAvatarUrl(group),
                 lastMessagePreview: getLastMessagePreview(group as any, true, currentUserId, groupMemberProfiles),
                 time: groupTime,
                 isOnline: false,
@@ -631,7 +631,7 @@ export default function ListFriends() {
                 conversationType: 0,
                 targetUserId: null,
                 fullName: null,
-                avatar: null,
+                avatar: getGroupAvatarUrl(group),
                 conversationKey,
                 groupVisibility: group.visibility,
             },
@@ -875,7 +875,7 @@ export default function ListFriends() {
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0, flex: 1 }}>
                                 <Box sx={{ position: "relative", flexShrink: 0 }}>
                                     {item.type === "GROUP" ? (
-                                        <Avatar sx={{ width: 45, height: 45, bgcolor: "#3b82f6" }}>
+                                        <Avatar src={item.avatarUrl ?? undefined} sx={{ width: 45, height: 45, bgcolor: "#4285f4" }}>
                                             <GroupsRoundedIcon sx={{ fontSize: 22 }} />
                                         </Avatar>
                                     ) : (

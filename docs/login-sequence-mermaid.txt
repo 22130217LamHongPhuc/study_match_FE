@@ -1,0 +1,27 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (Login Page)
+    participant AC as AuthController<br/>@PostMapping(/login)
+    participant AS as AuthService
+    participant UR as UserRepository
+    participant JT as JwtService + RefreshTokenService
+
+    User->>FE: Enter email and password
+    FE->>AC: POST /api/auth/login (email, password)
+    AC->>AS: login(AuthRequest)
+    AS->>UR: findByEmail(email)
+    UR-->>AS: User
+    AS->>AS: passwordEncoder.matches()<br/>check status != LOCKED/DELETED<br/>save(lastLoginAt)
+
+    alt Login success
+        AS->>JT: generateToken(user)<br/>createRefreshToken(user)
+        JT-->>AS: accessToken (JWT) + refreshToken
+        AS-->>AC: AuthResponse(accessToken, refreshToken,<br/>onboardingCompleted, userId, emailVerified)
+        AC-->>FE: ApiResponse AuthResponse (success=true)
+        FE->>FE: localStorage.setItem<br/>(accessToken, refreshToken, userId)
+        FE-->>User: Redirect: /verify-email | /onboarding | /home
+    else Login failed
+        Note over AS,UR: USER_NOT_FOUND<br/>PASSWORD_INCORRECT<br/>USER_LOCKED
+        AC-->>FE: Error response (Failure message)
+        FE-->>User: Show error / toast
+    end

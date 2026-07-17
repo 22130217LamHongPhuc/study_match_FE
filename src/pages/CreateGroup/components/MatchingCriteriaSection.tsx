@@ -25,7 +25,7 @@ const MODE_CONFIG: Record<
     description: "Cao hơn một chút để kéo nhóm lên mà không quá chênh lệch.",
   },
   challenge: {
-    icon: <Zap className="h-5 w-5 text-orange-600" />,
+    icon: <Zap className="h-5 w-5 text-blue-600" />,
     label: "Người thử thách",
     description: "Tìm bạn học giỏi hơn để tạo áp lực tích cực và bứt phá.",
   },

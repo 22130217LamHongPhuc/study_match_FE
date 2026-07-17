@@ -6,6 +6,7 @@ export interface CommonGroupApiItem {
   id: number;
   name: string;
   avatarUrl: string | null;
+  avatar_url?: string | null;
 }
 
 export interface RecommendationApiItem {

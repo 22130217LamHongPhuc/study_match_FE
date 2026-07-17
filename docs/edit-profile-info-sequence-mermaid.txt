@@ -1,0 +1,34 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (EditProfileModal)
+    participant SC as PostController<br/>social_service
+    participant Cloud as Cloudinary
+    participant UC as UserController<br/>user_service
+    participant DB as UserRepository / DB users
+    participant PS as profile_service<br/>internal update
+
+    User->>FE: Open own profile - click "Chinh sua ho so"
+    FE->>FE: prefill fullName, bio, avatar, banner
+    User->>FE: Edit fields + optional pick avatar/banner<br/>FE validate: fullName required, image/* only
+    User->>FE: Click "Luu"
+
+    opt avatarFile or bannerFile present
+        FE->>SC: POST /social/posts/media (multipart file)
+        SC->>Cloud: upload folder=social_posts
+        Cloud-->>FE: secure_url (mediaUrl)
+    end
+
+    FE->>UC: PUT /users/{userId}/profile<br/>{ fullName, bio, avatarUrl, bannerUrl }
+    UC->>DB: findById + apply fullName, bio, avatarUrl<br/>(banner IGNORED by BE DTO)
+    UC->>DB: save(User)
+
+    opt fullName or avatarUrl changed
+        UC->>PS: PUT /api/profile/internal/update-info<br/>(userId, fullName, avatarUrl)
+        PS-->>UC: sync StudentProfile fullName/avatar<br/>(fail logged, not fail main)
+    end
+
+    UC-->>FE: ProfileDto (fullName, avatarUrl, bio)
+    FE->>FE: onProfileUpdated: merge state<br/>patch posts authorName/avatar + close
+    FE-->>User: UI updated
+
+    Note over FE,PS: banner FE uploads/sends, BE ignores banner.<br/>Separate from academic profile edit (PUT /api/profile/update).

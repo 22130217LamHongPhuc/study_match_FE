@@ -2,7 +2,7 @@ import type { ScheduleStatus, StudyMode, ScheduleType } from "../types";
 
 const statusStyles: Record<ScheduleStatus, string> = {
   SCHEDULED: "bg-accent-50 text-accent-700",
-  ONGOING: "bg-amber-50 text-amber-700",
+  ONGOING: "bg-blue-50 text-blue-700",
   COMPLETED: "bg-sage-50 text-sage-700",
   CANCELLED: "bg-rose-50 text-rose-700",
   UPCOMING: "bg-blue-50 text-blue-700",

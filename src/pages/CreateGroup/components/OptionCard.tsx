@@ -18,7 +18,7 @@ export default function OptionCard({
   onChange,
 }: OptionCardProps) {
   return (
-    <label className="relative flex cursor-pointer flex-col rounded-xl border-2 border-slate-100 bg-slate-50/50 p-4 transition-colors hover:border-orange-500/30 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+    <label className="relative flex cursor-pointer flex-col rounded-xl border-2 border-slate-100 bg-slate-50/50 p-4 transition-colors hover:border-blue-500/30 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
       <input
         className="hidden"
         name={name}

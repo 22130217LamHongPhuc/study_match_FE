@@ -484,6 +484,7 @@ export interface GroupInvitationResponse {
   inviterAvatar?: string;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'CANCELLED';
   createdAt: string;
+  message?: string;
 }
 
 export async function sendGroupInvitation(
@@ -563,6 +564,87 @@ export async function getUserGroupStats(
     `/api/groups/user/${userId}/stats`,
     {
       method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export interface UpdateStudyGroupRequest {
+  name?: string;
+  description?: string;
+  mainSubjectId?: number;
+  subjectName?: string;
+  maxMembers?: number;
+  visibility?: "PUBLIC" | "PRIVATE";
+}
+
+export async function updateStudyGroup(
+  groupId: number,
+  request: UpdateStudyGroupRequest,
+  avatar?: File,
+): Promise<APIResponseData<unknown>> {
+  const formData = new FormData();
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(request)], { type: "application/json" }),
+  );
+  if (avatar) {
+    formData.append("avatar", avatar);
+  }
+
+  const response = await apiFetch<unknown>(
+    `/api/groups/${groupId}`,
+    {
+      method: "PUT",
+      body: formData,
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export async function deleteStudyGroup(
+  groupId: number,
+): Promise<APIResponseData<unknown>> {
+  const response = await apiFetch<unknown>(
+    `/api/groups/${groupId}`,
+    {
+      method: "DELETE",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export function getGroupAvatarUrl(group?: { avatarUrl?: string | null; avatar_url?: string | null; groupAvatarUrl?: string | null } | null): string | null {
+  if (!group) return null;
+  const url = group.avatarUrl || group.avatar_url || group.groupAvatarUrl;
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  return `${API_BASE_URL_GROUP}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
+export async function getSentPendingGroupJoinRequests(): Promise<APIResponseData<GroupInvitationResponse[]>> {
+  const response = await apiFetch<GroupInvitationResponse[]>(
+    `/api/groups/invitations/sent-pending`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
+export async function leaveGroup(
+  groupId: number,
+): Promise<APIResponseData<unknown>> {
+  const response = await apiFetch<unknown>(
+    `/api/groups/${groupId}/members/leave`,
+    {
+      method: "POST",
     },
     API_BASE_URL_GROUP,
   );

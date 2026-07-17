@@ -76,15 +76,15 @@ export default function ConnectionTabs({ activeTab, onTabChange }: ConnectionTab
               onClick={() => onTabChange(tab.id)}
               className={`flex items-center px-4 py-1.5 text-sm font-semibold rounded-full transition-all cursor-pointer border ${
                 isActive
-                  ? "bg-orange-50 text-orange-600 border-orange-200 shadow-sm"
-                  : "bg-transparent text-gray-500 border-transparent hover:text-orange-600"
+                  ? "bg-blue-50 text-blue-600 border-blue-200 shadow-sm"
+                  : "bg-transparent text-gray-500 border-transparent hover:text-blue-600"
               }`}
             >
               {tab.label}
               
               {/* Badge count indicating pending requests */}
               {showBadge && (
-                <span className="ml-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1.5 text-[10px] font-bold text-white">
+                <span className="ml-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-bold text-white">
                   {requestCount}
                 </span>
               )}

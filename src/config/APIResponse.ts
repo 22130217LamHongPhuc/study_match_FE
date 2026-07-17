@@ -25,6 +25,7 @@ export enum StatusCode {
   INVALID_FILE = "INVALID_FILE",
   PASSWORD_INCORRECT = "PASSWORD_INCORRECT",
   SUCCESS = "SUCCESS",
+  USER_LOCKED = "USER_LOCKED",
 }
 
 export const StatusMessage: Record<StatusCode, string> = {
@@ -38,6 +39,7 @@ export const StatusMessage: Record<StatusCode, string> = {
   [StatusCode.INVALID_FILE]: "File không hợp lệ",
   [StatusCode.PASSWORD_INCORRECT]: "Sai mật khẩu",
   [StatusCode.SUCCESS]: "Thành công",
+  [StatusCode.USER_LOCKED]: "Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động bởi quản trị viên",
 };
 export interface APIResponseData<T> {
   success: boolean;

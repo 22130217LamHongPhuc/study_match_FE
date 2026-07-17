@@ -1,0 +1,41 @@
+sequenceDiagram
+    actor UserA as UserA (Sender)
+    participant FEA as ConversationPage<br/>(FE Sender)
+    participant CC as ChatController<br/>(chat_service)
+    participant MSS as MessageStatusService<br/>+ MessageRepo
+    participant FEB as MainLayout<br/>(FE Receiver)
+    actor UserB as UserB (Receiver)
+
+    rect rgb(232, 245, 233)
+    Note over UserA,UserB: UC-1: Gui tin nhan | Pre: UserA login + participant | Post: status = SENT (Da gui)
+    UserA->>FEA: 1: nhap noi dung + bam Gui / Enter
+    FEA->>FEA: 2: createOptimisticMessage()<br/>status := SENDING (tempId < 0)
+    FEA->>CC: 3: STOMP /chat/send<br/>event=SEND_CHAT<br/>data={conversationId, type=text, content}
+    CC->>CC: 4: isParticipant(conversationId, senderId)
+    CC->>MSS: 5: saveMess() + markSenderSeen()
+    CC-->>FEA: 6: MESSAGE_SENT {status=SENT, messageIds}<br/>+ MESSAGE_ACK {message}
+    FEA->>FEA: 7: applyMessageAck()<br/>tempId -> realId<br/>status := SENT => UI "Da gui"
+    CC->>FEB: 8: NEW_MESSAGE {conversationId, message}
+    end
+
+    rect rgb(227, 242, 253)
+    Note over UserA,UserB: UC-2: Xac nhan da nhan | Pre: UserB online + nhan NEW_MESSAGE | Post: status = DELIVERED (Da nhan)
+    FEB->>UserB: 9: nhan NEW_MESSAGE (/user/queue/chat)
+    FEB->>FEB: 10: hien thi tin / toast<br/>neu khong mo chat: increaseUnread()
+    FEB->>CC: 11: STOMP /chat/send<br/>event=MESSAGE_DELIVERED<br/>data={conversationId, messageIds[]}
+    CC->>MSS: 12: markDelivered(conversationId, userB, message)
+    CC-->>FEA: 13: MESSAGE_DELIVERED<br/>{status=DELIVERED, messageIds, userId=UserB}
+    FEA->>FEA: 14: updateOutgoingMessageStatus()<br/>status := DELIVERED => UI "Da nhan"
+    end
+
+    rect rgb(255, 235, 238)
+    Note over UserA,UserB: UC-3: Xac nhan da xem | Pre: UserB mo conversation | Post: status = SEEN (Da xem)
+    UserB->>FEB: 15: mo / focus conversation
+    FEB->>FEB: 16: sendSeen(conversationId, messageIds)
+    FEB->>CC: 17: STOMP /chat/send<br/>event=MESSAGE_SEEN<br/>data={conversationId, messageIds[]}
+    CC->>MSS: 18: markSeen(conversationId, userB, messageIds)
+    CC-->>FEA: 19: MESSAGE_SEEN<br/>{status=SEEN, messageIds, userId=UserB}
+    FEA->>FEA: 20: updateOutgoingMessageStatus()<br/>status := SEEN => UI "Da xem"
+    end
+
+    Note over FEA: Bang trang thai UI (ListMess)<br/>SENDING = Dang gui<br/>SENT = Da gui<br/>DELIVERED = Da nhan<br/>SEEN = Da xem<br/>Priority: 0 < 1 < 2 < 3

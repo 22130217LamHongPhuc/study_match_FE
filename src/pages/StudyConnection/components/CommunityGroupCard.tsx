@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, ArrowRight } from "lucide-react";
+import { Users, ArrowRight, SquareX } from "lucide-react";
 
 type CommunityGroupStatus = "ACTIVE" | "INACTIVE";
 type CommunityGroupType = "COMMUNITY" | "PRIVATE" | "PUBLIC" | "STUDY";
@@ -16,6 +16,7 @@ export interface CommunityGroup {
   isMember?: boolean;
   avatarUrl?: string | null;
   isJoinRequestPending?: boolean;
+  description?: string | null;
 }
 
 interface CommunityGroupCardProps {
@@ -23,12 +24,13 @@ interface CommunityGroupCardProps {
   recommended?: boolean;
   onView?: (id: number) => void;
   onJoin?: (id: number) => void;
+  onCancel?: (id: number) => void;
 }
 
 const AVATAR_COLORS = [
-  "bg-orange-400",
+  "bg-blue-400",
   "bg-rose-400",
-  "bg-amber-500",
+  "bg-blue-500",
   "bg-lime-500",
   "bg-pink-400",
   "bg-red-400",
@@ -84,6 +86,7 @@ export default function CommunityGroupCard({
   recommended = false,
   onView,
   onJoin,
+  onCancel,
 }: CommunityGroupCardProps) {
   const initials = getInitials(group.name);
   const avatarBg = getAvatarColor(group.id);
@@ -119,7 +122,7 @@ export default function CommunityGroupCard({
               )}
 
               {recommended && (
-                <span className="shrink-0 rounded-md bg-orange-50 px-2 py-0.5 text-[10px] font-bold text-orange-600 border border-orange-100">
+                <span className="shrink-0 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600 border border-blue-100">
                   Gợi ý
                 </span>
               )}
@@ -129,6 +132,12 @@ export default function CommunityGroupCard({
                 {group.memberCount} thành viên
               </span>
             </div>
+
+            {group.description && (
+              <p className="mt-3 text-xs text-gray-500 line-clamp-2 leading-relaxed font-sans font-medium">
+                {group.description}
+              </p>
+            )}
           </div>
 
           <GroupAvatar
@@ -139,16 +148,27 @@ export default function CommunityGroupCard({
           />
         </div>
 
-        <div className="mt-auto">
+        <div className="mt-auto flex gap-2">
           <button
             type="button"
             onClick={() => onJoin?.(group.id)}
             disabled={isJoinDisabled}
-            className="flex w-full items-center justify-center gap-1.5 h-10 rounded-lg bg-orange-500 text-sm font-semibold text-white hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
+            className="flex flex-1 items-center justify-center gap-1.5 h-10 rounded-lg bg-blue-500 text-sm font-semibold text-white hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
           >
             {joinLabel}
             {!isJoinDisabled && <ArrowRight size={14} />}
           </button>
+
+          {group.isJoinRequestPending && onCancel && (
+            <button
+              type="button"
+              onClick={() => onCancel(group.id)}
+              title="Hủy yêu cầu"
+              className="flex items-center justify-center h-10 w-10 rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-400 hover:text-red-600 transition-colors"
+            >
+              <SquareX size={20} strokeWidth={2} />
+            </button>
+          )}
         </div>
       </div>
     </article>

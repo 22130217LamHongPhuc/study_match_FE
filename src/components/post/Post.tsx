@@ -48,7 +48,7 @@ const getFileMeta = (fileName: string) => {
     return { label: "Excel", color: "#10b981", bg: "#d1fae5" };
   }
   if (lower.endsWith(".ppt") || lower.endsWith(".pptx")) {
-    return { label: "PowerPoint", color: "#f97316", bg: "#ffedd5" };
+    return { label: "PowerPoint", color: "#2563eb", bg: "#dbeafe" };
   }
   if (lower.endsWith(".zip") || lower.endsWith(".rar") || lower.endsWith(".7z") || lower.endsWith(".tar") || lower.endsWith(".gz")) {
     return { label: "Archive", color: "#8b5cf6", bg: "#ede9fe" };
@@ -569,7 +569,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
       case "SAD":
         return { icon: <span style={{ fontSize: 22 }}>😢</span>, color: "#3b82f6" };
       case "ANGRY":
-        return { icon: <span style={{ fontSize: 22 }}>😡</span>, color: "#f97316" };
+        return { icon: <span style={{ fontSize: 22 }}>😡</span>, color: "#2563eb" };
       case "LIKE":
       default:
         return { icon: <ThumbUpIcon sx={{ fontSize: 22, color: "#1877f2" }} />, color: "#1877f2" };
@@ -818,10 +818,10 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
                 </MenuItem>
               )}
               {isOwner && (
-                <>
+                <Box sx={{ display: "contents" }}>
                   <MenuItem onClick={() => { setEditing(true); setAnchorEl(null); }}>Sửa bài</MenuItem>
                   <MenuItem onClick={handleDelete}>Xóa bài</MenuItem>
-                </>
+                </Box>
               )}
             </Menu>
           </>

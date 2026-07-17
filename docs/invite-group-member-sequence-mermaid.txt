@@ -1,0 +1,33 @@
+sequenceDiagram
+    actor Owner
+    participant FE as Frontend (GroupPage / Header)
+    participant Ctrl as GroupInvitationController<br/>group_service
+    participant Svc as StudyGroupServiceImpl
+    participant DB as DB (group_invitations + group_members)
+    participant Chat as ChatService + WebSocket
+    participant Inv as Invitee (Header)
+
+    Owner->>FE: Open group - click "Moi thanh vien"<br/>select friend - click "Moi"
+    FE->>Ctrl: POST /api/groups/{groupId}/invitations<br/>{ userId }
+    Ctrl->>Svc: sendInvitation(groupId, inviteeUserId)
+    Svc->>Svc: validate: inviter OWNER/ADMIN,<br/>invitee not member, no PENDING dup
+    Svc->>DB: save GroupInvitation PENDING<br/>(inviter != invitee)
+    Svc->>Chat: notify-group-invitation
+    Chat->>Inv: WS GROUP_INVITATION_RECEIVE
+    Inv->>Inv: toast + pending list in Header
+
+    alt Invitee Accept
+        Inv->>FE: Click "Dong y"
+        FE->>Ctrl: POST /api/groups/invitations/{id}/accept
+        Ctrl->>Svc: acceptInvitation
+        Svc->>DB: status=ACCEPTED<br/>upsert GroupMember MEMBER ACTIVE<br/>syncGroupParticipants (chat)
+        Svc-->>Inv: success - refresh pending list
+    else Invitee Reject / Owner Cancel
+        FE->>Ctrl: POST /api/groups/invitations/{id}/reject
+        Ctrl->>Svc: rejectInvitation<br/>invitee -> REJECTED / inviter -> CANCELLED
+        Svc->>DB: update invitation status
+        Svc->>Chat: WS GROUP_INVITATION_REJECTED<br/>(if invitee rejected)
+        Chat->>Owner: toast to Owner Header
+    end
+
+    Note over FE,Inv: Join request (user xin vao) dung chung bang inviter==invitee.<br/>Invite that: inviter!=invitee. UI moi: GroupPage + MediaFilesModal (OWNER only).

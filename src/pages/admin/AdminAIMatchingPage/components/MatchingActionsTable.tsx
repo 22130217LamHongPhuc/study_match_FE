@@ -102,7 +102,7 @@ export function MatchingActionsTable({
           <table className="w-full min-w-[920px] border-collapse text-left">
             <thead>
               <tr className="border-b border-sand-100 bg-sand-50">
-                <TableHeader>Người dùng</TableHeader>
+                <TableHeader>{""}</TableHeader>
                 <TableHeader>Người được gợi ý</TableHeader>
                 <TableHeader>Trạng thái</TableHeader>
                 <TableHeader>Ngày tạo</TableHeader>

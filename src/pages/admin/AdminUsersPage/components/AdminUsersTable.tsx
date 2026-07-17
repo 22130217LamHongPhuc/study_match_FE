@@ -40,14 +40,17 @@ type AdminUsersTableProps = {
   onEditUser?: (userId: number) => void;
 };
 
-function statusLabel(status: AdminUserStatus) {
-  switch (status) {
+function statusLabel(status: string) {
+  const s = status?.toUpperCase();
+  switch (s) {
     case "ACTIVE":
       return "Đang hoạt động";
-    case "INACTIVE":
+    case "LOCKED":
       return "Bị khóa";
     case "DELETED":
       return "Đã xóa";
+    case "PENDING":
+      return "Chờ xác thực";
     default:
       return status;
   }
@@ -173,8 +176,9 @@ export function AdminUsersTable({
     return user.full_name || user.email || `User #${user.user_id}`;
   };
 
-  const canToggleStatus = (status: AdminUserStatus) => {
-    return status === "ACTIVE" || status === "INACTIVE";
+  const canToggleStatus = (status: string) => {
+    const s = status?.toUpperCase();
+    return s === "ACTIVE" || s === "PENDING" || s === "LOCKED";
   };
 
   const closeConfirm = () => {
@@ -185,12 +189,12 @@ export function AdminUsersTable({
   };
 
   const startToggleStatus = (user: AdminUserDbRow) => {
-    const fromStatus = user.status as AdminUserStatus;
+    const fromStatus = (user.status || "").toUpperCase() as AdminUserStatus;
 
     if (!canToggleStatus(fromStatus)) return;
 
     const toStatus: AdminUserStatus =
-      fromStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      (fromStatus === "ACTIVE" || fromStatus === "PENDING") ? "LOCKED" : "ACTIVE";
 
     setPendingChange({
       kind: "status",
@@ -253,7 +257,7 @@ export function AdminUsersTable({
           <thead>
             <tr className="border-b border-sand-200 bg-sand-50 text-left">
               <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
-                Người dùng
+                
               </th>
               <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Vai trò
@@ -395,12 +399,12 @@ export function AdminUsersTable({
                             : "hover:bg-sand-100 hover:text-sand-600"
                         }`}
                         aria-label={
-                          status === "ACTIVE"
+                          status?.toUpperCase() === "ACTIVE" || status?.toUpperCase() === "PENDING"
                             ? "Khóa người dùng"
                             : "Mở khóa người dùng"
                         }
                       >
-                        {status === "ACTIVE" ? (
+                        {status?.toUpperCase() === "ACTIVE" || status?.toUpperCase() === "PENDING" ? (
                           <Lock size={15} />
                         ) : (
                           <Unlock size={15} />

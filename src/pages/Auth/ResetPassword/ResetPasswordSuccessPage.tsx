@@ -24,7 +24,7 @@ export default function ResetPasswordSuccessPage() {
 
         <Link
           to="/login"
-          className="mt-8 block w-full rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
+          className="mt-8 block w-full rounded-xl bg-blue-500 py-3 font-semibold text-white transition hover:bg-blue-600"
         >
           Đăng nhập ngay
         </Link>

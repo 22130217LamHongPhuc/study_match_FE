@@ -24,7 +24,7 @@ export default function PasswordField({
         </label>
         <Link
           to="/forgot-password"
-          className="text-sm font-semibold text-black-700 transition hover:underline"
+          className="text-sm font-semibold text-accent-500 transition hover:underline hover:text-accent-600"
         >
           Quên mật khẩu?
         </Link>
