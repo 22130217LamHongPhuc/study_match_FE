@@ -265,15 +265,15 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
             {STEPS.map((s, index) => (
               <React.Fragment key={s.id}>
                 <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${step === s.id
-                    ? "bg-orange-500 text-white scale-105 shadow-sm"
+                    ? "bg-blue-500 text-white scale-105 shadow-sm"
                     : step > s.id
-                      ? "bg-orange-100 text-orange-600"
+                      ? "bg-blue-100 text-blue-600"
                       : "bg-gray-200 text-gray-500"
                   }`}>
                   {s.id}
                 </span>
                 {index < STEPS.length - 1 && (
-                  <div className={`h-0.5 flex-1 mx-3 transition-all ${step > s.id ? "bg-orange-500" : "bg-gray-200"}`} />
+                  <div className={`h-0.5 flex-1 mx-3 transition-all ${step > s.id ? "bg-blue-500" : "bg-gray-200"}`} />
                 )}
               </React.Fragment>
             ))}
@@ -302,7 +302,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                 </div>
                 <button
                   type="button"
-                  className="mt-2.5 text-xs font-bold text-orange-500 hover:text-orange-600 cursor-pointer"
+                  className="mt-2.5 text-xs font-bold text-blue-500 hover:text-blue-600 cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   Tải ảnh đại diện nhóm
@@ -325,7 +325,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     placeholder="v.d. Nhóm ôn tập giải tích 1"
-                    className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-100 transition-all"
+                    className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all"
                     required
                   />
                 </label>
@@ -337,7 +337,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                     onChange={(e) => setGoalDescription(e.target.value)}
                     placeholder="Mô tả mục tiêu tập trung của nhóm học này..."
                     rows={4}
-                    className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-100 transition-all resize-none"
+                    className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all resize-none"
                   />
                 </label>
               </div>
@@ -386,7 +386,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                             "& fieldset": { borderColor: "#e5e7eb" },
                             "&:hover fieldset": { borderColor: "#d1d5db" },
                             "&.Mui-focused fieldset": {
-                              borderColor: "#f97316",
+                              borderColor: "#2563eb",
                               borderWidth: "1px",
                             },
                           },
@@ -398,11 +398,11 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
               </label>
 
               {mainSubject && (
-                <div className="rounded-lg border border-orange-150 bg-orange-50/40 p-4 mt-3 flex items-start gap-3">
-                  <BookOpen className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-4 mt-3 flex items-start gap-3">
+                  <BookOpen className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-bold text-orange-700">Môn học đã chọn: {mainSubject.subjectName}</h4>
-                    <p className="text-xs text-orange-600 mt-1">
+                    <h4 className="text-sm font-bold text-blue-700">Môn học đã chọn: {mainSubject.subjectName}</h4>
+                    <p className="text-xs text-blue-600 mt-1">
                       Mã môn học: {mainSubject.subjectCode || "N/A"}
                     </p>
                   </div>
@@ -429,8 +429,8 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                       type="button"
                       onClick={() => setMaxMembers(num)}
                       className={`h-10 rounded-lg border text-sm font-bold transition-all cursor-pointer ${maxMembers === num
-                          ? "bg-orange-500 text-white border-orange-500 shadow-sm"
-                          : "border-gray-200 bg-white text-gray-600 hover:border-orange-300 hover:bg-orange-50/30"
+                          ? "bg-blue-500 text-white border-blue-500 shadow-sm"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:bg-blue-50/30"
                         }`}
                     >
                       {num}
@@ -446,7 +446,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Public Card Option */}
                   <label className={`flex cursor-pointer items-start gap-4 rounded-xl border-2 p-4 transition-all ${visibility === "public"
-                      ? "border-orange-500 bg-orange-50/20"
+                      ? "border-blue-500 bg-blue-50/20"
                       : "border-gray-150 bg-gray-50/30 hover:bg-gray-50/80"
                     }`}>
                     <input
@@ -454,11 +454,11 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                       name="visibility"
                       checked={visibility === "public"}
                       onChange={() => setVisibility("public")}
-                      className="mt-1 text-orange-500 focus:ring-orange-100"
+                      className="mt-1 text-blue-500 focus:ring-blue-100"
                     />
                     <div>
                       <span className="flex items-center gap-1.5 font-bold text-gray-800 text-sm">
-                        <Globe className="h-4 w-4 text-orange-500" /> Công khai
+                        <Globe className="h-4 w-4 text-blue-500" /> Công khai
                       </span>
                       <span className="block text-xs text-gray-500 mt-1 leading-relaxed">
                         Nhóm hiển thị trên tìm kiếm. Sinh viên cùng trường có thể gửi yêu cầu tham gia.
@@ -468,7 +468,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
                   {/* Private Card Option */}
                   <label className={`flex cursor-pointer items-start gap-4 rounded-xl border-2 p-4 transition-all ${visibility === "private"
-                      ? "border-orange-500 bg-orange-50/20"
+                      ? "border-blue-500 bg-blue-50/20"
                       : "border-gray-150 bg-gray-50/30 hover:bg-gray-50/80"
                     }`}>
                     <input
@@ -476,11 +476,11 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                       name="visibility"
                       checked={visibility === "private"}
                       onChange={() => setVisibility("private")}
-                      className="mt-1 text-orange-500 focus:ring-orange-100"
+                      className="mt-1 text-blue-500 focus:ring-blue-100"
                     />
                     <div>
                       <span className="flex items-center gap-1.5 font-bold text-gray-800 text-sm">
-                        <Lock className="h-4 w-4 text-amber-600" /> Riêng tư
+                        <Lock className="h-4 w-4 text-blue-600" /> Riêng tư
                       </span>
                       <span className="block text-xs text-gray-500 mt-1 leading-relaxed">
                         Ẩn khỏi tìm kiếm. Chỉ những sinh viên nhận được link mời trực tiếp mới có thể tham gia.
@@ -523,13 +523,13 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                     value={friendSearchQuery}
                     onChange={(e) => setFriendSearchQuery(e.target.value)}
                     placeholder="Tìm bạn bè..."
-                    className="w-full rounded-lg border border-gray-200 pl-9 pr-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-100 transition-all"
+                    className="w-full rounded-lg border border-gray-200 pl-9 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all"
                   />
                 </div>
 
                 {invitedUserIds.length > 0 && (
-                  <div className="rounded-lg border border-orange-100 bg-orange-50/40 p-3">
-                    <p className="text-xs font-bold text-orange-700 mb-1.5">
+                  <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-3">
+                    <p className="text-xs font-bold text-blue-700 mb-1.5">
                       Bạn học đã chọn ({invitedUserIds.length})
                     </p>
                     <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
@@ -538,13 +538,13 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                         return (
                           <span
                             key={userId}
-                            className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-700"
+                            className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700"
                           >
                             {friend?.full_name || `User #${userId}`}
                             <button
                               type="button"
                               onClick={() => handleToggleInvite(userId)}
-                              className="ml-1 hover:text-orange-950 font-bold"
+                              className="ml-1 hover:text-blue-900 font-bold"
                             >
                               ×
                             </button>
@@ -580,7 +580,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                                 className="h-8 w-8 rounded-full object-cover shrink-0"
                               />
                             ) : (
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold text-xs">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-xs">
                                 {friend.full_name.substring(0, 2).toUpperCase()}
                               </div>
                             )}
@@ -598,8 +598,8 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                             type="button"
                             onClick={() => handleToggleInvite(friend.user_id)}
                             className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${isInvited
-                                ? "bg-orange-50 text-orange-600 border-orange-200"
-                                : "bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-600"
+                                ? "bg-blue-50 text-blue-600 border-blue-200"
+                                : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600"
                               }`}
                           >
                             {isInvited ? "Đã chọn" : "Chọn"}
@@ -635,7 +635,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
               <button
                 type="button"
                 onClick={handleNext}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-colors cursor-pointer"
               >
                 Tiếp theo <ChevronRight size={16} />
               </button>
@@ -644,7 +644,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                 type="button"
                 onClick={handleCreate}
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 {isSubmitting ? (
                   <>

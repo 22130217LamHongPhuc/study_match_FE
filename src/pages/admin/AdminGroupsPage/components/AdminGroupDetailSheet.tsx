@@ -328,7 +328,7 @@ export function AdminGroupDetailSheet({
                                 <span
                                   className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide ${
                                     member.role === "OWNER"
-                                      ? "bg-amber-50 border border-amber-200 text-amber-700"
+                                      ? "bg-blue-50 border border-blue-200 text-blue-700"
                                       : member.role === "ADMIN"
                                         ? "bg-blue-50 border border-blue-200 text-blue-700"
                                         : "bg-sand-50 border border-sand-200 text-sand-600"
@@ -354,7 +354,7 @@ export function AdminGroupDetailSheet({
                                       onClick={() => triggerChangeOwner(member.userId, member.fullName)}
                                       disabled={actionLoading}
                                       title="Chuyển quyền trưởng nhóm"
-                                      className="rounded p-0.5 text-amber-500 hover:bg-amber-50 hover:text-amber-600 transition-colors disabled:opacity-50"
+                                      className="rounded p-0.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600 transition-colors disabled:opacity-50"
                                     >
                                       <Crown size={13} />
                                     </button>
@@ -441,7 +441,7 @@ export function AdminGroupDetailSheet({
                 className={`h-9 flex-1 rounded-lg px-3 text-xs font-semibold text-white transition-all disabled:opacity-50 ${
                   confirmModal.type === "remove"
                     ? "bg-red-600 hover:bg-red-700"
-                    : "bg-amber-600 hover:bg-amber-700"
+                    : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
                 {actionLoading ? "Đang xử lý..." : "Xác nhận"}

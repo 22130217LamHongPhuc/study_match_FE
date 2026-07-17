@@ -1,0 +1,32 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (Header / SearchPage)
+    participant UC as UserSearchController<br/>user_service
+    participant GC as StudyGroupController<br/>group_service
+    participant FC as FriendsController<br/>social_service
+    participant DB as DB (users / groups / friend_requests)
+
+    User->>FE: Nhap keyword - Enter (Header search)
+    FE->>FE: navigate /search?query=keyword
+
+    alt Tab Ban hoc - Student search
+        FE->>UC: GET /api/users/search?page=0&size=100&keyword=
+        UC->>DB: searchStudents: status=ACTIVE, role=student<br/>fullName/email LIKE keyword
+        DB-->>FE: Page StudentSearchResponse
+        FE->>FC: GET /social/friend-requests/{userId}
+        FE->>FE: map friendStatus + enrich mutual/common groups
+        FE-->>User: Render StudentCard + client sort
+    else Tab Nhom hoc cong dong - Group browse
+        FE->>GC: GET /api/groups/browse/{userId}?page=0&limit=100
+        GC->>DB: getGroupsByTypeAndSubject<br/>status=ACTIVE, visibility != PRIVATE
+        DB-->>FE: Page groups
+        FE->>FE: Client filter: name/subject contains query<br/>+ client sort (az, members, friends)
+        FE-->>User: Render CommunityGroupCard
+    end
+
+    opt Actions from results
+        FE->>FC: Ket ban: POST /social/friend-requests/
+        FE->>GC: Tham gia nhom: POST /api/groups/{id}/members
+    end
+
+    Note over FE,DB: Group keyword filter is CLIENT-side only.<br/>No post/subject search. AI recommend = /recommendation (separate).

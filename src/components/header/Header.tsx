@@ -247,7 +247,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         window.dispatchEvent(new Event("group_invitations_updated"));
 
         const data = newMess.data as any;
-        const inviterName = data?.inviterName || "Người dùng";
+        const inviterName = data?.inviterName || "";
         const groupName = data?.groupName || "nhóm học";
         const inviteeUserId = data?.inviteeUserId ? Number(data.inviteeUserId) : 0;
         const currentUserId = Number(localStorage.getItem("userId"));
@@ -867,7 +867,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#eff6ff", color: "#2563eb" },
               }}
             >
               <PersonOutlineIcon
@@ -882,7 +882,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#eff6ff", color: "#2563eb" },
               }}
             >
               <SettingsOutlinedIcon
@@ -897,7 +897,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 fontSize: 13,
                 color: "#374151",
                 py: 1,
-                "&:hover": { bgcolor: "#fff7ed", color: "#ea580c" },
+                "&:hover": { bgcolor: "#eff6ff", color: "#2563eb" },
               }}
             >
               <HelpOutlineIcon
@@ -1057,7 +1057,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {req.sender?.fullName || "Người dùng StudyMatch"}
+                        {req.sender?.fullName || ""}
                       </Typography>
                       <Typography
                         sx={{

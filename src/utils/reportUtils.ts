@@ -172,7 +172,7 @@ export function getReportStatusLabel(
 export function getTargetTypeLabel(targetType?: string | null): string {
   switch (targetType) {
     case "USER":
-      return "Người dùng";
+      return "";
     case "POST":
       return "Bài viết";
     case "GROUP":
@@ -206,7 +206,7 @@ export function getReasonLabel(reason?: string | null): string {
 export function getStatusBadgeClass(status?: string | null): string {
   switch (status) {
     case "PENDING":
-      return "border-amber-200 bg-amber-50 text-amber-700";
+      return "border-blue-200 bg-blue-50 text-blue-700";
     case "REVIEWING":
       return "border-sky-200 bg-sky-50 text-sky-700";
     case "RESOLVED":
@@ -227,7 +227,7 @@ export function getTargetTypeBadgeClass(targetType?: string | null): string {
     case "POST":
       return "border-blue-200 bg-blue-50 text-blue-700";
     case "GROUP":
-      return "border-orange-200 bg-orange-50 text-orange-700";
+      return "border-blue-200 bg-blue-50 text-blue-700";
     default:
       return "border-gray-200 bg-gray-50 text-gray-600";
   }

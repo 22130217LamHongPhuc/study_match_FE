@@ -1,0 +1,26 @@
+sequenceDiagram
+    actor Invitee as Invitee (User)
+    participant FE as FE (Header / SessionDetailModal)
+    participant Ctrl as StudySessionController<br/>group_service
+    participant Svc as StudySessionServiceImpl
+    participant DB as DB study_session_participants
+
+    Note over Invitee,DB: Pre: participant.status = PENDING<br/>Entry A: Header pending invites<br/>Entry B: /schedule SessionDetailModal
+
+    Invitee->>FE: 1: click Accept or Decline
+    FE->>FE: 2: respondToStudySession<br/>(sessionId, userId, ACCEPTED|DECLINED)
+    FE->>Ctrl: 3: PATCH /api/study-sessions/{sessionId}<br/>/participants/{userId}/respond<br/>body: { status: ACCEPTED | DECLINED }
+    Ctrl->>Svc: 4: respondToSession(sessionId, userId, status)
+    Svc->>Svc: 5: validate status in {ACCEPTED, DECLINED}<br/>session exists and not CANCELLED<br/>participant exists and status = PENDING
+    Svc->>DB: 6: setStatus(ACCEPTED|DECLINED)<br/>setRespondedAt(now) + save
+    Svc-->>FE: 7: StudySessionResponse<br/>(participantStatus updated)
+
+    alt Accept - ACCEPTED
+        FE->>FE: toast success<br/>Header: refresh pending list<br/>Modal: update detail + stats
+    else Decline - DECLINED
+        FE->>FE: toast declined<br/>remove from pending list
+    end
+
+    FE-->>Invitee: UI updated
+
+    Note over FE,DB: State: PENDING -> ACCEPTED | DECLINED<br/>No WebSocket on respond<br/>(STUDY_SESSION_CREATED is invite only)

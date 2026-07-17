@@ -42,7 +42,7 @@ export function WeeklyCalendar({
             Tổng quan các buổi học trong tuần
           </p>
         </div>
-        <span className="rounded-lg bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600">
+        <span className="rounded-lg bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-600">
           {sessions.length} buổi
         </span>
       </div>
@@ -76,12 +76,12 @@ export function WeeklyCalendar({
                       key={session.id}
                       type="button"
                       onClick={() => onSelectSession(session)}
-                      className="rounded-xl bg-white p-3.5 text-left border border-gray-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:border-orange-200 active:scale-[0.98]"
+                      className="rounded-xl bg-white p-3.5 text-left border border-gray-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:border-blue-200 active:scale-[0.98]"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
-                          <Clock className="h-3.5 w-3.5 text-orange-500 shrink-0" />
-                          <span className="text-xs font-bold text-orange-600">
+                          <Clock className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                          <span className="text-xs font-bold text-blue-600">
                             {formatTime(session.startTime)}
                           </span>
                         </div>

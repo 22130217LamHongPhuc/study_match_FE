@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Kilo" version="24.0.0" type="device">
+  <diagram id="report" name="Report Sequence">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1500" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="StudyMatch - Sequence: Bao cao (Report)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="420" y="10" width="400" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1380" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="Frontend&#xa;(ReportModal)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="Frontend&#xa;(ReportModal)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1380" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="ReportController&#xa;user_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="ReportController&#xa;user_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1380" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="ReportServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="ReportServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="1380" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="ReportRepository&#xa;/ DB reports" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="ReportRepository&#xa;/ DB reports" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1380" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="Target check&#xa;User/Post/Group" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="970" y="50" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="Target check&#xa;User/Post/Group" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="970" y="1380" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g1" value="Admin&#xa;(AdminReportsPage)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="Admin&#xa;(AdminReportsPage)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="1380" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ll1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="110" as="sourcePoint"/>
+            <mxPoint x="55" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll2" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="100" as="sourcePoint"/>
+            <mxPoint x="190" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll3" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="405" y="100" as="sourcePoint"/>
+            <mxPoint x="405" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll4" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="620" y="100" as="sourcePoint"/>
+            <mxPoint x="620" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll5" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="830" y="100" as="sourcePoint"/>
+            <mxPoint x="830" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll6" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1035" y="100" as="sourcePoint"/>
+            <mxPoint x="1035" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll7" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="100" as="sourcePoint"/>
+            <mxPoint x="1240" y="1380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bar2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="183" y="150" width="14" height="1180" as="geometry"/>
+        </mxCell>
+        <mxCell id="bar4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="613" y="280" width="14" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1" value="Click Bao cao (Post / User / Group)" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="160" as="sourcePoint"/>
+            <mxPoint x="183" y="160" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="Open ReportModal&#xa;select reason + description" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="197" y="210" as="sourcePoint"/>
+            <mxPoint x="197" y="270" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="290" y="210"/>
+              <mxPoint x="290" y="270"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="POST /api/reports&#xa;{ targetType, targetId, reason, description }&#xa;Header X-User-Id = reporter" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="197" y="320" as="sourcePoint"/>
+            <mxPoint x="405" y="320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="createReport(reporterId, request)" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="405" y="370" as="sourcePoint"/>
+            <mxPoint x="613" y="370" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="check: not self-report (USER)&#xa;exists duplicate PENDING?" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="627" y="420" as="sourcePoint"/>
+            <mxPoint x="627" y="490" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="730" y="420"/>
+              <mxPoint x="730" y="490"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="existsByReporter+Type+Id" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="627" y="530" as="sourcePoint"/>
+            <mxPoint x="830" y="530" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="validateTargetExists&#xa;(UserRepo / PostClient / GroupClient)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="627" y="590" as="sourcePoint"/>
+            <mxPoint x="1035" y="590" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="save Report status=PENDING" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="627" y="650" as="sourcePoint"/>
+            <mxPoint x="830" y="650" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="ApiResponse ReportResponse" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="613" y="710" as="sourcePoint"/>
+            <mxPoint x="197" y="710" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="toast success + close modal" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="183" y="760" as="sourcePoint"/>
+            <mxPoint x="55" y="760" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div1" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="800" as="sourcePoint"/>
+            <mxPoint x="1340" y="800" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="altA" value="[Admin handle report]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="160" y="810" width="180" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m11" value="Open /admin/reports&#xa;GET /api/admin/reports (filters)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="860" as="sourcePoint"/>
+            <mxPoint x="405" y="860" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="findForAdmin(status, type, reason)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="405" y="910" as="sourcePoint"/>
+            <mxPoint x="830" y="910" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="PATCH /api/admin/reports/{id}/status&#xa;{ status, adminNote }" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="980" as="sourcePoint"/>
+            <mxPoint x="405" y="980" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="updateReportStatus&#xa;set status, adminNote, handledBy" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="405" y="1040" as="sourcePoint"/>
+            <mxPoint x="830" y="1040" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="updated ReportResponse" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="830" y="1090" as="sourcePoint"/>
+            <mxPoint x="1240" y="1090" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div2" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="1140" as="sourcePoint"/>
+            <mxPoint x="1340" y="1140" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fail" value="[Failed]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="160" y="1150" width="80" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="SELF_REPORT_NOT_ALLOWED&#xa;DUPLICATE_REPORT&#xa;TARGET_NOT_FOUND&#xa;reason required" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1155" width="170" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="m16" value="Error response" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="405" y="1200" as="sourcePoint"/>
+            <mxPoint x="197" y="1200" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="toast error" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="183" y="1250" as="sourcePoint"/>
+            <mxPoint x="55" y="1250" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note2" value="targetType: USER | POST | GROUP&#xa;reason: SPAM, HARASSMENT, ...&#xa;status: PENDING -&gt; REVIEWING | RESOLVED | REJECTED&#xa;Admin only updates status+note (no auto ban)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1280" width="320" height="70" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

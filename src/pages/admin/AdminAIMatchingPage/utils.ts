@@ -9,7 +9,7 @@ export const actionStatusLabel: Record<MatchingActionStatus, string> = {
 
 export const actionStatusStyle: Record<MatchingActionStatus, string> = {
   VIEWED: "bg-sand-100 text-sand-700",
-  FRIEND_REQUEST_SENT: "bg-amber-50 text-amber-700",
+  FRIEND_REQUEST_SENT: "bg-blue-50 text-blue-700",
   ACCEPTED: "bg-sage-50 text-sage-700",
   REJECTED: "bg-rose-50 text-rose-700",
 };

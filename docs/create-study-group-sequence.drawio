@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Kilo" version="24.0.0" type="device">
+  <diagram id="create-group" name="Create Study Group Sequence">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1550" pageHeight="1450" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="StudyMatch - Sequence: Tao nhom hoc tap" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="420" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1320" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="Frontend&#xa;(CreateGroupModal)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="Frontend&#xa;(CreateGroupModal)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1320" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="StudyGroupController&#xa;group_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="50" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="StudyGroupController&#xa;group_service" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1320" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="StudyGroupServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="StudyGroupServiceImpl" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="1320" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="Cloudinary" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="50" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="Cloudinary" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="1320" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="DB&#xa;(study_groups&#xa;+ members + slots&#xa;+ invitations)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="DB&#xa;(study_groups&#xa;+ members + slots&#xa;+ invitations)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="1320" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g1" value="ChatService&#xa;(notify invite)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="50" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="ChatService&#xa;(notify invite)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="1320" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ll1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="110" as="sourcePoint"/>
+            <mxPoint x="55" y="1320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll2" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="195" y="100" as="sourcePoint"/>
+            <mxPoint x="195" y="1320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll3" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="420" y="100" as="sourcePoint"/>
+            <mxPoint x="420" y="1320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll4" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="645" y="100" as="sourcePoint"/>
+            <mxPoint x="645" y="1320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll5" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="840" y="100" as="sourcePoint"/>
+            <mxPoint x="840" y="1320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll6" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1030" y="100" as="sourcePoint"/>
+            <mxPoint x="1030" y="1320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll7" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1235" y="100" as="sourcePoint"/>
+            <mxPoint x="1235" y="1320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bar2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="188" y="150" width="14" height="1120" as="geometry"/>
+        </mxCell>
+        <mxCell id="bar4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="638" y="300" width="14" height="900" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1" value="Open /groups - click Tao nhom moi" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="160" as="sourcePoint"/>
+            <mxPoint x="188" y="160" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="Wizard 5 steps: basic, subject, settings,&#xa;freeTime, invite friends" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="210" as="sourcePoint"/>
+            <mxPoint x="202" y="280" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="300" y="210"/>
+              <mxPoint x="300" y="280"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="Submit - FE validate name + mainSubject" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="320" as="sourcePoint"/>
+            <mxPoint x="188" y="320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="POST /api/groups (multipart)&#xa;request JSON + optional avatar" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="202" y="380" as="sourcePoint"/>
+            <mxPoint x="420" y="380" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="createGroup: set termId=8&#xa;createStudyGroup(request, avatar)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="420" y="440" as="sourcePoint"/>
+            <mxPoint x="638" y="440" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="uploadFile (optional)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="652" y="490" as="sourcePoint"/>
+            <mxPoint x="840" y="490" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="avatarUrl" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="840" y="530" as="sourcePoint"/>
+            <mxPoint x="652" y="530" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="requireName + build StudyGroup&#xa;type=STUDY, status=ACTIVE, visibility" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="652" y="580" as="sourcePoint"/>
+            <mxPoint x="652" y="640" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="750" y="580"/>
+              <mxPoint x="750" y="640"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="save study_groups" style="endArrow=block;html=1;endFill=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="652" y="680" as="sourcePoint"/>
+            <mxPoint x="1030" y="680" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="save owner GroupMember&#xa;(role=OWNER, status=ACTIVE)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="652" y="740" as="sourcePoint"/>
+            <mxPoint x="1030" y="740" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alt" value="alt" style="shape=umlFrame;whiteSpace=wrap;html=1;width=50;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="780" width="760" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="altI" value="[has invitedUserIds]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="790" width="160" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m11" value="save group_invitations PENDING&#xa;(check invites &lt;= maxMembers-1)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="652" y="840" as="sourcePoint"/>
+            <mxPoint x="1030" y="840" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="notify-group-invitation (per invitee)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="652" y="890" as="sourcePoint"/>
+            <mxPoint x="1235" y="890" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div1" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="920" as="sourcePoint"/>
+            <mxPoint x="1320" y="920" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="altF" value="[has freeTimeSlots]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="930" width="160" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="m13" value="save group_free_time_slots" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="652" y="970" as="sourcePoint"/>
+            <mxPoint x="1030" y="970" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="ApiResponse StudyGroupResponse" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="638" y="1040" as="sourcePoint"/>
+            <mxPoint x="202" y="1040" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="toast success + fetchGroups + close modal" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="188" y="1090" as="sourcePoint"/>
+            <mxPoint x="55" y="1090" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note1" value="Note: Chat room NOT created here&#xa;Lazy create when open group chat" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="250" y="1120" width="220" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="div2" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="1190" as="sourcePoint"/>
+            <mxPoint x="1320" y="1190" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fail" value="[Failed]" style="text;html=1;align=left;fontStyle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="160" y="1200" width="80" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="name blank / no subject&#xa;invites &gt; maxMembers-1&#xa;avatar upload fail&#xa;invalid visibility" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1205" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="m16" value="Error response" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="420" y="1240" as="sourcePoint"/>
+            <mxPoint x="202" y="1240" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="toast error" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=12;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="188" y="1280" as="sourcePoint"/>
+            <mxPoint x="55" y="1280" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

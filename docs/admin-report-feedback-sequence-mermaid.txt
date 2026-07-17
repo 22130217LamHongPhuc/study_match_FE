@@ -1,0 +1,17 @@
+sequenceDiagram
+    actor Admin
+    participant FE as FE (AdminReportDetailModal)
+    participant Ctrl as AdminReportController<br/>user_service
+    participant Svc as ReportServiceImpl + DB
+    actor Reporter as Reporter (MyReports)
+
+    Admin->>FE: 1: open /admin/reports<br/>open report detail
+    FE->>Ctrl: 2: GET /api/admin/reports/{id}
+    Ctrl-->>FE: ReportResponse
+    Admin->>FE: 3: select status + type adminNote<br/>status: REVIEWING | RESOLVED | REJECTED
+    FE->>Ctrl: 4: PATCH /api/admin/reports/{id}/status<br/>Header X-User-Id<br/>{ status, adminNote }
+    Ctrl->>Svc: 5: updateReportStatus<br/>set status, adminNote, handledBy, updatedAt
+    Svc-->>FE: 6: ReportResponse success
+    FE-->>Admin: 7: toast + close modal + refresh list
+    Note over Svc,Reporter: No push/email/WebSocket
+    Reporter->>Svc: 8: later GET /api/reports/my/{id}<br/>view status + adminNote

@@ -149,8 +149,8 @@ export default function MyFriendsSection() {
             <button
               onClick={() => setActiveFilter("all")}
               className={`flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${activeFilter === "all"
-                ? "bg-orange-500 text-white"
-                : "bg-white border border-gray-200 text-gray-600 hover:bg-orange-50 hover:text-orange-600"
+                ? "bg-blue-500 text-white"
+                : "bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
                 }`}
             >
               Tất cả
@@ -158,8 +158,8 @@ export default function MyFriendsSection() {
             <button
               onClick={() => setActiveFilter("online")}
               className={`flex items-center px-4 py-2 text-sm font-semibold rounded-lg border transition-colors ${activeFilter === "online"
-                ? "bg-orange-500 text-white border-orange-500"
-                : "bg-white border-gray-200 text-gray-600 hover:bg-orange-50 hover:text-orange-600"
+                ? "bg-blue-500 text-white border-blue-500"
+                : "bg-white border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
                 }`}
             >
               <span className={`w-2 h-2 rounded-full mr-2 ${activeFilter === "online" ? "bg-white" : "bg-green-500"}`} />
@@ -172,7 +172,7 @@ export default function MyFriendsSection() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none bg-white border border-gray-200 rounded-lg pl-4 pr-10 py-2 text-sm font-semibold text-gray-600 cursor-pointer focus:outline-none focus:border-orange-500"
+              className="appearance-none bg-white border border-gray-200 rounded-lg pl-4 pr-10 py-2 text-sm font-semibold text-gray-600 cursor-pointer focus:outline-none focus:border-blue-500"
             >
               <option value="connected">Mới kết nối</option>
               <option value="name-asc">Tên A-Z</option>
@@ -190,7 +190,7 @@ export default function MyFriendsSection() {
             placeholder="Tìm kiếm bạn bè..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="h-9 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-4 text-sm transition-all focus:border-orange-500 focus:outline-none"
+            className="h-9 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-4 text-sm transition-all focus:border-blue-500 focus:outline-none"
           />
         </div>
 
@@ -207,12 +207,12 @@ export default function MyFriendsSection() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredFriends.map((friend) => {
-              const displayName = friend.fullName || "Người dùng StudyMatch";
+              const displayName = friend.fullName || "";
 
               return (
                 <div
                   key={friend.userId}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-orange-200 hover:shadow-md"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
                 >
                   {/* Profile detail section */}
                   <div className="flex items-start gap-4">
@@ -223,7 +223,7 @@ export default function MyFriendsSection() {
                       <Avatar
                         src={friend.avatarUrl || undefined}
                         alt={displayName}
-                        className="h-12 w-12 border-2 border-orange-500/10"
+                        className="h-12 w-12 border-2 border-blue-500/10"
                         sx={{ width: 48, height: 48 }}
                       />
                       {/* Status Dot */}
@@ -235,7 +235,7 @@ export default function MyFriendsSection() {
                     <div className="min-w-0 flex-1">
                       <h3
                         onClick={() => handleGoProfile(friend.userId)}
-                        className="cursor-pointer text-sm font-bold text-gray-800 hover:text-orange-500 hover:underline line-clamp-1"
+                        className="cursor-pointer text-sm font-bold text-gray-800 hover:text-blue-500 hover:underline line-clamp-1"
                       >
                         {displayName}
                       </h3>
@@ -266,7 +266,7 @@ export default function MyFriendsSection() {
                     <button
                       onClick={() => handleChat(friend)}
                       disabled={actionLoading !== null}
-                      className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-orange-500 text-xs font-semibold text-white transition-colors hover:bg-orange-600 shadow-sm shadow-orange-500/10 disabled:opacity-50"
+                      className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-blue-500 text-xs font-semibold text-white transition-colors hover:bg-blue-600 shadow-sm shadow-blue-500/10 disabled:opacity-50"
                     >
                       <MessageSquare size={14} />
                       Nhắn tin

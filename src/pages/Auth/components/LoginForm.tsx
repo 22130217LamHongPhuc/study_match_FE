@@ -86,7 +86,7 @@ export default function LoginForm({
 
       <button
         type="submit"
-        className="w-full rounded-lg bg-green-600 py-3 text-base font-medium text-white transition hover:bg-green-700"
+        className="w-full rounded-lg bg-accent-500 py-3 text-base font-medium text-white transition hover:bg-accent-600"
       >
         Đăng nhập
       </button>

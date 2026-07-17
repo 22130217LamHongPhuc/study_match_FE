@@ -571,7 +571,7 @@ export default function MainLayout() {
       <VideoCallModal
         open={!!incomingVideoCall}
         mode="incoming"
-        name={incomingPeer?.fullName || "Người dùng"}
+        name={incomingPeer?.fullName || ""}
         avatar={incomingPeer?.avatar || null}
         callType={incomingVideoCall?.callType}
         loading={callActionLoading}

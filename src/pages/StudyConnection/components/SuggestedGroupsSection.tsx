@@ -324,7 +324,7 @@ export default function SuggestedGroupsSection() {
           <div>
             <h2 className="text-base font-bold text-gray-800">Nhóm cộng đồng</h2>
             <p className="text-xs text-gray-500">
-              Theo môn <span className="font-semibold text-orange-500">{suggestedSubjectName}</span>
+              Theo môn <span className="font-semibold text-blue-500">{suggestedSubjectName}</span>
             </p>
           </div>
         </div>
@@ -382,7 +382,7 @@ export default function SuggestedGroupsSection() {
                     "& fieldset": { borderColor: "#e5e7eb" },
                     "&:hover fieldset": { borderColor: "#d1d5db" },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#fdba74",
+                      borderColor: "#93c5fd",
                       borderWidth: "1px",
                     },
                   },

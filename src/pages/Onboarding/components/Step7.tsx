@@ -208,7 +208,7 @@ export function Step7({ data, studyPlan }: Step7Props) {
                 <span className="text-xs font-medium text-indigo-600 w-6">
                   {d.short}
                 </span>
-                {hasMorning && <Sunrise size={14} className="text-amber-500" />}
+                {hasMorning && <Sunrise size={14} className="text-blue-500" />}
                 {hasAfternoon && <Sun size={14} className="text-blue-500" />}
                 {hasEvening && (
                   <MoonStar size={14} className="text-indigo-500" />

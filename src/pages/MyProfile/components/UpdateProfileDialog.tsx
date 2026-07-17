@@ -744,7 +744,7 @@ export default function UpdateProfileDialog({
           <div className="mx-auto max-w-xl px-10 relative">
             <div className="absolute top-[14px] left-[40px] right-[40px] h-0.5 bg-gray-200 z-0" />
             <div
-              className="absolute top-[14px] left-[40px] h-0.5 bg-orange-500 transition-all duration-300 z-0"
+              className="absolute top-[14px] left-[40px] h-0.5 bg-blue-500 transition-all duration-300 z-0"
               style={{
                 width: `calc(${(step - 1) / 6} * (100% - 80px))`,
               }}
@@ -758,9 +758,9 @@ export default function UpdateProfileDialog({
                   <div key={s.id} className="flex flex-col items-center gap-1">
                     <span
                       className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${active
-                        ? "bg-orange-500 text-white scale-105 shadow-sm ring-4 ring-orange-100"
+                        ? "bg-blue-500 text-white scale-105 shadow-sm ring-4 ring-blue-100"
                         : completed
-                          ? "bg-orange-100 text-orange-600 font-bold"
+                          ? "bg-blue-100 text-blue-600 font-bold"
                           : "bg-white border border-gray-300 text-gray-400"
                         }`}
                     >
@@ -768,7 +768,7 @@ export default function UpdateProfileDialog({
                     </span>
                     <span
                       className={`text-[10px] font-semibold transition-colors duration-300 ${active
-                        ? "text-orange-600 font-bold"
+                        ? "text-blue-600 font-bold"
                         : completed
                           ? "text-gray-600"
                           : "text-gray-400"
@@ -785,7 +785,7 @@ export default function UpdateProfileDialog({
 
         <div className="px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
           <div>
-            <span className="text-xs font-bold text-orange-600 uppercase tracking-wider">
+            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
               {step === 3 && goalSub === 2 ? "Bước 3 - Phần 2 / 7" : `Bước ${step} / 7`}
             </span>
             <h3 className="text-sm font-bold text-gray-700 mt-0.5">

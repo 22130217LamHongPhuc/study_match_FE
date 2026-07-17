@@ -220,6 +220,16 @@ async function refreshToken(): Promise<string | null> {
   return null;
 }
 
+/** social_service uses {code:200,message:"Success"}; user_service uses {success:true} */
+export function isApiSuccess(res: any): boolean {
+  if (res == null) return false;
+  if (res.success === true) return true;
+  if (res.success === false) return false;
+  if (typeof res.code === "number" && res.code >= 200 && res.code < 300) return true;
+  if (res.code === StatusCode.SUCCESS || res.code === "SUCCESS") return true;
+  return false;
+}
+
 export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {},

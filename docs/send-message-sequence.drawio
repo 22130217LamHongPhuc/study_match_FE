@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Kilo" version="24.0.0" type="device">
+  <diagram id="send-message-status" name="Send Message Status UC">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1750" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="StudyMatch - Sequence Diagram: Gui tin nhan (Trang thai Da gui / Da nhan / Da xem)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="280" y="10" width="640" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Participants -->
+        <mxCell id="p1" value="UserA&#xa;(Sender)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1b" value="UserA&#xa;(Sender)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1620" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="ConversationPage&#xa;(FE Sender)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2b" value="ConversationPage&#xa;(FE Sender)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1620" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3" value="ChatController&#xa;(chat_service)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="50" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3b" value="ChatController&#xa;(chat_service)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1620" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4" value="MessageStatusService&#xa;+ MessageRepo" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4b" value="MessageStatusService&#xa;+ MessageRepo" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1620" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5" value="MainLayout&#xa;(FE Receiver)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="50" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5b" value="MainLayout&#xa;(FE Receiver)" style="rounded=0;whiteSpace=wrap;html=1;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1620" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6" value="UserB&#xa;(Receiver)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="50" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6b" value="UserB&#xa;(Receiver)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="1620" width="30" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Lifelines -->
+        <mxCell id="l1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="110" as="sourcePoint"/>
+            <mxPoint x="65" y="1620" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l2" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="100" as="sourcePoint"/>
+            <mxPoint x="210" y="1620" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l3" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="100" as="sourcePoint"/>
+            <mxPoint x="430" y="1620" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l4" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="100" as="sourcePoint"/>
+            <mxPoint x="655" y="1620" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l5" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="875" y="100" as="sourcePoint"/>
+            <mxPoint x="875" y="1620" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l6" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1035" y="110" as="sourcePoint"/>
+            <mxPoint x="1035" y="1620" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- UC1: SEND + SENT -->
+        <mxCell id="uc1" value="ref / UC-1" style="shape=umlFrame;whiteSpace=wrap;html=1;width=70;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="140" width="940" height="420" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc1t" value="UC-1: Gui tin nhan  |  Pre: UserA dang nhap, la participant  |  Post: status = SENT (Da gui)" style="text;html=1;align=left;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="145" width="700" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="m1" value="1: nhap noi dung + bam Gui / Enter" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="190" as="sourcePoint"/>
+            <mxPoint x="210" y="190" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="2: createOptimisticMessage()&#xa;status := SENDING (tempId &lt; 0)" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="230" as="sourcePoint"/>
+            <mxPoint x="210" y="290" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="300" y="230"/>
+              <mxPoint x="300" y="290"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="3: STOMP /chat/send&#xa;event=SEND_CHAT&#xa;data={conversationId, type=text, content}" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="340" as="sourcePoint"/>
+            <mxPoint x="430" y="340" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="4: isParticipant(conversationId, senderId)" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="390" as="sourcePoint"/>
+            <mxPoint x="430" y="430" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="520" y="390"/>
+              <mxPoint x="520" y="430"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="5: saveMess() + markSenderSeen()" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="470" as="sourcePoint"/>
+            <mxPoint x="655" y="470" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="6: MESSAGE_SENT {status=SENT, messageIds}&#xa;+ MESSAGE_ACK {message}" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="520" as="sourcePoint"/>
+            <mxPoint x="210" y="520" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="7: applyMessageAck()&#xa;tempId -&gt; realId&#xa;status := SENT  =&gt; UI: &quot;Da gui&quot;" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="560" as="sourcePoint"/>
+            <mxPoint x="210" y="620" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="300" y="560"/>
+              <mxPoint x="300" y="620"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="8: NEW_MESSAGE {conversationId, message}" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="530" as="sourcePoint"/>
+            <mxPoint x="875" y="530" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- UC2: DELIVERED -->
+        <mxCell id="uc2" value="ref / UC-2" style="shape=umlFrame;whiteSpace=wrap;html=1;width=70;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="590" width="940" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc2t" value="UC-2: Xac nhan da nhan  |  Pre: UserB online, da nhan NEW_MESSAGE  |  Post: status = DELIVERED (Da nhan)" style="text;html=1;align=left;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="595" width="750" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="m9" value="9: nhan NEW_MESSAGE&#xa;(subscribe /user/queue/chat)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="875" y="650" as="sourcePoint"/>
+            <mxPoint x="1035" y="650" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="10: hien thi tin / toast&#xa;neu khong mo chat: increaseUnread()" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="875" y="700" as="sourcePoint"/>
+            <mxPoint x="875" y="770" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="960" y="700"/>
+              <mxPoint x="960" y="770"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="11: STOMP /chat/send&#xa;event=MESSAGE_DELIVERED&#xa;data={conversationId, messageIds[]}" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="875" y="820" as="sourcePoint"/>
+            <mxPoint x="430" y="820" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="12: markDelivered(conversationId, userB, message)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="870" as="sourcePoint"/>
+            <mxPoint x="655" y="870" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="13: MESSAGE_DELIVERED&#xa;{status=DELIVERED, messageIds, userId=UserB}" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="920" as="sourcePoint"/>
+            <mxPoint x="210" y="920" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="14: updateOutgoingMessageStatus()&#xa;status := DELIVERED  =&gt; UI: &quot;Da nhan&quot;" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="960" as="sourcePoint"/>
+            <mxPoint x="210" y="1020" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="300" y="960"/>
+              <mxPoint x="300" y="1020"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- UC3: SEEN -->
+        <mxCell id="uc3" value="ref / UC-3" style="shape=umlFrame;whiteSpace=wrap;html=1;width=70;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=5;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1000" width="940" height="400" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc3t" value="UC-3: Xac nhan da xem  |  Pre: UserB mo conversation  |  Post: status = SEEN (Da xem)" style="text;html=1;align=left;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1005" width="700" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="m15" value="15: mo / focus conversation" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1035" y="1060" as="sourcePoint"/>
+            <mxPoint x="875" y="1060" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m16" value="16: sendSeen(conversationId, messageIds)" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="875" y="1110" as="sourcePoint"/>
+            <mxPoint x="875" y="1160" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="960" y="1110"/>
+              <mxPoint x="960" y="1160"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="17: STOMP /chat/send&#xa;event=MESSAGE_SEEN&#xa;data={conversationId, messageIds[]}" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="875" y="1210" as="sourcePoint"/>
+            <mxPoint x="430" y="1210" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m18" value="18: markSeen(conversationId, userB, messageIds)" style="endArrow=block;html=1;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="1260" as="sourcePoint"/>
+            <mxPoint x="655" y="1260" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m19" value="19: MESSAGE_SEEN&#xa;{status=SEEN, messageIds, userId=UserB}" style="endArrow=open;html=1;endFill=0;dashed=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="1310" as="sourcePoint"/>
+            <mxPoint x="210" y="1310" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m20" value="20: updateOutgoingMessageStatus()&#xa;status := SEEN  =&gt; UI: &quot;Da xem&quot;" style="endArrow=block;html=1;endFill=1;fontSize=11;align=left;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="1350" as="sourcePoint"/>
+            <mxPoint x="210" y="1410" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="300" y="1350"/>
+              <mxPoint x="300" y="1410"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="leg" value="Bang trang thai (UserA UI - ListMess)&#xa;&#xa;1. SENDING  = &quot;Dang gui&quot;   - optimistic, chua ACK&#xa;2. SENT      = &quot;Da gui&quot;     - UC-1: server luu + MESSAGE_ACK&#xa;3. DELIVERED = &quot;Da nhan&quot;    - UC-2: UserB online nhan NEW_MESSAGE + sendDelivered&#xa;4. SEEN      = &quot;Da xem&quot;     - UC-3: UserB mo conversation + sendSeen&#xa;&#xa;Priority: SENDING(0) &lt; SENT(1) &lt; DELIVERED(2) &lt; SEEN(3)&#xa;Chi cap nhat neu status moi &gt; status cu (setVisibleStatusIfNewer)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=8;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="140" width="340" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="leg2" value="Quy uoc ve UML&#xa;- Mui ten solid: call / request&#xa;- Mui ten dashed: return / event response&#xa;- Khung ref: 1 Use Case&#xa;- Pre / Post: dieu kien truoc / sau UC" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=8;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="380" width="280" height="120" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

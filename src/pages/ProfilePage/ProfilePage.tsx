@@ -427,11 +427,28 @@ export default function ProfilePage() {
   const profileUserId = Number(id);
   const isOwnProfile = currentUserId === profileUserId;
 
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
+
   const refreshProfileOverview = useCallback(() => {
     if (!profileUserId) return;
+    setLoadingProfile(true);
+    setProfileLoadError(null);
     loadProfileService(profileUserId)
-      .then((response: UserProfile) => setProfile(response))
-      .catch((error) => console.error("Cannot load profile", error));
+      .then((response: UserProfile) => {
+        setProfile(response);
+        setProfileLoadError(null);
+      })
+      .catch((error) => {
+        console.error("Cannot load profile", error);
+        setProfile(undefined);
+        setProfileLoadError(
+          error instanceof Error && error.message
+            ? error.message
+            : "Không thể tải hồ sơ. Vui lòng thử lại sau.",
+        );
+      })
+      .finally(() => setLoadingProfile(false));
   }, [profileUserId]);
 
   const refreshPendingFriendRequest = useCallback(() => {
@@ -1228,7 +1245,7 @@ export default function ProfilePage() {
         case "SAD":
           return { icon: <span style={{ fontSize: 18 }}>😢</span>, text: "Buồn", color: "#3b82f6" };
         case "ANGRY":
-          return { icon: <span style={{ fontSize: 18 }}>😡</span>, text: "Phẫn nộ", color: "#f97316" };
+          return { icon: <span style={{ fontSize: 18 }}>😡</span>, text: "Phẫn nộ", color: "#2563eb" };
         case "LIKE":
         default:
           return { icon: <ThumbUpIcon sx={{ fontSize: 18, color: "#3b82f6" }} />, text: "Thích", color: "#3b82f6" };
@@ -1750,20 +1767,20 @@ export default function ProfilePage() {
             p: 4,
             mt: 2,
             textAlign: "center",
-            bgcolor: "#fff7ed",
-            border: "1px solid #fed7aa",
+            bgcolor: "#eff6ff",
+            border: "1px solid #bfdbfe",
             borderRadius: "12px",
           }}
         >
-          <Typography sx={{ color: "#c2410c", fontWeight: 700, mb: 1 }}>
+          <Typography sx={{ color: "#1d4ed8", fontWeight: 700, mb: 1 }}>
             Không thể tải hồ sơ học tập
           </Typography>
-          <Typography sx={{ color: "#9a3412", mb: 2, overflowWrap: "anywhere" }}>
+          <Typography sx={{ color: "#1e40af", mb: 2, overflowWrap: "anywhere" }}>
             {studyProfileError}
           </Typography>
           <Button
             variant="outlined"
-            color="warning"
+            color="primary"
             onClick={() => setStudyProfileRetry((value) => value + 1)}
           >
             Thử lại
@@ -1978,7 +1995,7 @@ export default function ProfilePage() {
     );
   };
 
-  if (!profile) {
+  if (loadingProfile && !profile) {
     return (
       <ThemeProvider theme={profileTheme}>
         <Box component="div" sx={{ display: "flex", mt: "20px" }}>
@@ -2138,6 +2155,24 @@ export default function ProfilePage() {
                 </Box>
               </Box>
             </Box>
+          </Box>
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
+  if (!loadingProfile && !profile) {
+    return (
+      <ThemeProvider theme={profileTheme}>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh", px: 2 }}>
+          <Box role="alert" sx={{ maxWidth: 480, width: "100%", p: 4, textAlign: "center", bgcolor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "12px" }}>
+            <Typography sx={{ color: "#1d4ed8", fontWeight: 700, mb: 1 }}>Không thể tải hồ sơ</Typography>
+            <Typography sx={{ color: "#1e40af", mb: 2, overflowWrap: "anywhere" }}>
+              {profileLoadError || "Vui lòng thử lại sau."}
+            </Typography>
+            <Button variant="outlined" color="primary" onClick={refreshProfileOverview}>
+              Thử lại
+            </Button>
           </Box>
         </Box>
       </ThemeProvider>
@@ -2419,11 +2454,11 @@ export default function ProfilePage() {
                             py: 1,
                             textTransform: "none",
                             fontSize: "14px",
-                            borderColor: "#fdba74",
-                            color: "#ea580c",
+                            borderColor: "#93c5fd",
+                            color: "#2563eb",
                             "&:hover": {
-                              borderColor: "#fb923c",
-                              backgroundColor: "rgba(249, 115, 22, 0.06)",
+                              borderColor: "#60a5fa",
+                              backgroundColor: "rgba(37, 99, 235, 0.06)",
                             },
                           }}
                           onClick={() => setReportModalOpen(true)}

@@ -480,7 +480,7 @@ export default function ConversationPage() {
   const fullName = isGroupConversation
     ? baseFullName
     : privatePeerProfile?.fullName || baseFullName;
-  const displayName = fullName || (isGroupConversation ? "Nhóm học" : "Người dùng");
+  const displayName = fullName || (isGroupConversation ? "Nhóm học" : "");
   const avatar = isGroupConversation
     ? groupAvatar
     : normalizeAvatarUrl(privatePeerProfile?.avatarUrl || routeAvatar);

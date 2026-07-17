@@ -257,7 +257,7 @@ export function AdminUsersTable({
           <thead>
             <tr className="border-b border-sand-200 bg-sand-50 text-left">
               <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
-                Người dùng
+                
               </th>
               <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Vai trò

@@ -34,7 +34,7 @@ export function RecentActivityCard() {
         </div>
 
         <div className="flex gap-3">
-          <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded bg-amber-50 text-amber-500">
+          <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded bg-blue-50 text-blue-500">
             <AlertCircle size={14} />
           </div>
           <div>

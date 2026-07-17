@@ -1,0 +1,29 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (ReportModal)
+    participant RC as ReportController<br/>user_service
+    participant Svc as ReportServiceImpl
+    participant DB as ReportRepository / DB
+    participant Target as Target check<br/>User/Post/Group
+    participant Admin as Admin (AdminReportsPage)
+
+    User->>FE: Click "Bao cao" (Post / User / Group)
+    FE->>FE: Open ReportModal<br/>select reason + description
+    FE->>RC: POST /api/reports<br/>{ targetType, targetId, reason, description }<br/>Header X-User-Id = reporter
+    RC->>Svc: createReport(reporterId, request)
+    Svc->>Svc: check not self-report (USER)<br/>exists duplicate?
+    Svc->>DB: existsByReporter+Type+Id
+    Svc->>Target: validateTargetExists
+    Svc->>DB: save Report status=PENDING
+    Svc-->>FE: ApiResponse ReportResponse
+    FE-->>User: toast success + close modal
+
+    Note over Admin,DB: Admin handle
+    Admin->>RC: GET /api/admin/reports (filters)
+    RC->>DB: findForAdmin(status, type, reason)
+    Admin->>RC: PATCH /api/admin/reports/{id}/status<br/>{ status, adminNote }
+    RC->>Svc: updateReportStatus
+    Svc->>DB: set status, adminNote, handledBy
+    Svc-->>Admin: updated ReportResponse
+
+    Note over FE,Admin: targetType: USER | POST | GROUP<br/>status: PENDING -> REVIEWING | RESOLVED | REJECTED<br/>Admin only updates status+note (no auto ban)

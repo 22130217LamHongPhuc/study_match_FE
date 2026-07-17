@@ -19,7 +19,7 @@ export function GroupTypeBadge({ type }: { type: GroupType }) {
 export function GroupStatusBadge({ status }: { status: GroupStatus }) {
   const styles: Record<GroupStatus, string> = {
     ACTIVE: "bg-sage-50 text-sage-700",
-    INACTIVE: "bg-amber-50 text-amber-700",
+    INACTIVE: "bg-blue-50 text-blue-700",
     ARCHIVED: "bg-sand-200 text-sand-600",
     DELETED: "bg-rose-50 text-rose-700",
   };

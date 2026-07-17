@@ -403,7 +403,7 @@ export default function SuggestedFriendsSection() {
             type="button"
             onClick={() => fetchRecommendations(currentUserId, 1, false)}
             disabled={loading}
-            className="mt-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500 text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-0"
+            className="mt-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-0"
             title="Tải lại"
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} />

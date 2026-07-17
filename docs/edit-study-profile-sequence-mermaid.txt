@@ -1,0 +1,28 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend<br/>(MyProfile / UpdateProfileDialog)
+    participant PC as ProfileController<br/>profile_service :8082
+    participant Svc as ProfileUpdateService<br/>/ ProfileLoadService
+    participant DB as Repositories / DB<br/>(student_* tables)
+    participant AI as AI Recommender :8000
+
+    User->>FE: Open /my-profile
+    FE->>PC: GET /api/onboarding/profile/{userId}
+    PC->>Svc: loadUserProfile(userId)
+    Svc->>DB: load student_profiles + term + enrollments<br/>+ free_time + schedule_slots
+    DB-->>FE: UserProfileFullResponse
+
+    User->>FE: Click "Chinh sua" - open UpdateProfileDialog
+    FE->>FE: prefill FormData + load cohorts/study-plan<br/>Steps 1-7: info, personal, goal, subjects,<br/>freeTime, academic, review
+
+    User->>FE: Click "Luu thay doi"<br/>transformFormDataToPayload()
+    FE->>PC: PUT /api/profile/update<br/>Header: X-User-Id<br/>Body: OnboardingSubmitRequest
+    PC->>Svc: updateProfile(userId, request)
+    Svc->>Svc: validateRequest<br/>(studentCode, fullName, cohortId,<br/>termId, studyYearNo, semesterNo)
+    Svc->>DB: find Cohort + ACTIVE AcademicTerm
+    Svc->>DB: upsert StudentProfile<br/>(studentCode, fullName, gender, ageGroup, region, cohort)
+    Svc->>DB: upsert StudentTermProfile<br/>(year, semester, avgScore, credits, goal, mode, mainSubjectId)
+    Svc->>DB: replace enrollments + freeTimeSlots<br/>+ subjectScheduleSlots (delete+insert)
+    Svc->>AI: afterCommit POST /api/reload-recommender?userId=
+    Svc-->>FE: UserProfileFullResponse (success)
+    FE-->>User: toast success + reload profile + close dialog

@@ -46,10 +46,10 @@ export const POST_BACKGROUNDS = [
   { id: "bg-rose", name: "Hoa hồng", style: { background: "linear-gradient(135deg, #fff1f2 0%, #fecdd3 100%)", color: "#be123c" } },
   { id: "bg-mint", name: "Bạc hà", style: { background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)", color: "#047857" } },
   { id: "bg-lemon", name: "Chanh vàng", style: { background: "linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)", color: "#a16207" } },
-  { id: "bg-clay", name: "Đất sét", style: { background: "linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)", color: "#c2410c" } },
+  { id: "bg-clay", name: "Đất sét", style: { background: "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)", color: "#1d4ed8" } },
   { id: "bg-sunset", name: "Sunset", style: { background: "linear-gradient(135deg, #a21caf 0%, #3b82f6 100%)", color: "white" } },
   { id: "bg-violet-pink", name: "Violet Pink", style: { background: "linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)", color: "white" } },
-  { id: "bg-orange-yellow", name: "Orange Yellow", style: { background: "linear-gradient(135deg, #f97316 0%, #facc15 100%)", color: "white" } },
+  { id: "bg-blue-yellow", name: "Blue Yellow", style: { background: "linear-gradient(135deg, #2563eb 0%, #facc15 100%)", color: "white" } },
   { id: "bg-purple", name: "Màu Tím", style: { background: "linear-gradient(135deg, #d904e9 0%, #70027a 100%)", color: "white" } },
   { id: "bg-red", name: "Màu Đỏ", style: { background: "linear-gradient(135deg, #e11d48 0%, #9f1239 100%)", color: "white" } },
   { id: "bg-black", name: "Màu Đen", style: { background: "linear-gradient(135deg, #0f172a 0%, #020617 100%)", color: "white" } },
@@ -86,7 +86,7 @@ const getFileMeta = (fileName: string) => {
     return { label: "Excel", color: "#10b981", bg: "#d1fae5" };
   }
   if (lower.endsWith(".ppt") || lower.endsWith(".pptx")) {
-    return { label: "PowerPoint", color: "#f97316", bg: "#ffedd5" };
+    return { label: "PowerPoint", color: "#2563eb", bg: "#dbeafe" };
   }
   if (lower.endsWith(".zip") || lower.endsWith(".rar") || lower.endsWith(".7z") || lower.endsWith(".tar") || lower.endsWith(".gz")) {
     return { label: "Archive", color: "#8b5cf6", bg: "#ede9fe" };
@@ -112,7 +112,7 @@ export default function CreatePostDialog({
   open,
   onClose,
   currentUserId,
-  authorName = "Người dùng",
+  authorName = "",
   authorAvatarUrl,
   showSubjectSelect = false,
   onPostCreated,

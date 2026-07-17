@@ -36,7 +36,7 @@ export default function SubjectsCard({ profile }: SubjectsCardProps) {
                   key={subject.subjectId}
                   className="inline-flex items-center rounded-lg bg-gray-50 border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600"
                 >
-                  <span className="font-bold text-orange-600 mr-1">
+                  <span className="font-bold text-blue-600 mr-1">
                     {subject.subjectCode}
                   </span>
                   - {subject.subjectName}

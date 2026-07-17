@@ -706,7 +706,7 @@ export function Step4CurrentPlan({
                             <td className="py-2 pr-3">
                               <div className="flex items-center gap-1.5">
                                 <span
-                                  className={`text-sm font-semibold ${isWeekend ? "text-orange-500" : "text-gray-700"}`}
+                                  className={`text-sm font-semibold ${isWeekend ? "text-blue-500" : "text-gray-700"}`}
                                 >
                                   {day.short}
                                 </span>

@@ -54,8 +54,8 @@ const ProblemSection: React.FC = () => {
           {/* Left heading – takes 2 cols */}
           <div className="lg:col-span-2 space-y-6">
             <div className="inline-flex items-center gap-2">
-              <span className="w-5 h-0.5 bg-[#f97316]" />
-              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#f97316]">Vấn đề</span>
+              <span className="w-5 h-0.5 bg-[#2563eb]" />
+              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#2563eb]">Vấn đề</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-[#1a3557] leading-tight">
               Tìm nhóm học không nên là chuyện may rủi.

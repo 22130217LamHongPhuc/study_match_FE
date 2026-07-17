@@ -46,7 +46,7 @@ export function Pagination({
                 onClick={() => onPageChange(pageNumber)}
                 className={`h-8 min-w-8 rounded px-2 text-[12px] font-bold transition ${
                   page === pageNumber
-                    ? "bg-orange-500 text-white"
+                    ? "bg-blue-500 text-white"
                     : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >

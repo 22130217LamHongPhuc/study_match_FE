@@ -39,8 +39,8 @@ export default function QuickStats({
       title: "Nhóm đã tham gia",
       value: groupsCount,
       description: "Đã tham gia",
-      bg: "bg-amber-50",
-      text: "text-amber-600",
+      bg: "bg-blue-50",
+      text: "text-blue-600",
     },
     {
       id: "groupInvites",

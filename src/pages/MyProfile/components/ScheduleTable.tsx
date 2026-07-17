@@ -6,7 +6,7 @@ interface ScheduleTableProps {
 
 function getClassBadgeClass(scheduleType: string) {
   if (scheduleType === "MAIN_SUBJECT") {
-    return "bg-orange-50 text-orange-700 border border-orange-200 font-semibold";
+    return "bg-blue-50 text-blue-700 border border-blue-200 font-semibold";
   }
   return "bg-gray-100 text-gray-600 border border-gray-200 font-medium";
 }
@@ -40,7 +40,7 @@ export default function ScheduleTable({ profile }: ScheduleTableProps) {
             {profile.scheduleRows.map((row) => (
               <tr
                 key={row.slot.id}
-                className="hover:bg-orange-50/10 transition-colors"
+                className="hover:bg-blue-50/10 transition-colors"
               >
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="font-bold text-gray-800">

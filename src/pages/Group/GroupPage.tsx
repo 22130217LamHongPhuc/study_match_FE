@@ -69,7 +69,7 @@ const getInitials = (name: string) => {
 
 const getAvatarBg = (id: number) => {
   const colors = [
-    "from-orange-500 to-amber-500",
+    "from-blue-500 to-blue-500",
     "from-rose-500 to-pink-500",
     "from-blue-500 to-indigo-500",
     "from-emerald-500 to-teal-500",
@@ -90,11 +90,11 @@ function GroupPreviewCard({
   return (
     <article
       onClick={() => onOpenDetail(group)}
-      className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-gray-200 bg-white p-6 transition-all duration-200 hover:border-orange-200 hover:shadow-[0_4px_20px_rgba(249,115,22,0.04)]"
+      className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-gray-200 bg-white p-6 transition-all duration-200 hover:border-blue-200 hover:shadow-[0_4px_20px_rgba(37, 99, 235,0.04)]"
     >
       <div>
         <div className="flex items-center justify-between gap-4 mb-3">
-          <span className="text-xs font-semibold tracking-wider text-orange-500 uppercase">
+          <span className="text-xs font-semibold tracking-wider text-blue-500 uppercase">
             {group.subjectName}
           </span>
           <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
@@ -112,13 +112,13 @@ function GroupPreviewCard({
             />
           ) : (
             <div
-              className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center text-white font-bold text-sm tracking-wider shadow-sm shrink-0"
+              className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center text-white font-bold text-sm tracking-wider shadow-sm shrink-0"
             >
               {getInitials(group.name)}
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-gray-900 group-hover:text-orange-500 transition-colors mb-2">
+            <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-500 transition-colors mb-2">
               {group.name}
             </h3>
             <p className="text-sm text-gray-600 line-clamp-2">
@@ -136,7 +136,7 @@ function GroupPreviewCard({
           </span>
         </div>
 
-        <span className="text-xs font-semibold text-orange-500 group-hover:underline inline-flex items-center gap-0.5">
+        <span className="text-xs font-semibold text-blue-500 group-hover:underline inline-flex items-center gap-0.5">
           Chi tiết
           <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
         </span>
@@ -679,7 +679,7 @@ export default function GroupPage() {
               </div>
             ) : groupList.length === 0 ? (
               <div className="flex min-h-[350px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white p-8 text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-500">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-500">
                   <BookOpen size={24} />
                 </div>
 
@@ -691,7 +691,7 @@ export default function GroupPage() {
 
                 <button
                   onClick={goToCreateGroup}
-                  className="mt-6 inline-flex items-center gap-2 h-10 rounded-lg bg-orange-500 px-5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                  className="mt-6 inline-flex items-center gap-2 h-10 rounded-lg bg-blue-500 px-5 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
                 >
                   <Plus size={16} />
                   Tạo nhóm mới
@@ -714,7 +714,7 @@ export default function GroupPage() {
   };
 
   return (
-    <main className="px-6 py-8 sm:px-8 lg:px-10 bg-orange-50/30 min-h-screen">
+    <main className="px-6 py-8 sm:px-8 lg:px-10 bg-blue-50/30 min-h-screen">
       <div className="mx-auto w-full max-w-7xl flex flex-col gap-5">
         <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -735,7 +735,7 @@ export default function GroupPage() {
             <button
               type="button"
               onClick={goToCreateGroup}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 shrink-0 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 shrink-0 cursor-pointer"
             >
               <Plus size={16} />
               Tạo nhóm mới
@@ -757,13 +757,13 @@ export default function GroupPage() {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center rounded-full border px-4 py-1.5 text-sm font-semibold transition-all cursor-pointer ${isActive
-                    ? "border-orange-200 bg-orange-50 text-orange-600 shadow-sm"
-                    : "border-transparent bg-transparent text-gray-500 hover:text-orange-600"
+                    ? "border-blue-200 bg-blue-50 text-blue-600 shadow-sm"
+                    : "border-transparent bg-transparent text-gray-500 hover:text-blue-600"
                     }`}
                 >
                   {tab.label}
                   {showBadge && (
-                    <span className="ml-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1.5 text-[10px] font-bold text-white">
+                    <span className="ml-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-bold text-white">
                       {count}
                     </span>
                   )}
@@ -782,7 +782,7 @@ export default function GroupPage() {
           <section className="w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
             <header className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 py-5">
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-orange-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">
                   {selectedGroup.subjectName}
                 </p>
                 <h2 className="mt-1 truncate text-xl font-bold text-gray-900">
@@ -813,7 +813,7 @@ export default function GroupPage() {
                     <button
                       type="button"
                       onClick={() => setReportModalOpen(true)}
-                      className="inline-flex h-9 items-center rounded-md border border-orange-200 bg-orange-50 px-3 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-100 cursor-pointer"
+                      className="inline-flex h-9 items-center rounded-md border border-blue-200 bg-blue-50 px-3 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-100 cursor-pointer"
                     >
                       Báo cáo
                     </button>
@@ -825,7 +825,7 @@ export default function GroupPage() {
                       type="button"
                       onClick={() => setIsEditing(!isEditing)}
                       className={`inline-flex h-9 items-center px-3 text-sm font-semibold rounded-md border transition-colors cursor-pointer ${isEditing
-                        ? "border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
+                        ? "border-blue-500 bg-blue-500 text-white hover:bg-blue-600"
                         : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                         }`}
                     >
@@ -836,7 +836,7 @@ export default function GroupPage() {
                   <button
                     type="button"
                     onClick={toggleInvitePanel}
-                    className="inline-flex h-9 items-center gap-2 rounded-md bg-orange-500 px-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                    className="inline-flex h-9 items-center gap-2 rounded-md bg-blue-500 px-3 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
                   >
                     <UserPlus size={16} />
                     Mời thành viên
@@ -865,7 +865,7 @@ export default function GroupPage() {
                       {editAvatarPreview ? (
                         <img src={editAvatarPreview} alt="Group Avatar" className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-600 to-orange-500 text-white font-bold text-lg uppercase">
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-600 to-blue-500 text-white font-bold text-lg uppercase">
                           {selectedGroup?.name ? selectedGroup.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() : "G"}
                         </div>
                       )}
@@ -896,7 +896,7 @@ export default function GroupPage() {
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full h-10 rounded-lg border border-gray-200 px-3.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all font-medium text-gray-800"
+                        className="w-full h-10 rounded-lg border border-gray-200 px-3.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-medium text-gray-800"
                         required
                       />
                     </div>
@@ -916,7 +916,7 @@ export default function GroupPage() {
                               setEditSubjectName(subObj.subjectName);
                             }
                           }}
-                          className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all font-medium text-gray-800 bg-white"
+                          className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-medium text-gray-800 bg-white"
                         >
                           <option value={0}>Chọn môn học</option>
                           {subjects.map((sub) => (
@@ -935,7 +935,7 @@ export default function GroupPage() {
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       rows={3}
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all font-medium text-gray-800 resize-none"
+                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-medium text-gray-800 resize-none"
                       placeholder="Mô tả mục tiêu học tập của nhóm..."
                     />
                   </div>
@@ -948,7 +948,7 @@ export default function GroupPage() {
                         min={1}
                         value={editMaxMembers}
                         onChange={(e) => setEditMaxMembers(Number(e.target.value))}
-                        className="w-full h-10 rounded-lg border border-gray-200 px-3.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all font-medium text-gray-800"
+                        className="w-full h-10 rounded-lg border border-gray-200 px-3.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-medium text-gray-800"
                         required
                       />
                     </div>
@@ -958,7 +958,7 @@ export default function GroupPage() {
                       <select
                         value={editVisibility}
                         onChange={(e) => setEditVisibility(e.target.value as "PUBLIC" | "PRIVATE")}
-                        className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all font-medium text-gray-800 bg-white"
+                        className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-medium text-gray-800 bg-white"
                       >
                         <option value="PUBLIC">Công khai (Public)</option>
                         <option value="PRIVATE">Riêng tư (Private)</option>
@@ -989,7 +989,7 @@ export default function GroupPage() {
                       <button
                         type="submit"
                         disabled={isSavingGroup || isDeletingGroup}
-                        className="w-full sm:w-auto h-10 px-6 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+                        className="w-full sm:w-auto h-10 px-6 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
                       >
                         {isSavingGroup ? <Loader2 size={16} className="animate-spin" /> : null}
                         Lưu thay đổi
@@ -1000,7 +1000,7 @@ export default function GroupPage() {
               ) : (
                 <>
                   {invitePanelOpen && (
-                    <div className="mb-5 rounded-lg border border-orange-100 bg-orange-50/40 p-4">
+                    <div className="mb-5 rounded-lg border border-blue-100 bg-blue-50/40 p-4">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <h3 className="text-sm font-bold text-gray-900">Mời bạn bè vào nhóm</h3>
@@ -1009,7 +1009,7 @@ export default function GroupPage() {
                           value={inviteSearch}
                           onChange={(event) => setInviteSearch(event.target.value)}
                           placeholder="Tìm bạn bè..."
-                          className="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm outline-none transition-colors focus:border-orange-400 sm:w-56"
+                          className="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm outline-none transition-colors focus:border-blue-400 sm:w-56"
                         />
                       </div>
 
@@ -1033,7 +1033,7 @@ export default function GroupPage() {
                             ))}
                           </div>
                         ) : visibleInviteCandidates.length === 0 ? (
-                          <div className="rounded-md border border-dashed border-orange-200 bg-white/70 p-4 text-center text-sm text-gray-500">
+                          <div className="rounded-md border border-dashed border-blue-200 bg-white/70 p-4 text-center text-sm text-gray-500">
                             Không tìm thấy bạn bè
                           </div>
                         ) : (
@@ -1056,7 +1056,7 @@ export default function GroupPage() {
                                       className="h-10 w-10 rounded-full object-cover"
                                     />
                                   ) : (
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-sm font-bold text-orange-600">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-blue-600">
                                       {friend.fullName?.charAt(0)?.toUpperCase() || "U"}
                                     </div>
                                   )}
@@ -1074,7 +1074,7 @@ export default function GroupPage() {
                                   type="button"
                                   onClick={() => handleInviteFriend(friend)}
                                   disabled={isInviting || isPending}
-                                  className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-orange-200 px-3 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent"
+                                  className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-blue-200 px-3 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent"
                                 >
                                   {isInviting ? (
                                     <Loader2 size={15} className="animate-spin" />
@@ -1137,7 +1137,7 @@ export default function GroupPage() {
                                 />
                               ) : (
                                 <div 
-                                  className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-50 text-sm font-bold text-orange-600 cursor-pointer hover:opacity-80 transition-opacity"
+                                  className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-blue-600 cursor-pointer hover:opacity-80 transition-opacity"
                                   onClick={() => navigate(`/profile/${member.userId}`)}
                                 >
                                   {member.fullName?.charAt(0)?.toUpperCase() || "U"}
@@ -1146,7 +1146,7 @@ export default function GroupPage() {
                               <div className="min-w-0">
                                 <div className="flex min-w-0 items-center gap-2">
                                   <p 
-                                    className="truncate text-sm font-bold text-gray-900 cursor-pointer hover:text-orange-500 hover:underline transition-colors"
+                                    className="truncate text-sm font-bold text-gray-900 cursor-pointer hover:text-blue-500 hover:underline transition-colors"
                                     onClick={() => navigate(`/profile/${member.userId}`)}
                                   >
                                     {member.fullName || `User ${member.userId}`}

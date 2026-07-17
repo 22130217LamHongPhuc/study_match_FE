@@ -25,7 +25,7 @@ export function HeaderCard({ onCreateClick }: HeaderCardProps) {
         <button
           type="button"
           onClick={onCreateClick}
-          className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+          className="inline-flex items-center justify-center rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
         >
           + Tạo lịch
         </button>

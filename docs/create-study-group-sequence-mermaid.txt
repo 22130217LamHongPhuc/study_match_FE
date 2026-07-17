@@ -1,0 +1,36 @@
+sequenceDiagram
+    actor User
+    participant FE as Frontend (CreateGroupModal)
+    participant Ctrl as StudyGroupController<br/>group_service
+    participant Svc as StudyGroupServiceImpl
+    participant Cloud as Cloudinary
+    participant DB as DB (study_groups + members<br/>+ slots + invitations)
+    participant Chat as ChatService (notify invite)
+
+    User->>FE: Open /groups - click "Tao nhom moi"
+    FE->>FE: Wizard 5 steps: basic, subject, settings,<br/>freeTime, invite friends
+    User->>FE: Submit - FE validate name + mainSubject
+    FE->>Ctrl: POST /api/groups (multipart)<br/>request JSON + optional avatar
+    Ctrl->>Svc: createGroup: set termId=8<br/>createStudyGroup(request, avatar)
+
+    opt avatar present
+        Svc->>Cloud: uploadFile
+        Cloud-->>Svc: avatarUrl
+    end
+
+    Svc->>Svc: requireName + build StudyGroup<br/>type=STUDY, status=ACTIVE, visibility
+    Svc->>DB: save study_groups
+    Svc->>DB: save owner GroupMember<br/>(role=OWNER, status=ACTIVE)
+
+    opt has invitedUserIds
+        Svc->>DB: save group_invitations PENDING<br/>(check invites <= maxMembers-1)
+        Svc->>Chat: notify-group-invitation (per invitee)
+    end
+
+    opt has freeTimeSlots
+        Svc->>DB: save group_free_time_slots
+    end
+
+    Svc-->>FE: ApiResponse StudyGroupResponse
+    FE-->>User: toast success + fetchGroups + close modal
+    Note over FE,Chat: Chat room NOT created here<br/>Lazy create when open group chat

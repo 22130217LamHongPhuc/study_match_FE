@@ -1,0 +1,20 @@
+sequenceDiagram
+    actor User
+    participant FE as FE (SessionDetailModal<br/>/ StudySessionRoom)
+    participant Ctrl as StudySessionController<br/>group_service
+    participant Svc as StudySessionServiceImpl + DB
+    participant Zego as ZegoCloud
+
+    Note over User,Zego: Pre: participant ACCEPTED (or re-join JOINED)<br/>ONLINE/HYBRID, within start-5min..end
+
+    User->>FE: 1: open session detail
+    User->>FE: 2: click Join room
+    FE->>Ctrl: 3: POST /api/study-sessions/{id}/join?userId=
+    Ctrl->>Svc: 4: joinSession<br/>validate participant + time window
+    Svc->>Svc: 5: open attendance log<br/>status ACCEPTED -> JOINED<br/>ensureRoomId + Zego token
+    Svc-->>FE: 6: { sessionId, roomId, token, joinedAt }
+    FE->>Zego: 7: StudySessionRoom<br/>ZegoUIKitPrebuilt.joinRoom(token, roomId)
+    Zego-->>FE: media connected
+    User->>FE: 8: leave room
+    FE->>Ctrl: POST /api/study-sessions/{id}/leave
+    Ctrl->>Svc: 9: close attendance log<br/>update duration / attendanceStatus

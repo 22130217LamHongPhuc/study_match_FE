@@ -125,7 +125,7 @@ function getStatusBadgeClass(status?: string | null) {
     return "bg-emerald-50 text-emerald-700 border-emerald-100";
   }
   if (status === "PENDING") {
-    return "bg-amber-50 text-amber-700 border-amber-100";
+    return "bg-blue-50 text-blue-700 border-blue-100";
   }
   if (status === "DECLINED") {
     return "bg-rose-50 text-rose-700 border-rose-100";
@@ -383,7 +383,7 @@ export function SessionDetailModal({
         <div className="flex items-start justify-between border-b border-gray-100 bg-white px-6 py-5 shrink-0">
           <div className="flex items-start gap-4">
             <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-              isGroup ? "bg-indigo-50 text-indigo-600" : "bg-orange-50 text-orange-600"
+              isGroup ? "bg-indigo-50 text-indigo-600" : "bg-blue-50 text-blue-600"
             }`}>
               {isGroup ? <Users className="h-5 w-5" /> : <User className="h-5 w-5" />}
             </div>
@@ -440,7 +440,7 @@ export function SessionDetailModal({
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-10 h-10 border-4 border-orange-100 border-t-orange-600 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
               <span className="text-sm font-semibold text-gray-500">Đang tải thông tin chi tiết...</span>
             </div>
           ) : (
@@ -517,7 +517,7 @@ export function SessionDetailModal({
                           href={currentSession?.meetingUrl || session.meetingUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
                         >
                           Mở phòng học online
                           <ExternalLink className="h-3 w-3" />
@@ -558,8 +558,8 @@ export function SessionDetailModal({
                     </div>
                     {loadingStats && (
                       <span className="flex h-1.5 w-1.5 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500" />
                       </span>
                     )}
                   </div>
@@ -646,7 +646,7 @@ export function SessionDetailModal({
                       type="button"
                       onClick={() => handleRespond("ACCEPTED")}
                       disabled={responding !== null}
-                      className="flex-1 rounded-xl bg-orange-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-orange-700 disabled:opacity-50 transition-all shadow-sm shadow-orange-600/10"
+                      className="flex-1 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm shadow-blue-600/10"
                     >
                       {responding === "ACCEPTED" ? "Đang xử lý..." : "Xác nhận tham gia"}
                     </button>

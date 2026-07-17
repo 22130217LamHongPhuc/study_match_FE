@@ -27,7 +27,7 @@ export default function StudyConnectionPage() {
   };
 
   return (
-    <main className="min-h-full bg-orange-50/30 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="min-h-full bg-blue-50/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-5">
         <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

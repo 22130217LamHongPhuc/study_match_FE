@@ -34,9 +34,9 @@ interface RecommendationCardProps {
 }
 
 const AVATAR_COLORS = [
-  "bg-orange-400",
+  "bg-blue-400",
   "bg-rose-400",
-  "bg-amber-500",
+  "bg-blue-500",
   "bg-lime-500",
   "bg-pink-400",
   "bg-red-400",
@@ -99,16 +99,16 @@ function getMatchColor(match: number) {
 
   if (match >= 50) {
     return {
-      text: "text-orange-600",
-      bg: "bg-orange-500",
-      track: "bg-orange-100",
+      text: "text-blue-600",
+      bg: "bg-blue-500",
+      track: "bg-blue-100",
     };
   }
 
   return {
-    text: "text-amber-600",
-    bg: "bg-amber-500",
-    track: "bg-amber-100",
+    text: "text-blue-600",
+    bg: "bg-blue-500",
+    track: "bg-blue-100",
   };
 }
 
@@ -162,7 +162,7 @@ export default function RecommendationCard({
         label: "Đã gửi",
         icon: <Clock size={15} />,
         disabled: true,
-        className: "border border-amber-200 bg-amber-50 text-amber-600",
+        className: "border border-blue-200 bg-blue-50 text-blue-600",
       };
     }
 
@@ -186,7 +186,7 @@ export default function RecommendationCard({
       disabled:
         isConnecting || (!canSendFriendRequest && !canAcceptFriendRequest),
       className:
-        "bg-orange-500 text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50",
+        "bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50",
     };
   })();
 
@@ -228,7 +228,7 @@ export default function RecommendationCard({
               <span className="truncate max-w-[120px]" title={recommendation.fullName}>
                 {recommendation.fullName ?? "Không xác định"}
               </span>
-              <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white">
+              <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white">
                 <Check size={8} className="stroke-[3.5px]" />
               </span>
             </h3>
@@ -257,13 +257,13 @@ export default function RecommendationCard({
 
         <span className="font-bold text-gray-700">Khu vực</span>
         <div className="flex items-center gap-1 text-gray-500 font-medium">
-          <MapPin size={12} className="text-orange-500" />
+          <MapPin size={12} className="text-blue-500" />
           <span>{recommendation.region || "Chưa cập nhật"}</span>
         </div>
 
         <span className="font-bold text-gray-700">Môn chung học kỳ</span>
         <div className="flex items-center gap-1 text-gray-500 font-medium">
-          <BookOpen size={12} className="text-orange-500" />
+          <BookOpen size={12} className="text-blue-500" />
           <span>{recommendation.sharedSubjectCount || 0} môn học chung</span>
         </div>
 
@@ -285,7 +285,7 @@ export default function RecommendationCard({
             );
           })}
           {recommendation.commonGroups && recommendation.commonGroups.length > 2 && (
-            <span className="rounded-lg bg-orange-50 px-1.5 py-0.5 text-[9px] font-bold text-orange-600">
+            <span className="rounded-lg bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-600">
               +{recommendation.commonGroups.length - 2}
             </span>
           )}

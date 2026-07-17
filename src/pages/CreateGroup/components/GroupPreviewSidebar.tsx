@@ -13,9 +13,9 @@ type FriendPreviewItem = FriendListItem & {
 };
 
 const AVATAR_COLORS = [
-  "bg-orange-400",
+  "bg-blue-400",
   "bg-rose-400",
-  "bg-amber-500",
+  "bg-blue-500",
   "bg-lime-500",
   "bg-pink-400",
   "bg-red-400",
@@ -142,7 +142,7 @@ export default function GroupPreviewSidebar({
                 <img src={draft.avatarPreview} alt="Group Preview" className="h-full w-full object-cover" />
               </div>
             ) : (
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <AutoAwesomeMosaicOutlined fontSize="small" />
               </div>
             )}
@@ -189,7 +189,7 @@ export default function GroupPreviewSidebar({
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Tìm bạn bè"
-            className="mb-3 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/50"
+            className="mb-3 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-200/50"
           />
 
           {invitedMembers.length > 0 && (
@@ -201,7 +201,7 @@ export default function GroupPreviewSidebar({
                 {invitedMembers.map((m) => (
                   <span
                     key={m.user_id}
-                    className="rounded-full border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700"
+                    className="rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
                   >
                     {m.full_name}
                   </span>
@@ -314,8 +314,8 @@ function MemberCard({
         className={
           "ml-3 rounded-lg border px-3 py-1.5 text-xs font-medium transition " +
           (invited
-            ? "cursor-not-allowed border-orange-200 bg-orange-50 text-orange-700"
-            : "border-slate-200 text-slate-700 hover:border-orange-300 hover:text-orange-600")
+            ? "cursor-not-allowed border-blue-200 bg-blue-50 text-blue-700"
+            : "border-slate-200 text-slate-700 hover:border-blue-300 hover:text-blue-600")
         }
       >
         {invited ? "Đang mời" : "Mời"}

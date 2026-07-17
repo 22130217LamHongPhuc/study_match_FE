@@ -24,8 +24,8 @@ export function QuickStats({ sessions }: QuickStatsProps) {
       label: "Lịch hôm nay",
       value: todayCount,
       helper: "Buổi học cần tham gia",
-      bg: "bg-orange-50",
-      text: "text-orange-600",
+      bg: "bg-blue-50",
+      text: "text-blue-600",
     },
     {
       label: "Tuần này",
@@ -38,8 +38,8 @@ export function QuickStats({ sessions }: QuickStatsProps) {
       label: "Chờ xác nhận",
       value: pendingCount,
       helper: "Lời mời cần phản hồi",
-      bg: "bg-amber-50",
-      text: "text-amber-600",
+      bg: "bg-blue-50",
+      text: "text-blue-600",
     },
     {
       label: "Lịch nhóm",

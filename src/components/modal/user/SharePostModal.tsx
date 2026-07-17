@@ -201,7 +201,7 @@ export default function SharePostModal({
   onClose,
   post,
   currentUserId,
-  authorName = "Người dùng",
+  authorName = "",
   authorAvatarUrl,
   onPostShared,
 }: SharePostModalProps) {

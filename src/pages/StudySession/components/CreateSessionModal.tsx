@@ -399,7 +399,7 @@ export function CreateSessionModal({
   };
 
   const inputClass =
-    "w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 transition-all";
+    "w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all";
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 px-4 py-6">
@@ -488,7 +488,7 @@ export function CreateSessionModal({
                   type="button"
                   onClick={() => setIsGroupDropdownOpen(!isGroupDropdownOpen)}
                   disabled={loadingGroups}
-                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 transition-all disabled:bg-gray-50 disabled:text-gray-400"
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all disabled:bg-gray-50 disabled:text-gray-400"
                 >
                   {selectedGroup ? (
                     <div className="flex items-center gap-3">
@@ -515,7 +515,7 @@ export function CreateSessionModal({
                         placeholder="Tìm kiếm nhóm..."
                         value={groupSearchQuery}
                         onChange={(e) => setGroupSearchQuery(e.target.value)}
-                        className="mb-2 w-full rounded border border-gray-200 px-3 py-2 text-xs outline-none focus:border-orange-400"
+                        className="mb-2 w-full rounded border border-gray-200 px-3 py-2 text-xs outline-none focus:border-blue-400"
                       />
                       {loadingGroups && (
                         <div className="py-2 text-center text-xs text-gray-400">Đang tải nhóm...</div>
@@ -540,7 +540,7 @@ export function CreateSessionModal({
                               setIsGroupDropdownOpen(false);
                               setGroupSearchQuery("");
                             }}
-                            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-orange-50/50 ${selectedGroupId === group.id ? "bg-orange-50 font-semibold" : ""
+                            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-blue-50/50 ${selectedGroupId === group.id ? "bg-blue-50 font-semibold" : ""
                               }`}
                           >
                             <GroupMiniAvatar group={group} />
@@ -572,7 +572,7 @@ export function CreateSessionModal({
                   type="button"
                   onClick={() => setIsFriendDropdownOpen(!isFriendDropdownOpen)}
                   disabled={loadingFriends}
-                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 transition-all disabled:bg-gray-50 disabled:text-gray-400"
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all disabled:bg-gray-50 disabled:text-gray-400"
                 >
                   {selectedFriend ? (
                     <div className="flex items-center gap-3">
@@ -583,7 +583,7 @@ export function CreateSessionModal({
                           className="h-8 w-8 rounded-full object-cover shrink-0"
                         />
                       ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold text-xs shrink-0">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-xs shrink-0">
                           {selectedFriend.full_name.substring(0, 2).toUpperCase()}
                         </div>
                       )}
@@ -607,7 +607,7 @@ export function CreateSessionModal({
                         placeholder="Tìm kiếm bạn học..."
                         value={friendSearchQuery}
                         onChange={(e) => setFriendSearchQuery(e.target.value)}
-                        className="mb-2 w-full rounded border border-gray-200 px-3 py-2 text-xs outline-none focus:border-orange-400"
+                        className="mb-2 w-full rounded border border-gray-200 px-3 py-2 text-xs outline-none focus:border-blue-400"
                       />
                       {loadingFriends && (
                         <div className="py-2 text-center text-xs text-gray-400">Đang tải bạn bè...</div>
@@ -629,7 +629,7 @@ export function CreateSessionModal({
                               setIsFriendDropdownOpen(false);
                               setFriendSearchQuery("");
                             }}
-                            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-orange-50/50 ${selectedFriendId === friend.user_id ? "bg-orange-50 font-semibold" : ""
+                            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-blue-50/50 ${selectedFriendId === friend.user_id ? "bg-blue-50 font-semibold" : ""
                               }`}
                           >
                             {friend.avatar_url ? (
@@ -639,7 +639,7 @@ export function CreateSessionModal({
                                 className="h-8 w-8 rounded-full object-cover shrink-0"
                               />
                             ) : (
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold">
                                 {friend.full_name.substring(0, 2).toUpperCase()}
                               </div>
                             )}
@@ -735,7 +735,7 @@ export function CreateSessionModal({
             type="button"
             onClick={handleSubmit}
             disabled={isCreating}
-            className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-400 transition-colors flex items-center gap-2 justify-center"
+            className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-blue-400 transition-colors flex items-center gap-2 justify-center"
           >
             {isCreating ? (
               <>

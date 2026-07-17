@@ -76,7 +76,7 @@ function GroupAvatar({ url, name }: { url?: string | null; name: string }) {
   }
 
   return (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-orange-500 text-white font-bold text-sm uppercase shadow-sm">
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 text-white font-bold text-sm uppercase shadow-sm">
       {getInitials(name)}
     </div>
   );
@@ -98,12 +98,12 @@ function InvitationCard({
   onCardClick?: () => void;
 }) {
   const avatarUrl = getGroupAvatarUrl(invitation);
-  const requesterName = invitation.inviterName || `Người dùng #${invitation.inviterUserId}`;
+  const requesterName = invitation.inviterName || `#${invitation.inviterUserId}`;
 
   return (
     <article
       onClick={onCardClick}
-      className={`rounded-xl border border-gray-200 bg-white p-4 shadow-2xs transition-shadow hover:shadow-md ${onCardClick ? "cursor-pointer hover:border-orange-200" : ""
+      className={`rounded-xl border border-gray-200 bg-white p-4 shadow-2xs transition-shadow hover:shadow-md ${onCardClick ? "cursor-pointer hover:border-blue-200" : ""
         }`}
     >
       <div className="flex items-start gap-3">
@@ -112,7 +112,7 @@ function InvitationCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-sm font-bold text-gray-800">{invitation.groupName}</h3>
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-semibold text-orange-600">
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-600">
               <Clock3 size={12} />
               Chờ duyệt
             </span>
@@ -153,7 +153,7 @@ function InvitationCard({
               e.stopPropagation();
               onAccept?.(invitation.invitationId);
             }}
-            className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-500 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-500 text-sm font-semibold text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Chấp nhận
           </button>
@@ -214,13 +214,13 @@ function JoinRequestDetailModal({
                 className="h-14 w-14 rounded-xl border border-gray-100 object-cover"
               />
             ) : (
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-orange-500 text-white font-bold text-base uppercase shadow-sm">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 text-white font-bold text-base uppercase shadow-sm">
                 {getInitials(invitation.groupName)}
               </div>
             )}
             <div>
               <h4 className="font-bold text-gray-900">{invitation.groupName}</h4>
-              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-semibold text-orange-600">
+              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-600">
                 <Clock3 size={11} />
                 Chờ duyệt
               </span>
@@ -235,7 +235,7 @@ function JoinRequestDetailModal({
             <div className="flex justify-between">
               <span className="text-gray-500">Người gửi:</span>
               <span className="font-semibold text-gray-800">
-                {invitation.inviterName || `Người dùng #${invitation.inviterUserId}`}
+                {invitation.inviterName || `#${invitation.inviterUserId}`}
               </span>
             </div>
             <div className="flex justify-between">
@@ -296,7 +296,7 @@ function JoinRequestDetailModal({
                 type="button"
                 disabled={actionLoading}
                 onClick={() => onAccept?.(invitation.invitationId)}
-                className="inline-flex h-9 items-center justify-center rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-9 items-center justify-center rounded-lg bg-blue-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Chấp nhận
               </button>
@@ -724,13 +724,13 @@ export default function StudyGroupsSection() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center rounded-full border px-4 py-1.5 text-sm font-semibold transition-all ${isActive
-                  ? "border-orange-200 bg-orange-50 text-orange-600 shadow-sm"
-                  : "border-transparent bg-transparent text-gray-500 hover:text-orange-600"
+                  ? "border-blue-200 bg-blue-50 text-blue-600 shadow-sm"
+                  : "border-transparent bg-transparent text-gray-500 hover:text-blue-600"
                   }`}
               >
                 {tab.label}
                 {tab.id !== "suggested" && (
-                  <span className={`ml-1.5 text-xs ${isActive ? "text-orange-500" : "text-gray-400"}`}>
+                  <span className={`ml-1.5 text-xs ${isActive ? "text-blue-500" : "text-gray-400"}`}>
                     ({count})
                   </span>
                 )}

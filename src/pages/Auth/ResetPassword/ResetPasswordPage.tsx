@@ -58,8 +58,8 @@ export default function ResetPasswordPage() {
           <LoadingSkeleton />
         ) : (
           <div>
-            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-orange-100">
-              <LockKeyhole className="h-7 w-7 text-orange-600" />
+            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
+              <LockKeyhole className="h-7 w-7 text-blue-600" />
             </div>
 
             <h1 className="text-center text-2xl font-bold text-slate-800">
@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
                   placeholder="Nhập mật khẩu mới"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
                   placeholder="Nhập lại mật khẩu mới"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
@@ -108,7 +108,7 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-xl bg-blue-500 py-3 font-semibold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
               </button>
@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
             <div className="mt-6 text-center">
               <Link
                 to="/login"
-                className="text-sm font-medium text-orange-600 hover:underline"
+                className="text-sm font-medium text-blue-600 hover:underline"
               >
                 Quay lại đăng nhập
               </Link>

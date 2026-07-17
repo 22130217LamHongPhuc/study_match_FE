@@ -49,7 +49,7 @@ const getFileMeta = (fileName: string) => {
     return { label: "Excel", color: "#10b981", bg: "#d1fae5" };
   }
   if (lower.endsWith(".ppt") || lower.endsWith(".pptx")) {
-    return { label: "PowerPoint", color: "#f97316", bg: "#ffedd5" };
+    return { label: "PowerPoint", color: "#2563eb", bg: "#dbeafe" };
   }
   if (lower.endsWith(".zip") || lower.endsWith(".rar") || lower.endsWith(".7z") || lower.endsWith(".tar") || lower.endsWith(".gz")) {
     return { label: "Archive", color: "#8b5cf6", bg: "#ede9fe" };
