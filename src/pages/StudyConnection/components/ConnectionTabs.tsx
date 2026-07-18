@@ -19,10 +19,6 @@ export const TABS: TabItem[] = [
     label: "Gợi ý bạn học",
   },
   {
-    id: "suggested-groups",
-    label: "Gợi ý nhóm học",
-  },
-  {
     id: "friend-requests",
     label: "Lời mời kết bạn",
   },

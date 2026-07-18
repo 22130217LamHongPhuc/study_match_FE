@@ -1,6 +1,6 @@
-import { List, ListItemButton, Tooltip } from "@mui/material";
+import { Badge, List, ListItemButton, Tooltip } from "@mui/material";
 import { Box } from "@mui/system";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import HomeIcon from "@mui/icons-material/Home";
 import PersonIcon from "@mui/icons-material/Person";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
@@ -13,8 +13,10 @@ import SchoolIcon from "@mui/icons-material/School";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import logo from "../../assets/img/logo.png";
 import { Report } from "@mui/icons-material";
+import { RootState } from "../../redux/store";
 
 interface NavItem {
   label: string;
@@ -46,6 +48,19 @@ export default function SideBar({ collapsed = false, onToggle }: SideBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
+  const unreadByConversation = useSelector(
+    (state: RootState) => state.chat.unreadByConversation,
+  ) ?? {};
+
+  const conversationUnreadTotal = useMemo(() => {
+    return Object.values(unreadByConversation).reduce((sum, count) => {
+      const n = Number(count);
+      return sum + (Number.isFinite(n) && n > 0 ? n : 0);
+    }, 0);
+  }, [unreadByConversation]);
+
+  const conversationUnreadLabel =
+    conversationUnreadTotal > 99 ? "99+" : String(conversationUnreadTotal);
 
   return (
     <Box
@@ -218,10 +233,66 @@ export default function SideBar({ collapsed = false, onToggle }: SideBarProps) {
                   },
                 }}
               >
-                {item.icon}
+                {item.path === "/conversation" && collapsed ? (
+                  <Badge
+                    color="error"
+                    badgeContent={conversationUnreadTotal > 0 ? conversationUnreadLabel : 0}
+                    overlap="circular"
+                    sx={{
+                      "& .MuiBadge-badge": {
+                        minWidth: 16,
+                        height: 16,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        px: conversationUnreadTotal > 9 ? 0.4 : 0,
+                        right: 2,
+                        top: 2,
+                      },
+                    }}
+                  >
+                    {item.icon}
+                  </Badge>
+                ) : (
+                  item.icon
+                )}
                 {!collapsed && (
-                  <Box component="span" sx={{ whiteSpace: "nowrap" }}>
-                    {item.label}
+                  <Box
+                    component="span"
+                    sx={{
+                      whiteSpace: "nowrap",
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 1,
+                      minWidth: 0,
+                    }}
+                  >
+                    <Box component="span" sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {item.label}
+                    </Box>
+                    {item.path === "/conversation" && conversationUnreadTotal > 0 && (
+                      <Box
+                        component="span"
+                        sx={{
+                          minWidth: 18,
+                          height: 18,
+                          px: conversationUnreadTotal > 9 ? 0.5 : 0,
+                          borderRadius: "999px",
+                          bgcolor: "#ef4444",
+                          color: "#fff",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          lineHeight: 1,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {conversationUnreadLabel}
+                      </Box>
+                    )}
                   </Box>
                 )}
               </ListItemButton>

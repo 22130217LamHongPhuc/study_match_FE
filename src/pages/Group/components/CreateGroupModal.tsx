@@ -212,7 +212,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
     try {
       const res = await createStudyGroup(payload, avatarFile || undefined);
       if (res.success) {
-        toast.success("Tạo nhóm thành công!");
         onCreated();
         handleClose();
       } else {

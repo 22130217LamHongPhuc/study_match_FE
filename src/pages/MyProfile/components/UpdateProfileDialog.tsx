@@ -596,7 +596,6 @@ export default function UpdateProfileDialog({
         if (result.success) {
           const userId = Number(localStorage.getItem("userId"));
           dispatch(loadProfileByUserId(userId));
-          toast.success("Cập nhật thông tin thành công");
           onClose();
         } else {
           setSubmitError(result.error || "Lỗi khi lưu dữ liệu");

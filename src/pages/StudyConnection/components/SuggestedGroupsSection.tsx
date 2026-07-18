@@ -204,7 +204,6 @@ export default function SuggestedGroupsSection() {
         setSelectedOtherGroups((prev) =>
           prev.map((g) => g.id === groupId ? { ...g, isJoinRequestPending: false } : g)
         );
-        toast.success("Đã hủy yêu cầu tham gia nhóm.");
         window.dispatchEvent(new Event("group_invitations_updated"));
       } catch (err) {
         toast.error("Hủy yêu cầu thất bại.");

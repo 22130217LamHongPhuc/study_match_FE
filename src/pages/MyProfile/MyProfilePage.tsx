@@ -13,7 +13,7 @@ export default function MyProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-blue-50/30 px-4 py-5">
+      <div className="flex min-h-screen items-center justify-center bg-blue-50/30 px-6 py-8 sm:px-8 lg:px-10">
         <div className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-5">
           <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-100 border-t-blue-500" />
           <span className="text-sm font-medium text-gray-600">
@@ -26,8 +26,8 @@ export default function MyProfilePage() {
 
   if (!profileVm) {
     return (
-      <div className="min-h-screen bg-blue-50/30 px-4 py-5 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl">
+      <div className="min-h-screen bg-blue-50/30 px-6 py-8 sm:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-7xl">
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             Không có dữ liệu hồ sơ để hiển thị.
           </div>
@@ -37,8 +37,8 @@ export default function MyProfilePage() {
   }
 
   return (
-    <main className="min-h-full bg-blue-50/30 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-5xl space-y-6">
+    <main className="min-h-screen bg-blue-50/30 px-6 py-8 sm:px-8 lg:px-10">
+      <div className="mx-auto w-full max-w-7xl flex flex-col gap-5">
         <section className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
@@ -62,7 +62,7 @@ export default function MyProfilePage() {
 
         <ProfileHeaderCard profile={profileVm} />
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 items-stretch">
           <AcademicInfoCard profile={profileVm} />
           <SubjectsCard profile={profileVm} />
         </div>

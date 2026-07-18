@@ -102,7 +102,6 @@ export default function ReportModal({
       });
 
       if (response.success) {
-        toast.success("Báo cáo đã được gửi cho admin xử lý.");
         setReason("");
         setDescription("");
         setReasonError("");
@@ -204,42 +203,6 @@ export default function ReportModal({
       </DialogTitle>
 
       <DialogContent dividers sx={{ px: 3, py: 2.5 }}>
-        {targetName ? (
-          <Box
-            sx={{
-              mb: 2.5,
-              borderRadius: "12px",
-              border: "1px solid #bae2fd",
-              bgcolor: "#f0f7ff",
-              px: 2,
-              py: 1.5,
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#1e40af",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {TARGET_LABELS[targetType]}
-            </Typography>
-            <Typography
-              sx={{
-                mt: 0.5,
-                fontSize: 14,
-                fontWeight: 700,
-                color: "#1e3a8a",
-                wordBreak: "break-word",
-              }}
-            >
-              {targetName}
-            </Typography>
-          </Box>
-        ) : null}
-
         <TextField
           select
           fullWidth

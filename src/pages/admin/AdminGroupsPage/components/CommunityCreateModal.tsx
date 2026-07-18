@@ -89,7 +89,6 @@ export function CommunityCreateModal({
 
     const res = await createCommunityGroup(createGroupRequest);
     if (res.success) {
-      toast.success("Cộng đồng đã được tạo thành công");
       onClose();
     }
     setLoading(false);

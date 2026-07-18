@@ -1,4 +1,3 @@
-import { User, IdCard, BookOpen, Info } from "lucide-react";
 import { FormData, Cohort } from "./types";
 import { getCohortLabel } from "./constants";
 import { FieldLabel, TInput } from "./Shared";
@@ -29,20 +28,18 @@ export function Step1({
   return (
     <div className="space-y-5">
       <div>
-        <FieldLabel className="flex items-center gap-2">
-          <IdCard size={16} /> Mã số sinh viên
-        </FieldLabel>
+        <FieldLabel>Mã số sinh viên</FieldLabel>
         <TInput
           value={data.studentId}
-          onChange={(v) => update("studentId", v)}
+          onChange={(v) => update("studentId", v.replace(/\D/g, ""))}
           placeholder="2151..."
+          type="tel"
+          inputMode="numeric"
         />
       </div>
 
       <div>
-        <FieldLabel className="flex items-center gap-2">
-          <BookOpen size={16} /> Khóa hiện tại
-        </FieldLabel>
+        <FieldLabel>Khóa hiện tại</FieldLabel>
 
         {cohortsLoading ? (
           <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
@@ -70,25 +67,20 @@ export function Step1({
                   onClick={() =>
                     update("cohortCode", String(cohort.cohortCode))
                   }
-                  className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-150 ${active ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100" : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50"}`}
+                  className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-150 bg-white ${
+                    active
+                      ? "border-accent"
+                      : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${active ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"}`}
-                    >
-                      <span className="text-sm font-bold">
-                        {cohort.cohortCode}
-                      </span>
-                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span
-                          className={`font-semibold text-sm ${active ? "text-blue-700" : "text-gray-700"}`}
-                        >
+                        <span className="font-semibold text-sm text-gray-700">
                           {getCohortLabel(cohort)}
                         </span>
                         {active && (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200">
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full border border-accent text-accent">
                             Đã chọn
                           </span>
                         )}
@@ -97,20 +89,21 @@ export function Step1({
                         Mã khóa: {cohort.cohortCode}
                       </p>
                     </div>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                        active ? "border-accent" : "border-gray-200"
+                      }`}
+                    >
+                      {active && (
+                        <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+                      )}
+                    </div>
                   </div>
                 </button>
               );
             })}
           </div>
         )}
-      </div>
-
-      <div className="flex gap-3 bg-blue-50 border border-blue-100 rounded-xl p-4">
-        <Info className="text-blue-400 shrink-0" size={20} />
-        <p className="text-xs text-blue-600 leading-relaxed">
-          Thông tin sẽ được dùng để xây dựng hồ sơ học tập và ghép nhóm tự động.
-          Dữ liệu chỉ dùng nội bộ trong hệ thống <strong>StudyMatch</strong>.
-        </p>
       </div>
     </div>
   );

@@ -167,8 +167,6 @@ export default function AdminReportsPage() {
         );
         return;
       }
-
-      toast.success("Cập nhật trạng thái báo cáo thành công.");
       handleCloseDetail(true);
       setRefreshTick((prev) => prev + 1);
     } catch {

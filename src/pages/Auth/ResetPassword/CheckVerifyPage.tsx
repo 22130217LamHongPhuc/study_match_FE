@@ -21,9 +21,6 @@ export default function CheckVerifyEmailPage() {
     const res = await resetEmailVerification(email || "");
 
     if (res.success) {
-      toast.success(
-        "Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư của bạn.",
-      );
     } else {
       toast.error(
         "Gửi lại email xác thực thất bại: " +

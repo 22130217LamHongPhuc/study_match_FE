@@ -44,8 +44,6 @@ export default function AdminLoginPage() {
       localStorage.setItem("refreshToken", response.data.refreshToken);
       localStorage.setItem("userId", response.data.userId.toString());
       localStorage.setItem("isAdmin", "true");
-
-      toast.success("Đăng nhập quản trị thành công!");
       navigate("/admin/dashboard");
     } catch (error) {
       console.error("Admin login exception:", error);

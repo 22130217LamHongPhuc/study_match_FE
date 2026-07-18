@@ -54,6 +54,7 @@ import {
   loadGroupConversation,
   recallMess,
   replyText,
+  sendFirstMessage,
   sendSeen,
   sendText,
   setMessagePinned,
@@ -340,7 +341,7 @@ export default function ConversationPage() {
   const storeNewMess = useSelector((state: RootState) => state.chat.newMess);
   const storeEvent = useSelector((state: RootState) => state.chat.newMess?.event);
 
-  const routeState = location.state as RouteState;
+  const routeState = location.state as RouteState & { conversationId?: number | string | null };
   const targetUserIdFromState = Number(routeState?.targetUserId);
   const targetUserId = Number.isFinite(targetUserIdFromState) && targetUserIdFromState > 0
     ? targetUserIdFromState
@@ -351,7 +352,14 @@ export default function ConversationPage() {
     routeState?.conversationKind === "GROUP" ||
     Number(routeState?.conversationType) === 0 ||
     groupId !== null;
-  const fallbackConversationId = !targetUserId && !isGroupConversation ? currentConversationId : null;
+  const conversationIdFromState = Number(routeState?.conversationId);
+  const fallbackConversationId = !targetUserId && !isGroupConversation
+    ? (
+      Number.isFinite(conversationIdFromState) && conversationIdFromState > 0
+        ? conversationIdFromState
+        : currentConversationId
+    )
+    : null;
   const routeAvatar = normalizeAvatarUrl(routeState?.avatar || null);
   const groupName = routeState?.groupName || null;
   const baseFullName = isGroupConversation
@@ -374,6 +382,7 @@ export default function ConversationPage() {
   const [privateSenderProfiles, setPrivateSenderProfiles] = useState<Record<number, FriendUser>>({});
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const hasSelectedConversation = selectedConversationKey !== "none";
   const [loadingConversation, setLoadingConversation] = useState(() => {
     return selectedConversationKey !== "none";
   });
@@ -422,6 +431,7 @@ export default function ConversationPage() {
   const loadingOlderMessagesRef = useRef(false);
   const hasMoreMessagesRef = useRef(true);
   const activeConversationKeyRef = useRef("none");
+  const conversationHydratedRef = useRef(false);
   const emojiPickerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const documentInputRef = useRef<HTMLInputElement | null>(null);
@@ -431,6 +441,26 @@ export default function ConversationPage() {
   useLayoutEffect(() => {
     conversationRef.current = conversation;
   }, [conversation]);
+
+  const mergeConversationMessages = useCallback((
+    prev: MessageInterface[],
+    incoming: MessageInterface[],
+  ) => {
+    if (!incoming.length) return prev;
+    const byId = new Map<number, MessageInterface>();
+    [...prev, ...incoming].forEach((message) => {
+      const id = Number(message?.messageId);
+      if (!Number.isFinite(id)) return;
+      const existing = byId.get(id);
+      byId.set(id, existing ? { ...existing, ...message } : message);
+    });
+    return Array.from(byId.values()).sort((a, b) => {
+      const ta = new Date(a.createdAt || 0).getTime();
+      const tb = new Date(b.createdAt || 0).getTime();
+      if (tb !== ta) return tb - ta;
+      return Number(b.messageId) - Number(a.messageId);
+    });
+  }, []);
 
   useEffect(() => {
     setGroupAvatar(isGroupConversation ? routeAvatar : null);
@@ -672,6 +702,7 @@ export default function ConversationPage() {
       loadingOlderMessagesRef.current = false;
       lastSeenMessageIdRef.current = null;
       conversationId.current = null;
+      conversationHydratedRef.current = false;
       pendingTempMessageIds.current = [];
       setHasMoreMessages(true);
       setLoadingOlderMessages(false);
@@ -684,16 +715,30 @@ export default function ConversationPage() {
       setLoadingConversation(true);
 
       try {
-        const result: APIResponse = isGroupConversation
-          ? await loadGroupConversation(currentUserId, groupId as number, 0)
-          : targetUserId
-            ? await loadConversation(currentUserId, targetUserId, 0)
-            : await loadConversationById(currentUserId, fallbackConversationId as number, 0);
+        // Prefer by-id when conversationId is known (message request / accepted direct)
+        let result: APIResponse | null = null;
+        if (isGroupConversation) {
+          result = await loadGroupConversation(currentUserId, groupId as number, 0);
+        } else if (
+          Number.isFinite(conversationIdFromState) &&
+          conversationIdFromState > 0
+        ) {
+          result = await loadConversationById(currentUserId, conversationIdFromState, 0);
+          // Fallback to peer-based load if by-id empty
+          if (!result?.data && targetUserId) {
+            result = await loadConversation(currentUserId, targetUserId, 0);
+          }
+        } else if (targetUserId) {
+          result = await loadConversation(currentUserId, targetUserId, 0);
+        } else if (fallbackConversationId) {
+          result = await loadConversationById(currentUserId, fallbackConversationId as number, 0);
+        }
 
         if (activeConversationKeyRef.current !== loadKey) return;
         if (!result?.data) {
           setConversation([]);
           conversationId.current = null;
+          conversationHydratedRef.current = true;
           return;
         }
 
@@ -742,7 +787,9 @@ export default function ConversationPage() {
         }
 
         const loadedMessages = (result.data.listMess || []) as MessageInterface[];
-        setConversation(loadedMessages);
+        // Merge with any realtime messages that arrived during loading
+        setConversation((prev) => mergeConversationMessages(prev, loadedMessages));
+        conversationHydratedRef.current = true;
 
         const hasNextPage = loadedMessages.length === MESSAGE_PAGE_SIZE;
         hasMoreMessagesRef.current = hasNextPage;
@@ -757,6 +804,7 @@ export default function ConversationPage() {
         markLatestIncomingSeen(loadedMessages, result.data.conversationId);
       } catch (error) {
         console.error("[Conversation][load-first-error]", error);
+        conversationHydratedRef.current = true;
       } finally {
         await waitForMinLoading(loadingStartedAt);
         if (activeConversationKeyRef.current === loadKey) {
@@ -766,7 +814,18 @@ export default function ConversationPage() {
     };
 
     loadMess();
-  }, [selectedConversationKey, currentUserId, dispatch, markLatestIncomingSeen]);
+  }, [
+    selectedConversationKey,
+    currentUserId,
+    dispatch,
+    markLatestIncomingSeen,
+    isGroupConversation,
+    groupId,
+    targetUserId,
+    conversationIdFromState,
+    fallbackConversationId,
+    mergeConversationMessages,
+  ]);
 
   useEffect(() => {
     loadedPrivateProfileIdsRef.current.clear();
@@ -1054,6 +1113,8 @@ export default function ConversationPage() {
 
   useEffect(() => {
     if (!storeNewMess?.data) return;
+    // Chưa hydrate history xong thì chỉ nhận tin realtime của conversation đang mở
+    // (tránh replay tin cũ trong redux khi vừa vào trang).
 
     // Allow processing socket events when either the event's conversationId matches
     // the current conversation, OR the payload's message belongs to the current
@@ -1061,10 +1122,26 @@ export default function ConversationPage() {
     const socketConvoId = Number((storeNewMess.data as any).conversationId);
     const socketMessage = (storeNewMess.data as any).message;
     const socketMessageId = Number(socketMessage?.messageId ?? socketMessage?.messageID ?? NaN);
+    const isPendingFirstPrivate =
+      !conversationId.current &&
+      !isGroupConversation &&
+      !!targetUserId &&
+      Number(socketMessage?.senderId) === currentUserId;
     const belongsToCurrentConversation =
-      socketConvoId === conversationId.current ||
-      (Number.isFinite(socketMessageId) && conversationRef.current.some((m) => m.messageId === socketMessageId));
+      (conversationId.current != null && socketConvoId === conversationId.current) ||
+      (Number.isFinite(socketMessageId) && conversationRef.current.some((m) => m.messageId === socketMessageId)) ||
+      isPendingFirstPrivate;
     if (!belongsToCurrentConversation) return;
+    if (!conversationHydratedRef.current && !isPendingFirstPrivate) return;
+
+    if (
+      Number.isFinite(socketConvoId) &&
+      socketConvoId > 0 &&
+      !conversationId.current
+    ) {
+      conversationId.current = socketConvoId;
+      dispatch(updateCurrentConverId({ currentConversationId: socketConvoId }));
+    }
 
     if (storeEvent === SocketEvent.MESSAGE_ACK && isSocketData(storeNewMess.data)) {
       applyMessageAck(storeNewMess.data.message);
@@ -1130,25 +1207,49 @@ export default function ConversationPage() {
     const socketConvoId = Number((storeNewMess.data as any).conversationId);
     const socketMessage = (storeNewMess.data as any).message;
     const socketMessageId = Number(socketMessage?.messageId ?? socketMessage?.messageID ?? NaN);
+    const isPendingFirstPrivate =
+      !conversationId.current &&
+      !isGroupConversation &&
+      !!targetUserId &&
+      (
+        Number(socketMessage?.senderId) === currentUserId ||
+        Number(socketMessage?.senderId) === targetUserId
+      );
     const belongsToCurrentConversation =
-      socketConvoId === conversationId.current ||
-      (Number.isFinite(socketMessageId) && conversationRef.current.some((m) => m.messageId === socketMessageId));
+      (conversationId.current != null && socketConvoId === conversationId.current) ||
+      (Number.isFinite(socketMessageId) && conversationRef.current.some((m) => m.messageId === socketMessageId)) ||
+      isPendingFirstPrivate;
     if (!belongsToCurrentConversation) return;
+    // Chỉ append realtime sau khi đã load history (tránh chỉ còn tin mới)
+    if (!conversationHydratedRef.current && !isPendingFirstPrivate) return;
+
+    if (
+      Number.isFinite(socketConvoId) &&
+      socketConvoId > 0 &&
+      !conversationId.current
+    ) {
+      conversationId.current = socketConvoId;
+      dispatch(updateCurrentConverId({ currentConversationId: socketConvoId }));
+    }
 
     if (storeEvent === SocketEvent.NEW_MESSAGE && isSocketData(storeNewMess.data)) {
       const incomingMessage = storeNewMess.data.message as any;
       const incomingMessageId = Number(incomingMessage?.messageId ?? incomingMessage?.messageID ?? NaN);
+      if (!Number.isFinite(incomingMessageId)) return;
       const normalizedIncoming = { ...incomingMessage, messageId: incomingMessageId } as MessageInterface;
       setConversation((prev) => {
-        if (prev.some((item) => item.messageId === incomingMessageId)) {
+        if (prev.some((item) => Number(item.messageId) === incomingMessageId)) {
           return prev;
         }
-        return [normalizedIncoming, ...prev];
+        return mergeConversationMessages(prev, [normalizedIncoming]);
       });
 
       if (incomingMessage.senderId !== currentUserId) {
         if (document.visibilityState === "visible") {
-          markLatestIncomingSeen([...conversation, incomingMessage], storeNewMess.data.conversationId);
+          markLatestIncomingSeen(
+            mergeConversationMessages(conversationRef.current, [normalizedIncoming]),
+            storeNewMess.data.conversationId,
+          );
         } else {
           dispatch(increaseUnread({ conversationId: storeNewMess.data.conversationId }));
         }
@@ -1233,7 +1334,7 @@ export default function ConversationPage() {
         setRejectedVideoCall(true);
       }
     }
-  }, [storeNewMess, storeEvent, currentUserId, dispatch, conversation, markLatestIncomingSeen, updateOutgoingMessageStatus]);
+  }, [storeNewMess, storeEvent, currentUserId, dispatch, markLatestIncomingSeen, updateOutgoingMessageStatus]);
 
   useEffect(() => {
     const markCurrentConversationSeen = () => {
@@ -1251,36 +1352,43 @@ export default function ConversationPage() {
     }
 
     try {
-      const result: APIResponse | null = isGroupConversation
-        ? await loadGroupConversation(currentUserId, groupId as number, 0)
-        : targetUserId
-          ? await loadConversation(currentUserId, targetUserId, 0)
-          : fallbackConversationId
-            ? await loadConversationById(currentUserId, fallbackConversationId, 0)
-            : null;
+      let result: APIResponse | null = null;
+      if (isGroupConversation) {
+        result = await loadGroupConversation(currentUserId, groupId as number, 0);
+      } else if (Number.isFinite(conversationIdFromState) && conversationIdFromState > 0) {
+        result = await loadConversationById(currentUserId, conversationIdFromState, 0);
+        if (!result?.data && targetUserId) {
+          result = await loadConversation(currentUserId, targetUserId, 0);
+        }
+      } else if (targetUserId) {
+        result = await loadConversation(currentUserId, targetUserId, 0);
+      } else if (fallbackConversationId) {
+        result = await loadConversationById(currentUserId, fallbackConversationId, 0);
+      }
 
-      const loadedConversationId = result?.data?.conversationId;
-      if (!loadedConversationId) {
+      const data = result?.data;
+      const loadedConversationId = data?.conversationId;
+      if (!loadedConversationId || !data) {
         return null;
       }
 
       conversationId.current = Number(loadedConversationId);
       dispatch(updateCurrentConverId({ currentConversationId: Number(loadedConversationId) }));
 
-      if (result.data?.color) {
-        setThemeId(result.data.color);
+      if (data.color) {
+        setThemeId(data.color);
       } else {
         setThemeId("default");
       }
 
-      if (result.data?.font) {
-        setFontFamily(result.data.font);
+      if (data.font) {
+        setFontFamily(data.font);
       } else {
         setFontFamily("default");
       }
 
-      if (Array.isArray(result.data.listMess)) {
-        setConversation(result.data.listMess as MessageInterface[]);
+      if (Array.isArray(data.listMess)) {
+        setConversation(data.listMess as MessageInterface[]);
       }
 
       return conversationId.current;
@@ -1522,8 +1630,53 @@ export default function ConversationPage() {
     //   return;
     // }
 
-    const activeConversationId = await ensureConversationIdBeforeSend();
-    if (!activeConversationId) return;
+    let activeConversationId = conversationId.current || (await ensureConversationIdBeforeSend());
+
+    // First private message: conversation may not exist yet
+    if (!activeConversationId && !isGroupConversation && targetUserId && !preview && !selectedFile) {
+      const chunks = splitMessageText(messageText);
+      if (chunks.length === 0) return;
+
+      const createdAt = new Date().toISOString();
+      const optimisticMessages: MessageInterface[] = chunks.map((content) => {
+        const tempMessageId = nextTempMessageId.current--;
+        pendingTempMessageIds.current.push(tempMessageId);
+        return {
+          messageId: tempMessageId,
+          senderId: currentUserId,
+          type: "text",
+          content,
+          mediaURL: null,
+          fileName: null,
+          createdAt,
+          status: "SENDING" as const,
+        };
+      });
+      setVisibleStatusIfNewer(optimisticMessages[optimisticMessages.length - 1].messageId, "SENDING");
+      setConversation((prev) => [...optimisticMessages].reverse().concat(prev));
+      setMessageText("");
+      setReplyMess(null);
+
+      sendFirstMessage(chunks[0], targetUserId);
+      chunks.slice(1).forEach((content) => sendFirstMessage(content, targetUserId));
+
+      // After first message, try to resolve conversation id for subsequent sends
+      void (async () => {
+        for (let i = 0; i < 5; i++) {
+          await new Promise((r) => setTimeout(r, 400));
+          const resolved = await ensureConversationIdBeforeSend();
+          if (resolved) break;
+        }
+      })();
+      return;
+    }
+
+    if (!activeConversationId) {
+      toast.error("Không thể gửi tin nhắn. Vui lòng thử lại.");
+      return;
+    }
+
+    const conversationIdToSend = activeConversationId;
 
     if (!preview && !selectedFile) {
       const chunks = splitMessageText(messageText);
@@ -1556,10 +1709,10 @@ export default function ConversationPage() {
       setMessageText("");
 
       if (replymess && chunks[0]) {
-        replyText(chunks[0], replymess.messageId, "text", activeConversationId);
-        chunks.slice(1).forEach((content) => sendText(content, activeConversationId));
+        replyText(chunks[0], replymess.messageId, "text", conversationIdToSend);
+        chunks.slice(1).forEach((content) => sendText(content, conversationIdToSend));
       } else {
-        chunks.forEach((content) => sendText(content, activeConversationId));
+        chunks.forEach((content) => sendText(content, conversationIdToSend));
       }
       setReplyMess(null);
       return;
@@ -1583,7 +1736,7 @@ export default function ConversationPage() {
     setPreview(null);
     setSelectedFile(null);
     setMessageText("");
-    uploadMedia(String(activeConversationId), selectedFile, messageText);
+    uploadMedia(String(conversationIdToSend), selectedFile, messageText);
   };
 
   const handleSelectTheme = async (newThemeId: string) => {
@@ -1738,6 +1891,7 @@ export default function ConversationPage() {
           overflow: "hidden",
         }}
       >
+        {hasSelectedConversation && (
         <Box
           sx={{
             height: 64,
@@ -1867,6 +2021,7 @@ export default function ConversationPage() {
             </IconButton>
           </Box>
         </Box>
+        )}
 
         {loadingConversation ? (
           <Box

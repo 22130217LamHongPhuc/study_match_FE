@@ -122,15 +122,15 @@ function formatRespondedAt(value?: string | null) {
 
 function getStatusBadgeClass(status?: string | null) {
   if (status === "ACCEPTED" || status === "JOINED") {
-    return "bg-emerald-50 text-emerald-700 border-emerald-100";
+    return "text-emerald-600";
   }
   if (status === "PENDING") {
-    return "bg-blue-50 text-blue-700 border-blue-100";
+    return "text-blue-600";
   }
   if (status === "DECLINED") {
-    return "bg-rose-50 text-rose-700 border-rose-100";
+    return "text-rose-600";
   }
-  return "bg-gray-50 text-gray-600 border-gray-100";
+  return "text-gray-500";
 }
 
 function hasSessionEnded(session: StudySessionVm | null) {
@@ -281,7 +281,8 @@ export function SessionDetailModal({
       ["ACCEPTED", "JOINED"].includes(currentSession?.participantStatus || "") &&
       currentSession?.studyMode !== "OFFLINE" &&
       !isCancelled) ||
-    (isCreator && !isCancelled && !isCompleted && canCancel);
+    (isCreator && !isCancelled && !isCompleted && canCancel) ||
+    (!isCreator && !isCancelled && !isCompleted && ["ACCEPTED", "DECLINED"].includes(currentSession?.participantStatus || ""));
 
   const handleRespond = async (status: "ACCEPTED" | "DECLINED") => {
     if (!session) return;
@@ -360,7 +361,6 @@ export function SessionDetailModal({
       setCancelling(true);
       setError("");
       await cancelStudySession(session.id, userIdVal);
-      toast.success("Hủy lịch học thành công.");
       onSessionUpdated?.({
         ...(currentSession || session),
         status: "CANCELLED" as any,
@@ -379,36 +379,12 @@ export function SessionDetailModal({
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 px-4 py-6">
-      <div className="relative w-full max-w-lg flex flex-col max-h-[90vh] bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden animate-scale-in">
+      <div className="relative w-full max-w-2xl flex flex-col max-h-[90vh] bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden animate-scale-in">
         <div className="flex items-start justify-between border-b border-gray-100 bg-white px-6 py-5 shrink-0">
-          <div className="flex items-start gap-4">
-            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-              isGroup ? "bg-indigo-50 text-indigo-600" : "bg-blue-50 text-blue-600"
-            }`}>
-              {isGroup ? <Users className="h-5 w-5" /> : <User className="h-5 w-5" />}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
-                  {isGroup ? "Nhóm học" : "Cá nhân"}
-                </span>
-                {!isCancelled && (
-                  <span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
-                    {getParticipantStatusLabel(currentSession?.participantStatus || session.participantStatus)}
-                  </span>
-                )}
-                <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                  isCancelled
-                    ? "bg-red-50 border-red-100 text-red-600"
-                    : "bg-gray-50 border-gray-200 text-gray-600"
-                }`}>
-                  {getSessionStatusLabel(currentSession?.status || session.status)}
-                </span>
-              </div>
-              <h2 className="text-lg font-bold text-gray-900 mt-1.5 leading-snug">
-                {currentSession?.title || session.title}
-              </h2>
-            </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 leading-snug">
+              {currentSession?.title || session.title}
+            </h2>
           </div>
           <button
             type="button"
@@ -445,106 +421,87 @@ export function SessionDetailModal({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Thời gian</span>
-                    <div className="mt-1 text-sm font-bold text-gray-800">
-                      {formatDateTime(currentSession?.startTime || session.startTime)}
-                    </div>
-                    <div className="mt-0.5 text-xs text-gray-500">
-                      Đến: {formatDateTime(currentSession?.endTime || session.endTime)}
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Thời gian */}
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Thời gian</span>
+                  <div className="mt-1.5 text-sm font-bold text-gray-800">
+                    {formatDateTime(currentSession?.startTime || session.startTime)}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    Đến: {formatDateTime(currentSession?.endTime || session.endTime)}
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
-                  {currentSession?.studyMode === "ONLINE" ? (
-                    <Video className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
-                  ) : (
-                    <MapPin className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
-                  )}
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hình thức</span>
-                    <div className="mt-1 text-sm font-bold text-gray-800">
-                      {getModeLabel(currentSession?.studyMode || session.studyMode)}
-                    </div>
+                {/* Hình thức */}
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hình thức</span>
+                  <div className="mt-1.5 text-sm font-bold text-gray-800">
+                    {getModeLabel(currentSession?.studyMode || session.studyMode)}
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
-                {isGroup ? (
-                  <Users className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
-                ) : (
-                  <User className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
-                )}
-                <div>
+                {/* Bạn học / Nhóm học */}
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     {isGroup ? "Nhóm học" : "Bạn học"}
                   </span>
-                  <div className="mt-1 text-sm font-bold text-gray-800">
+                  <div className="mt-1.5 text-sm font-bold text-gray-800">
                     {isGroup
                       ? currentSession?.groupName || session.groupName || "Nhóm học"
                       : currentSession?.partnerName || session.partnerName || "Bạn học"}
                   </div>
                   {isGroup && (
-                    <div className="mt-0.5 text-xs text-gray-500">
+                    <div className="mt-1 text-xs text-gray-500">
                       Quy mô: {currentSession?.membersCount || session.membersCount || 0} thành viên
                     </div>
                   )}
                 </div>
-              </div>
 
-              {(currentSession?.location || currentSession?.meetingUrl || session.location || session.meetingUrl) && (
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
-                  {currentSession?.studyMode === "ONLINE" ? (
-                    <Video className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                {/* Địa điểm / Link học */}
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Địa điểm / Link học</span>
+                  {currentSession?.location || currentSession?.meetingUrl || session.location || session.meetingUrl ? (
+                    <div className="mt-1.5 min-w-0">
+                      {(currentSession?.location || session.location) && (
+                        <div className="text-sm font-medium text-gray-800 break-words">
+                          {currentSession?.location || session.location}
+                        </div>
+                      )}
+                      {(currentSession?.meetingUrl || session.meetingUrl) && (
+                        <div className="mt-1.5">
+                          <a
+                            href={currentSession?.meetingUrl || session.meetingUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                          >
+                            Mở phòng học online
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    <MapPin className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
+                    <div className="mt-1.5 text-xs text-gray-400 font-medium italic">
+                      Chưa cập nhật địa điểm hoặc link
+                    </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Địa điểm / Link học</span>
-                    {(currentSession?.location || session.location) && (
-                      <div className="mt-1 text-sm font-medium text-gray-800 break-words">
-                        {currentSession?.location || session.location}
-                      </div>
-                    )}
-                    {(currentSession?.meetingUrl || session.meetingUrl) && (
-                      <div className="mt-2">
-                        <a
-                          href={currentSession?.meetingUrl || session.meetingUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                        >
-                          Mở phòng học online
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
                 </div>
-              )}
 
-              {(currentSession?.description || session.description) && (
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-start gap-3">
-                  <BookOpen className="h-5 w-5 text-gray-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nội dung học</span>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 whitespace-pre-wrap">
-                      {currentSession?.description || session.description}
-                    </p>
-                  </div>
+                {/* Nội dung học (Span full width) */}
+                <div className="md:col-span-2 bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nội dung học</span>
+                  <p className="mt-1.5 text-xs leading-relaxed text-gray-600 whitespace-pre-wrap">
+                    {currentSession?.description || session.description || "Không có nội dung mô tả"}
+                  </p>
                 </div>
-              )}
+              </div>
 
               {confirmationStats && (
                 <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-4">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center">
                       <div>
                         <div className="text-xs font-bold text-gray-800 uppercase tracking-wider">
                           Trạng thái xác nhận
@@ -564,23 +521,25 @@ export function SessionDetailModal({
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <StatCard
-                      label="Tham gia"
-                      value={confirmationStats.totalParticipants}
-                    />
-                    <StatCard
-                      label="Đồng ý"
-                      value={confirmationStats.acceptedCount}
-                    />
-                    <StatCard
-                      label="Chờ"
-                      value={confirmationStats.pendingCount}
-                    />
-                    <StatCard
-                      label="Từ chối"
-                      value={confirmationStats.declinedCount}
-                    />
+                  <div className="overflow-hidden bg-white mt-1">
+                    <table className="w-full text-center border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50/75 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-2 font-bold">Tham gia</th>
+                          <th className="px-4 py-2 font-bold">Đồng ý</th>
+                          <th className="px-4 py-2 font-bold">Chờ</th>
+                          <th className="px-4 py-2 font-bold">Từ chối</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="text-lg font-bold text-gray-800">
+                          <td className="px-4 py-2.5 font-mono">{confirmationStats.totalParticipants}</td>
+                          <td className="px-4 py-2.5 font-mono">{confirmationStats.acceptedCount}</td>
+                          <td className="px-4 py-2.5 font-mono">{confirmationStats.pendingCount}</td>
+                          <td className="px-4 py-2.5 font-mono">{confirmationStats.declinedCount}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
 
                   <div className="space-y-2 mt-4">
@@ -615,7 +574,7 @@ export function SessionDetailModal({
                               </div>
                             </div>
                           </div>
-                          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${getStatusBadgeClass(participant.status)}`}>
+                          <span className={`text-[10px] font-bold ${getStatusBadgeClass(participant.status)}`}>
                             {getParticipantStatusLabel(participant.status || "")}
                           </span>
                         </div>
@@ -671,7 +630,7 @@ export function SessionDetailModal({
                   type="button"
                   onClick={handleJoinSession}
                   disabled={joining}
-                  className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-xs font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50"
+                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-600/30 disabled:opacity-50"
                 >
                   {joining ? (
                     <span className="flex items-center justify-center gap-2">
@@ -687,12 +646,34 @@ export function SessionDetailModal({
                 </button>
               )}
 
+            {!isCreator && !isCancelled && !isCompleted && currentSession?.participantStatus === "ACCEPTED" && (
+              <button
+                type="button"
+                onClick={() => handleRespond("DECLINED")}
+                disabled={responding !== null}
+                className="w-full rounded-xl px-5 py-2.5 text-xs font-bold transition-all border bg-white border-rose-200 text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+              >
+                {responding === "DECLINED" ? "Đang xử lý..." : "Hủy tham gia"}
+              </button>
+            )}
+
+            {!isCreator && !isCancelled && !isCompleted && currentSession?.participantStatus === "DECLINED" && (
+              <button
+                type="button"
+                onClick={() => handleRespond("ACCEPTED")}
+                disabled={responding !== null}
+                className="w-full rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/10 transition-all hover:bg-blue-700 disabled:opacity-50"
+              >
+                {responding === "ACCEPTED" ? "Đang xử lý..." : "Tham gia lại"}
+              </button>
+            )}
+
             {isCreator && !isCancelled && !isCompleted && canCancel && (
               <button
                 type="button"
                 onClick={handleCancel}
                 disabled={cancelling}
-                className="w-full rounded-xl px-5 py-2.5 text-xs font-bold transition-all border bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100/70"
+                className="w-full rounded-xl px-5 py-2.5 text-xs font-bold transition-all border bg-white border-rose-200 text-rose-700 hover:bg-rose-50"
               >
                 {cancelling ? "Đang hủy..." : "Hủy buổi học"}
               </button>
@@ -707,14 +688,32 @@ export function SessionDetailModal({
 function StatCard({
   label,
   value,
+  variant = "gray",
 }: {
   label: string;
   value: number;
+  variant?: "blue" | "green" | "amber" | "rose" | "gray";
 }) {
+  const styles = {
+    blue: "bg-blue-50/50 border-blue-100 text-blue-700",
+    green: "bg-emerald-50/50 border-emerald-100 text-emerald-700",
+    amber: "bg-amber-50/50 border-amber-100 text-amber-700",
+    rose: "bg-rose-50/50 border-rose-100 text-rose-700",
+    gray: "bg-gray-50/40 border-gray-100 text-gray-700",
+  };
+
+  const labelStyles = {
+    blue: "text-blue-500/90",
+    green: "text-emerald-500/90",
+    amber: "text-amber-500/90",
+    rose: "text-rose-500/90",
+    gray: "text-gray-400",
+  };
+
   return (
-    <div className="rounded-xl border border-gray-100 bg-gray-50/40 px-3 py-2 text-center text-gray-600">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{label}</div>
-      <div className="mt-1 text-base font-bold text-gray-800">{value}</div>
+    <div className={`rounded-xl border px-3 py-2.5 text-center transition-all ${styles[variant]}`}>
+      <div className={`text-[10px] font-bold uppercase tracking-wider ${labelStyles[variant]}`}>{label}</div>
+      <div className="mt-1 text-lg font-extrabold leading-none">{value}</div>
     </div>
   );
 }

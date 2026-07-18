@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Check } from "lucide-react";
 import {
   FormData,
   StudyPlan,
@@ -294,25 +293,10 @@ export function Step4CurrentPlan({
         ) : null}
       </div>
 
-      <p className="text-sm text-gray-500">
-        Hệ thống tự tải chương trình học hiện tại của khóa bạn đã chọn. Chọn môn bạn
-        muốn học tập trên StudyMatch trước, sau đó có thể chọn thêm các môn học trong
-        học kỳ.
-      </p>
-
       {!studyPlanLoading && !studyPlanError && studyPlan && (
-        <div className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/30 p-5 shadow-sm">
-          <div>
-            <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">
-              Tùy chọn học kỳ
-            </p>
-            <p className="text-xs text-blue-500 mt-1 leading-relaxed">
-              Bạn có thể chọn học kỳ riêng cho môn muốn học tập và các môn học trong học kỳ.
-            </p>
-          </div>
-
+        <div className="space-y-4">
           {studyPlanOptionsLoading ? (
-            <div className="rounded-xl border border-blue-200 bg-white px-3 py-2.5 text-xs text-blue-700">
+            <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-500">
               Đang tải danh sách học kỳ...
             </div>
           ) : studyPlanOptionsError ? (
@@ -321,16 +305,16 @@ export function Step4CurrentPlan({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-2xl border border-gray-150 bg-white p-4 space-y-3 shadow-sm">
+              <div className="space-y-3">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Môn muốn học tập</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={handleMainUseCurrentTerm}
-                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
+                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border-2 transition-all bg-white ${
                       !mainTermSelection
-                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100/50"
-                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                        ? "border-accent text-gray-700"
+                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
                     }`}
                   >
                     Học kỳ hiện tại
@@ -338,10 +322,10 @@ export function Step4CurrentPlan({
                   <button
                     type="button"
                     onClick={handleMainUseCustomTerm}
-                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
+                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border-2 transition-all bg-white ${
                       mainTermSelection
-                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100/50"
-                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                        ? "border-accent text-gray-700"
+                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
                     }`}
                   >
                     Tùy chọn
@@ -351,7 +335,7 @@ export function Step4CurrentPlan({
                   <select
                     value={mainTermKey}
                     onChange={(e) => handleMainTermChange(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/50 transition-all"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-700 outline-none focus:border-accent transition-all"
                   >
                     {termOptions.map((option) => (
                       <option
@@ -365,16 +349,16 @@ export function Step4CurrentPlan({
                 )}
               </div>
 
-              <div className="rounded-2xl border border-gray-150 bg-white p-4 space-y-3 shadow-sm">
+              <div className="space-y-3">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Môn học trong học kỳ</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={handleEnrolledUseCurrentTerm}
-                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
+                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border-2 transition-all bg-white ${
                       !enrolledTermSelection
-                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100/50"
-                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                        ? "border-accent text-gray-700"
+                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
                     }`}
                   >
                     Học kỳ hiện tại
@@ -382,10 +366,10 @@ export function Step4CurrentPlan({
                   <button
                     type="button"
                     onClick={handleEnrolledUseCustomTerm}
-                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all ${
+                    className={`text-xs font-semibold px-3.5 py-2 rounded-xl border-2 transition-all bg-white ${
                       enrolledTermSelection
-                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100/50"
-                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                        ? "border-accent text-gray-700"
+                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
                     }`}
                   >
                     Tùy chọn
@@ -395,7 +379,7 @@ export function Step4CurrentPlan({
                   <select
                     value={enrolledTermKey}
                     onChange={(e) => handleEnrolledTermChange(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/50 transition-all"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-700 outline-none focus:border-accent transition-all"
                   >
                     {termOptions.map((option) => (
                       <option
@@ -412,7 +396,7 @@ export function Step4CurrentPlan({
           )}
 
           {(mainTermSelection || enrolledTermSelection) && (
-            <p className="text-xs font-medium text-blue-600 bg-blue-100/50 border border-blue-200 px-3.5 py-2.5 rounded-xl">
+            <p className="text-xs font-medium text-gray-500">
               Đã bật chế độ tùy chọn học kỳ. Danh sách môn phía dưới đang được tải theo học kỳ bạn chọn.
             </p>
           )}
@@ -434,11 +418,11 @@ export function Step4CurrentPlan({
         </div>
       ) : (
         <>
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 space-y-1">
-            <p className="text-sm font-semibold text-blue-700 truncate">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-gray-800 truncate">
               {studyPlan.curriculumName}
             </p>
-            <p className="text-xs text-blue-500">
+            <p className="text-xs text-gray-500">
               {getStudyPlanTitle(studyPlan)}
             </p>
           </div>
@@ -466,24 +450,28 @@ export function Step4CurrentPlan({
                   onClick={() =>
                     update("mainModule", String(subject.subjectCode))
                   }
-                  className={`w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all flex items-center gap-4 ${active ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"}`}
+                  className={`w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all flex items-center gap-4 bg-white ${active ? "border-accent" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}
                 >
                   <span
-                    className={`text-xs font-bold w-16 py-1 text-center rounded-lg ${active ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-500"}`}
+                    className={`text-xs font-bold w-16 py-1 text-center rounded-lg ${active ? "border border-accent text-accent bg-white" : "bg-gray-100 text-gray-500"}`}
                   >
                     {subject.subjectCode}
                   </span>
                   <span
-                    className={`text-sm flex-1 ${active ? "text-blue-700 font-medium" : "text-gray-700"}`}
+                    className={`text-sm flex-1 ${active ? "text-gray-800 font-medium" : "text-gray-700"}`}
                   >
                     {subject.subjectName}
                   </span>
                   <div className="flex items-center gap-2">
-                    {active && (
-                      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                      </div>
-                    )}
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                        active ? "border-accent" : "border-gray-200"
+                      }`}
+                    >
+                      {active && (
+                        <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+                      )}
+                    </div>
                   </div>
                 </button>
               );
@@ -514,40 +502,39 @@ export function Step4CurrentPlan({
                     key={subject.subjectId}
                     type="button"
                     onClick={() => toggleSubject(String(subject.subjectCode))}
-                    className={`w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all flex items-center gap-3 ${active ? "border-emerald-500 bg-emerald-50" : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"}`}
+                    className={`w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all flex items-center gap-3 bg-white ${active ? "border-accent" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}
                   >
-                    <div className="flex items-center gap-2">
-                      {active && (
-                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-                          <Check
-                            className="w-3 h-3 text-white"
-                            strokeWidth={3}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs font-bold w-16 py-1 text-center rounded-lg">
+                    <span className="text-xs font-bold w-16 py-1 text-center rounded-lg text-gray-500">
                       {subject.subjectCode}
                     </span>
                     <span
-                      className={`text-sm flex-1 ${active ? "text-emerald-700 font-medium" : "text-gray-700"}`}
+                      className={`text-sm flex-1 ${active ? "text-gray-800 font-medium" : "text-gray-700"}`}
                     >
                       {subject.subjectName}
                     </span>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                        active ? "border-accent" : "border-gray-200"
+                      }`}
+                    >
+                      {active && (
+                        <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+                      )}
+                    </div>
                   </button>
                 );
               })}
           </div>
 
           {data.enrolledModules.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
-              <span className="text-xs text-emerald-600 font-semibold">
+            <div className="flex items-center gap-2 flex-wrap bg-white border-2 border-accent rounded-xl px-4 py-2.5">
+              <span className="text-xs text-accent font-semibold">
                 Đã chọn:
               </span>
               {data.enrolledModules.map((code) => (
                 <span
                   key={code}
-                  className="text-xs font-bold text-emerald-700 bg-emerald-200 px-2 py-0.5 rounded-md"
+                  className="text-xs font-bold text-accent border border-accent px-2 py-0.5 rounded-md"
                 >
                   {code}
                 </span>
@@ -733,7 +720,7 @@ export function Step4CurrentPlan({
                                         slot.id,
                                       )
                                     }
-                                    className={`w-full rounded-lg border text-xs font-semibold py-2 transition-all ${active ? "bg-blue-500 border-blue-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-blue-300 hover:bg-blue-50"}`}
+className={`w-full rounded-lg border-2 text-xs font-semibold py-2 transition-all bg-white ${active ? "border-accent text-accent" : "border-gray-200 text-gray-400 hover:border-accent/40"}`}
                                   >
                                     {active ? "✓" : "—"}
                                   </button>

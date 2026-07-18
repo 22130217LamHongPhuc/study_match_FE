@@ -351,8 +351,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       const response = await updateFriendRequestStatusService(requestId, "APPROVED");
       const responseCode = Number(response.code);
       if (responseCode >= 200 && responseCode < 300) {
-        toast.success("Đã chấp nhận lời mời kết bạn!");
-
         const req = pendingRequests.find((r) => r.id === requestId);
         const currentUserId = Number(localStorage.getItem("userId"));
         if (req && currentUserId) {
@@ -387,7 +385,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       const response = await updateFriendRequestStatusService(requestId, "REJECTED");
       const responseCode = Number(response.code);
       if (responseCode >= 200 && responseCode < 300) {
-        toast.success("Đã từ chối lời mời kết bạn.");
         fetchPendingRequests();
         window.dispatchEvent(new Event("friend_status_updated"));
       } else {
@@ -405,7 +402,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       if (!currentUserId) return;
       const res = await respondToStudySession(sessionId, currentUserId, "ACCEPTED");
       if (res.success) {
-        toast.success("Đã chấp nhận lời mời học nhóm!");
         fetchPendingSessions();
       } else {
         toast.error("Thao tác thất bại.");
@@ -421,7 +417,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       if (!currentUserId) return;
       const res = await respondToStudySession(sessionId, currentUserId, "DECLINED");
       if (res.success) {
-        toast.success("Đã từ chối lời mời học nhóm.");
         fetchPendingSessions();
       } else {
         toast.error("Thao tác thất bại.");

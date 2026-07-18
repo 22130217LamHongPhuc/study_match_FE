@@ -197,12 +197,13 @@ export default function MyFriendsSection() {
         {/* Friends list grid */}
         {filteredFriends.length === 0 ? (
           <EmptyState
-            title={searchText.trim() ? "Không tìm thấy bạn bè phù hợp" : "Chưa kết nối bạn học nào"}
+            title={searchText.trim() ? "Không tìm thấy bạn bè phù hợp" : "Không có bạn bè nào"}
             description={
               searchText.trim()
                 ? "Hãy thử tìm kiếm bằng một từ khóa khác."
-                : "Bạn có thể vào tab 'Gợi ý bạn học' để gửi lời mời kết bạn và bắt đầu học tập cùng nhau."
+                : ""
             }
+            imageUrl={searchText.trim() ? undefined : "https://app.studystream.live/assets/images/onboarding-slides/intro-slide.png"}
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -241,8 +242,8 @@ export default function MyFriendsSection() {
                       </h3>
                       <span
                         className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${friend.online
-                            ? "bg-green-50 text-green-700"
-                            : "bg-gray-100 text-gray-600"
+                          ? "bg-green-50 text-green-700"
+                          : "bg-gray-100 text-gray-600"
                           }`}
                       >
                         {friend.online ? "Trực tuyến" : "Ngoại tuyến"}
@@ -292,7 +293,7 @@ export default function MyFriendsSection() {
             padding: "10px",
           }
         }}
-      >LeaveStudySessionResponse
+      >
         <DialogTitle sx={{ fontWeight: "bold", textAlign: "center" }}>
           Hủy kết bạn
         </DialogTitle>

@@ -1,4 +1,5 @@
 import { Eye, FileWarning } from "lucide-react";
+import noImg from "../../../assets/img/no-img.png";
 import type { ReportResponse } from "../../../services/reportApi";
 import {
   formatDateTime,
@@ -129,9 +130,11 @@ export function MyReportsTable({
       ) : !hasReports ? (
         <div className="px-5 py-14">
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/70 px-4 py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-              <FileWarning size={22} className="text-blue-500" />
-            </div>
+            <img
+              src={noImg}
+              alt="Bạn chưa gửi báo cáo nào"
+              className="mx-auto mb-4 w-96 h-auto object-contain"
+            />
             <p className="mt-4 text-base font-semibold text-gray-700">
               Bạn chưa gửi báo cáo nào.
             </p>

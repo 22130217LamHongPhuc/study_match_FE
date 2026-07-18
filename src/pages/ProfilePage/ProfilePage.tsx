@@ -409,6 +409,7 @@ export default function ProfilePage() {
   const [mutualFriendsMap, setMutualFriendsMap] = useState<Record<number, number>>({});
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);
 
   // Inline Media Viewer States
   const [activeViewingPost, setActiveViewingPost] = useState<SocialPost | null>(null);
@@ -2274,8 +2275,60 @@ export default function ProfilePage() {
                       height: "80px",
                       borderRadius: "14px 14px 0 0",
                       margin: "-16px -16px 0 -16px",
+                      position: "relative",
                     }}
-                  />
+                  >
+                    {!isOwnProfile && (
+                      <>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProfileMenuAnchor(e.currentTarget);
+                          }}
+                          sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            width: 32,
+                            height: 32,
+                            bgcolor: "rgba(255,255,255,0.92)",
+                            boxShadow: "0 1px 4px rgba(15,23,42,0.12)",
+                            color: "#475569",
+                            "&:hover": { bgcolor: "#fff", color: "#0f172a" },
+                          }}
+                        >
+                          <MoreHorizIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                        <Menu
+                          anchorEl={profileMenuAnchor}
+                          open={Boolean(profileMenuAnchor)}
+                          onClose={() => setProfileMenuAnchor(null)}
+                          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                          transformOrigin={{ vertical: "top", horizontal: "right" }}
+                          PaperProps={{
+                            sx: {
+                              mt: 0.5,
+                              minWidth: 180,
+                              borderRadius: "10px",
+                              boxShadow: "0 8px 24px rgba(15,23,42,0.12)",
+                              border: "1px solid #e2e8f0",
+                            },
+                          }}
+                        >
+                          <MenuItem
+                            onClick={() => {
+                              setProfileMenuAnchor(null);
+                              setReportModalOpen(true);
+                            }}
+                            sx={{ fontSize: 14, fontWeight: 600, color: "#dc2626", py: 1.25 }}
+                          >
+                            Báo cáo
+                          </MenuItem>
+                        </Menu>
+                      </>
+                    )}
+                  </Box>
                   <Box
                     sx={{
                       borderRadius: "50%",
@@ -2445,26 +2498,6 @@ export default function ProfilePage() {
                           </Button>
                           )}
                         </Box>
-                        <Button
-                          variant="outlined"
-                          fullWidth
-                          sx={{
-                            mt: 1.5,
-                            borderRadius: "8px",
-                            py: 1,
-                            textTransform: "none",
-                            fontSize: "14px",
-                            borderColor: "#93c5fd",
-                            color: "#2563eb",
-                            "&:hover": {
-                              borderColor: "#60a5fa",
-                              backgroundColor: "rgba(37, 99, 235, 0.06)",
-                            },
-                          }}
-                          onClick={() => setReportModalOpen(true)}
-                        >
-                          Báo cáo người dùng
-                        </Button>
                       </>
                     )}
                   </Box>
