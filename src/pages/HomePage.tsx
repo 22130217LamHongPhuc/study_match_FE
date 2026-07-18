@@ -177,7 +177,6 @@ export default function HomePage() {
           return student;
         })
       );
-      toast.success("Đã đồng ý lời mời kết bạn!");
     }
   };
 
@@ -201,7 +200,6 @@ export default function HomePage() {
           return student;
         })
       );
-      toast.success("Đã gửi lời mời kết bạn!");
     }
   };
 

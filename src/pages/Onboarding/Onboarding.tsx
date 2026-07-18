@@ -607,13 +607,28 @@ export default function OnboardingFlow() {
               {DIALOG_STEPS.map((s) => {
                 const active = step === s.id;
                 const completed = step > s.id;
+                const clickable = s.id <= step;
                 return (
-                  <div key={s.id} className="flex flex-col items-center gap-1">
+                  <button
+                    key={s.id}
+                    type="button"
+                    disabled={!clickable || submissionLoading}
+                    onClick={() => {
+                      if (!clickable || submissionLoading) return;
+                      setStep(s.id);
+                      if (s.id === 3) setGoalSub(1);
+                    }}
+                    className={`flex flex-col items-center gap-1 ${
+                      clickable && !submissionLoading
+                        ? "cursor-pointer"
+                        : "cursor-default"
+                    } disabled:cursor-not-allowed`}
+                  >
                     <span
                       className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${active
                           ? "bg-blue-500 text-white scale-105 shadow-sm ring-4 ring-blue-100"
                           : completed
-                            ? "bg-blue-100 text-blue-600 font-bold"
+                            ? "bg-blue-100 text-blue-600 font-bold hover:bg-blue-200"
                             : "bg-white border border-gray-300 text-gray-400"
                         }`}
                     >
@@ -629,7 +644,7 @@ export default function OnboardingFlow() {
                     >
                       {s.name}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>

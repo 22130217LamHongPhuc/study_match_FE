@@ -1041,8 +1041,8 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
             >
                 <Box
                     sx={{
-                        width: 250,
-                        maxWidth: "min(250px, 78vw)",
+                        width: 290,
+                        maxWidth: "min(290px, 78vw)",
                         borderRadius: "18px",
                         bgcolor: "#fff",
                         px: 2,
@@ -1069,17 +1069,17 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                         <Box sx={{ minWidth: 0 }}>
                             <Box
                                 sx={{
-                                    fontSize: 18,
-                                    fontWeight: 700,
-                                    color: "#050505",
-                                    lineHeight: 1.12,
+                                    fontSize: 15,
+                                    fontWeight: 600,
+                                    color: "#0f172a",
+                                    lineHeight: 1.3,
                                     wordBreak: "break-word",
                                     textTransform: "none",
                                 }}
                             >
                                 {title}
                             </Box>
-                            <Box sx={{ fontSize: 14, color: "#64748b", mt: 0.2 }}>
+                            <Box sx={{ fontSize: 12.5, color: "#64748b", mt: 0.2 }}>
                                 {subtitle}
                             </Box>
                         </Box>
@@ -1091,17 +1091,18 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                         sx={{
                             mt: 1.15,
                             width: "100%",
-                            height: 44,
+                            height: 36,
                             border: 0,
                             borderRadius: "8px",
-                            bgcolor: "#f1f1f1",
-                            color: "#000",
-                            fontSize: 17,
-                            fontWeight: 700,
+                            bgcolor: "#f1f5f9",
+                            color: "#1e293b",
+                            fontSize: 14,
+                            fontWeight: 600,
                             textTransform: "none",
                             cursor: "pointer",
+                            transition: "background-color 0.15s ease",
                             "&:hover": {
-                                bgcolor: "#e7e7e7",
+                                bgcolor: "#e2e8f0",
                             },
                         }}
                     >

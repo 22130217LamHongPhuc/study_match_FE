@@ -342,7 +342,6 @@ export function CreateSessionModal({
         onCreate(newSession);
         resetForm();
         onClose();
-        toast.success("Tạo lịch học 1-1 thành công");
         return;
       }
 
@@ -389,7 +388,6 @@ export function CreateSessionModal({
       onCreate(newSession);
       resetForm();
       onClose();
-      toast.success("Tạo lịch học nhóm thành công");
     } catch (error) {
       console.error(error);
       setGroupError("Tạo lịch học nhóm thất bại");

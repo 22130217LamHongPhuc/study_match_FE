@@ -419,8 +419,7 @@ export function JoinRequestsPanel({ onCountChange }: { onCountChange: (count: nu
           <EmptyState
             title="Chưa có yêu cầu tham gia"
             description="Các yêu cầu xin vào nhóm bạn quản lý sẽ hiển thị tại đây."
-            actionLabel="Tải lại"
-            onAction={fetchRequests}
+            imageUrl="https://app.studystream.live/assets/images/onboarding-slides/result-slide.png"
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -539,8 +538,7 @@ export function SentRequestsPanel({ onCountChange }: { onCountChange: (count: nu
           <EmptyState
             title="Chưa gửi yêu cầu tham gia nhóm"
             description="Những nhóm bạn đã gửi yêu cầu nhưng chưa được duyệt sẽ nằm ở đây."
-            actionLabel="Tải lại"
-            onAction={fetchRequests}
+            imageUrl="https://app.studystream.live/assets/images/onboarding-slides/intro-slide.png"
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -642,6 +640,7 @@ function MyGroupsPanel({ onCountChange }: { onCountChange: (count: number) => vo
           description="Khi được duyệt vào nhóm hoặc tự tạo nhóm, nhóm sẽ hiển thị tại đây."
           actionLabel="Tải lại"
           onAction={fetchGroups}
+          imageUrl="https://app.studystream.live/assets/images/onboarding-slides/explanation-slide.png"
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

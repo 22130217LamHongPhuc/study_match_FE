@@ -139,9 +139,6 @@ export default function SuggestedStudents({
           } catch (trackingError) {
             console.error("Track matching FRIEND_REQUEST_SENT failed", trackingError);
           }
-
-          toast.success("Đã gửi lời mời kết bạn.");
-
           setLocalStudents((prev) =>
             prev.map((student) => {
               if (student.userId === targetUserId) {
@@ -203,9 +200,6 @@ export default function SuggestedStudents({
           } catch (trackingError) {
             console.error("Track matching ACCEPTED failed", trackingError);
           }
-
-          toast.success("Đã chấp nhận lời mời kết bạn.");
-
           setLocalStudents((prev) =>
             prev.map((student) => {
               if (student.friendRequest && student.friendRequest.id === requestId) {
@@ -268,9 +262,6 @@ export default function SuggestedStudents({
         if (!isSuccessCode(response.code)) {
           throw new Error(response.message || "Không thể hủy lời mời kết bạn.");
         }
-
-        toast.success("Đã hủy lời mời kết bạn.");
-
         setLocalStudents((prev) =>
           prev.map((student) => {
             if (student.userId === targetUserId) {
@@ -346,8 +337,6 @@ export default function SuggestedStudents({
           } catch (trackingError) {
             console.error("Track matching SKIPPED failed", trackingError);
           }
-
-          toast.success("Đã bỏ qua gợi ý.");
         } else {
           if (isPendingReceivedRequest && friendRequest?.senderId && friendRequest?.receiverId) {
             const friendResponse = await updateFriendRequestStatusBySenderAndReceiverService(
@@ -374,9 +363,7 @@ export default function SuggestedStudents({
           }
 
           if (!matchingResponse.success && isPendingReceivedRequest) {
-            toast.success("Đã từ chối kết nối, nhưng phản hồi gợi ý chưa được lưu.");
           } else {
-            toast.success("Đã gửi phản hồi từ chối.");
           }
         }
 

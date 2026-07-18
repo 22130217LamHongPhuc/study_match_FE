@@ -1,11 +1,5 @@
-import { useEffect, type ReactNode } from "react";
-import {
-  CalendarDays,
-  FileWarning,
-  Flag,
-  Hash,
-  X,
-} from "lucide-react";
+import { useEffect } from "react";
+import { X } from "lucide-react";
 import type { ReportResponse } from "../../../services/reportApi";
 import {
   formatDateTime,
@@ -18,7 +12,6 @@ import {
   getReportDisplayId,
   getStatusBadgeClass,
   getStatusValue,
-  getTargetIdValue,
   getTargetTypeBadgeClass,
   getTargetTypeLabel,
   getTargetTypeValue,
@@ -73,31 +66,28 @@ export function MyReportDetailModal({
 
       <div className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
         <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
-          <div className="flex items-start gap-3">
-
-            <div className="min-w-0">
-              <h3 className="text-lg font-semibold text-gray-800">
-                Chi tiết báo cáo {getReportDisplayId(report)}
-              </h3>
-              {!loading && !error && report ? (
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getTargetTypeBadgeClass(
-                      targetType,
-                    )}`}
-                  >
-                    {getTargetTypeLabel(targetType)}
-                  </span>
-                  <span
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
-                      status,
-                    )}`}
-                  >
-                    {getMyReportStatusLabel(status)}
-                  </span>
-                </div>
-              ) : null}
-            </div>
+          <div className="min-w-0">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Chi tiết báo cáo {getReportDisplayId(report)}
+            </h3>
+            {!loading && !error && report ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getTargetTypeBadgeClass(
+                    targetType,
+                  )}`}
+                >
+                  {getTargetTypeLabel(targetType)}
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
+                    status,
+                  )}`}
+                >
+                  {getMyReportStatusLabel(status)}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <button
@@ -139,26 +129,14 @@ export function MyReportDetailModal({
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <InfoItem
-                    icon={<Hash size={16} />}
                     label="Loại đối tượng"
                     value={getTargetTypeLabel(targetType)}
                   />
-                  {/* <InfoItem
-                    icon={<Hash size={16} />}
-                    label="ID đối tượng"
-                    value={
-                      getTargetIdValue(report) === null
-                        ? "--"
-                        : `#${getTargetIdValue(report)}`
-                    }
-                  /> */}
                   <InfoItem
-                    icon={<Flag size={16} />}
                     label="Lý do"
                     value={getReasonLabel(getReasonValue(report))}
                   />
                   <InfoItem
-                    icon={<Flag size={16} />}
                     label="Trạng thái"
                     value={getMyReportStatusLabel(status)}
                   />
@@ -250,18 +228,15 @@ function DetailSkeleton() {
 }
 
 function InfoItem({
-  icon,
   label,
   value,
 }: {
-  icon: ReactNode;
   label: string;
   value: string;
 }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white px-3 py-3">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-        <span className="text-blue-500">{icon}</span>
+      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
         {label}
       </div>
       <p className="mt-2 text-sm font-semibold text-gray-700">{value}</p>
@@ -278,8 +253,7 @@ function DateCard({
 }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-        <CalendarDays size={15} className="text-blue-500" />
+      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
         {label}
       </div>
       <p className="mt-3 text-sm font-medium text-gray-700">

@@ -20,6 +20,16 @@ interface TInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   type?: string;
+  inputMode?:
+    | "none"
+    | "text"
+    | "tel"
+    | "url"
+    | "email"
+    | "numeric"
+    | "decimal"
+    | "search";
+  pattern?: string;
 }
 
 export function TInput({
@@ -27,6 +37,8 @@ export function TInput({
   onChange,
   placeholder,
   type = "text",
+  inputMode,
+  pattern,
 }: TInputProps) {
   const [focused, setFocused] = useState<boolean>(false);
   return (
@@ -34,11 +46,13 @@ export function TInput({
       type={type}
       value={value}
       placeholder={placeholder}
+      inputMode={inputMode}
+      pattern={pattern}
       onChange={(e) => onChange(e.target.value)}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       className={`w-full px-4 py-3 rounded-xl border bg-gray-50 text-sm text-gray-800 outline-none transition-all
-        ${focused ? "border-blue-400 ring-2 ring-blue-100 bg-white" : "border-gray-200"}`}
+        ${focused ? "border-accent ring-2 ring-accent/20 bg-white" : "border-gray-200"}`}
     />
   );
 }
@@ -54,13 +68,13 @@ export function Chip({
   active,
   onClick,
   children,
-  activeClass = "border-blue-500 bg-blue-50 text-blue-700",
+  activeClass = "border-accent bg-white text-gray-700",
 }: ChipProps) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-xl border text-sm text-gray-700 font-medium transition-all
-        ${active ? activeClass : "border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100"}`}
+      className={`px-4 py-2 rounded-xl border-2 text-sm text-gray-700 font-medium transition-all
+        ${active ? activeClass : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"}`}
     >
       {children}
     </button>

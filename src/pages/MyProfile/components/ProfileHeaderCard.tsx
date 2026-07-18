@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pencil } from "lucide-react";
 import { ProfileViewModel } from "../types";
 import UpdateProfileDialog from "./UpdateProfileDialog";
 
@@ -53,26 +54,27 @@ export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
             <p className="text-sm font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full inline-block">
               MSSV: {profile.studentCode}
             </p>
-            <div className="text-xs text-gray-500 mt-1 flex flex-wrap justify-center sm:justify-start gap-x-2 gap-y-1">
+            <div className="text-xs text-gray-500 mt-1 flex flex-wrap justify-center sm:justify-start items-center gap-x-2 gap-y-1">
               <span>Giới tính: <span className="font-medium text-gray-700">{getGenderLabel(profile.gender)}</span></span>
               <span>•</span>
               <span>Độ tuổi: <span className="font-medium text-gray-700">{profile.ageGroup}</span></span>
               <span>•</span>
               <span>Khu vực: <span className="font-medium text-gray-700">{profile.region}</span></span>
+              <span>•</span>
+              <span className="inline-flex items-center rounded-lg bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600 border border-blue-100">
+                {profile.cohortLabel}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3 self-center sm:self-auto shrink-0">
-          <span className="inline-flex items-center rounded-lg bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600 border border-blue-100">
-            {profile.cohortLabel}
-          </span>
-
           <button
             type="button"
             onClick={() => setOpenEdit(true)}
-            className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition rounded-lg border border-gray-200 hover:border-blue-100 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 cursor-pointer"
           >
+            <Pencil size={16} />
             Chỉnh sửa
           </button>
         </div>

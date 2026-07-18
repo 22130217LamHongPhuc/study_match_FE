@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ReportModal from "../../components/modal/ReportModal";
 import CreateGroupModal from "./components/CreateGroupModal";
 import groupImg from "../../assets/img/group.png";
+import noImg from "../../assets/img/no-img.png";
 import {
   getActiveGroupMembers,
   getActiveGroupMemberIds,
@@ -317,7 +318,6 @@ export default function GroupPage() {
     try {
       const res = await deleteStudyGroup(selectedGroup.id);
       if (res.success) {
-        toast.success("Xóa nhóm học thành công!");
         closeGroupDetail();
         fetchGroups();
       } else {
@@ -340,7 +340,6 @@ export default function GroupPage() {
     try {
       const res = await leaveGroup(groupId);
       if (res.success) {
-        toast.success("Rời nhóm thành công!");
         closeGroupDetail();
         fetchGroups();
         window.dispatchEvent(new Event("group_list_updated"));
@@ -679,23 +678,17 @@ export default function GroupPage() {
               </div>
             ) : groupList.length === 0 ? (
               <div className="flex min-h-[350px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white p-8 text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-500">
-                  <BookOpen size={24} />
-                </div>
+                <img
+                  src={noImg}
+                  alt="Bạn chưa tham gia nhóm nào"
+                  className="mx-auto mb-4 w-96 h-auto object-contain"
+                />
 
                 <h3 className="text-lg font-bold text-gray-900">Bạn chưa tham gia nhóm nào</h3>
 
                 <p className="mt-1 max-w-sm text-sm text-gray-500">
                   Tạo nhóm học mới để trao đổi tài liệu, giải bài tập và đồng hành cùng các bạn học khác.
                 </p>
-
-                <button
-                  onClick={goToCreateGroup}
-                  className="mt-6 inline-flex items-center gap-2 h-10 rounded-lg bg-blue-500 px-5 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
-                >
-                  <Plus size={16} />
-                  Tạo nhóm mới
-                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

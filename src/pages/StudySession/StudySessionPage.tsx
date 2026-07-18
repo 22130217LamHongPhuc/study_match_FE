@@ -446,9 +446,24 @@ export default function StudySessionPage() {
 
         <FilterTabs activeFilter={filter} onChange={handleFilterChange} />
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[2fr_0.95fr]">
-          <WeeklyCalendar
-            sessions={weekSessions}
+        <WeeklyCalendar
+          sessions={weekSessions}
+          onSelectSession={setSelectedSession}
+        />
+
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[7fr_3fr]">
+          <AllSessionList
+            sessions={sessions}
+            page={sessionPage.number}
+            pageSize={pageSize}
+            pageSizeOptions={SESSION_PAGE_SIZE_OPTIONS}
+            totalElements={sessionPage.totalElements}
+            totalPages={sessionPage.totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize);
+              setPage(0);
+            }}
             onSelectSession={setSelectedSession}
           />
           <TodaySessionList
@@ -456,21 +471,6 @@ export default function StudySessionPage() {
             onSelectSession={setSelectedSession}
           />
         </div>
-
-        <AllSessionList
-          sessions={sessions}
-          page={sessionPage.number}
-          pageSize={pageSize}
-          pageSizeOptions={SESSION_PAGE_SIZE_OPTIONS}
-          totalElements={sessionPage.totalElements}
-          totalPages={sessionPage.totalPages}
-          onPageChange={setPage}
-          onPageSizeChange={(nextPageSize) => {
-            setPageSize(nextPageSize);
-            setPage(0);
-          }}
-          onSelectSession={setSelectedSession}
-        />
       </div>
 
       <CreateSessionModal

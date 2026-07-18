@@ -3,7 +3,7 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import MarkEmailUnreadRoundedIcon from "@mui/icons-material/MarkEmailUnreadRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import { Avatar, Badge, Box, Button, CircularProgress, InputAdornment, Skeleton, TextField, Typography } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SocketEvent } from "../../enum/SocketEvent";
@@ -12,6 +12,8 @@ import { updateCurrentConverId, setUnreads, upsertGroupMemberProfiles } from "..
 import { loadAcceptedDirectConversations, loadConversation, loadGroupConversation, loadGroupConversationPins, loadMessageRequests, MessageRequestItem } from "../../services/ChatService";
 import { FriendUser, loadAllFriendsService, loadFriendOnlineStatusesService, loadFriendProfilesService } from "../../services/FriendService";
 import { getGroupAvatarUrl, getGroupsByUserId, StudyGroupDetailResponse } from "../../services/GroupService";
+import noFriendImg from "../../assets/img/no-friend-2.png";
+import noMessImg from "../../assets/img/no-mess.png";
 
 type GroupConversationItem = StudyGroupDetailResponse & {
     conversationId?: number | null;
@@ -55,15 +57,16 @@ const getLastMessagePreview = (
     currentUserId?: number,
     groupMemberProfiles?: any
 ) => {
-    const lastMessage = request.lastMessage;
-    if (!lastMessage) return "Tin nhắn mới";
+    const lastMessage = request?.lastMessage;
+    if (!lastMessage) return "";
     if (lastMessage.isDeleted) return "Tin nhắn đã được thu hồi";
 
     let prefix = "";
     const effectiveUserId = currentUserId ?? Number(localStorage.getItem("userId"));
+    const isOwnMessage = Number(lastMessage.senderId) === effectiveUserId;
 
     if (isGroup && lastMessage.senderId) {
-        if (Number(lastMessage.senderId) === effectiveUserId) {
+        if (isOwnMessage) {
             prefix = "Bạn: ";
         } else {
             const senderId = Number(lastMessage.senderId);
@@ -71,27 +74,28 @@ const getLastMessagePreview = (
             const senderName = memberProfile?.fullName || memberProfile?.username || `User ${senderId}`;
             prefix = `${senderName}: `;
         }
-    } else if (!isGroup && lastMessage.senderId) {
-        if (Number(lastMessage.senderId) === effectiveUserId) {
-            prefix = "Bạn: ";
-        }
+    } else if (!isGroup && isOwnMessage) {
+        // Chat 1-1: tin mình gửi → "Bạn: <nội dung>"
+        prefix = "Bạn: ";
     }
 
     let body = "";
     if (lastMessage.type === "CALL_AUDIO" || lastMessage.type === "CALL_VIDEO") {
         body = formatCallPreview(lastMessage);
-    } else if (lastMessage.content) {
-        body = lastMessage.content;
+    } else if (typeof lastMessage.content === "string" && lastMessage.content.trim()) {
+        body = lastMessage.content.trim();
     } else if (lastMessage.type?.startsWith("image/")) {
         body = "Đã gửi một ảnh";
     } else if (lastMessage.type?.startsWith("video/")) {
         body = "Đã gửi một video";
     } else if (lastMessage.type?.startsWith("audio/")) {
         body = "Đã gửi một âm thanh";
+    } else if (lastMessage.fileName) {
+        body = lastMessage.fileName;
     } else {
         body = "Đã gửi một tệp";
     }
-    return prefix + body;
+    return `${prefix}${body}`;
 };
 
 const SidebarSkeleton = () => (
@@ -161,80 +165,106 @@ export default function ListFriends() {
 
     const currentUserId = Number(localStorage.getItem("userId"));
     const friendIdsKey = useMemo(() => friends.map((friend) => friend.userId).join(","), [friends]);
+    const friendIdSet = useMemo(
+        () => new Set(friends.map((friend) => Number(friend.userId)).filter((id) => Number.isFinite(id) && id > 0)),
+        [friends],
+    );
+
+    const loadProfilesByRequests = useCallback(async (
+        requests: MessageRequestItem[],
+        setter: React.Dispatch<React.SetStateAction<Record<number, FriendUser>>>
+    ) => {
+        const otherUserIds = Array.from(new Set(
+            requests
+                .map((request) => Number(request.otherUserId))
+                .filter((userId) => Number.isFinite(userId) && userId > 0)
+        ));
+        if (otherUserIds.length === 0) {
+            setter({});
+            return;
+        }
+
+        const profiles = await loadFriendProfilesService(otherUserIds);
+        setter(profiles.reduce<Record<number, FriendUser>>((acc, profile) => {
+            acc[profile.userId] = profile;
+            return acc;
+        }, {}));
+    }, []);
+
+    // Load tin nhắn chờ (chưa là bạn bè / chưa reply) + accepted direct
+    const fetchMessageRequestLists = useCallback(async (options?: {
+        showLoading?: boolean;
+        finalGroups?: GroupConversationItem[];
+        replaceAll?: boolean;
+    }) => {
+        if (!Number.isFinite(currentUserId) || currentUserId <= 0) return;
+        const showLoading = options?.showLoading ?? false;
+        const replaceAll = options?.replaceAll ?? true;
+        if (showLoading) setRequestLoading(true);
+
+        try {
+            const [requests, acceptedDirect] = await Promise.all([
+                loadMessageRequests(currentUserId),
+                loadAcceptedDirectConversations(currentUserId),
+            ]);
+
+            if (replaceAll) {
+                setMessageRequests(Array.isArray(requests) ? requests : []);
+            } else {
+                setMessageRequests((prev) => {
+                    const byId = new Map<number, MessageRequestItem>();
+                    (Array.isArray(requests) ? requests : []).forEach((item) => {
+                        const id = Number(item.conversationId);
+                        if (Number.isFinite(id) && id > 0) byId.set(id, item);
+                    });
+                    prev.forEach((item) => {
+                        const id = Number(item.conversationId);
+                        if (!Number.isFinite(id) || id <= 0 || byId.has(id)) return;
+                        const accepted = acceptedDirect.some((c) => Number(c.conversationId) === id);
+                        if (!accepted) byId.set(id, item);
+                    });
+                    return Array.from(byId.values());
+                });
+            }
+            setAcceptedDirectConversations(Array.isArray(acceptedDirect) ? acceptedDirect : []);
+
+            const unreads: Record<number, number> = {};
+            (Array.isArray(acceptedDirect) ? acceptedDirect : []).forEach((c) => {
+                if (c.conversationId && typeof c.unreadCount === "number") {
+                    unreads[c.conversationId] = c.unreadCount;
+                }
+            });
+            (Array.isArray(requests) ? requests : []).forEach((r) => {
+                if (r.conversationId && typeof r.unreadCount === "number") {
+                    unreads[r.conversationId] = r.unreadCount;
+                }
+            });
+            (options?.finalGroups || []).forEach((g) => {
+                if (g.conversationId && typeof (g as any).unreadCount === "number") {
+                    unreads[g.conversationId] = (g as any).unreadCount;
+                }
+            });
+            if (Object.keys(unreads).length > 0) {
+                dispatch(setUnreads(unreads));
+            }
+
+            await Promise.all([
+                loadProfilesByRequests(Array.isArray(requests) ? requests : [], setRequestProfiles),
+                loadProfilesByRequests(Array.isArray(acceptedDirect) ? acceptedDirect : [], setDirectProfiles),
+            ]);
+        } catch (err) {
+            console.error(err);
+            if (replaceAll) {
+                setMessageRequests([]);
+                setRequestProfiles({});
+            }
+        } finally {
+            if (showLoading) setRequestLoading(false);
+        }
+    }, [currentUserId, dispatch, loadProfilesByRequests]);
 
     useEffect(() => {
         let mounted = true;
-
-        const loadProfilesByRequests = async (
-            requests: MessageRequestItem[],
-            setter: React.Dispatch<React.SetStateAction<Record<number, FriendUser>>>
-        ) => {
-            const otherUserIds = Array.from(new Set(
-                requests
-                    .map((request) => Number(request.otherUserId))
-                    .filter((userId) => Number.isFinite(userId) && userId > 0)
-            ));
-            if (otherUserIds.length === 0) {
-                setter({});
-                return;
-            }
-
-            const profiles = await loadFriendProfilesService(otherUserIds);
-            if (!mounted) return;
-            setter(profiles.reduce<Record<number, FriendUser>>((acc, profile) => {
-                acc[profile.userId] = profile;
-                return acc;
-            }, {}));
-        };
-
-        const loadPendingRequests = async (currentUserId: number, finalGroups: GroupConversationItem[] = []) => {
-            setRequestLoading(true);
-            try {
-                const [requests, acceptedDirect] = await Promise.all([
-                    loadMessageRequests(currentUserId),
-                    loadAcceptedDirectConversations(currentUserId),
-                ]);
-                if (!mounted) return;
-
-                setMessageRequests(requests);
-                setAcceptedDirectConversations(acceptedDirect);
-
-                const unreads: Record<number, number> = {};
-                acceptedDirect.forEach((c) => {
-                    if (c.conversationId && typeof c.unreadCount === "number") {
-                        unreads[c.conversationId] = c.unreadCount;
-                    }
-                });
-                requests.forEach((r) => {
-                    if (r.conversationId && typeof r.unreadCount === "number") {
-                        unreads[r.conversationId] = r.unreadCount;
-                    }
-                });
-                finalGroups.forEach((g) => {
-                    if (g.conversationId && typeof (g as any).unreadCount === "number") {
-                        unreads[g.conversationId] = (g as any).unreadCount;
-                    }
-                });
-                if (Object.keys(unreads).length > 0) {
-                    dispatch(setUnreads(unreads));
-                }
-
-                await Promise.all([
-                    loadProfilesByRequests(requests, setRequestProfiles),
-                    loadProfilesByRequests(acceptedDirect, setDirectProfiles),
-                ]);
-            } catch (err) {
-                console.error(err);
-                if (mounted) {
-                    setMessageRequests([]);
-                    setRequestProfiles({});
-                    setAcceptedDirectConversations([]);
-                    setDirectProfiles({});
-                }
-            } finally {
-                if (mounted) setRequestLoading(false);
-            }
-        };
 
         const loadSidebarData = async () => {
             try {
@@ -305,8 +335,12 @@ export default function ListFriends() {
                     setGroups([]);
                 }
 
-                if (shouldLoadGroups) {
-                    await loadPendingRequests(currentUserId, finalGroups);
+                if (shouldLoadGroups && mounted) {
+                    await fetchMessageRequestLists({
+                        showLoading: true,
+                        finalGroups,
+                        replaceAll: true,
+                    });
                 }
 
                 if (friendResult.status === "rejected" || groupResult.status === "rejected") {
@@ -333,7 +367,14 @@ export default function ListFriends() {
             mounted = false;
             window.removeEventListener("group_list_updated", handleGroupListUpdate);
         };
-    }, []);
+    }, [dispatch, fetchMessageRequestLists]);
+
+    // Mỗi lần mở tab Tin nhắn chờ → call API message-requests
+    useEffect(() => {
+        if (activeView !== "requests") return;
+        if (!Number.isFinite(currentUserId) || currentUserId <= 0) return;
+        void fetchMessageRequestLists({ showLoading: true, replaceAll: true });
+    }, [activeView, currentUserId, fetchMessageRequestLists]);
 
     useEffect(() => {
         if (!friendIdsKey) return;
@@ -387,10 +428,17 @@ export default function ListFriends() {
             return;
         }
 
-        const socketPayload = socketData as { conversationId?: number; message?: any } | null;
+        const socketPayload = socketData as {
+            conversationId?: number;
+            message?: any;
+            otherUserId?: number;
+        } | null;
         if (socketPayload?.conversationId && socketPayload?.message) {
             const convId = Number(socketPayload.conversationId);
             const msg = socketPayload.message;
+            const senderId = Number(msg?.senderId);
+            const isOwnMessage = senderId === currentUserId;
+
             setGroups((prev) =>
                 prev.map((g) =>
                     g.conversationId === convId
@@ -398,86 +446,90 @@ export default function ListFriends() {
                         : g
                 )
             );
-            setAcceptedDirectConversations((prev) =>
-                prev.map((c) =>
-                    c.conversationId === convId
-                        ? { ...c, lastMessage: msg }
-                        : c
-                )
-            );
-            setMessageRequests((prev) =>
-                prev.map((r) =>
-                    r.conversationId === convId
-                        ? { ...r, lastMessage: msg }
-                        : r
-                )
-            );
+
+            // Khi mình reply tin nhắn chờ → chuyển sang tab Bạn bè ngay
+            if (isOwnMessage) {
+                setMessageRequests((prev) => {
+                    const matched = prev.find((r) => Number(r.conversationId) === convId);
+                    if (matched) {
+                        setAcceptedDirectConversations((acceptedPrev) => {
+                            const exists = acceptedPrev.some((c) => Number(c.conversationId) === convId);
+                            if (exists) {
+                                return acceptedPrev.map((c) =>
+                                    Number(c.conversationId) === convId ? { ...c, lastMessage: msg } : c
+                                );
+                            }
+                            return [{ ...matched, lastMessage: msg }, ...acceptedPrev];
+                        });
+                        return prev.filter((r) => Number(r.conversationId) !== convId);
+                    }
+                    return prev.map((r) =>
+                        Number(r.conversationId) === convId ? { ...r, lastMessage: msg } : r
+                    );
+                });
+                setAcceptedDirectConversations((prev) =>
+                    prev.map((c) =>
+                        Number(c.conversationId) === convId ? { ...c, lastMessage: msg } : c
+                    )
+                );
+            } else if (Number.isFinite(senderId) && senderId > 0) {
+                // Tin đến: update accepted-direct, hoặc đưa vào Tin nhắn chờ nếu chưa phải bạn bè
+                setAcceptedDirectConversations((acceptedPrev) => {
+                    const inAccepted = acceptedPrev.some((c) => Number(c.conversationId) === convId);
+                    if (inAccepted) {
+                        return acceptedPrev.map((c) =>
+                            Number(c.conversationId) === convId ? { ...c, lastMessage: msg } : c
+                        );
+                    }
+                    return acceptedPrev;
+                });
+
+                setFriends((currentFriends) => {
+                    const isFriend = currentFriends.some((f) => Number(f.userId) === senderId);
+                    setMessageRequests((requestPrev) => {
+                        const exists = requestPrev.some((r) => Number(r.conversationId) === convId);
+                        if (exists) {
+                            return requestPrev.map((r) =>
+                                Number(r.conversationId) === convId
+                                    ? {
+                                        ...r,
+                                        lastMessage: msg,
+                                        unreadCount: Math.max(1, Number(r.unreadCount || 0) + 1),
+                                    }
+                                    : r
+                            );
+                        }
+                        // Chỉ tạo request mới nếu chưa là bạn bè (tin nhắn chờ)
+                        if (isFriend) return requestPrev;
+
+                        void loadFriendProfilesService([senderId])
+                            .then((profiles) => {
+                                if (!profiles?.length) return;
+                                setRequestProfiles((prevProfiles) => ({
+                                    ...prevProfiles,
+                                    [senderId]: profiles[0],
+                                }));
+                            })
+                            .catch(() => undefined);
+
+                        return [
+                            {
+                                conversationId: convId,
+                                otherUserId: senderId,
+                                unreadCount: 1,
+                                lastMessage: msg,
+                            },
+                            ...requestPrev,
+                        ];
+                    });
+                    return currentFriends;
+                });
+            }
         }
 
         if (!Number.isFinite(currentUserId) || currentUserId <= 0) return;
-        let mounted = true;
-
-        const loadProfilesByRequests = async (
-            requests: MessageRequestItem[],
-            setter: React.Dispatch<React.SetStateAction<Record<number, FriendUser>>>
-        ) => {
-            const otherUserIds = Array.from(new Set(
-                requests
-                    .map((request) => Number(request.otherUserId))
-                    .filter((userId) => Number.isFinite(userId) && userId > 0)
-            ));
-            if (otherUserIds.length === 0) {
-                setter({});
-                return;
-            }
-
-            const profiles = await loadFriendProfilesService(otherUserIds);
-            if (!mounted) return;
-            setter(profiles.reduce<Record<number, FriendUser>>((acc, profile) => {
-                acc[profile.userId] = profile;
-                return acc;
-            }, {}));
-        };
-
-        const refreshMessageRequests = async () => {
-            try {
-                const [requests, acceptedDirect] = await Promise.all([
-                    loadMessageRequests(currentUserId),
-                    loadAcceptedDirectConversations(currentUserId),
-                ]);
-                if (!mounted) return;
-                setMessageRequests(requests);
-                setAcceptedDirectConversations(acceptedDirect);
-
-                const unreads: Record<number, number> = {};
-                acceptedDirect.forEach((c) => {
-                    if (c.conversationId && typeof c.unreadCount === "number") {
-                        unreads[c.conversationId] = c.unreadCount;
-                    }
-                });
-                requests.forEach((r) => {
-                    if (r.conversationId && typeof r.unreadCount === "number") {
-                        unreads[r.conversationId] = r.unreadCount;
-                    }
-                });
-                if (Object.keys(unreads).length > 0) {
-                    dispatch(setUnreads(unreads));
-                }
-
-                await Promise.all([
-                    loadProfilesByRequests(requests, setRequestProfiles),
-                    loadProfilesByRequests(acceptedDirect, setDirectProfiles),
-                ]);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        void refreshMessageRequests();
-        return () => {
-            mounted = false;
-        };
-    }, [socketEvent, socketData, currentUserId]);
+        void fetchMessageRequestLists({ showLoading: false, replaceAll: false });
+    }, [socketEvent, socketData, currentUserId, fetchMessageRequestLists]);
 
     const visibleFriends = useMemo(() => {
         const keyword = searchText.trim().toLowerCase();
@@ -502,25 +554,35 @@ export default function ListFriends() {
         });
     }, [groups, searchText]);
 
+    // Tin nhắn chờ: chỉ request chưa được reply/accept (theo API message-requests)
     const visibleMessageRequests = useMemo(() => {
         const keyword = searchText.trim().toLowerCase();
-        const requests = messageRequests.map((request) => {
-            const profile = requestProfiles[request.otherUserId];
-            return {
-                ...request,
-                profile,
-                displayName: profile?.fullName || profile?.email || `User ${request.otherUserId}`,
-            };
-        });
+        const acceptedUserIds = new Set(
+            acceptedDirectConversations
+                .map((c) => Number(c.otherUserId))
+                .filter((id) => Number.isFinite(id) && id > 0),
+        );
+        const requests = messageRequests
+            // Nếu đã nằm ở accepted-direct (đã reply) thì không còn ở tin nhắn chờ
+            .filter((request) => !acceptedUserIds.has(Number(request.otherUserId)))
+            .map((request) => {
+                const profile = requestProfiles[request.otherUserId] || directProfiles[request.otherUserId];
+                return {
+                    ...request,
+                    profile,
+                    displayName: profile?.fullName || profile?.email || `User ${request.otherUserId}`,
+                };
+            });
         const filteredRequests = keyword
             ? requests.filter((request) =>
             `${request.displayName} ${request.profile?.email ?? ""} ${request.lastMessage?.content ?? ""}`.toLowerCase().includes(keyword)
             )
             : requests;
         return sortByLatestMessage(filteredRequests);
-    }, [messageRequests, requestProfiles, searchText]);
+    }, [messageRequests, acceptedDirectConversations, requestProfiles, directProfiles, searchText]);
 
-    const visibleAcceptedDirectConversations = useMemo(() => {
+    // Tab Bạn bè: conversation đã accept/reply + bạn bè
+    const visibleAcceptedDirectForMain = useMemo(() => {
         const keyword = searchText.trim().toLowerCase();
         const conversations = acceptedDirectConversations.map((conversation) => {
             const profile = directProfiles[conversation.otherUserId];
@@ -539,7 +601,7 @@ export default function ListFriends() {
     }, [acceptedDirectConversations, directProfiles, searchText]);
 
     const unifiedConversations = useMemo(() => {
-        const directList = visibleAcceptedDirectConversations.map((conv) => {
+        const directList = visibleAcceptedDirectForMain.map((conv) => {
             const lastMsgTime = getLastMessageTime(conv);
             const friendObj = friends.find((f) => Number(f.userId) === Number(conv.otherUserId));
             const isOnline = friendObj ? Boolean(friendObj.online) : Boolean(conv.profile?.online);
@@ -557,7 +619,7 @@ export default function ListFriends() {
         });
 
         const activeChatUserIds = new Set(
-            visibleAcceptedDirectConversations.map((c) => Number(c.otherUserId)).filter(Boolean)
+            visibleAcceptedDirectForMain.map((c) => Number(c.otherUserId)).filter(Boolean)
         );
 
         const inactiveFriendsList = visibleFriends
@@ -567,7 +629,7 @@ export default function ListFriends() {
                 type: "FRIEND" as const,
                 displayName: friend.fullName || friend.email || `User ${friend.userId}`,
                 avatarUrl: friend.avatarUrl ?? undefined,
-                lastMessagePreview: "Tin nhắn mới",
+                lastMessagePreview: "",
                 time: 0,
                 isOnline: Boolean(friend.online),
                 original: friend,
@@ -591,7 +653,7 @@ export default function ListFriends() {
         });
 
         return [...directList, ...groupList, ...inactiveFriendsList].sort((a, b) => b.time - a.time);
-    }, [visibleAcceptedDirectConversations, visibleFriends, visibleGroups, friends, groupMemberProfiles, currentUserId]);
+    }, [visibleAcceptedDirectForMain, visibleFriends, visibleGroups, friends, groupMemberProfiles, currentUserId]);
 
     const openConversation = (friend: FriendUser) => {
         const currentUserId = Number(localStorage.getItem("userId"));
@@ -651,32 +713,42 @@ export default function ListFriends() {
     };
 
     const openMessageRequest = (request: MessageRequestItem) => {
-        const profile = requestProfiles[request.otherUserId];
-        const conversationKey = `private:${request.otherUserId}:${request.conversationId}:${Date.now()}`;
-        dispatch(updateCurrentConverId({ currentConversationId: Number(request.conversationId) }));
+        const profile = requestProfiles[request.otherUserId] || directProfiles[request.otherUserId];
+        const conversationId = Number(request.conversationId);
+        const conversationKey = `private:${request.otherUserId}:${conversationId}:${Date.now()}`;
+        if (Number.isFinite(conversationId) && conversationId > 0) {
+            dispatch(updateCurrentConverId({ currentConversationId: conversationId }));
+        }
         navigate("/conversation", {
             state: {
                 conversationKind: "PRIVATE",
                 targetUserId: request.otherUserId,
+                conversationId: Number.isFinite(conversationId) ? conversationId : undefined,
                 fullName: profile?.fullName || `User ${request.otherUserId}`,
                 avatar: profile?.avatarUrl || null,
                 conversationKey,
             },
+            replace: false,
         });
     };
 
     const openAcceptedDirectConversation = (conversation: MessageRequestItem) => {
         const profile = directProfiles[conversation.otherUserId];
-        const conversationKey = `private:${conversation.otherUserId}:${conversation.conversationId}:${Date.now()}`;
-        dispatch(updateCurrentConverId({ currentConversationId: Number(conversation.conversationId) }));
+        const conversationId = Number(conversation.conversationId);
+        const conversationKey = `private:${conversation.otherUserId}:${conversationId}:${Date.now()}`;
+        if (Number.isFinite(conversationId) && conversationId > 0) {
+            dispatch(updateCurrentConverId({ currentConversationId: conversationId }));
+        }
         navigate("/conversation", {
             state: {
                 conversationKind: "PRIVATE",
                 targetUserId: conversation.otherUserId,
+                conversationId: Number.isFinite(conversationId) ? conversationId : undefined,
                 fullName: profile?.fullName || `User ${conversation.otherUserId}`,
                 avatar: profile?.avatarUrl || null,
                 conversationKey,
             },
+            replace: false,
         });
     };
 
@@ -684,8 +756,12 @@ export default function ListFriends() {
     const hasActiveChat = Boolean(routeState?.targetUserId || routeState?.groupId || routeState?.conversationKey);
 
     useEffect(() => {
-        if (location.pathname !== "/conversation") return;
+        if (location.pathname !== "/conversation") {
+            autoRedirectedRef.current = false;
+            return;
+        }
 
+        // Chỉ auto-open 1 lần khi vào trang và chưa chọn conversation nào
         if (!loading && !hasActiveChat && unifiedConversations.length > 0 && !autoRedirectedRef.current) {
             autoRedirectedRef.current = true;
             const firstConv = unifiedConversations[0];
@@ -705,7 +781,7 @@ export default function ListFriends() {
             if (routeState.groupId) {
                 setSelectedItemKey(`group-${routeState.groupId}`);
             } else if (routeState.targetUserId) {
-                const activeDirect = visibleAcceptedDirectConversations.find(
+                const activeDirect = visibleAcceptedDirectForMain.find(
                     (c) => Number(c.otherUserId) === Number(routeState.targetUserId)
                 );
                 if (activeDirect) {
@@ -715,11 +791,11 @@ export default function ListFriends() {
                 }
             }
         }
-    }, [routeState, visibleAcceptedDirectConversations]);
+    }, [routeState, visibleAcceptedDirectForMain]);
 
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
-            <Box sx={{ px: 1, mb: 2, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+            <Box sx={{ px: 1, mt: 1, mb: 1, flexShrink: 0 }}>
                 <TextField
                     fullWidth
                     placeholder="Tìm kiếm bạn bè"
@@ -730,59 +806,201 @@ export default function ListFriends() {
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon sx={{ color: "#7f8aa0", fontSize: 18 }} />
+                                <SearchIcon sx={{ color: "#94a3b8", fontSize: 17 }} />
                             </InputAdornment>
                         ),
                     }}
                     sx={{
                         "& .MuiOutlinedInput-root": {
-                            height: 40,
-                            borderRadius: "12px",
-                            bgcolor: "#ffffff",
-                            border: "1px solid #d2dbea",
-                            boxShadow: "0 2px 8px rgba(31,42,68,0.05)",
+                            height: 36,
+                            borderRadius: "999px",
+                            bgcolor: "#fff",
+                            border: "1px solid #e2e8f0",
+                            boxShadow: "none",
                             transition: "all 0.2s ease",
                             "& fieldset": { border: "none" },
-                            "&:hover": { borderColor: "#b9c6dd", boxShadow: "0 3px 10px rgba(31,42,68,0.08)" },
-                            "&.Mui-focused": { borderColor: "#3b82f6", boxShadow: "0 0 0 3px rgba(59,130,246,0.16)" },
+                            "&:hover": {
+                                bgcolor: "#fff",
+                                borderColor: "#cbd5e1",
+                            },
+                            "&.Mui-focused": {
+                                bgcolor: "#fff",
+                                borderColor: "#3b82f6",
+                                boxShadow: "0 0 0 3px rgba(59,130,246,0.12)",
+                            },
                         },
-                        "& .MuiOutlinedInput-input": { py: 0, px: 0, fontSize: 14, color: "#1f2a44" },
-                        "& .MuiOutlinedInput-input::placeholder": { color: "#9aa3b2", opacity: 1 },
+                        "& .MuiOutlinedInput-input": {
+                            py: 0,
+                            px: 0,
+                            fontSize: 13,
+                            fontWeight: 500,
+                            color: "#1e293b",
+                        },
+                        "& .MuiOutlinedInput-input::placeholder": {
+                            color: "#94a3b8",
+                            opacity: 1,
+                            fontWeight: 500,
+                        },
                     }}
                 />
             </Box>
 
-            <Box sx={{ px: 1, mb: 1.5, display: "flex", gap: 1, flexShrink: 0 }}>
-                <Button
-                    fullWidth
-                    size="small"
-                    variant={activeView === "main" ? "contained" : "outlined"}
-                    startIcon={<PeopleAltRoundedIcon />}
-                    onClick={() => setActiveView("main")}
-                    sx={{ flex: 1, borderRadius: "10px", textTransform: "none", fontWeight: 700 }}
-                >
-                    Bạn bè
-                </Button>
-                <Badge
-                    color="error"
-                    badgeContent={messageRequests.length}
-                    overlap="rectangular"
-                    sx={{ flex: 1, width: "100%", "& .MuiBadge-badge": { right: 8, top: 4 } }}
-                >
-                    <Button
-                        fullWidth
-                        size="small"
-                        variant={activeView === "requests" ? "contained" : "outlined"}
-                        startIcon={<MarkEmailUnreadRoundedIcon />}
-                        onClick={() => setActiveView("requests")}
-                        sx={{ borderRadius: "10px", textTransform: "none", fontWeight: 700, whiteSpace: "nowrap" }}
-                    >
-                        Tin nhắn chờ
-                    </Button>
-                </Badge>
+            <Box
+                sx={{
+                    mx: 1,
+                    mb: 1,
+                    p: 0.35,
+                    display: "flex",
+                    gap: 0.35,
+                    flexShrink: 0,
+                    bgcolor: "#f1f5f9",
+                    borderRadius: "10px",
+                    border: "1px solid #e2e8f0",
+                    overflow: "visible",
+                }}
+            >
+                {(() => {
+                    const getUnreadForConversation = (conversationId?: number | null, fallback?: number) => {
+                        const convId = Number(conversationId);
+                        if (Number.isFinite(convId) && convId > 0) {
+                            const unread = Number(unreadByConversation[convId] ?? fallback ?? 0);
+                            return Number.isFinite(unread) && unread > 0 ? unread : 0;
+                        }
+                        const fallbackUnread = Number(fallback ?? 0);
+                        return Number.isFinite(fallbackUnread) && fallbackUnread > 0 ? fallbackUnread : 0;
+                    };
+
+                    const friendConversationIds = new Set(
+                        [
+                            ...visibleAcceptedDirectForMain.map((c) => Number(c.conversationId)),
+                            ...visibleGroups.map((g) => Number(g.conversationId)),
+                        ].filter((id) => Number.isFinite(id) && id > 0),
+                    );
+
+                    const friendsUnreadTotal = [
+                        ...visibleAcceptedDirectForMain.map((c) =>
+                            getUnreadForConversation(c.conversationId, c.unreadCount),
+                        ),
+                        ...visibleGroups.map((g) =>
+                            getUnreadForConversation(g.conversationId, (g as any).unreadCount),
+                        ),
+                    ].reduce((sum, n) => sum + n, 0);
+
+                    // Badge Tin nhắn chờ: chỉ theo danh sách request thực tế
+                    const requestsUnreadTotal = visibleMessageRequests.reduce((sum, request) => {
+                        return sum + getUnreadForConversation(request.conversationId, request.unreadCount);
+                    }, 0);
+                    const requestsBadgeTotal =
+                        requestsUnreadTotal > 0
+                            ? requestsUnreadTotal
+                            : visibleMessageRequests.length;
+
+                    const friendsBadgeLabel =
+                        friendsUnreadTotal > 99 ? "99+" : friendsUnreadTotal;
+                    const requestsBadgeLabel =
+                        requestsBadgeTotal > 99 ? "99+" : requestsBadgeTotal;
+
+                    const badgeSx = {
+                        flex: 1,
+                        width: "100%",
+                        "& .MuiBadge-badge": {
+                            right: 6,
+                            top: 2,
+                            minWidth: 16,
+                            height: 16,
+                            fontSize: 9,
+                            fontWeight: 700,
+                            bgcolor: "#ef4444",
+                            color: "#fff",
+                        },
+                    } as const;
+
+                    return (
+                        <>
+                            <Badge
+                                color="error"
+                                badgeContent={friendsUnreadTotal > 0 ? friendsBadgeLabel : 0}
+                                invisible={friendsUnreadTotal <= 0}
+                                overlap="rectangular"
+                                sx={badgeSx}
+                            >
+                                <Button
+                                    fullWidth
+                                    size="small"
+                                    disableElevation
+                                    startIcon={<PeopleAltRoundedIcon sx={{ fontSize: "15px !important" }} />}
+                                    onClick={() => setActiveView("main")}
+                                    sx={{
+                                        minHeight: 32,
+                                        px: 1,
+                                        borderRadius: "8px",
+                                        textTransform: "none",
+                                        fontWeight: 700,
+                                        fontSize: 12.5,
+                                        boxShadow: "none",
+                                        border: "none",
+                                        color: activeView === "main" ? "#fff" : "#64748b",
+                                        bgcolor: activeView === "main" ? "#2563eb" : "transparent",
+                                        "&:hover": {
+                                            bgcolor: activeView === "main" ? "#1d4ed8" : "rgba(255,255,255,0.7)",
+                                            boxShadow: "none",
+                                        },
+                                        "& .MuiButton-startIcon": { mr: 0.5 },
+                                    }}
+                                >
+                                    Bạn bè
+                                </Button>
+                            </Badge>
+
+                            <Badge
+                                color="error"
+                                badgeContent={requestsBadgeTotal > 0 ? requestsBadgeLabel : 0}
+                                invisible={requestsBadgeTotal <= 0}
+                                overlap="rectangular"
+                                sx={badgeSx}
+                            >
+                                <Button
+                                    fullWidth
+                                    size="small"
+                                    disableElevation
+                                    startIcon={<MarkEmailUnreadRoundedIcon sx={{ fontSize: "15px !important" }} />}
+                                    onClick={() => setActiveView("requests")}
+                                    sx={{
+                                        minHeight: 32,
+                                        px: 1,
+                                        borderRadius: "8px",
+                                        textTransform: "none",
+                                        fontWeight: 700,
+                                        fontSize: 12.5,
+                                        whiteSpace: "nowrap",
+                                        boxShadow: "none",
+                                        border: "none",
+                                        color: activeView === "requests" ? "#fff" : "#64748b",
+                                        bgcolor: activeView === "requests" ? "#2563eb" : "transparent",
+                                        "&:hover": {
+                                            bgcolor: activeView === "requests" ? "#1d4ed8" : "rgba(255,255,255,0.7)",
+                                            boxShadow: "none",
+                                        },
+                                        "& .MuiButton-startIcon": { mr: 0.5 },
+                                    }}
+                                >
+                                    Tin nhắn chờ
+                                </Button>
+                            </Badge>
+                        </>
+                    );
+                })()}
             </Box>
 
-            <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+            <Box
+                sx={{
+                    flex: 1,
+                    overflowY: "auto",
+                    minHeight: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                }}
+            >
                 {(activeView === "main" ? loading : requestLoading) && (
                     <SidebarSkeleton />
                 )}
@@ -792,12 +1010,55 @@ export default function ListFriends() {
                 )}
 
                 {activeView === "requests" && !requestLoading && visibleMessageRequests.length === 0 && (
-                    <Typography sx={{ px: 1, py: 2, color: "#8d8fa3", fontSize: 13 }}>
-                        Không có tin nhắn đang chờ
-                    </Typography>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            width: "100%",
+                            px: 2,
+                            py: 4,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            textAlign: "center",
+                            gap: 2.5,
+                            bgcolor: "#fff",
+                            borderRadius: "12px",
+                        }}
+                    >
+                        <Box
+                            component="img"
+                            src={noMessImg}
+                            alt="Không có tin nhắn đang chờ"
+                            sx={{
+                                width: "min(260px, 90%)",
+                                maxHeight: 280,
+                                objectFit: "contain",
+                            }}
+                        />
+                        <Typography
+                            sx={{
+                                color: "#64748b",
+                                fontSize: 14,
+                                fontWeight: 600,
+                            }}
+                        >
+                            Không có tin nhắn đang chờ
+                        </Typography>
+                    </Box>
                 )}
 
-                {activeView === "requests" && !requestLoading && visibleMessageRequests.map((request) => (
+                {activeView === "requests" && !requestLoading && visibleMessageRequests.map((request) => {
+                    const convId = Number(request.conversationId);
+                    const unreadCount = Number(
+                        (Number.isFinite(convId) && convId > 0
+                            ? unreadByConversation[convId]
+                            : undefined) ?? request.unreadCount ?? 0,
+                    );
+                    const isUnread = Number.isFinite(unreadCount) && unreadCount > 0;
+                    const unreadLabel = unreadCount > 5 ? "5+" : String(unreadCount);
+
+                    return (
                     <Box
                         key={`request-${request.conversationId}`}
                         onClick={() => openMessageRequest(request)}
@@ -808,29 +1069,100 @@ export default function ListFriends() {
                             py: 1.5,
                             px: 1,
                             borderRadius: "8px",
+                            bgcolor: isUnread ? "rgba(37, 99, 235, 0.04)" : "transparent",
                             "&:hover": { bgcolor: "#f0f2f8", cursor: "pointer" },
                         }}
                     >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0, flex: 1 }}>
                             <Avatar src={request.profile?.avatarUrl ?? undefined} sx={{ width: 45, height: 45 }}>
                                 {request.displayName?.charAt(0)?.toUpperCase()}
                             </Avatar>
-                            <Box sx={{ minWidth: 0 }}>
-                                <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1f2a44", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography sx={{
+                                    fontSize: 15,
+                                    fontWeight: isUnread ? 700 : 600,
+                                    color: "#1f2a44",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                }}>
                                     {request.displayName}
                                 </Typography>
-                                <Typography sx={{ fontSize: 13, color: "#8d8fa3", mt: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                <Typography sx={{
+                                    fontSize: 13,
+                                    color: isUnread ? "#2563eb" : "#8d8fa3",
+                                    fontWeight: isUnread ? 600 : 400,
+                                    mt: "2px",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                }}>
                                     {getLastMessagePreview(request)}
                                 </Typography>
                             </Box>
                         </Box>
+                        {isUnread && (
+                            <Box
+                                sx={{
+                                    minWidth: 18,
+                                    height: 18,
+                                    px: unreadCount > 5 ? 0.5 : 0,
+                                    borderRadius: "999px",
+                                    bgcolor: "#ef4444",
+                                    color: "#fff",
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    ml: 1,
+                                    flexShrink: 0,
+                                }}
+                            >
+                                {unreadLabel}
+                            </Box>
+                        )}
                     </Box>
-                ))}
+                    );
+                })}
 
                 {activeView === "main" && !loading && !error && unifiedConversations.length === 0 && (
-                    <Typography sx={{ px: 1, py: 2, color: "#8d8fa3", fontSize: 13 }}>
-                        Không có bạn bè hoặc nhóm
-                    </Typography>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            width: "100%",
+                            px: 2,
+                            py: 4,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            textAlign: "center",
+                            gap: 2.5,
+                            bgcolor: "#fff",
+                            borderRadius: "12px",
+                        }}
+                    >
+                        <Box
+                            component="img"
+                            src={noFriendImg}
+                            alt="Không có bạn bè hoặc nhóm"
+                            sx={{
+                                width: "min(260px, 90%)",
+                                maxHeight: 280,
+                                objectFit: "contain",
+                            }}
+                        />
+                        <Typography
+                            sx={{
+                                color: "#64748b",
+                                fontSize: 14,
+                                fontWeight: 600,
+                            }}
+                        >
+                            Không có bạn bè hoặc nhóm
+                        </Typography>
+                    </Box>
                 )}
 
                 {activeView === "main" && !loading && !error && unifiedConversations.map((item) => {
@@ -845,7 +1177,6 @@ export default function ListFriends() {
                     const unreadLabel = unreadCount > 5 ? "5+" : String(unreadCount);
 
                     const handleClick = () => {
-                        if (selectedItemKey === item.id) return;
                         setSelectedItemKey(item.id);
                         if (item.type === "PRIVATE") {
                             openAcceptedDirectConversation(item.original);

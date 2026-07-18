@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Users, Calendar, Mars, Venus } from "lucide-react";
 import { FormData } from "./types";
 import { FieldLabel, Chip } from "./Shared";
 
@@ -22,34 +21,27 @@ export function Step2({ data, update }: Step2Props) {
   return (
     <div className="space-y-5">
       <div>
-        <FieldLabel className="flex items-center gap-2">
-          <Users size={16} /> Giới tính
-        </FieldLabel>
+        <FieldLabel>Giới tính</FieldLabel>
         <div className="flex gap-3">
           {(
             [
-              ["M", "Nam", Mars],
-              ["F", "Nữ", Venus],
+              ["M", "Nam"],
+              ["F", "Nữ"],
             ] as const
-          ).map(([val, lbl, GenderIcon]) => (
+          ).map(([val, lbl]) => (
             <Chip
               key={val}
               active={data.gender === val}
               onClick={() => update("gender", val)}
             >
-              <span className="inline-flex items-center gap-2 text-gray-700">
-                <GenderIcon size={16} />
-                {lbl}
-              </span>
+              {lbl}
             </Chip>
           ))}
         </div>
       </div>
 
       <div>
-        <FieldLabel className="flex items-center gap-2">
-          <Calendar size={16} /> Nhóm tuổi
-        </FieldLabel>
+        <FieldLabel>Nhóm tuổi</FieldLabel>
         <div className="flex gap-3">
           {(["0-35", "35-55", "55<="] as const).map((ag) => (
             <Chip
@@ -70,7 +62,7 @@ export function Step2({ data, update }: Step2Props) {
             <select
               value={data.region || ""}
               onChange={(e) => update("region", e.target.value)}
-              className="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 pr-10 text-gray-800 text-sm truncate focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+              className="block w-full rounded-lg border-2 border-gray-200 bg-white py-2 px-3 pr-10 text-gray-800 text-sm truncate focus:outline-none focus:border-accent"
               title={data.region || ""}
             >
               <option value="" disabled>

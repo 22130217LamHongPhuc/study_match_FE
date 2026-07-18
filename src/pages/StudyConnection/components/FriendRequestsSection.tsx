@@ -153,7 +153,6 @@ export default function FriendRequestsSection() {
       if (res && res.code && Number(res.code) >= 400) {
         throw new Error(res.message || "Failed to decline request");
       }
-      toast.success(name ? `Đã từ chối lời mời của ${name}` : "Đã từ chối lời mời");
       setReceivedRequests((prev) => prev.filter((r) => r.id !== requestId));
       window.dispatchEvent(new Event("friend_status_updated"));
     } catch (error: any) {
@@ -171,8 +170,6 @@ export default function FriendRequestsSection() {
       if (res && res.code && Number(res.code) >= 400) {
         throw new Error(res.message || "Failed to cancel request");
       }
-      toast.success(name ? `Đã thu hồi lời mời kết bạn tới ${name}` : "Đã thu hồi lời mời");
-
       // Emit socket event to notify other user in real-time
       const currentUserId = Number(localStorage.getItem("userId"));
       const originalRequest = sentRequests.find((r) => r.id === requestId);

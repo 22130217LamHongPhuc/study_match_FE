@@ -1,4 +1,3 @@
-import { Check } from "lucide-react";
 import { FormData, StudyGoal, StudyMode } from "./types";
 import { LEARNING_LEVELS, MODES, VALID_MODES } from "./constants";
 
@@ -15,10 +14,8 @@ export function Step3Mode({ data, update }: Step3ModeProps) {
 
   return (
     <div className="space-y-4">
-      <div
-        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border ${goalObj?.badge}`}
-      >
-        {goalObj?.icon && <goalObj.icon size={14} />} {goalObj?.title}
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border border-accent text-accent bg-white">
+        {goalObj?.title}
       </div>
       <p className="text-sm text-gray-500">
         Dựa trên trình độ của bạn, hãy chọn{" "}
@@ -28,37 +25,32 @@ export function Step3Mode({ data, update }: Step3ModeProps) {
         {availModes.map((mKey) => {
           const m = MODES[mKey];
           const active = data.studyMode === mKey;
-          const Icon = m.icon;
           return (
             <button
               key={mKey}
               onClick={() => update("studyMode", mKey)}
-              className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-150 ${active ? `${m.bg} ${m.border}` : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50"}`}
+              className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-150 bg-white ${
+                active
+                  ? "border-accent"
+                  : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+              }`}
             >
               <div className="flex items-start gap-3">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${active ? m.bg : "bg-gray-50"}`}
-                >
-                  <Icon
-                    size={20}
-                    className={active ? m.text : "text-gray-500"}
-                  />
-                </div>
                 <div className="flex-1">
-                  <p
-                    className={`font-semibold text-sm ${active ? m.text : "text-gray-700"}`}
-                  >
-                    {m.label}
-                  </p>
+                  <p className="font-semibold text-sm text-gray-700">{m.label}</p>
                   <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
                     {m.desc}
                   </p>
                 </div>
-                {active && (
-                  <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                  </div>
-                )}
+                <div
+                  className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center mt-0.5 ${
+                    active ? "border-accent" : "border-gray-200"
+                  }`}
+                >
+                  {active && (
+                    <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+                  )}
+                </div>
               </div>
             </button>
           );

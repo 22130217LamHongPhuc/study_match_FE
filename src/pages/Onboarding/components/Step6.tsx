@@ -6,17 +6,16 @@ interface Step6Props {
   update: (key: keyof FormData, value: FormData[keyof FormData]) => void;
 }
 
-function getScoreLabel(score: number): { text: string; color: string } {
-  if (score < 5.0) return { text: "Yếu", color: "text-red-500" };
-  if (score < 6.5) return { text: "Trung bình", color: "text-blue-500" };
-  if (score < 8.0) return { text: "Khá", color: "text-yellow-600" };
-  if (score < 9.0) return { text: "Giỏi", color: "text-blue-600" };
-  return { text: "Xuất sắc", color: "text-green-600" };
+function getScoreLabel(score: number): string {
+  if (score < 5.0) return "Yếu";
+  if (score < 6.5) return "Trung bình";
+  if (score < 8.0) return "Khá";
+  if (score < 9.0) return "Giỏi";
+  return "Xuất sắc";
 }
 
 export function Step6({ data, update }: Step6Props) {
   const score = data.avgScore;
-  const scoreLabel = getScoreLabel(score);
 
   return (
     <div className="space-y-6">
@@ -31,15 +30,15 @@ export function Step6({ data, update }: Step6Props) {
             step={0.1}
             value={score}
             onChange={(e) => update("avgScore", Number(e.target.value))}
-            className="flex-1 accent-blue-500"
+            className="flex-1 accent-accent"
           />
 
           <div className="text-right shrink-0">
             <div className="text-2xl font-bold text-gray-800">
               {score.toFixed(1)}
             </div>
-            <div className={`text-xs font-semibold ${scoreLabel.color}`}>
-              {scoreLabel.text}
+            <div className="text-xs font-semibold text-gray-500">
+              {getScoreLabel(score)}
             </div>
           </div>
         </div>

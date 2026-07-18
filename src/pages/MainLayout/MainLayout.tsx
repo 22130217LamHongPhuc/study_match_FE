@@ -6,7 +6,6 @@ import Header from "../../components/header/Header";
 import WebSocketManager from "../../socket/WebSocketManager";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ToastCustom from "../../components/toastComponent/ToastCustom";
 import { useDispatch, useSelector } from "react-redux";
 import { increaseUnread, updateNewMess } from "../../redux/ChatReducer";
 import { SocketResponse } from "../../model/SocketResponse";
@@ -298,19 +297,6 @@ export default function MainLayout() {
                   conversationId: parsed.data.conversationId,
                 }),
               );
-
-              if (!isConversationPageRef.current) {
-                toast(
-                  <ToastCustom
-                    message={parsed.data.message.content || ""}
-                    userName={parsed.data.message.senderId.toString()}
-                  />,
-                  {
-                    position: "bottom-right",
-                    autoClose: 4000,
-                  },
-                );
-              }
             }
           }
         });

@@ -122,7 +122,6 @@ export default function CreateGroupPage() {
     try {
       const res = await createStudyGroup(payload, avatarFile || undefined);
       if (res.success) {
-        toast.success("Tạo nhóm thành công!");
         navigate("/groups");
         return;
       } else {

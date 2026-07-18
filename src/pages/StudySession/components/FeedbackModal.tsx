@@ -144,7 +144,6 @@ export default function FeedbackSubmitSheet({
       setSubmitError("");
       await submitStudyFeedback(payload);
       setSubmitted(true);
-      toast.success("Đã gửi đánh giá buổi học");
     } catch {
       setSubmitError("Không thể gửi phản hồi. Vui lòng thử lại.");
     } finally {
