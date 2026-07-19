@@ -904,7 +904,7 @@ export default function AdminDashboardPage() {
             <button
               type="submit"
               disabled={userSearchLoading}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-sand-900 px-4 text-sm font-medium text-white transition hover:bg-sand-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#3b82f6] px-4 text-sm font-medium text-white transition hover:bg-[#2563eb] shadow-md shadow-[#3b82f6]/20 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Search size={16} />
               {userSearchLoading ? "Đang tìm" : "Tìm user"}
@@ -1417,7 +1417,7 @@ export default function AdminDashboardPage() {
                     onClick={() => setGroupsPage(pageNum)}
                     className={`h-8 w-8 rounded-lg text-xs font-medium transition ${
                       pageNum === groupsData.number
-                        ? "bg-sand-900 text-white"
+                        ? "bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
                         : "border border-sand-200 text-sand-700 hover:bg-sand-50"
                     }`}
                   >

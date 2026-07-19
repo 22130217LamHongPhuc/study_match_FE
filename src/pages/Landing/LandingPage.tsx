@@ -1,21 +1,23 @@
 import React from "react";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
-import FeatureSection from "./components/FeatureSection";
+import NLUSection from "./components/NLUSection";
 import HowItWorksSection from "./components/HowItWorksSection";
-import BenefitsSection from "./components/BenefitsSection";
+import FeatureDetailsSection from "./components/FeatureDetailsSection";
+import TestimonialsSection from "./components/TestimonialsSection";
 import CTASection from "./components/CTASection";
 import Footer from "./components/Footer";
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-white font-sans antialiased" style={{ fontFamily: "Arial, sans-serif" }}>
+    <div className="min-h-screen bg-white font-inter antialiased">
       <Navbar />
       <main>
         <HeroSection />
-        <FeatureSection />
+        <NLUSection />
         <HowItWorksSection />
-        <BenefitsSection />
+        <FeatureDetailsSection />
+        <TestimonialsSection />
         <CTASection />
       </main>
       <Footer />

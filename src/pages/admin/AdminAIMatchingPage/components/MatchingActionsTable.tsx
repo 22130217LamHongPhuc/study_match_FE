@@ -5,6 +5,7 @@ import { AI_MATCHING_PAGE_SIZE } from "../types";
 import { StatusBadge } from "./StatusBadge";
 import { formatDateTime } from "../utils";
 import { Pagination } from "../../../../components/admin/Pagination";
+import { normalizeAvatarUrl } from "../../../../services/FriendService";
 
 const statusOptions: Array<{ label: string; value: MatchingActionStatus | null }> = [
   { label: "Tất cả", value: null },
@@ -295,7 +296,7 @@ function UserCell({
     <div className="flex min-w-0 items-center gap-2.5">
       {avatarUrl ? (
         <img
-          src={avatarUrl}
+          src={normalizeAvatarUrl(avatarUrl) || ""}
           alt={name}
           className="h-9 w-9 shrink-0 rounded-full object-cover"
         />

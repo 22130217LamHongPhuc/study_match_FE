@@ -278,7 +278,7 @@ function ReportsPagination({
               disabled={totalItems === 0}
               className={`h-8 min-w-8 rounded-lg px-2 text-xs font-medium transition ${
                 page === pageNumber
-                  ? "bg-sand-900 text-white"
+                  ? "bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
                   : "border border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
               } disabled:cursor-not-allowed disabled:opacity-50`}
             >

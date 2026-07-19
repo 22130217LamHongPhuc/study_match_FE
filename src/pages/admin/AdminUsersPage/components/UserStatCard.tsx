@@ -21,9 +21,6 @@ export function UserStatCard({
         <span className="text-xs font-medium uppercase tracking-wide text-sand-500">
           {title}
         </span>
-        <div className={iconClassName}>
-          <Icon size={16} />
-        </div>
       </div>
 
       <div className="mt-3 flex items-baseline gap-2">

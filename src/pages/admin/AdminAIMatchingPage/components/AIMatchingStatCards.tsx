@@ -93,7 +93,6 @@ export function AIMatchingStatCards({
           >
             <div className="flex items-center justify-between">
               <div className="h-4 w-24 bg-sand-200 rounded" />
-              <div className="h-4 w-4 bg-sand-200 rounded" />
             </div>
 
             <div className="mt-3 flex items-baseline gap-2">
@@ -109,7 +108,6 @@ export function AIMatchingStatCards({
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cardConfigs.map((cfg) => {
-        const Icon = cfg.icon;
         const value = stats[cfg.key];
         return (
           <div
@@ -120,9 +118,6 @@ export function AIMatchingStatCards({
               <span className="text-xs font-medium uppercase tracking-wide text-sand-500">
                 {cfg.label}
               </span>
-              <div className="text-sand-500">
-                <Icon size={16} />
-              </div>
             </div>
 
             <div className="mt-3 flex items-baseline gap-2">

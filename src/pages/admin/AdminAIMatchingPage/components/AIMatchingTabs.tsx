@@ -11,6 +11,7 @@ import { StudyFeedbacksTable } from "./StudyFeedbacksTable";
 import { FeedbackStatisticsPanel } from "./FeedbackStatisticsPanel";
 import { FeedbackDetailModal } from "./FeedbackDetailModal";
 import { getMatchingFeedbackById } from "../service";
+import { normalizeAvatarUrl } from "../../../../services/FriendService";
 
 const tabs = [
   { key: "actions", label: "Hoạt động ghép đôi" },
@@ -321,7 +322,7 @@ function ActionUserDetail({
     <div className="flex min-w-0 items-center gap-2.5">
       {avatarUrl ? (
         <img
-          src={avatarUrl}
+          src={normalizeAvatarUrl(avatarUrl) || ""}
           alt={name}
           className="h-10 w-10 shrink-0 rounded-full object-cover"
         />

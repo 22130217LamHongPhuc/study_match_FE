@@ -19,7 +19,7 @@ export function GroupsToolbar({ onOpenCreate }: { onOpenCreate: () => void }) {
         <button
           type="button"
           onClick={onOpenCreate}
-          className="flex items-center gap-1.5 rounded-lg bg-sand-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-sand-800"
+          className="flex items-center gap-1.5 rounded-lg bg-[#3b82f6] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#2563eb] shadow-md shadow-[#3b82f6]/20"
         >
           <Plus size={14} />
           Tạo cộng đồng
@@ -63,7 +63,7 @@ export function GroupsFilterBar({
             <button
               key={item.title}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${selectedFilter.title === item.title
-                  ? "bg-sand-900 text-white shadow-sm"
+                  ? "bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
                   : "border border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
                 }`}
               onClick={() => onFilterChange(item)}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { updateAdminUserStatus } from "../../../../services/UserService";
+import { normalizeAvatarUrl } from "../../../../services/FriendService";
 import {
   Eye,
   Lock,
@@ -286,9 +287,12 @@ export function AdminUsersTable({
               Array.from({ length: pageSize }).map((_, index) => (
                 <tr key={index} className="border-b border-sand-100 last:border-b-0 animate-pulse">
                   <td className="px-4 py-3">
-                    <div className="space-y-1">
-                      <div className="h-4 w-32 bg-sand-200 rounded" />
-                      <div className="h-3 w-48 bg-sand-100 rounded" />
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 bg-sand-200 rounded-full shrink-0" />
+                      <div className="space-y-1">
+                        <div className="h-4 w-32 bg-sand-200 rounded" />
+                        <div className="h-3 w-48 bg-sand-100 rounded" />
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -337,12 +341,24 @@ export function AdminUsersTable({
                   className="border-b border-sand-100 last:border-b-0 hover:bg-sand-50/50"
                 >
                   <td className="px-4 py-3">
-                    <p className="text-sm font-medium text-sand-800">
-                      {user.full_name || "Chưa cập nhật tên"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-sand-500">
-                      ID: {user.user_id} • {user.email}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={normalizeAvatarUrl(user.avatar_url) || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80"}
+                        alt={user.full_name || "User Avatar"}
+                        className="h-9 w-9 shrink-0 rounded-full object-cover border border-slate-100 shadow-sm"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80";
+                        }}
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-sand-800">
+                          {user.full_name || "Chưa cập nhật tên"}
+                        </p>
+                        <p className="mt-0.5 text-xs text-sand-500">
+                          ID: {user.user_id} • {user.email}
+                        </p>
+                      </div>
+                    </div>
                   </td>
 
                   <td className="px-4 py-3">
@@ -499,7 +515,7 @@ export function AdminUsersTable({
                   disabled={totalPages === 0}
                   className={`h-8 min-w-8 rounded-lg px-2 text-xs font-medium transition ${
                     page === pageNumber
-                      ? "bg-sand-900 text-white"
+                      ? "bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
                       : "border border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
                   } disabled:cursor-not-allowed disabled:opacity-50`}
                 >

@@ -207,14 +207,14 @@ export function CommunityCreateModal({
                 >
                   Hủy
                 </button>
-                <button
-                  type="button"
-                  onClick={handleCreateCommunity}
-                  className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-sand-900 text-sm font-medium text-white transition-all hover:bg-sand-800"
-                >
-                  <Plus size={14} />
-                  Tạo cộng đồng
-                </button>
+                 <button
+                   type="button"
+                   onClick={handleCreateCommunity}
+                   className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#3b82f6] text-sm font-medium text-white transition-all hover:bg-[#2563eb] shadow-md shadow-[#3b82f6]/20"
+                 >
+                   <Plus size={14} />
+                   Tạo cộng đồng
+                 </button>
               </div>
             </div>
           </>
