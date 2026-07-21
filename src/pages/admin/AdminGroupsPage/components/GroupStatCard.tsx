@@ -22,9 +22,6 @@ export function GroupStatCard({
           <span className="text-xs font-medium uppercase tracking-wide text-sand-500">
             {card.title}
           </span>
-          <div className="text-sand-200">
-            <Icon size={16} />
-          </div>
         </div>
 
         <div className="mt-3 flex items-baseline gap-2">
@@ -41,9 +38,6 @@ export function GroupStatCard({
         <span className="text-xs font-bold uppercase tracking-wider text-sand-500">
           {card.title}
         </span>
-        <div className="text-sand-400">
-          <Icon size={16} />
-        </div>
       </div>
 
       <div className="mt-3 flex items-baseline gap-2">

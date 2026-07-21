@@ -7,6 +7,7 @@ import {
   CalendarDays,
   BrainCircuit,
   MessageSquareWarning,
+  ShieldAlert,
   Video,
   Bell,
   BarChart3,
@@ -18,15 +19,26 @@ import {
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { loadFriendProfilesService } from "../../services/FriendService";
+import logoImg from "../../assets/img/logo.png";
 
 const menuItems = [
   {
     label: "Tổng quan",
     icon: LayoutDashboard,
-    path: "/admin/dashboard",
+    path: "/admin/overview",
   },
   {
-    label: "",
+    label: "Quản lý Chat",
+    icon: MessageSquareWarning,
+    path: "/admin/chat-manager",
+  },
+  {
+    label: "Quản lí Vi Phạm",
+    icon: ShieldAlert,
+    path: "/admin/violations",
+  },
+  {
+    label: "Người dùng",
     icon: Users,
     path: "/admin/users",
   },
@@ -70,17 +82,19 @@ const menuItems = [
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
-      <div className="border-b border-sand-200 px-5 py-4">
+      <div className="border-b border-slate-100 px-5 py-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-sand-900 text-white">
-            <GraduationCap size={16} />
-          </div>
+          <img
+            src={logoImg}
+            alt="StudyMatch Logo"
+            className="w-8 h-8 rounded-full object-cover border border-blue-50 shadow-sm"
+          />
 
-          <span className="text-sm font-semibold tracking-tight text-sand-900">
+          <span className="text-sm font-semibold tracking-tight text-slate-900">
             StudyMatch Admin
           </span>
         </div>
-        <p className="mt-2 text-[11px] font-medium text-sand-500">
+        <p className="mt-2 text-[11px] font-medium text-slate-500">
           Quản trị học tập thông minh
         </p>
       </div>
@@ -96,8 +110,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               className={({ isActive }) =>
                 `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                  ? "bg-sand-200/70 text-sand-900"
-                  : "text-sand-600 hover:bg-sand-100 hover:text-sand-800"
+                  ? "bg-blue-50 text-[#3b82f6]"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                 }`
               }
             >
@@ -129,7 +143,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 function Sidebar() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-sand-200 bg-sand-100 lg:flex lg:flex-col">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-slate-100 bg-slate-50/50 lg:flex lg:flex-col">
       <SidebarContent />
     </aside>
   );
@@ -151,12 +165,12 @@ function MobileDrawer({
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sand-100 transition-transform duration-200 ease-in-out lg:hidden ${open ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-white transition-transform duration-200 ease-in-out lg:hidden ${open ? "translate-x-0" : "-translate-x-full"
           }`}
       >
         <button
           onClick={onClose}
-          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-md text-sand-500 hover:bg-sand-200 hover:text-sand-700"
+          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
         >
           <X size={16} />
         </button>
@@ -196,9 +210,9 @@ function Topbar({
   };
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-sand-200 bg-white px-4 sm:px-6">
+    <header className="flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 sm:px-6">
       <div className="flex items-center gap-4">
-        <button className="text-sand-500 lg:hidden" onClick={onMenuClick}>
+        <button className="text-slate-500 lg:hidden" onClick={onMenuClick}>
           <Menu size={18} />
         </button>
 
@@ -206,7 +220,7 @@ function Topbar({
 
       <div className="flex items-center gap-4 relative">
 
-        <div className="h-4 w-px bg-sand-200" />
+        <div className="h-4 w-px bg-slate-200" />
         <div
           className="group relative flex cursor-pointer items-center gap-2 select-none"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -218,21 +232,21 @@ function Topbar({
               className="h-8 w-8 rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sand-800 text-[10px] font-medium text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3b82f6] text-[10px] font-medium text-white shadow-sm">
               {initials}
             </div>
           )}
           <div className="hidden sm:block">
-            <p className="text-xs font-medium leading-none text-sand-800">
+            <p className="text-xs font-medium leading-none text-slate-800">
               {fullName}
             </p>
-            <p className="mt-1 text-[10px] uppercase text-sand-400">
+            <p className="mt-1 text-[10px] uppercase text-slate-400">
               Root Admin
             </p>
           </div>
           <ChevronDown
             size={12}
-            className={`text-sand-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""
+            className={`text-slate-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""
               }`}
           />
 
@@ -246,7 +260,7 @@ function Topbar({
                 }}
               />
               <div
-                className="absolute right-0 top-full mt-2 w-40 rounded-xl border border-sand-200 bg-white py-1 shadow-lg ring-1 ring-black/5 z-40"
+                className="absolute right-0 top-full mt-2 w-40 rounded-xl border border-slate-100 bg-white py-1 shadow-lg ring-1 ring-black/5 z-40"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -341,7 +355,7 @@ export default function StudyMatchAdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-sand-50 font-sans text-sand-900">
+    <div className="flex min-h-screen bg-blue-50/20 font-sans text-slate-900">
       <Sidebar />
       <MobileDrawer
         open={sidebarOpen}

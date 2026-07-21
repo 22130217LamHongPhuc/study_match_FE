@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
         orange: {
@@ -20,16 +20,16 @@ module.exports = {
           900: '#0f172a',
         },
         sand: {
-          50: '#FAFAF8',
-          100: '#F5F5F0',
-          200: '#E8E6DF',
-          300: '#D4D0C8',
-          400: '#B8B3A8',
-          500: '#9C9688',
-          600: '#8A8475',
-          700: '#6B6558',
-          800: '#44403C',
-          900: '#292524',
+          50: '#F8FAFC',  // slate-50
+          100: '#F1F5F9', // slate-100
+          200: '#E2E8F0', // slate-200
+          300: '#CBD5E1', // slate-300
+          400: '#94A3B8', // slate-400
+          500: '#64748B', // slate-500
+          600: '#475569', // slate-600
+          700: '#334155', // slate-700
+          800: '#1E293B', // slate-800
+          900: '#0F172A', // slate-900
         },
         accent: {
           DEFAULT: '#2563eb',

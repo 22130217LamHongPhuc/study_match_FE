@@ -8,6 +8,7 @@ import {
   changeAdminGroupOwner,
 } from "../../../../services/GroupService";
 import { LoadingSkeleton } from "../../../../components/modal/basic/LoadingSkeleton";
+import { normalizeAvatarUrl } from "../../../../services/FriendService";
 
 export function AdminGroupDetailSheet({
   open,
@@ -121,7 +122,7 @@ export function AdminGroupDetailSheet({
               <div className="flex items-start gap-3">
                 {detail?.avatarUrl ? (
                   <img
-                    src={detail.avatarUrl}
+                    src={normalizeAvatarUrl(detail.avatarUrl) || ""}
                     alt={detail.name}
                     className="h-10 w-10 shrink-0 rounded-lg object-cover border border-sand-200"
                   />
@@ -305,7 +306,7 @@ export function AdminGroupDetailSheet({
                               <div className="flex items-center gap-2.5 min-w-0">
                                 {member.avatarUrl ? (
                                   <img
-                                    src={member.avatarUrl}
+                                    src={normalizeAvatarUrl(member.avatarUrl) || ""}
                                     alt={member.fullName}
                                     className="h-8 w-8 rounded-full object-cover border border-sand-100 shrink-0"
                                   />

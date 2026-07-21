@@ -284,7 +284,7 @@ export function AdminReportDetailModal({
                       type="button"
                       onClick={onSubmit}
                       disabled={updateLoading}
-                      className="h-10 flex-1 rounded-lg bg-sand-900 px-3 text-sm font-medium text-white transition-all hover:bg-sand-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="h-10 flex-1 rounded-lg bg-[#3b82f6] px-3 text-sm font-medium text-white transition-all hover:bg-[#2563eb] shadow-md shadow-[#3b82f6]/20 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {updateLoading ? "Đang cập nhật..." : "Cập nhật"}
                     </button>

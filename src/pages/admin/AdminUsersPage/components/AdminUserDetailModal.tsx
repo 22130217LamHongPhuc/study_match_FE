@@ -8,6 +8,7 @@ import {
   X,
 } from "lucide-react";
 import type { AdminUserDbRow } from "../types";
+import { normalizeAvatarUrl } from "../../../../services/FriendService";
 import {
   formatDateTime,
   getBooleanBadgeClass,
@@ -67,7 +68,7 @@ export function AdminUserDetailModal({
             <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded bg-accent-50 text-accent-600">
               {user?.avatar_url ? (
                 <img
-                  src={user.avatar_url}
+                  src={normalizeAvatarUrl(user.avatar_url) || ""}
                   alt={displayName}
                   className="h-full w-full object-cover"
                 />

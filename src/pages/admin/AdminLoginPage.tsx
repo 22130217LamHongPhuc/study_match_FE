@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Lock, Mail, Loader2 } from "lucide-react";
+import { Lock, Mail, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { adminLogin } from "../../services/AuthService";
+import logoImg from "../../assets/img/logo.png";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -44,7 +45,7 @@ export default function AdminLoginPage() {
       localStorage.setItem("refreshToken", response.data.refreshToken);
       localStorage.setItem("userId", response.data.userId.toString());
       localStorage.setItem("isAdmin", "true");
-      navigate("/admin/dashboard");
+      navigate("/admin/overview");
     } catch (error) {
       console.error("Admin login exception:", error);
       localStorage.removeItem("accessToken");
@@ -59,21 +60,22 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-sand-50 font-sans p-4">
-      <div className="w-full max-w-md rounded-xl border border-sand-200 bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50/80 font-sans p-4">
+      <div className="w-full max-w-md rounded-xl border border-blue-100 bg-white p-8 shadow-sm">
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sand-900 text-white shadow-sm">
-            <GraduationCap size={24} />
-          </div>
-          <h1 className="mt-4 text-xl font-bold tracking-tight text-sand-900">
+          <img
+            src={logoImg}
+            alt="StudyMatch Logo"
+            className="w-12 h-12 rounded-full object-cover border border-blue-50 shadow-sm"
+          />
+          <h1 className="mt-4 text-xl font-bold tracking-tight text-slate-900">
             StudyMatch Admin
           </h1>
-          <p className="mt-1 text-xs font-medium text-sand-500">
+          <p className="mt-1 text-xs font-medium text-slate-500">
             Quản trị học tập thông minh
           </p>
         </div>
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           {errorMsg && (
             <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-600 font-medium">
@@ -81,17 +83,16 @@ export default function AdminLoginPage() {
             </div>
           )}
           <div className="space-y-4">
-            {/* Email Field */}
             <div>
               <label
                 htmlFor="email"
-                className="text-xs font-semibold uppercase tracking-wider text-sand-500"
+                className="text-xs font-semibold uppercase tracking-wider text-slate-500"
               >
                 Email quản trị
               </label>
               <div className="relative mt-1.5">
                 <Mail
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sand-400"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                   size={16}
                 />
                 <input
@@ -100,24 +101,23 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
-                  className="h-10 w-full rounded-lg border border-sand-300 bg-sand-50 pl-10 pr-3 text-sm text-sand-800 outline-none transition-colors focus:border-accent-600 focus:bg-white focus:ring-1 focus:ring-accent-600/20 disabled:opacity-60"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50/50 pl-10 pr-3 text-sm text-slate-800 outline-none transition-colors focus:border-[#3b82f6] focus:bg-white focus:ring-1 focus:ring-[#3b82f6]/20 disabled:opacity-60"
                   placeholder="admin@studymatch.vn"
                   required
                 />
               </div>
             </div>
 
-            {/* Password Field */}
             <div>
               <label
                 htmlFor="password"
-                className="text-xs font-semibold uppercase tracking-wider text-sand-500"
+                className="text-xs font-semibold uppercase tracking-wider text-slate-500"
               >
                 Mật khẩu
               </label>
               <div className="relative mt-1.5">
                 <Lock
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sand-400"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                   size={16}
                 />
                 <input
@@ -126,7 +126,7 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
-                  className="h-10 w-full rounded-lg border border-sand-300 bg-sand-50 pl-10 pr-3 text-sm text-sand-800 outline-none transition-colors focus:border-accent-600 focus:bg-white focus:ring-1 focus:ring-accent-600/20 disabled:opacity-60"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50/50 pl-10 pr-3 text-sm text-slate-800 outline-none transition-colors focus:border-[#3b82f6] focus:bg-white focus:ring-1 focus:ring-[#3b82f6]/20 disabled:opacity-60"
                   placeholder="••••••••"
                   required
                 />
@@ -134,11 +134,10 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-sand-900 text-sm font-semibold text-white transition-all hover:bg-sand-800 focus:outline-none focus:ring-2 focus:ring-sand-900/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#3b82f6] hover:bg-[#2563eb] text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/20 shadow-md shadow-[#3b82f6]/20 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
               <>

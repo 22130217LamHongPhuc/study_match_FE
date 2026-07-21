@@ -93,7 +93,7 @@ export function SchedulesFilterBar({
                   onClick={() => onStatusChange(opt.value)}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
                     statusFilter === opt.value
-                      ? "border-sand-800 bg-sand-900 text-white"
+                      ? "border-[#3b82f6] bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
                       : "border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
                   }`}
                 >
@@ -118,7 +118,7 @@ export function SchedulesFilterBar({
                   onClick={() => onModeChange(opt.value)}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
                     modeFilter === opt.value
-                      ? "border-sand-800 bg-sand-900 text-white"
+                      ? "border-[#3b82f6] bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
                       : "border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
                   }`}
                 >
@@ -143,7 +143,7 @@ export function SchedulesFilterBar({
                   onClick={() => onTypeChange(opt.value)}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
                     typeFilter === opt.value
-                      ? "border-sand-800 bg-sand-900 text-white"
+                      ? "border-[#3b82f6] bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
                       : "border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
                   }`}
                 >

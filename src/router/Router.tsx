@@ -30,6 +30,7 @@ import AdminAIMatchingPage from "../pages/admin/AdminAIMatchingPage/AdminAIMatch
 import AdminReportsPage from "../pages/admin/AdminReportsPage/AdminReportsPage";
 import StudySessionPage from "../pages/StudySession/StudySessionPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
+import AdminOverviewPage from "../pages/admin/AdminOverviewPage/AdminOverviewPage";
 import LandingPage from "../pages/Landing/LandingPage";
 import AdminLoginPage from "../pages/admin/AdminLoginPage";
 import MyReportsPage from "../pages/MyReports/MyReportsPage";
@@ -50,7 +51,7 @@ function getRoleFromToken(token: string | null): "admin" | "student" | null {
 const ProtectedRoute = () => {
   const role = getRoleFromToken(localStorage.getItem("accessToken"));
   if (!role) return <Navigate to="/" replace />;
-  if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  if (role === "admin") return <Navigate to="/admin/overview" replace />;
   return <Outlet />;
 };
 
@@ -62,14 +63,14 @@ const AdminProtectedRoute = () => {
 
 const PublicLayout = () => {
   const role = getRoleFromToken(localStorage.getItem("accessToken"));
-  if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  if (role === "admin") return <Navigate to="/admin/overview" replace />;
   if (role === "student") return <Navigate to="/home" replace />;
   return <Outlet />;
 };
 
 const NotFoundRedirect = () => {
   const role = getRoleFromToken(localStorage.getItem("accessToken"));
-  if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  if (role === "admin") return <Navigate to="/admin/overview" replace />;
   if (role === "student") return <Navigate to="/home" replace />;
   return <Navigate to="/" replace />;
 };
@@ -156,11 +157,23 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to="/admin/dashboard" replace />,
+            element: <Navigate to="/admin/overview" replace />,
+          },
+          {
+            path: "overview",
+            element: <AdminOverviewPage />,
+          },
+          {
+            path: "chat-manager",
+            element: <AdminDashboardPage />,
+          },
+          {
+            path: "violations",
+            element: <AdminDashboardPage />,
           },
           {
             path: "dashboard",
-            element: <AdminDashboardPage />,
+            element: <Navigate to="/admin/overview" replace />,
           },
           {
             path: "users",

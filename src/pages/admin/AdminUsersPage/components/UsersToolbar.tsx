@@ -77,7 +77,7 @@ export function UsersToolbar({
                 type="button"
                 onClick={() => onStatusChange(option.value)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === option.value
-                    ? "border-sand-800 bg-sand-900 text-white"
+                    ? "border-[#3b82f6] bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
                     : "border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
                   }`}
               >
