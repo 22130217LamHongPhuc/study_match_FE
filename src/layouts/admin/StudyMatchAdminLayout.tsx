@@ -7,6 +7,7 @@ import {
   CalendarDays,
   BrainCircuit,
   MessageSquareWarning,
+  ShieldAlert,
   Video,
   Bell,
   BarChart3,
@@ -24,7 +25,17 @@ const menuItems = [
   {
     label: "Tổng quan",
     icon: LayoutDashboard,
-    path: "/admin/dashboard",
+    path: "/admin/overview",
+  },
+  {
+    label: "Quản lý Chat",
+    icon: MessageSquareWarning,
+    path: "/admin/chat-manager",
+  },
+  {
+    label: "Quản lí Vi Phạm",
+    icon: ShieldAlert,
+    path: "/admin/violations",
   },
   {
     label: "Người dùng",

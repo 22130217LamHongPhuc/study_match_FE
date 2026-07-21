@@ -45,7 +45,7 @@ export default function AdminLoginPage() {
       localStorage.setItem("refreshToken", response.data.refreshToken);
       localStorage.setItem("userId", response.data.userId.toString());
       localStorage.setItem("isAdmin", "true");
-      navigate("/admin/dashboard");
+      navigate("/admin/overview");
     } catch (error) {
       console.error("Admin login exception:", error);
       localStorage.removeItem("accessToken");
