@@ -34,6 +34,8 @@ export interface StudySessionVm {
   groupAvatarUrl?: string | null;
   membersCount?: number;
   subjectName?: string;
+  recurrenceId?: string | null;
+  recurrenceType?: string | null;
 }
 
 export type GroupStudySessionMode = "ONLINE" | "OFFLINE" | "HYBRID";
@@ -43,6 +45,8 @@ export type StudySessionType = "GROUP" | "USER_PAIR";
 export interface CreateStudySessionRequest {
   title: string;
   description?: string;
+  startDate: string;
+  endDate?: string | null;
   startTime: string;
   endTime: string;
   studyMode: GroupStudySessionMode;
@@ -54,6 +58,8 @@ export interface CreateStudySessionRequest {
   subjectId?: number | null;
   partnerUserId?: number | null;
   partnerUserName?: string | null;
+  recurrenceType: string;
+  repeatDays: string[];
 }
 
 export type GroupStudySessionStatus =
@@ -83,6 +89,9 @@ export interface StudySessionResponse {
   subjectName: string | null;
   createdAt: string;
   updatedAt: string;
+  totalCreated?: number | null;
+  recurrenceId?: string | null;
+  recurrenceType?: string | null;
 }
 
 export interface SessionParticipantConfirmationResponse {

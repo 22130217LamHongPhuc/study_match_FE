@@ -4,6 +4,7 @@ import {
   createGroupStudySession,
   createPairStudySession,
 } from "../../../services/StudySessionService";
+import { isApiSuccess } from "../../../config/apiClient";
 import { getGroupAvatarUrl, getGroupsByUserId } from "../../../services/GroupService";
 import type { StudyGroupDetailResponse } from "../../../services/GroupService";
 import {
@@ -50,8 +51,13 @@ export function CreateSessionModal({
   const [title, setTitle] = useState("");
   const [subjectName, setSubjectName] = useState("");
   const [subjectId, setSubjectId] = useState<number | null>(null);
+  const [startDate, setStartDate] = useState(() => new Date().toLocaleDateString("en-CA"));
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState<"NONE" | "WEEKLY">("NONE");
+  const [repeatDays, setRepeatDays] = useState<string[]>([]);
+  const [endDate, setEndDate] = useState("");
   const [targetName, setTargetName] = useState("");
   const [selectedFriendId, setSelectedFriendId] = useState<number | "">("");
   const [location, setLocation] = useState("");
@@ -104,19 +110,104 @@ export function CreateSessionModal({
 
   const needSystemRoom = studyMode === "ONLINE" || studyMode === "HYBRID";
 
-  const formatLocalDateTime = (value: string) => {
-    if (!value) return value;
-
-    if (value.length === 16) {
-      return `${value}:00`;
-    }
-
-    if (value.length === 19) {
-      return value;
-    }
-
-    return value;
+  const getLastDayOfMonth = (dateStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    return lastDay.toLocaleDateString("en-CA");
   };
+
+  const parseLocalDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  const getWeeklyDates = (startStr: string, endStr: string, days: string[]) => {
+    if (!startStr || !endStr || days.length === 0) return [];
+    const dates: Date[] = [];
+    const start = parseLocalDate(startStr);
+    const end = parseLocalDate(endStr);
+    if (end < start) return [];
+
+    const dayMap: Record<string, number> = {
+      SUNDAY: 0,
+      MONDAY: 1,
+      TUESDAY: 2,
+      WEDNESDAY: 3,
+      THURSDAY: 4,
+      FRIDAY: 5,
+      SATURDAY: 6,
+    };
+    const targetDays = days.map((day) => dayMap[day]);
+
+    let current = new Date(start);
+    while (current <= end) {
+      if (targetDays.includes(current.getDay())) {
+        dates.push(new Date(current));
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  };
+
+  const DAYS = [
+    { label: "T2", value: "MONDAY" },
+    { label: "T3", value: "TUESDAY" },
+    { label: "T4", value: "WEDNESDAY" },
+    { label: "T5", value: "THURSDAY" },
+    { label: "T6", value: "FRIDAY" },
+    { label: "T7", value: "SATURDAY" },
+    { label: "CN", value: "SUNDAY" },
+  ];
+
+  const toggleDay = (dayValue: string) => {
+    setRepeatDays((prev) =>
+      prev.includes(dayValue)
+        ? prev.filter((d) => d !== dayValue)
+        : [...prev, dayValue]
+    );
+  };
+
+  const formatTimeWithSeconds = (timeStr: string) => {
+    if (!timeStr) return "";
+    if (timeStr.split(":").length === 2) {
+      return `${timeStr}:00`;
+    }
+    return timeStr;
+  };
+
+  useEffect(() => {
+    if (!startDate) return;
+    const lastDay = getLastDayOfMonth(startDate);
+    if (endDate) {
+      const startD = new Date(startDate);
+      const endD = new Date(endDate);
+      const isValid =
+        endD.getFullYear() === startD.getFullYear() &&
+        endD.getMonth() === startD.getMonth() &&
+        endDate >= startDate;
+      if (!isValid) {
+        setEndDate(lastDay);
+      }
+    } else {
+      setEndDate(lastDay);
+    }
+  }, [startDate]);
+
+  const weeklyDates = useMemo(() => {
+    if (!isRecurring || recurrenceType !== "WEEKLY") return [];
+    return getWeeklyDates(startDate, endDate, repeatDays);
+  }, [isRecurring, recurrenceType, startDate, endDate, repeatDays]);
+
+  const expectedSessionsCount = isRecurring ? weeklyDates.length : 1;
+
+  const formattedDatesList = useMemo(() => {
+    return weeklyDates
+      .map((d) =>
+        d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })
+      )
+      .join(", ");
+  }, [weeklyDates]);
 
   useEffect(() => {
     if (!open) return;
@@ -235,8 +326,13 @@ export function CreateSessionModal({
     setTitle("");
     setSubjectName("");
     setSubjectId(null);
+    setStartDate(new Date().toLocaleDateString("en-CA"));
     setStartTime("");
     setEndTime("");
+    setIsRecurring(false);
+    setRecurrenceType("NONE");
+    setRepeatDays([]);
+    setEndDate("");
     setTargetName("");
     setSelectedFriendId("");
     setLocation("");
@@ -266,32 +362,72 @@ export function CreateSessionModal({
       setFriendError("Vui lòng chọn bạn học");
       return;
     }
-    const startDate = new Date(startTime);
-    const endDate = new Date(endTime);
+
+    if (!title.trim()) {
+      toast.error("Vui lòng nhập tiêu đề buổi học");
+      return;
+    }
+
+    if (!startDate) {
+      toast.error("Vui lòng chọn ngày bắt đầu");
+      return;
+    }
+
+    if (!startTime) {
+      toast.error("Vui lòng chọn giờ bắt đầu");
+      return;
+    }
+
+    if (!endTime) {
+      toast.error("Vui lòng chọn giờ kết thúc");
+      return;
+    }
+
+    const startDateTime = new Date(`${startDate}T${startTime}`);
     const now = new Date();
-
-    if (startDate <= now) {
-      toast.error("Thời gian bắt đầu phải lớn hơn thời gian hiện tại");
+    if (startDateTime <= now) {
+      toast.error("Thời gian bắt đầu không được ở trong quá khứ");
       return;
     }
 
-    if (startDate >= endDate) {
-      toast.error("Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc");
+    const [sh, sm] = startTime.split(":").map(Number);
+    const [eh, em] = endTime.split(":").map(Number);
+    const diff = (eh * 60 + em) - (sh * 60 + sm);
+    if (diff <= 0) {
+      toast.error("Giờ kết thúc phải sau giờ bắt đầu");
       return;
     }
-
-    const durationMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
-
-    if (durationMinutes < 5) {
+    if (diff < 5) {
       toast.error("Buổi học phải kéo dài ít nhất 5 phút");
       return;
     }
-
-    if (durationMinutes > 8 * 60) {
+    if (diff > 8 * 60) {
       toast.error("Buổi học không được kéo dài quá 8 tiếng");
       return;
     }
 
+    if (isRecurring && repeatDays.length === 0) {
+      toast.error("Lịch lặp phải chọn ít nhất một ngày trong tuần");
+      return;
+    }
+
+    if (isRecurring) {
+      const lastDay = getLastDayOfMonth(startDate);
+      if (endDate < startDate || endDate > lastDay) {
+        toast.error(`Ngày kết thúc phải từ ${startDate} đến ${lastDay}`);
+        return;
+      }
+    }
+
+    if (isRecurring && weeklyDates.length === 0) {
+      toast.error("Không tìm thấy ngày phù hợp nào trong khoảng thời gian đã chọn");
+      return;
+    }
+
+    if (isRecurring && weeklyDates.length > 31) {
+      toast.error("Số lượng buổi học vượt quá giới hạn cho phép (tối đa 31 buổi)");
+      return;
+    }
 
     try {
       setIsCreating(true);
@@ -301,8 +437,10 @@ export function CreateSessionModal({
         const payload = {
           title,
           description,
-          startTime: formatLocalDateTime(startTime),
-          endTime: formatLocalDateTime(endTime),
+          startDate,
+          endDate: isRecurring ? endDate : null,
+          startTime: formatTimeWithSeconds(startTime),
+          endTime: formatTimeWithSeconds(endTime),
           studyMode,
           location:
             studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
@@ -313,10 +451,17 @@ export function CreateSessionModal({
           subjectId: null,
           partnerUserId: friend!.user_id,
           partnerUserName: friend!.full_name,
+          recurrenceType: isRecurring ? "WEEKLY" : "NONE",
+          repeatDays: isRecurring ? repeatDays : [],
         };
 
         const response = await createPairStudySession(payload);
+        if (!response || !isApiSuccess(response)) {
+          toast.error(response?.message || "Tạo lịch học 1-1 thất bại");
+          return;
+        }
         const createdSession = response.data;
+        const totalCreated = createdSession.totalCreated ?? expectedSessionsCount;
 
         const newSession: StudySessionVm = {
           id: createdSession.id,
@@ -339,7 +484,9 @@ export function CreateSessionModal({
             friend!.full_name,
         };
 
+        toast.success(`Đã tạo thành công ${totalCreated} buổi học`);
         onCreate(newSession);
+        window.dispatchEvent(new Event("study_session_updated"));
         resetForm();
         onClose();
         return;
@@ -348,8 +495,10 @@ export function CreateSessionModal({
       const payload = {
         title,
         description,
-        startTime: formatLocalDateTime(startTime),
-        endTime: formatLocalDateTime(endTime),
+        startDate,
+        endDate: isRecurring ? endDate : null,
+        startTime: formatTimeWithSeconds(startTime),
+        endTime: formatTimeWithSeconds(endTime),
         studyMode,
         location:
           studyMode === "OFFLINE" || studyMode === "HYBRID" ? location : "",
@@ -357,14 +506,20 @@ export function CreateSessionModal({
         sessionType: "GROUP" as const,
         subjectName: subjectName || selectedGroup?.subjectName || "",
         subjectId,
+        recurrenceType: isRecurring ? "WEEKLY" : "NONE",
+        repeatDays: isRecurring ? repeatDays : [],
       };
 
       const response = await createGroupStudySession(
         selectedGroup!.id,
         payload,
       );
-
+      if (!response || !isApiSuccess(response)) {
+        toast.error(response?.message || "Tạo lịch học nhóm thất bại");
+        return;
+      }
       const createdSession = response.data;
+      const totalCreated = createdSession.totalCreated ?? expectedSessionsCount;
 
       const newSession: StudySessionVm = {
         id: createdSession.id,
@@ -385,12 +540,15 @@ export function CreateSessionModal({
         membersCount: selectedGroup!.maxMembers,
       };
 
+      toast.success(`Đã tạo thành công ${totalCreated} buổi học`);
       onCreate(newSession);
+      window.dispatchEvent(new Event("study_session_updated"));
       resetForm();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setGroupError("Tạo lịch học nhóm thất bại");
+      const errMsg = error.response?.data?.message || error.message || "Tạo lịch học thất bại";
+      toast.error(errMsg);
     } finally {
       setIsCreating(false);
     }
@@ -660,14 +818,26 @@ export function CreateSessionModal({
           </div>
 
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <label className="space-y-2">
               <span className="text-sm font-semibold text-gray-700">
-                Bắt đầu
+                Ngày bắt đầu
               </span>
-
               <input
-                type="datetime-local"
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+                required
+                className={inputClass}
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-gray-700">
+                Giờ bắt đầu
+              </span>
+              <input
+                type="time"
                 value={startTime}
                 onChange={(event) => setStartTime(event.target.value)}
                 required
@@ -677,17 +847,113 @@ export function CreateSessionModal({
 
             <label className="space-y-2">
               <span className="text-sm font-semibold text-gray-700">
-                Kết thúc
+                Giờ kết thúc
               </span>
-
               <input
-                type="datetime-local"
+                type="time"
                 value={endTime}
                 onChange={(event) => setEndTime(event.target.value)}
                 required
                 className={inputClass}
               />
             </label>
+          </div>
+
+          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-4">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setIsRecurring(checked);
+                  setRecurrenceType(checked ? "WEEKLY" : "NONE");
+                  if (!checked) {
+                    setRepeatDays([]);
+                  }
+                }}
+                className="h-4.5 w-4.5 rounded border-gray-300 text-blue-600 focus:ring-blue-200"
+              />
+              <div>
+                <span className="text-sm font-semibold text-gray-800">Lặp lại lịch học</span>
+                <span className="block text-xs text-gray-400 mt-0.5">Tạo chuỗi lịch lặp lại hàng tuần tự động</span>
+              </div>
+            </label>
+
+            {isRecurring && (
+              <div className="space-y-4 border-t border-gray-100 pt-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-xs font-bold text-gray-600 uppercase tracking-wider block">
+                      Ngày kết thúc lặp
+                    </span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      min={startDate}
+                      max={getLastDayOfMonth(startDate)}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      required={isRecurring}
+                      className={inputClass}
+                    />
+                  </label>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-gray-600 uppercase tracking-wider block">
+                    Chọn các ngày lặp trong tuần
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS.map((day) => {
+                      const isSel = repeatDays.includes(day.value);
+                      return (
+                        <button
+                          key={day.value}
+                          type="button"
+                          onClick={() => toggleDay(day.value)}
+                          className={
+                            isSel
+                              ? "bg-blue-500 text-white border-blue-500 font-semibold text-sm h-10 w-10 rounded-full transition-all shrink-0 border"
+                              : "bg-white text-gray-600 border-gray-200 font-semibold text-sm h-10 w-10 rounded-full transition-all shrink-0 border hover:bg-gray-50"
+                          }
+                        >
+                          {day.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="bg-blue-50/50 border border-blue-100/50 rounded-lg p-3 text-xs text-gray-600 space-y-1">
+                  <div>
+                    <strong>Dự kiến tạo: </strong>
+                    <span className={weeklyDates.length === 0 ? "text-red-500 font-semibold" : "font-semibold"}>
+                      {weeklyDates.length} buổi học
+                    </span>
+                  </div>
+                  {weeklyDates.length > 0 && (
+                    <div className="text-[11px] text-gray-500">
+                      Các ngày: {formattedDatesList}
+                    </div>
+                  )}
+                  {isRecurring && repeatDays.length === 0 && (
+                    <div className="text-red-500 font-medium">
+                      Vui lòng chọn ít nhất một ngày lặp trong tuần
+                    </div>
+                  )}
+                  {isRecurring && repeatDays.length > 0 && weeklyDates.length === 0 && (
+                    <div className="text-red-500 font-medium">
+                      Không tìm thấy ngày phù hợp nào trong khoảng từ {startDate} đến {endDate}
+                    </div>
+                  )}
+                  {weeklyDates.length > 31 && (
+                    <div className="text-red-500 font-medium">
+                      Không được tạo quá 31 buổi học (hiện tại: {weeklyDates.length} buổi)
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {(studyMode === "OFFLINE" || studyMode === "HYBRID") && (
@@ -732,16 +998,21 @@ export function CreateSessionModal({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isCreating}
-            className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-blue-400 transition-colors flex items-center gap-2 justify-center"
+            disabled={
+              isCreating ||
+              (isRecurring && (repeatDays.length === 0 || weeklyDates.length === 0 || weeklyDates.length > 31))
+            }
+            className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-blue-450 transition-colors flex items-center gap-2 justify-center min-w-[120px]"
           >
             {isCreating ? (
               <>
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
                 Đang tạo...
               </>
+            ) : isRecurring ? (
+              `Tạo ${expectedSessionsCount} buổi học`
             ) : (
-              "Tạo lịch"
+              "Tạo lịch học"
             )}
           </button>
         </div>

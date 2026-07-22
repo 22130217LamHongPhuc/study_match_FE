@@ -56,12 +56,12 @@ function toLocalDateTimeParam(date: Date) {
   return localDate.toISOString().slice(0, 19);
 }
 
-function getCurrentWeekRange() {
+function getWeekRange(offset: number) {
   const startOfWeek = new Date();
   const day = startOfWeek.getDay();
   const diffToMonday = day === 0 ? -6 : 1 - day;
 
-  startOfWeek.setDate(startOfWeek.getDate() + diffToMonday);
+  startOfWeek.setDate(startOfWeek.getDate() + diffToMonday + offset * 7);
   startOfWeek.setHours(0, 0, 0, 0);
 
   const endOfWeek = new Date(startOfWeek);
@@ -69,8 +69,24 @@ function getCurrentWeekRange() {
   endOfWeek.setHours(0, 0, 0, 0);
 
   return {
+    startOfWeek,
+    endOfWeek,
     startFrom: toLocalDateTimeParam(startOfWeek),
     startTo: toLocalDateTimeParam(endOfWeek),
+  };
+}
+
+function getTodayRange() {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const endOfToday = new Date(startOfToday);
+  endOfToday.setDate(startOfToday.getDate() + 1);
+  endOfToday.setHours(0, 0, 0, 0);
+
+  return {
+    startFrom: toLocalDateTimeParam(startOfToday),
+    startTo: toLocalDateTimeParam(endOfToday),
   };
 }
 
@@ -94,21 +110,27 @@ function matchesFilter(session: StudySessionVm, filter: ScheduleFilter) {
   return session.sessionType === filter;
 }
 
-function isSessionInCurrentWeek(session: StudySessionVm) {
-  const { startFrom, startTo } = getCurrentWeekRange();
+function isSessionInWeek(session: StudySessionVm, offset: number) {
+  const { startFrom, startTo } = getWeekRange(offset);
   return session.startTime >= startFrom && session.startTime < startTo;
 }
 
+function isSessionToday(session: StudySessionVm) {
+  const today = new Date().toDateString();
+  return new Date(session.startTime).toDateString() === today;
+}
+
 function resolvePartnerName(
-  session: StudySessionResponse,
+  session: StudySessionResponse | StudySessionVm,
   friendsById: Map<number, FriendListItem>,
 ) {
-  const partnerName = session.partnerUserName ?? session.partnerName;
+  const partnerUserName = "partnerUserName" in session ? session.partnerUserName : undefined;
+  const partnerName = partnerUserName ?? session.partnerName;
 
   if (!partnerName) return undefined;
 
-  if (session.partnerUserName) {
-    return session.partnerUserName;
+  if (partnerUserName) {
+    return partnerUserName;
   }
 
   const match = partnerName.match(/^User\s*#(\d+)$/i);
@@ -142,6 +164,8 @@ function mapSessionToVm(
     groupName: session.groupName ?? undefined,
     membersCount: session.membersCount ?? undefined,
     subjectName: session.subjectName ?? undefined,
+    recurrenceId: session.recurrenceId ?? undefined,
+    recurrenceType: session.recurrenceType ?? undefined,
   };
 }
 
@@ -182,10 +206,15 @@ export default function StudySessionPage() {
   );
   const [feedbackEligibility, setFeedbackEligibility] =
     useState<FeedbackEligibilityResponse | null>(null);
-  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [loadingAll, setLoadingAll] = useState(true);
+  const [loadingCalendar, setLoadingCalendar] = useState(true);
+  const [loadingToday, setLoadingToday] = useState(true);
+  const [friendsById, setFriendsById] = useState<Map<number, FriendListItem>>(new Map());
   const [sessionError, setSessionError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [reloadTrigger, setReloadTrigger] = useState(0);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [todaySessions, setTodaySessions] = useState<StudySessionVm[]>([]);
 
   const currentUserId = Number(localStorage.getItem("userId"));
   const querySessionId = searchParams.get("sessionId");
@@ -232,105 +261,189 @@ export default function StudySessionPage() {
   }, [querySessionId, currentUserId]);
 
   useEffect(() => {
+    if (!Number.isFinite(currentUserId) || currentUserId <= 0) return;
+    getFriendsListService(currentUserId)
+      .then((res) => {
+        const friends = res.data ?? [];
+        setFriendsById(new Map<number, FriendListItem>(
+          friends.map((friend: any) => [friend.user_id, friend]),
+        ));
+      })
+      .catch((err) => {
+        console.error("Lỗi khi tải danh sách bạn bè:", err);
+      });
+  }, [currentUserId]);
+
+  useEffect(() => {
+    if (friendsById.size === 0) return;
+
+    setSessions((prev) =>
+      prev.map((session) => ({
+        ...session,
+        partnerName: resolvePartnerName(session, friendsById) || session.partnerName,
+      }))
+    );
+    setCalendarSessions((prev) =>
+      prev.map((session) => ({
+        ...session,
+        partnerName: resolvePartnerName(session, friendsById) || session.partnerName,
+      }))
+    );
+    setTodaySessions((prev) =>
+      prev.map((session) => ({
+        ...session,
+        partnerName: resolvePartnerName(session, friendsById) || session.partnerName,
+      }))
+    );
+  }, [friendsById]);
+
+  useEffect(() => {
     let mounted = true;
 
-    async function loadSessions() {
+    async function loadAll() {
       if (!Number.isFinite(currentUserId) || currentUserId <= 0) {
         if (mounted) {
           setSessions([]);
-          setCalendarSessions([]);
           setSessionPage(createEmptyPage(pageSize, page));
           setSessionError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
-          setLoadingSessions(false);
+          setLoadingAll(false);
         }
         return;
       }
 
       try {
-        setLoadingSessions(true);
+        setLoadingAll(true);
         setSessionError("");
 
         const filterParams = getSessionParamsByFilter(filter);
-        const weekRange = getCurrentWeekRange();
-
-        const [sessionResponse, calendarResponse, friendsResponse] =
-          await Promise.all([
-            getUserStudySessions(currentUserId, {
-              ...filterParams,
-              page,
-              size: pageSize,
-            }),
-            getUserStudySessions(currentUserId, {
-              ...filterParams,
-              ...weekRange,
-              page: 0,
-              size: CALENDAR_SESSION_PAGE_SIZE,
-            }),
-            getFriendsListService(currentUserId),
-          ]);
-
-        const content = sessionResponse.data?.content ?? [];
-        const calendarContent = calendarResponse.data?.content ?? [];
-        const friends = friendsResponse.data ?? [];
-        const friendsById = new Map<number, FriendListItem>(
-          friends.map((friend: any) => [friend.user_id, friend]),
-        );
+        const response = await getUserStudySessions(currentUserId, {
+          ...filterParams,
+          page,
+          size: pageSize,
+        });
 
         if (!mounted) return;
 
+        const content = response.data?.content ?? [];
         setSessions(
           content.map((session: any) => mapSessionToVm(session, friendsById)),
         );
-        setCalendarSessions(
-          calendarContent.map((session: any) =>
-            mapSessionToVm(session, friendsById),
-          ),
-        );
-        setSessionPage(sessionResponse.data ?? createEmptyPage(pageSize, page));
+        setSessionPage(response.data ?? createEmptyPage(pageSize, page));
       } catch {
         if (!mounted) return;
         setSessions([]);
-        setCalendarSessions([]);
         setSessionPage(createEmptyPage(pageSize, page));
-        setSessionError("Không thể tải lịch học của bạn");
+        setSessionError("Không thể tải danh sách lịch học");
       } finally {
         if (mounted) {
-          setLoadingSessions(false);
+          setLoadingAll(false);
         }
       }
     }
 
-    loadSessions();
+    loadAll();
 
     return () => {
       mounted = false;
     };
   }, [currentUserId, filter, page, pageSize, reloadTrigger]);
 
-  const todaySessions = useMemo(() => {
-    const today = new Date().toDateString();
+  useEffect(() => {
+    let mounted = true;
 
-    return calendarSessions
-      .filter((session) => new Date(session.startTime).toDateString() === today)
-      .sort(
-        (a, b) =>
-          new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-      );
-  }, [calendarSessions]);
+    async function loadCalendar() {
+      if (!Number.isFinite(currentUserId) || currentUserId <= 0) {
+        if (mounted) {
+          setCalendarSessions([]);
+          setLoadingCalendar(false);
+        }
+        return;
+      }
+
+      try {
+        setLoadingCalendar(true);
+
+        const filterParams = getSessionParamsByFilter(filter);
+        const weekRange = getWeekRange(weekOffset);
+        const response = await getUserStudySessions(currentUserId, {
+          ...filterParams,
+          ...weekRange,
+          page: 0,
+          size: CALENDAR_SESSION_PAGE_SIZE,
+        });
+
+        if (!mounted) return;
+
+        const content = response.data?.content ?? [];
+        setCalendarSessions(
+          content.map((session: any) => mapSessionToVm(session, friendsById)),
+        );
+      } catch {
+        if (!mounted) return;
+        setCalendarSessions([]);
+      } finally {
+        if (mounted) {
+          setLoadingCalendar(false);
+        }
+      }
+    }
+
+    loadCalendar();
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentUserId, filter, weekOffset, reloadTrigger]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadToday() {
+      if (!Number.isFinite(currentUserId) || currentUserId <= 0) {
+        if (mounted) {
+          setTodaySessions([]);
+          setLoadingToday(false);
+        }
+        return;
+      }
+
+      try {
+        setLoadingToday(true);
+
+        const filterParams = getSessionParamsByFilter(filter);
+        const todayRange = getTodayRange();
+        const response = await getUserStudySessions(currentUserId, {
+          ...filterParams,
+          ...todayRange,
+          page: 0,
+          size: CALENDAR_SESSION_PAGE_SIZE,
+        });
+
+        if (!mounted) return;
+
+        const content = response.data?.content ?? [];
+        setTodaySessions(
+          content.map((session: any) => mapSessionToVm(session, friendsById)),
+        );
+      } catch {
+        if (!mounted) return;
+        setTodaySessions([]);
+      } finally {
+        if (mounted) {
+          setLoadingToday(false);
+        }
+      }
+    }
+
+    loadToday();
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentUserId, filter, reloadTrigger]);
 
   const weekSessions = useMemo(() => {
-    const now = new Date();
-
-    const startOfWeek = new Date(now);
-    const day = startOfWeek.getDay();
-    const diffToMonday = day === 0 ? -6 : 1 - day;
-
-    startOfWeek.setDate(startOfWeek.getDate() + diffToMonday);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 7);
-    endOfWeek.setHours(0, 0, 0, 0);
+    const { startOfWeek, endOfWeek } = getWeekRange(weekOffset);
 
     return calendarSessions
       .filter((session) => {
@@ -344,7 +457,7 @@ export default function StudySessionPage() {
         (a, b) =>
           new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
       );
-  }, [calendarSessions]);
+  }, [calendarSessions, weekOffset]);
 
   const handleCreateSession = (newSession: StudySessionVm) => {
     if (matchesFilter(newSession, filter)) {
@@ -361,8 +474,12 @@ export default function StudySessionPage() {
       }));
     }
 
-    if (matchesFilter(newSession, filter) && isSessionInCurrentWeek(newSession)) {
+    if (matchesFilter(newSession, filter) && isSessionInWeek(newSession, weekOffset)) {
       setCalendarSessions((prev) => [newSession, ...prev]);
+    }
+
+    if (matchesFilter(newSession, filter) && isSessionToday(newSession)) {
+      setTodaySessions((prev) => [newSession, ...prev]);
     }
 
     setIsCreateOpen(false);
@@ -396,9 +513,11 @@ export default function StudySessionPage() {
       const response = await getStudySessionById(sessionId, currentUserId);
       if (response.data) {
         const updatedSession = mapSessionToVm(response.data, new Map());
-
         setSessions((prev) => applySessionUpdate(prev, updatedSession, filter));
         setCalendarSessions((prev) =>
+          applySessionUpdate(prev, updatedSession, filter),
+        );
+        setTodaySessions((prev) =>
           applySessionUpdate(prev, updatedSession, filter),
         );
         setSelectedSession(updatedSession);
@@ -418,18 +537,7 @@ export default function StudySessionPage() {
     }
   }, [currentUserId, filter, joinedSession, sessions]);
 
-  if (loadingSessions) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-blue-50/30 px-4 py-5">
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-5">
-          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-100 border-t-blue-500" />
-          <span className="text-sm font-medium text-gray-600">
-            Đang tải lịch học...
-          </span>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-blue-50/30 px-4 py-5 sm:px-6 lg:px-8">
@@ -442,13 +550,16 @@ export default function StudySessionPage() {
           </div>
         )}
 
-        <QuickStats sessions={weekSessions} />
+        <QuickStats sessions={weekSessions} loading={loadingCalendar} />
 
         <FilterTabs activeFilter={filter} onChange={handleFilterChange} />
 
         <WeeklyCalendar
           sessions={weekSessions}
           onSelectSession={setSelectedSession}
+          weekOffset={weekOffset}
+          onWeekOffsetChange={setWeekOffset}
+          loading={loadingCalendar}
         />
 
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[7fr_3fr]">
@@ -465,10 +576,12 @@ export default function StudySessionPage() {
               setPage(0);
             }}
             onSelectSession={setSelectedSession}
+            loading={loadingAll}
           />
           <TodaySessionList
             sessions={todaySessions}
             onSelectSession={setSelectedSession}
+            loading={loadingToday}
           />
         </div>
       </div>
@@ -487,6 +600,9 @@ export default function StudySessionPage() {
             applySessionUpdate(prev, updatedSession, filter),
           );
           setCalendarSessions((prev) =>
+            applySessionUpdate(prev, updatedSession, filter),
+          );
+          setTodaySessions((prev) =>
             applySessionUpdate(prev, updatedSession, filter),
           );
           setSelectedSession(updatedSession);

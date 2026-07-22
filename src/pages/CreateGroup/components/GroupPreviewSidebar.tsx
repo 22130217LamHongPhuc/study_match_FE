@@ -1,8 +1,7 @@
 import { AutoAwesomeMosaicOutlined } from "@mui/icons-material";
 import { CircularProgress } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { DAYS } from "../../Onboarding/components/constants";
-import type { FreeTime } from "../../Onboarding/components/types";
+
 import {
   getFriendsListService,
   type FriendListItem,
@@ -43,7 +42,6 @@ interface CreateGroupDraft {
   mainSubject: string;
   maxMembers: number;
   visibility: "public" | "private";
-  freeTime: FreeTime;
   avatarPreview?: string | null;
 }
 
@@ -111,13 +109,7 @@ export default function GroupPreviewSidebar({
     );
   }, [friends, searchTerm]);
 
-  const totalSelectedSlots = useMemo(() => {
-    return DAYS.reduce(
-      (acc, d) =>
-        acc + Object.values(draft.freeTime[d.id]).filter(Boolean).length,
-      0,
-    );
-  }, [draft.freeTime]);
+
 
   const invitedMembers = useMemo(
     () => friends.filter((friend) => invitedUserIds.includes(friend.user_id)),
@@ -170,11 +162,7 @@ export default function GroupPreviewSidebar({
               <Badge tone="muted">Chưa chọn môn</Badge>
             )}
 
-            {totalSelectedSlots > 0 ? (
-              <Badge>{totalSelectedSlots} slot rảnh</Badge>
-            ) : (
-              <Badge tone="muted">Chưa chọn thời gian</Badge>
-            )}
+
           </div>
         </div>
 

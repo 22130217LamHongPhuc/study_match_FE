@@ -156,6 +156,38 @@ export async function respondToStudySession(
   return response;
 }
 
+export async function respondToMultipleStudySessions(
+  userId: number,
+  sessionIds: number[],
+  status: "ACCEPTED" | "DECLINED",
+): Promise<APIResponseData<void>> {
+  const response = await apiFetch<void>(
+    `/api/study-sessions/participants/${userId}/respond-bulk`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ sessionIds, status }),
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
+export async function getSessionsByRecurrenceId(
+  recurrenceId: string,
+  userId: number,
+): Promise<APIResponseData<StudySessionResponse[]>> {
+  const response = await apiFetch<StudySessionResponse[]>(
+    `/api/study-sessions/recurrence/${recurrenceId}?userId=${userId}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL,
+  );
+
+  return response;
+}
+
 export async function getConfirmationStats(
   sessionId: number,
   userId: number,

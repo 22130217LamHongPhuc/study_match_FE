@@ -1,6 +1,4 @@
 import { Settings2 } from "lucide-react";
-import type { FreeTime } from "../../Onboarding/components/types";
-import FreeTimePicker from "./FreeTimePicker";
 import SectionCard from "./SectionCard";
 
 export type Visibility = "public" | "private";
@@ -10,8 +8,6 @@ interface GroupSettingsSectionProps {
   onMaxMembersChange: (next: number) => void;
   visibility: Visibility;
   onVisibilityChange: (next: Visibility) => void;
-  freeTime: FreeTime;
-  onFreeTimeChange: (next: FreeTime) => void;
 }
 
 export default function GroupSettingsSection({
@@ -19,8 +15,6 @@ export default function GroupSettingsSection({
   onMaxMembersChange,
   visibility,
   onVisibilityChange,
-  freeTime,
-  onFreeTimeChange,
 }: GroupSettingsSectionProps) {
   return (
     <SectionCard
@@ -74,15 +68,7 @@ export default function GroupSettingsSection({
           />
         </div>
 
-        <div className="pt-2">
-          <div className="mb-3">
-            <p className="text-sm font-semibold text-slate-800">
-              Thời gian rảnh của nhóm
-            </p>
-          </div>
 
-          <FreeTimePicker value={freeTime} onChange={onFreeTimeChange} />
-        </div>
       </div>
     </SectionCard>
   );
