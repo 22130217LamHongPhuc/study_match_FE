@@ -11,6 +11,8 @@ import {
   respondToStudySession,
   joinStudySession,
   cancelStudySession,
+  respondToMultipleStudySessions,
+  getSessionsByRecurrenceId,
 } from "../../../services/StudySessionService";
 import { toast } from "react-toastify";
 import {
@@ -42,6 +44,36 @@ function formatDateTime(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatSessionTimeRange(startTimeStr: string, endTimeStr: string) {
+  const start = new Date(startTimeStr);
+  const end = new Date(endTimeStr);
+  
+  const timeStr = `${start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
+  const dateStr = start.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+  
+  return { timeStr, dateStr };
+}
+
+function formatSessionSingleOptionDate(s: StudySessionVm) {
+  const start = new Date(s.startTime);
+  const end = new Date(s.endTime);
+  const weekday = start.toLocaleDateString("vi-VN", { weekday: "long" });
+  const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  const dateStr = start.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const timeStr = `${start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}–${end.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
+  return `${capitalizedWeekday}, ${dateStr} · ${timeStr}`;
+}
+
+function getStudyModeBadge(mode: string) {
+  if (mode === "ONLINE") {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Online</span>;
+  }
+  if (mode === "OFFLINE") {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">Trực tiếp</span>;
+  }
+  return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200">Kết hợp</span>;
 }
 
 function getParticipantStatusLabel(status: string) {
@@ -93,6 +125,8 @@ function mapResponseToVm(
     groupName: response.groupName ?? undefined,
     membersCount: response.membersCount ?? undefined,
     subjectName: response.subjectName ?? undefined,
+    recurrenceId: response.recurrenceId ?? undefined,
+    recurrenceType: response.recurrenceType ?? undefined,
   };
 }
 
@@ -157,6 +191,11 @@ export function SessionDetailModal({
   );
   const [joining, setJoining] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
+  const [recurrenceSelectType, setRecurrenceSelectType] = useState<"SINGLE" | "ALL" | "CUSTOM">("SINGLE");
+  const [recurrenceSessions, setRecurrenceSessions] = useState<StudySessionResponse[]>([]);
+  const [selectedRecurrenceSessionIds, setSelectedRecurrenceSessionIds] = useState<number[]>([]);
+  const [loadingRecurrence, setLoadingRecurrence] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -313,6 +352,101 @@ export function SessionDetailModal({
     } catch {
       setError("Không thể gửi phản hồi cho lịch học");
     } finally {
+      setResponding(null);
+    }
+  };
+
+  const handleOpenRecurrenceModal = async (status: "ACCEPTED" | "DECLINED") => {
+    if (!session) return;
+    const userIdVal = Number(localStorage.getItem("userId"));
+    if (!Number.isFinite(userIdVal) || userIdVal <= 0) {
+      setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+      return;
+    }
+    const recId = currentSession?.recurrenceId || session?.recurrenceId;
+    if (!recId) {
+      await handleRespond(status);
+      return;
+    }
+
+    try {
+      setResponding(status);
+      setLoadingRecurrence(true);
+      setError("");
+      const response = await getSessionsByRecurrenceId(recId, userIdVal);
+      if (response.data) {
+        // Filter to only pending sessions for the user
+        const pendingSessions = response.data.filter(
+          (s) => s.participantStatus === "PENDING"
+        );
+
+        if (pendingSessions.length <= 1) {
+          // If only 1 or less pending sessions are left, handle directly as a single session response!
+          await handleRespond(status);
+          return;
+        }
+
+        setRecurrenceSessions(pendingSessions);
+        setSelectedRecurrenceSessionIds(pendingSessions.map((s) => s.id));
+        setRecurrenceSelectType("SINGLE");
+        setShowRecurrenceModal(true);
+      } else {
+        setError("Không thể tải danh sách chuỗi lịch lặp");
+      }
+    } catch {
+      setError("Có lỗi xảy ra khi tải chuỗi lịch lặp");
+    } finally {
+      setLoadingRecurrence(false);
+    }
+  };
+
+  const handleRecurrenceRespondSubmit = async () => {
+    if (!session || !responding) return;
+    const userIdVal = Number(localStorage.getItem("userId"));
+    if (!Number.isFinite(userIdVal) || userIdVal <= 0) {
+      setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    let idsToRespond: number[] = [];
+    if (recurrenceSelectType === "SINGLE") {
+      idsToRespond = [session.id];
+    } else if (recurrenceSelectType === "ALL") {
+      idsToRespond = recurrenceSessions.map(s => s.id);
+    } else {
+      idsToRespond = selectedRecurrenceSessionIds;
+    }
+
+    if (idsToRespond.length === 0) {
+      toast.warning("Vui lòng chọn ít nhất một buổi học");
+      return;
+    }
+
+    try {
+      setLoadingRecurrence(true);
+      setError("");
+      const response = await respondToMultipleStudySessions(userIdVal, idsToRespond, responding);
+      if (response.success) {
+        toast.success(
+          responding === "ACCEPTED"
+            ? `Đã xác nhận tham gia ${idsToRespond.length} buổi học`
+            : `Đã từ chối tham gia ${idsToRespond.length} buổi học`
+        );
+        setShowRecurrenceModal(false);
+        const detailResponse = await getStudySessionById(session.id, userIdVal);
+        if (detailResponse.data) {
+          setDetail(detailResponse.data);
+          const updatedSession = mapResponseToVm(detailResponse.data, session);
+          onSessionUpdated?.(updatedSession);
+        }
+        window.dispatchEvent(new Event("study_session_updated"));
+      } else {
+        setError("Không thể cập nhật trạng thái chuỗi lịch học");
+      }
+    } catch {
+      setError("Có lỗi xảy ra khi cập nhật trạng thái chuỗi lịch học");
+    } finally {
+      setLoadingRecurrence(false);
       setResponding(null);
     }
   };
@@ -603,7 +737,7 @@ export function SessionDetailModal({
                   <>
                     <button
                       type="button"
-                      onClick={() => handleRespond("ACCEPTED")}
+                      onClick={() => handleOpenRecurrenceModal("ACCEPTED")}
                       disabled={responding !== null}
                       className="flex-1 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm shadow-blue-600/10"
                     >
@@ -611,7 +745,7 @@ export function SessionDetailModal({
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleRespond("DECLINED")}
+                      onClick={() => handleOpenRecurrenceModal("DECLINED")}
                       disabled={responding !== null}
                       className="flex-1 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-all"
                     >
@@ -649,7 +783,7 @@ export function SessionDetailModal({
             {!isCreator && !isCancelled && !isCompleted && currentSession?.participantStatus === "ACCEPTED" && (
               <button
                 type="button"
-                onClick={() => handleRespond("DECLINED")}
+                onClick={() => handleOpenRecurrenceModal("DECLINED")}
                 disabled={responding !== null}
                 className="w-full rounded-xl px-5 py-2.5 text-xs font-bold transition-all border bg-white border-rose-200 text-rose-700 hover:bg-rose-50 disabled:opacity-50"
               >
@@ -660,7 +794,7 @@ export function SessionDetailModal({
             {!isCreator && !isCancelled && !isCompleted && currentSession?.participantStatus === "DECLINED" && (
               <button
                 type="button"
-                onClick={() => handleRespond("ACCEPTED")}
+                onClick={() => handleOpenRecurrenceModal("ACCEPTED")}
                 disabled={responding !== null}
                 className="w-full rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/10 transition-all hover:bg-blue-700 disabled:opacity-50"
               >
@@ -681,6 +815,206 @@ export function SessionDetailModal({
           </div>
         )}
       </div>
+
+      {showRecurrenceModal && (
+        <div className="fixed inset-0 z-[11000] flex items-center justify-center bg-gray-900/50 px-4 py-6">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden animate-scale-in">
+            <div className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5 shrink-0">
+              <h3 className="text-base font-bold text-gray-900 leading-snug">
+                {responding === "ACCEPTED" ? "Xác nhận tham gia" : "Từ chối lịch học"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRecurrenceModal(false);
+                  setResponding(null);
+                }}
+                className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+              <p className="text-sm font-semibold text-gray-800">
+                Bạn muốn áp dụng cho những buổi nào?
+              </p>
+
+              <div className="space-y-3">
+                {session && (
+                  <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="recurrenceSelectType"
+                      checked={recurrenceSelectType === "SINGLE"}
+                      onChange={() => setRecurrenceSelectType("SINGLE")}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-200"
+                    />
+                    <div>
+                      <span className="text-sm font-semibold text-gray-800">
+                        Chỉ buổi này
+                      </span>
+                      <span className="block text-xs text-gray-500 mt-0.5">
+                        {formatSessionSingleOptionDate(session)}
+                      </span>
+                    </div>
+                  </label>
+                )}
+
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer select-none">
+                  <input
+                    type="radio"
+                    name="recurrenceSelectType"
+                    checked={recurrenceSelectType === "ALL"}
+                    onChange={() => setRecurrenceSelectType("ALL")}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-200"
+                  />
+                  <div>
+                    <span className="text-sm font-semibold text-gray-800">
+                      Tất cả {recurrenceSessions.length} buổi chưa phản hồi
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-0.5">
+                      Áp dụng cho các buổi sắp tới trong chuỗi
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer select-none">
+                  <input
+                    type="radio"
+                    name="recurrenceSelectType"
+                    checked={recurrenceSelectType === "CUSTOM"}
+                    onChange={() => setRecurrenceSelectType("CUSTOM")}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-200"
+                  />
+                  <div>
+                    <span className="text-sm font-semibold text-gray-800">
+                      Tự chọn buổi học
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-0.5">
+                      Chọn từng buổi cụ thể
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {recurrenceSelectType === "CUSTOM" && (
+                <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100 bg-gray-50/50 max-h-48 overflow-y-auto">
+                  {recurrenceSessions.map((s) => {
+                    const isSel = selectedRecurrenceSessionIds.includes(s.id);
+                    return (
+                       <label
+                        key={s.id}
+                        className={`flex items-start gap-3 px-4 py-3.5 hover:bg-white cursor-pointer select-none transition-colors ${
+                          isSel ? "bg-blue-50/20" : ""
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSel}
+                          onChange={() => {
+                            if (isSel) {
+                              setSelectedRecurrenceSessionIds(
+                                selectedRecurrenceSessionIds.filter((id) => id !== s.id)
+                              );
+                            } else {
+                              setSelectedRecurrenceSessionIds([
+                                ...selectedRecurrenceSessionIds,
+                                s.id,
+                              ]);
+                            }
+                          }}
+                          className="mt-1 h-4.5 w-4.5 rounded border-gray-300 text-blue-600 focus:ring-blue-200"
+                        />
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-xs font-bold text-gray-800 truncate">
+                              {s.title}
+                            </div>
+                            {getStudyModeBadge(s.studyMode)}
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5 text-gray-400" />
+                              {(() => {
+                                const { timeStr, dateStr } = formatSessionTimeRange(s.startTime, s.endTime);
+                                return (
+                                  <>
+                                    <span className="font-semibold text-gray-700">{timeStr}</span>, {dateStr}
+                                  </>
+                                );
+                              })()}
+                            </span>
+                          </div>
+
+                          {(s.studyMode === "ONLINE" && s.meetingUrl) && (
+                            <div className="flex items-center gap-1 text-[10px] text-blue-600 font-medium">
+                              <Video className="h-3.5 w-3.5 text-blue-500" />
+                              <span className="truncate">{s.meetingUrl}</span>
+                            </div>
+                          )}
+
+                          {(s.studyMode === "OFFLINE" && s.location) && (
+                            <div className="flex items-center gap-1 text-[10px] text-gray-600 font-medium">
+                              <MapPin className="h-3.5 w-3.5 text-amber-500" />
+                              <span className="truncate">{s.location}</span>
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap gap-1.5 pt-0.5">
+                            {s.subjectName && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-medium text-gray-600">
+                                <BookOpen className="h-3 w-3" />
+                                {s.subjectName}
+                              </span>
+                            )}
+                            {s.groupName && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-medium text-gray-600">
+                                <Users className="h-3 w-3" />
+                                {s.groupName}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-gray-100 bg-white px-6 py-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRecurrenceModal(false);
+                  setResponding(null);
+                }}
+                disabled={loadingRecurrence}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                Quay lại
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRecurrenceRespondSubmit}
+                disabled={loadingRecurrence}
+                className={`rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 transition-colors ${
+                  responding === "ACCEPTED"
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-rose-600 hover:bg-rose-700"
+                }`}
+              >
+                {loadingRecurrence
+                  ? "Đang xử lý..."
+                  : "Xác nhận"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

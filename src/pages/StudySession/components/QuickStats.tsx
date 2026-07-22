@@ -2,9 +2,33 @@ import type { StudySessionVm } from "../types";
 
 interface QuickStatsProps {
   sessions: StudySessionVm[];
+  loading?: boolean;
 }
 
-export function QuickStats({ sessions }: QuickStatsProps) {
+export function QuickStatsSkeleton() {
+  return (
+    <section className="grid grid-cols-2 gap-4 lg:grid-cols-4 animate-pulse">
+      {Array.from({ length: 4 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="rounded-xl border border-gray-200 bg-white p-5 text-left"
+        >
+          <div className="mb-4 inline-flex h-6 w-20 bg-gray-200 rounded-lg" />
+          <div>
+            <div className="h-9 w-12 bg-gray-300 rounded" />
+            <div className="mt-2 h-4 w-32 bg-gray-150 rounded" />
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+export function QuickStats({ sessions, loading }: QuickStatsProps) {
+  if (loading) {
+    return <QuickStatsSkeleton />;
+  }
+
   const today = new Date().toDateString();
 
   const todayCount = sessions.filter(
@@ -71,3 +95,4 @@ export function QuickStats({ sessions }: QuickStatsProps) {
     </section>
   );
 }
+

@@ -13,9 +13,7 @@ import {
 import { Autocomplete, TextField, CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 
-import { initFreeTime } from "../../Onboarding/components/constants";
-import type { FreeTime, Subject } from "../../Onboarding/components/types";
-import FreeTimePicker from "../../CreateGroup/components/FreeTimePicker";
+import type { Subject } from "../../Onboarding/components/types";
 
 import {
   createStudyGroup,
@@ -36,7 +34,7 @@ interface CreateGroupModalProps {
   onCreated: () => void;
 }
 
-type StepId = 1 | 2 | 3 | 4 | 5;
+type StepId = 1 | 2 | 3 | 4;
 
 interface StepItem {
   id: StepId;
@@ -48,8 +46,7 @@ const STEPS: StepItem[] = [
   { id: 1, name: "Cơ bản", desc: "Tên & Mô tả nhóm" },
   { id: 2, name: "Môn học", desc: "Chọn môn học chính" },
   { id: 3, name: "Thiết lập", desc: "Số lượng & Quyền riêng tư" },
-  { id: 4, name: "Lịch học", desc: "Thời gian rảnh dự kiến" },
-  { id: 5, name: "Bạn bè", desc: "Mời bạn học" }
+  { id: 4, name: "Bạn bè", desc: "Mời bạn học" }
 ];
 
 export default function CreateGroupModal({ open, onClose, onCreated }: CreateGroupModalProps) {
@@ -77,8 +74,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
   const [maxMembers, setMaxMembers] = useState<number>(5);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
 
-  // Step 4: Schedule & Invite Friends
-  const [freeTime, setFreeTime] = useState<FreeTime>(() => initFreeTime());
+  // Step 4: Invite Friends
   const [friends, setFriends] = useState<FriendListItem[]>([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
   const [invitedUserIds, setInvitedUserIds] = useState<number[]>([]);
@@ -103,7 +99,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
   // Load friends
   useEffect(() => {
-    if (!open || step !== 5) return;
+    if (!open || step !== 4) return;
     const loadFriends = async () => {
       setLoadingFriends(true);
       try {
@@ -158,8 +154,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       setStep(3);
     } else if (step === 3) {
       setStep(4);
-    } else if (step === 4) {
-      setStep(5);
     }
   };
 
@@ -179,22 +173,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       return;
     }
 
-    const validSlotCodes = new Set(["ca1", "ca2", "ca3", "ca4", "ca5", "ca6"]);
-    const freeTimeSlots: FreeTimeSlotRequest[] = Object.entries(freeTime).flatMap(([dayKey, slots]) => {
-      const dayNumber = Number(dayKey);
-      if (!Number.isInteger(dayNumber) || dayNumber < 0 || dayNumber > 6) {
-        return [];
-      }
-      const dayOfWeek = dayNumber as DayOfWeek;
-      return Object.entries(slots as Record<string, boolean>)
-        .filter(([slotCodeKey]) => validSlotCodes.has(slotCodeKey))
-        .filter(([, isAvailable]) => Boolean(isAvailable))
-        .map(([slotCodeKey]) => ({
-          dayOfWeek,
-          slotCode: slotCodeKey as SlotCode,
-          isAvailable: true,
-        }));
-    });
+    const freeTimeSlots: FreeTimeSlotRequest[] = [];
 
     const payload: CreateStudyGroupRequest = {
       name: groupName.trim(),
@@ -234,7 +213,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
     setMainSubject(null);
     setMaxMembers(5);
     setVisibility("public");
-    setFreeTime(initFreeTime());
     setInvitedUserIds([]);
     setFriendSearchQuery("");
     onClose();
@@ -492,20 +470,8 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
             </div>
           )}
 
-          {/* STEP 4: Group Schedule */}
+          {/* STEP 4: Invite Friends */}
           {step === 4 && (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <span className="text-sm font-semibold text-gray-700 block">Thời gian rảnh dự kiến của nhóm</span>
-                <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
-                  <FreeTimePicker value={freeTime} onChange={setFreeTime} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 5: Invite Friends */}
-          {step === 5 && (
             <div className="space-y-6">
               <div className="space-y-3">
                 <div>
@@ -630,7 +596,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           </div>
 
           <div>
-            {step < 5 ? (
+            {step < 4 ? (
               <button
                 type="button"
                 onClick={handleNext}
