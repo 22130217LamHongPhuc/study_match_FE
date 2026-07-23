@@ -12,7 +12,23 @@ import {
   type FriendListItem,
 } from "../../../services/FriendService";
 import { toast } from "react-toastify";
-import { ChevronRight, Users, BookOpen } from "lucide-react";
+import { ChevronRight, Users, BookOpen, Sunrise, Sun, MoonStar } from "lucide-react";
+
+export interface SlotConfig {
+  id: string;
+  label: string;
+  time: string;
+  icon: React.ComponentType<any>;
+}
+
+export const SLOTS: SlotConfig[] = [
+  { id: "ca1", label: "Ca 1", time: "7h00–9h15", icon: Sunrise },
+  { id: "ca2", label: "Ca 2", time: "9h30–11h45", icon: Sunrise },
+  { id: "ca3", label: "Ca 3", time: "12h15–14h30", icon: Sun },
+  { id: "ca4", label: "Ca 4", time: "14h50–17h05", icon: Sun },
+  { id: "ca5", label: "Ca 5", time: "17h30–19h45", icon: MoonStar },
+  { id: "ca6", label: "Ca 6", time: "20h00–21h45", icon: MoonStar },
+];
 
 interface CreateSessionModalProps {
   open: boolean;
@@ -63,6 +79,8 @@ export function CreateSessionModal({
   const [location, setLocation] = useState("");
   const [meetingUrl, setMeetingUrl] = useState("");
   const [description, setDescription] = useState("");
+  const [useShift, setUseShift] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   const [groups, setGroups] = useState<StudyGroupDetailResponse[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<number | "">("");
@@ -322,6 +340,38 @@ export function CreateSessionModal({
 
   if (!open) return null;
 
+  const handleSlotSelect = (slotId: string) => {
+    setSelectedSlot(slotId);
+    switch (slotId) {
+      case "ca1":
+        setStartTime("07:00");
+        setEndTime("09:15");
+        break;
+      case "ca2":
+        setStartTime("09:30");
+        setEndTime("11:45");
+        break;
+      case "ca3":
+        setStartTime("12:15");
+        setEndTime("14:30");
+        break;
+      case "ca4":
+        setStartTime("14:50");
+        setEndTime("17:05");
+        break;
+      case "ca5":
+        setStartTime("17:30");
+        setEndTime("19:45");
+        break;
+      case "ca6":
+        setStartTime("20:00");
+        setEndTime("21:45");
+        break;
+      default:
+        break;
+    }
+  };
+
   const resetForm = () => {
     setTitle("");
     setSubjectName("");
@@ -340,6 +390,8 @@ export function CreateSessionModal({
     setDescription("");
     setSessionType("USER_PAIR");
     setStudyMode("ONLINE");
+    setUseShift(false);
+    setSelectedSlot(null);
     setGroups([]);
     setSelectedGroupId("");
     setGroupError("");
@@ -818,45 +870,122 @@ export function CreateSessionModal({
           </div>
 
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <label className="space-y-2">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <span className="text-sm font-semibold text-gray-700">
-                Ngày bắt đầu
+                Phương thức chọn thời gian học
               </span>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
-                required
-                className={inputClass}
-              />
-            </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseShift(false);
+                    setSelectedSlot(null);
+                  }}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                    !useShift
+                      ? "border-blue-500 bg-blue-50 text-blue-600"
+                      : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Nhập giờ tùy chỉnh
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseShift(true);
+                    handleSlotSelect("ca1");
+                  }}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                    useShift
+                      ? "border-blue-500 bg-blue-50 text-blue-600"
+                      : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Chọn theo ca học
+                </button>
+              </div>
+            </div>
 
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-gray-700">
-                Giờ bắt đầu
-              </span>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(event) => setStartTime(event.target.value)}
-                required
-                className={inputClass}
-              />
-            </label>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-gray-700">
+                  Ngày bắt đầu
+                </span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </label>
 
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-gray-700">
-                Giờ kết thúc
-              </span>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(event) => setEndTime(event.target.value)}
-                required
-                className={inputClass}
-              />
-            </label>
+              {!useShift && (
+                <>
+                  <label className="space-y-2">
+                    <span className="text-sm font-semibold text-gray-700">
+                      Giờ bắt đầu
+                    </span>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(event) => setStartTime(event.target.value)}
+                      required
+                      className={inputClass}
+                    />
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-sm font-semibold text-gray-700">
+                      Giờ kết thúc
+                    </span>
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(event) => setEndTime(event.target.value)}
+                      required
+                      className={inputClass}
+                    />
+                  </label>
+                </>
+              )}
+            </div>
+
+            {useShift && (
+              <div className="space-y-3">
+                <span className="text-sm font-semibold text-gray-700 block">
+                  Chọn ca học
+                </span>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {SLOTS.map((slot) => {
+                    const SlotIcon = slot.icon;
+                    const isSelected = selectedSlot === slot.id;
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        onClick={() => handleSlotSelect(slot.id)}
+                        className={`flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all ${
+                          isSelected
+                            ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm"
+                            : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        <SlotIcon size={18} className={`${isSelected ? "text-blue-500" : "text-gray-400"} mb-1.5`} />
+                        <span className="text-xs font-bold">{slot.label}</span>
+                        <span className="mt-0.5 text-[10px] opacity-80">{slot.time}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedSlot && (
+                  <p className="text-xs font-medium text-blue-600 bg-blue-50/50 rounded-lg p-2.5 border border-blue-100">
+                    Thời gian học đã chọn: <strong>{SLOTS.find(s => s.id === selectedSlot)?.time}</strong> ({SLOTS.find(s => s.id === selectedSlot)?.label})
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-4">

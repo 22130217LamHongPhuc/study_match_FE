@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   CalendarDays,
   CheckCircle2,
@@ -48,7 +49,7 @@ export function AdminUserDetailModal({
   const displayName = user?.full_name || "Chưa cập nhật tên";
   const email = user?.email || "--";
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6"
       role="dialog"
@@ -227,7 +228,8 @@ export function AdminUserDetailModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

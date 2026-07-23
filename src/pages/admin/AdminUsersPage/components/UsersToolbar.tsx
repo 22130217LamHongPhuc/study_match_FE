@@ -10,6 +10,8 @@ const statusOptions: Array<{
     { label: "Bị khóa", value: "LOCKED" },
     { label: "Đã xóa", value: "DELETED" },
     { label: "Chờ xác thực", value: "PENDING" },
+    { label: "Không hoạt động", value: "INACTIVE" },
+    { label: "Chờ kích hoạt", value: "PENDING_ACTIVATION" },
   ];
 
 const roleOptions: Array<{
@@ -28,6 +30,8 @@ type UsersToolbarProps = {
   onQueryChange: (value: string) => void;
   onStatusChange: (value: AdminUserStatus | null) => void;
   onRoleChange: (value: AdminUserRole | null) => void;
+  isSuperAdmin?: boolean;
+  onInviteClick?: () => void;
 };
 
 export function UsersToolbar({
@@ -37,6 +41,8 @@ export function UsersToolbar({
   onQueryChange,
   onStatusChange,
   onRoleChange,
+  isSuperAdmin,
+  onInviteClick,
 }: UsersToolbarProps) {
   return (
     <div>
@@ -49,10 +55,15 @@ export function UsersToolbar({
             Quản lý tài khoản người dùng, vai trò và trạng thái hoạt động
           </p>
         </div>
-        {/* 
-        <button className="rounded-lg border border-sand-300 bg-white px-4 py-2 text-sm font-medium text-sand-700 transition-all hover:bg-sand-50">
-          Xuất dữ liệu
-        </button> */}
+        {isSuperAdmin && (
+          <button
+            type="button"
+            onClick={onInviteClick}
+            className="rounded-lg bg-[#3b82f6] hover:bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white transition-all shadow-md shadow-[#3b82f6]/10"
+          >
+            Mời quản trị viên
+          </button>
+        )}
       </div>
 
       <div className="rounded-lg border border-sand-200 bg-white p-3">

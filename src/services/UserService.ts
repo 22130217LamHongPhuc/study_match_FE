@@ -33,6 +33,7 @@ export interface UserBasicInfo {
   avatarUrl: string | null;
   email: string;
   username: string | null;
+  bio?: string | null;
 }
 
 const API_BASE_URL_USER = BASE_URL;
@@ -137,3 +138,133 @@ export async function getAdminUsers(
 
   return response;
 }
+
+export interface InviteAdminResponse {
+  invitationId: number;
+  email: string;
+  status: string;
+  expiresAt: string;
+}
+
+export interface VerifyInvitationResponse {
+  email: string;
+  fullName: string;
+}
+
+export interface ActivateAdminRequest {
+  token: string;
+  fullName: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
+export async function inviteAdmin(
+  email: string,
+): Promise<APIResponseData<InviteAdminResponse>> {
+  const response = await apiFetch<InviteAdminResponse>(
+    "/api/super-admin/admin-invitations",
+    {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    },
+    API_BASE_URL_USER,
+  );
+  return response;
+}
+
+export async function verifyAdminInvitation(
+  token: string,
+): Promise<APIResponseData<VerifyInvitationResponse>> {
+  const response = await apiFetch<VerifyInvitationResponse>(
+    `/api/public/admin-invitations/verify?token=${encodeURIComponent(token)}`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_USER,
+  );
+  return response;
+}
+
+export async function activateAdmin(
+  payload: ActivateAdminRequest,
+): Promise<APIResponseData<any>> {
+  const response = await apiFetch<any>(
+    "/api/public/admin-invitations/activate",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    API_BASE_URL_USER,
+  );
+  return response;
+}
+
+export interface UpdateAdminStatusResponse {
+  status: AdminUserStatus;
+}
+
+export async function updateAdminStatus(
+  adminId: number,
+  status: AdminUserStatus,
+): Promise<APIResponseData<UpdateAdminStatusResponse>> {
+  const response = await apiFetch<UpdateAdminStatusResponse>(
+    `/api/super-admin/admins/${adminId}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+    API_BASE_URL_USER,
+  );
+  return response;
+}
+
+export interface UpdateAdminProfileRequest {
+  fullName?: string;
+  bio?: string;
+  avatarUrl?: string;
+}
+
+export interface AdminProfileResponse {
+  userId: number;
+  fullName: string;
+  avatarUrl: string | null;
+  email: string;
+  bio: string | null;
+  role: string;
+}
+
+export async function updateAdminProfile(
+  payload: UpdateAdminProfileRequest,
+): Promise<APIResponseData<AdminProfileResponse>> {
+  const response = await apiFetch<AdminProfileResponse>(
+    "/api/admin/profile",
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+    API_BASE_URL_USER,
+  );
+  return response;
+}
+
+export interface ChangeAdminPasswordRequest {
+  oldPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+}
+
+export async function changeAdminPassword(
+  payload: ChangeAdminPasswordRequest,
+): Promise<APIResponseData<void>> {
+  const response = await apiFetch<void>(
+    "/api/admin/change-password",
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+    API_BASE_URL_USER,
+  );
+  return response;
+}
+
+
