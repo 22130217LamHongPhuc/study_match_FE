@@ -1,5 +1,5 @@
 import type { StudySessionVm } from "../types";
-import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, ChevronLeft, ChevronRight, Repeat } from "lucide-react";
 
 interface WeeklyCalendarProps {
   sessions: StudySessionVm[];
@@ -253,15 +253,25 @@ export function WeeklyCalendar({
                             {formatTime(session.startTime)}
                           </span>
                         </div>
-                        <span
-                          className={`rounded border px-1 py-0.2 text-[8px] font-bold ${
-                            session.sessionType === "GROUP"
-                              ? "bg-rose-50 border-rose-100 text-rose-600"
-                              : "bg-emerald-50 border-emerald-100 text-emerald-600"
-                          }`}
-                        >
-                          {session.sessionType === "GROUP" ? "Nhóm" : "1-1"}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          {session.recurrenceType === "WEEKLY" && (
+                            <span title="Lặp lại hàng tuần" className="inline-flex shrink-0">
+                              <Repeat
+                                size={10}
+                                className="text-blue-500 shrink-0"
+                              />
+                            </span>
+                          )}
+                          <span
+                            className={`rounded border px-1 py-0.2 text-[8px] font-bold ${
+                              session.sessionType === "GROUP"
+                                ? "bg-rose-50 border-rose-100 text-rose-600"
+                                : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                            }`}
+                          >
+                            {session.sessionType === "GROUP" ? "Nhóm" : "1-1"}
+                          </span>
+                        </div>
                       </div>
                       <div className="line-clamp-2 text-xs font-bold text-gray-800 mt-2 leading-snug">
                         {session.title}

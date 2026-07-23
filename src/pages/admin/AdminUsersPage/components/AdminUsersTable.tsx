@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
-import { updateAdminUserStatus } from "../../../../services/UserService";
+import { updateAdminUserStatus, updateAdminStatus } from "../../../../services/UserService";
 import { normalizeAvatarUrl } from "../../../../services/FriendService";
 import {
   Eye,
@@ -26,6 +27,7 @@ type PendingUserStatusChange = {
   userName: string;
   fromStatus: AdminUserStatus;
   toStatus: AdminUserStatus;
+  role: string;
 };
 
 type AdminUsersTableProps = {
@@ -52,6 +54,10 @@ function statusLabel(status: string) {
       return "Đã xóa";
     case "PENDING":
       return "Chờ xác thực";
+    case "INACTIVE":
+      return "Không hoạt động";
+    case "PENDING_ACTIVATION":
+      return "Chờ kích hoạt";
     default:
       return status;
   }
@@ -84,7 +90,7 @@ function ConfirmUserStatusChangePopup({
           pending.fromStatus,
         )} sang ${statusLabel(pending.toStatus)}?`;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center p-4"
       role="dialog"
@@ -99,7 +105,7 @@ function ConfirmUserStatusChangePopup({
       />
 
       <div className="relative z-10 w-full max-w-md rounded-xl border border-sand-200 bg-white p-4 shadow-lg">
-        <h3 className="text-sm font-semibold text-sand-900">{title}</h3>
+        <h3>{title}</h3>
         <p className="mt-1 text-sm font-medium text-sand-600">{content}</p>
 
         {error && (
@@ -127,7 +133,8 @@ function ConfirmUserStatusChangePopup({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -179,7 +186,7 @@ export function AdminUsersTable({
 
   const canToggleStatus = (status: string) => {
     const s = status?.toUpperCase();
-    return s === "ACTIVE" || s === "PENDING" || s === "LOCKED";
+    return s === "ACTIVE" || s === "PENDING" || s === "LOCKED" || s === "INACTIVE" || s === "PENDING_ACTIVATION";
   };
 
   const closeConfirm = () => {
@@ -195,7 +202,7 @@ export function AdminUsersTable({
     if (!canToggleStatus(fromStatus)) return;
 
     const toStatus: AdminUserStatus =
-      (fromStatus === "ACTIVE" || fromStatus === "PENDING") ? "LOCKED" : "ACTIVE";
+      (fromStatus === "ACTIVE" || fromStatus === "PENDING" || fromStatus === "PENDING_ACTIVATION") ? "LOCKED" : "ACTIVE";
 
     setPendingChange({
       kind: "status",
@@ -203,6 +210,7 @@ export function AdminUsersTable({
       userName: getUserDisplayName(user),
       fromStatus,
       toStatus,
+      role: user.role,
     });
     setConfirmError(null);
     setConfirmOpen(true);
@@ -219,6 +227,7 @@ export function AdminUsersTable({
       userName: getUserDisplayName(user),
       fromStatus,
       toStatus: "DELETED",
+      role: user.role,
     });
 
     setConfirmError(null);
@@ -231,10 +240,10 @@ export function AdminUsersTable({
     setConfirmLoading(true);
     setConfirmError(null);
 
-    const res = await updateAdminUserStatus(
-      pendingChange.userId,
-      pendingChange.toStatus,
-    );
+    const isAdminRole = pendingChange.role === "admin" || pendingChange.role === "super_admin";
+    const res = isAdminRole
+      ? await updateAdminStatus(pendingChange.userId, pendingChange.toStatus)
+      : await updateAdminUserStatus(pendingChange.userId, pendingChange.toStatus);
 
     if (!res.success) {
       setConfirmLoading(false);

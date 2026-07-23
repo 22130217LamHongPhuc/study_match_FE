@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Lock, Mail, Loader2 } from "lucide-react";
+import { Lock, Mail, Loader2, X } from "lucide-react";
 import { toast } from "react-toastify";
-import { adminLogin } from "../../services/AuthService";
+import { adminLogin, adminForgetPassword } from "../../services/AuthService";
 import logoImg from "../../assets/img/logo.png";
 
 export default function AdminLoginPage() {
@@ -10,6 +11,7 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,12 +111,21 @@ export default function AdminLoginPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="text-xs font-semibold uppercase tracking-wider text-slate-500"
-              >
-                Mật khẩu
-              </label>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="password"
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                >
+                  Mật khẩu
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(true)}
+                  className="text-xs font-semibold text-[#3b82f6] hover:text-[#2563eb] transition-colors focus:outline-none"
+                >
+                  Quên mật khẩu?
+                </button>
+              </div>
               <div className="relative mt-1.5">
                 <Lock
                   className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -150,6 +161,160 @@ export default function AdminLoginPage() {
           </button>
         </form>
       </div>
+
+      <AdminForgotPasswordModal
+        open={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+      />
     </div>
+  );
+}
+
+function AdminForgotPasswordModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setEmail("");
+      setSuccess(false);
+      setLoading(false);
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast.warning("Vui lòng nhập email");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await adminForgetPassword(email.trim());
+      if (res.success) {
+        setSuccess(true);
+        toast.success("Gửi yêu cầu khôi phục thành công");
+      } else {
+        toast.error(res.message || "Gửi yêu cầu thất bại");
+      }
+    } catch {
+      toast.error("Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Quên mật khẩu quản trị"
+    >
+      <button
+        type="button"
+        aria-label="Đóng"
+        onClick={loading ? undefined : onClose}
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+      />
+
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4">
+          <h3 className="text-base font-bold text-slate-900">
+            Quên mật khẩu quản trị
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+            aria-label="Đóng modal"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {success ? (
+          <div className="p-6 text-center space-y-4">
+            <p className="text-sm font-medium text-slate-600">
+              Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu đến email của bạn. Vui lòng kiểm tra hộp thư đến của <strong>{email}</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-10 w-full rounded-lg bg-[#3b82f6] hover:bg-[#2563eb] text-sm font-semibold text-white transition-all shadow-md shadow-[#3b82f6]/10"
+            >
+              Đóng
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-5 space-y-4">
+            <p className="text-xs text-slate-500 font-medium">
+              Nhập email tài khoản quản trị của bạn để nhận liên kết khôi phục mật khẩu.
+            </p>
+
+            <div>
+              <label
+                htmlFor="forgot-email"
+                className="text-xs font-bold uppercase tracking-wider text-slate-500"
+              >
+                Email
+              </label>
+              <div className="relative mt-1">
+                <Mail
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  size={16}
+                />
+                <input
+                  id="forgot-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                  placeholder="admin@studymatch.vn"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50/50 pl-10 pr-3 text-sm text-slate-800 outline-none transition-colors focus:border-[#3b82f6] focus:bg-white disabled:opacity-60"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="h-10 flex-1 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#3b82f6] hover:bg-[#2563eb] text-sm font-semibold text-white transition-all shadow-md shadow-[#3b82f6]/10 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Đang gửi...
+                  </>
+                ) : (
+                  "Gửi yêu cầu"
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>,
+    document.body
   );
 }

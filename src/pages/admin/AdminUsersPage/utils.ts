@@ -18,10 +18,11 @@ export function formatDateTime(value: string | null): string {
 }
 
 export function getRoleLabel(
-  role: AdminUserRole | "student" | "admin",
+  role: AdminUserRole | "student" | "admin" | "super_admin",
 ): string {
   if (role === "student") return "Sinh viên";
   if (role === "admin") return "Quản trị viên";
+  if (role === "super_admin") return "Super Admin";
   return "Tất cả vai trò";
 }
 
@@ -31,6 +32,8 @@ export function getStatusLabel(status: string): string {
   if (s === "LOCKED") return "Bị khóa";
   if (s === "DELETED") return "Đã xóa";
   if (s === "PENDING") return "Chờ xác thực";
+  if (s === "INACTIVE") return "Không hoạt động";
+  if (s === "PENDING_ACTIVATION") return "Chờ kích hoạt";
   return status || "Chưa xác định";
 }
 
@@ -45,15 +48,25 @@ export function getStatusClassName(status: string): string {
   if (s === "PENDING") {
     return "border-blue-100 bg-blue-50 text-blue-700";
   }
+  if (s === "INACTIVE") {
+    return "border-sand-200 bg-sand-50 text-sand-600";
+  }
+  if (s === "PENDING_ACTIVATION") {
+    return "border-amber-100 bg-amber-50 text-amber-700";
+  }
   return "border-rose-100 bg-rose-50 text-rose-700";
 }
 
-export function getRoleClassName(role: "student" | "admin"): string {
+export function getRoleClassName(role: "student" | "admin" | "super_admin"): string {
+  if (role === "super_admin") {
+    return "border-amber-100 bg-amber-50 text-amber-700";
+  }
   if (role === "admin") {
     return "border-accent-100 bg-accent-50 text-accent-700";
   }
   return "border-sand-200 bg-sand-100 text-sand-700";
 }
+
 
 export function getBooleanBadgeClass(value: boolean): string {
   if (value) {

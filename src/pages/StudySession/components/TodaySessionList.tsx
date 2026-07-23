@@ -1,5 +1,6 @@
 import type { StudySessionVm } from "../types";
 import icon1 from "../../../assets/img/icon1.png";
+import { Repeat } from "lucide-react";
 
 interface TodaySessionListProps {
   sessions: StudySessionVm[];
@@ -105,8 +106,17 @@ export function TodaySessionList({
           >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-bold text-blue-600">
+                <div className="flex items-center gap-1.5 text-sm font-bold text-blue-600">
                   {formatTimeRange(session.startTime, session.endTime)}
+                  {session.recurrenceType === "WEEKLY" && (
+                    <span
+                      title="Lặp lại hàng tuần"
+                      className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-600"
+                    >
+                      <Repeat size={10} className="shrink-0" />
+                      Lặp tuần
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 text-base font-bold text-gray-800">
                   {session.title}

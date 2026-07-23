@@ -1,5 +1,5 @@
-export type AdminUserRole = "student" | "admin";
-export type AdminUserStatus = "ACTIVE" | "LOCKED" | "DELETED" | "PENDING";
+export type AdminUserRole = "student" | "admin" | "super_admin";
+export type AdminUserStatus = "ACTIVE" | "LOCKED" | "DELETED" | "PENDING" | "INACTIVE" | "PENDING_ACTIVATION";
 
 export interface AdminUserDbRow {
   user_id: number;

@@ -34,6 +34,9 @@ import AdminOverviewPage from "../pages/admin/AdminOverviewPage/AdminOverviewPag
 import LandingPage from "../pages/Landing/LandingPage";
 import AdminLoginPage from "../pages/admin/AdminLoginPage";
 import MyReportsPage from "../pages/MyReports/MyReportsPage";
+import ActivateAdminPage from "../pages/admin/ActivateAdminPage";
+import AdminResetPasswordPage from "../pages/admin/AdminResetPasswordPage";
+import AdminAuditLogsPage from "../pages/admin/AdminAuditLogsPage/AdminAuditLogsPage";
 
 
 function getRoleFromToken(token: string | null): "admin" | "student" | null {
@@ -41,7 +44,8 @@ function getRoleFromToken(token: string | null): "admin" | "student" | null {
   try {
     const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
     const role = String(payload.role ?? "").toLowerCase();
-    if (role === "admin" || role === "student") return role;
+    if (role === "admin" || role === "super_admin") return "admin";
+    if (role === "student") return "student";
     return null;
   } catch {
     return null;
@@ -112,6 +116,10 @@ export const router = createBrowserRouter([
         path: "/verify-email",
         element: <CheckVerifyEmailPage />,
       },
+      {
+        path: "/activate-admin",
+        element: <ActivateAdminPage />,
+      },
     ],
   },
 
@@ -146,6 +154,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/login",
     element: <AdminLoginPage />,
+  },
+  {
+    path: "/admin/reset-password",
+    element: <AdminResetPasswordPage />,
   },
 
   {
@@ -194,6 +206,10 @@ export const router = createBrowserRouter([
           {
             path: "reports",
             element: <AdminReportsPage />,
+          },
+          {
+            path: "audit-logs",
+            element: <AdminAuditLogsPage />,
           },
         ],
       },
