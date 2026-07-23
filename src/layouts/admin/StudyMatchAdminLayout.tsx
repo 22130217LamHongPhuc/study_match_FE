@@ -7,15 +7,14 @@ import {
   CalendarDays,
   BrainCircuit,
   MessageSquareWarning,
-  ShieldAlert,
   Video,
   Bell,
   BarChart3,
   Settings,
   Search,
-  ChevronDown,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { loadFriendProfilesService } from "../../services/FriendService";
@@ -31,11 +30,6 @@ const menuItems = [
     label: "Quản lý Chat",
     icon: MessageSquareWarning,
     path: "/admin/chat-manager",
-  },
-  {
-    label: "Quản lí Vi Phạm",
-    icon: ShieldAlert,
-    path: "/admin/violations",
   },
   {
     label: "Người dùng",
@@ -79,7 +73,24 @@ const menuItems = [
   },
 ];
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({
+  onNavigate,
+  adminProfile,
+  onLogout,
+}: {
+  onNavigate?: () => void;
+  adminProfile: { fullName: string; avatarUrl?: string } | null;
+  onLogout: () => void;
+}) {
+  const fullName = adminProfile?.fullName || "Admin";
+  const avatarUrl = adminProfile?.avatarUrl;
+  const initials = fullName
+    .split(" ")
+    .map((name) => name[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <>
       <div className="border-b border-slate-100 px-5 py-4">
@@ -122,6 +133,33 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
+      <div className="border-t border-slate-200 p-3">
+        <div className="flex items-center gap-2.5 px-2 py-2">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={fullName}
+              className="h-9 w-9 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-semibold text-white">
+              {initials}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold text-slate-800">{fullName}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="mt-1 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+        >
+          <LogOut size={16} />
+          <span>Đăng xuất</span>
+        </button>
+      </div>
+
       {/* <div className="border-t border-sand-200 p-3">
         <NavLink
           to="/admin/settings"
@@ -141,10 +179,16 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function Sidebar() {
+function Sidebar({
+  adminProfile,
+  onLogout,
+}: {
+  adminProfile: { fullName: string; avatarUrl?: string } | null;
+  onLogout: () => void;
+}) {
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-slate-100 bg-slate-50/50 lg:flex lg:flex-col">
-      <SidebarContent />
+      <SidebarContent adminProfile={adminProfile} onLogout={onLogout} />
     </aside>
   );
 }
@@ -152,9 +196,13 @@ function Sidebar() {
 function MobileDrawer({
   open,
   onClose,
+  adminProfile,
+  onLogout,
 }: {
   open: boolean;
   onClose: () => void;
+  adminProfile: { fullName: string; avatarUrl?: string } | null;
+  onLogout: () => void;
 }) {
   return (
     <>
@@ -175,121 +223,25 @@ function MobileDrawer({
           <X size={16} />
         </button>
 
-        <SidebarContent onNavigate={onClose} />
+        <SidebarContent
+          onNavigate={onClose}
+          adminProfile={adminProfile}
+          onLogout={onLogout}
+        />
       </aside>
     </>
   );
 }
 
-function Topbar({
-  onMenuClick,
-  adminProfile,
-  onLogout,
-}: {
-  onMenuClick: () => void;
-  adminProfile: { fullName: string; avatarUrl?: string } | null;
-  onLogout: () => void;
-}) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const fullName = adminProfile?.fullName || "Admin";
-  const avatarUrl = adminProfile?.avatarUrl;
-
-  const initials = fullName
-    ? fullName
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase()
-    : "AD";
-
-  const handleLogoutClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDropdownOpen(false);
-    onLogout();
-  };
-
+function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   return (
     <header className="flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <button className="text-slate-500 lg:hidden" onClick={onMenuClick}>
           <Menu size={18} />
         </button>
-
       </div>
-
-      <div className="flex items-center gap-4 relative">
-
-        <div className="h-4 w-px bg-slate-200" />
-        <div
-          className="group relative flex cursor-pointer items-center gap-2 select-none"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={fullName}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3b82f6] text-[10px] font-medium text-white shadow-sm">
-              {initials}
-            </div>
-          )}
-          <div className="hidden sm:block">
-            <p className="text-xs font-medium leading-none text-slate-800">
-              {fullName}
-            </p>
-            <p className="mt-1 text-[10px] uppercase text-slate-400">
-              Root Admin
-            </p>
-          </div>
-          <ChevronDown
-            size={12}
-            className={`text-slate-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""
-              }`}
-          />
-
-          {isDropdownOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-30 cursor-default"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDropdownOpen(false);
-                }}
-              />
-              <div
-                className="absolute right-0 top-full mt-2 w-40 rounded-xl border border-slate-100 bg-white py-1 shadow-lg ring-1 ring-black/5 z-40"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  onClick={handleLogoutClick}
-                  className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50/50 rounded-lg transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" x2="9" y1="12" y2="12" />
-                  </svg>
-                  Đăng xuất
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+      <div />
     </header>
   );
 }
@@ -356,17 +308,15 @@ export default function StudyMatchAdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-blue-50/20 font-sans text-slate-900">
-      <Sidebar />
+      <Sidebar adminProfile={adminProfile} onLogout={handleLogout} />
       <MobileDrawer
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        adminProfile={adminProfile}
+        onLogout={handleLogout}
       />
       <div className="flex flex-1 flex-col min-w-0">
-        <Topbar
-          onMenuClick={() => setSidebarOpen(true)}
-          adminProfile={adminProfile}
-          onLogout={handleLogout}
-        />
+        <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
