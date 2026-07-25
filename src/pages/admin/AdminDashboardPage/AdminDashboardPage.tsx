@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useConfirm } from "../../../components/modal/ConfirmModal";
 import {
   AlertTriangle,
   Ban,
@@ -130,6 +131,7 @@ function getMemberSuggestion(row: AdminChatMemberRisk) {
 }
 
 export default function AdminDashboardPage() {
+  const confirm = useConfirm();
   const [dashboard, setDashboard] =
     useState<AdminChatDashboardResponse>(emptyDashboard);
   const [loading, setLoading] = useState(true);
@@ -1315,7 +1317,14 @@ export default function AdminDashboardPage() {
                             <button
                               type="button"
                               onClick={async () => {
-                                if (!window.confirm(`Ẩn nhóm "${group.name}"?`)) return;
+                                const confirmed = await confirm({
+                                  title: "Ẩn nhóm học",
+                                  message: `Bạn có chắc chắn muốn ẩn nhóm "${group.name}"?`,
+                                  type: "warning",
+                                  confirmText: "Ẩn",
+                                  cancelText: "Hủy",
+                                });
+                                if (!confirmed) return;
                                 const res = await updateAdminGroupStatus(group.id, "INACTIVE");
                                 if (res.success) {
                                   setGroupsData((prev) =>
@@ -1363,7 +1372,14 @@ export default function AdminDashboardPage() {
                           <button
                             type="button"
                             onClick={async () => {
-                              if (!window.confirm(`Xóa nhóm "${group.name}"? Hành động này không thể hoàn tác.`)) return;
+                              const confirmed = await confirm({
+                                title: "Xóa nhóm học",
+                                message: `Bạn có chắc chắn muốn xóa nhóm "${group.name}"? Hành động này không thể hoàn tác.`,
+                                type: "danger",
+                                confirmText: "Xóa",
+                                cancelText: "Hủy",
+                              });
+                              if (!confirmed) return;
                               const res = await updateAdminGroupStatus(group.id, "DELETED");
                               if (res.success) {
                                 setGroupsData((prev) =>
