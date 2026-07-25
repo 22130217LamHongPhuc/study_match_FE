@@ -180,10 +180,6 @@ export const router = createBrowserRouter([
             element: <AdminDashboardPage />,
           },
           {
-            path: "violations",
-            element: <AdminDashboardPage />,
-          },
-          {
             path: "dashboard",
             element: <Navigate to="/admin/overview" replace />,
           },

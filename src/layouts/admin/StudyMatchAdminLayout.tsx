@@ -8,15 +8,14 @@ import {
   CalendarDays,
   BrainCircuit,
   MessageSquareWarning,
-  ShieldAlert,
   Video,
   Bell,
   BarChart3,
   Settings,
   Search,
-  ChevronDown,
   Menu,
   X,
+  LogOut,
   User,
   KeyRound,
   FileClock,
@@ -39,11 +38,6 @@ const menuItems = [
     label: "Quản lý Chat",
     icon: MessageSquareWarning,
     path: "/admin/chat-manager",
-  },
-  {
-    label: "Quản lí Vi Phạm",
-    icon: ShieldAlert,
-    path: "/admin/violations",
   },
   {
     label: "Người dùng",
@@ -89,11 +83,22 @@ const menuItems = [
 
 function SidebarContent({
   onNavigate,
-  isSuperAdmin,
+  adminProfile,
+  onLogout,
 }: {
   onNavigate?: () => void;
-  isSuperAdmin?: boolean;
+  adminProfile: { fullName: string; avatarUrl?: string } | null;
+  onLogout: () => void;
 }) {
+  const fullName = adminProfile?.fullName || "Admin";
+  const avatarUrl = adminProfile?.avatarUrl;
+  const initials = fullName
+    .split(" ")
+    .map((name) => name[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <>
       <div className="border-b border-slate-100 px-5 py-4">
@@ -151,6 +156,33 @@ function SidebarContent({
         )}
       </nav>
 
+      <div className="border-t border-slate-200 p-3">
+        <div className="flex items-center gap-2.5 px-2 py-2">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={fullName}
+              className="h-9 w-9 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-semibold text-white">
+              {initials}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold text-slate-800">{fullName}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="mt-1 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+        >
+          <LogOut size={16} />
+          <span>Đăng xuất</span>
+        </button>
+      </div>
+
       {/* <div className="border-t border-sand-200 p-3">
         <NavLink
           to="/admin/settings"
@@ -170,7 +202,8 @@ function SidebarContent({
   );
 }
 
-function Sidebar({ isSuperAdmin }: { isSuperAdmin?: boolean }) {
+function Sidebar({ isSuperAdmin  adminProfile,
+  onLogout}: { isSuperAdmin?: boolean }) {
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-slate-100 bg-slate-50/50 lg:flex lg:flex-col">
       <SidebarContent isSuperAdmin={isSuperAdmin} />
@@ -206,7 +239,12 @@ function MobileDrawer({
           <X size={16} />
         </button>
 
-        <SidebarContent onNavigate={onClose} isSuperAdmin={isSuperAdmin} />
+        <SidebarContent
+          onNavigate={onClose}
+          adminProfile={adminProfile}
+          onLogout={onLogout}
+          isSuperAdmin={isSuperAdmin}
+        />
       </aside>
     </>
   );
@@ -348,6 +386,7 @@ function Topbar({
           )}
         </div>
       </div>
+      <div />
     </header>
   );
 }
