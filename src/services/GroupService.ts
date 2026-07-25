@@ -194,6 +194,15 @@ export async function getAllSubjects(): Promise<APIResponseData<Subject[]>> {
     },
     API_BASE_URL_PROFILE,
   );
+  if (!response.success || !response.data || response.data.length === 0) {
+    return apiFetch<Subject[]>(
+      `/subjects/by-curriculum/1`,
+      {
+        method: "GET",
+      },
+      API_BASE_URL_PROFILE,
+    );
+  }
   return response;
 }
 

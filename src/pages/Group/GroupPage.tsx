@@ -1,6 +1,7 @@
 import { BookOpen, ChevronRight, Crown, Loader2, Plus, Send, UserPlus, UserX, Users, X, Camera, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ReportModal from "../../components/modal/ReportModal";
+import { useConfirm } from "../../components/modal/ConfirmModal";
 import CreateGroupModal from "./components/CreateGroupModal";
 import groupImg from "../../assets/img/group.png";
 import noImg from "../../assets/img/no-img.png";
@@ -180,6 +181,7 @@ function GroupPreviewCardSkeleton() {
 
 export default function GroupPage() {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [groupList, setGroupList] = useState<StudyGroupDetailResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -310,7 +312,14 @@ export default function GroupPage() {
 
   const handleDeleteGroup = async () => {
     if (!selectedGroup) return;
-    if (!window.confirm("Bạn có chắc chắn muốn xóa nhóm học này không? Hành động này không thể hoàn tác.")) {
+    const confirmed = await confirm({
+      title: "Xóa nhóm học",
+      message: "Bạn có chắc chắn muốn xóa nhóm học này không? Hành động này không thể hoàn tác.",
+      type: "danger",
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -332,7 +341,14 @@ export default function GroupPage() {
   };
 
   const handleLeaveGroup = async (groupId: number) => {
-    if (!window.confirm("Bạn có chắc chắn muốn rời nhóm học này không?")) {
+    const confirmed = await confirm({
+      title: "Rời nhóm học",
+      message: "Bạn có chắc chắn muốn rời nhóm học này không?",
+      type: "warning",
+      confirmText: "Rời nhóm",
+      cancelText: "Hủy",
+    });
+    if (!confirmed) {
       return;
     }
 

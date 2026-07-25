@@ -254,8 +254,11 @@ export function WeeklyCalendar({
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          {session.recurrenceType === "WEEKLY" && (
-                            <span title="Lặp lại hàng tuần" className="inline-flex shrink-0">
+                          {(session.recurrenceId || (session.recurrenceType && session.recurrenceType !== "NONE")) && (
+                            <span
+                              title={session.recurrenceType === "WEEKLY" ? "Lặp lại hàng tuần" : "Lặp lại"}
+                              className="inline-flex shrink-0"
+                            >
                               <Repeat
                                 size={10}
                                 className="text-blue-500 shrink-0"
