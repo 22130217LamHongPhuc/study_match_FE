@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ConfirmProvider } from "./components/modal/ConfirmModal";
 
 function App() {
   return (
@@ -12,7 +13,9 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} style={{ zIndex: 99999 }} />
 
       <Provider store={store}>
-        <RouterProvider router={router} />
+        <ConfirmProvider>
+          <RouterProvider router={router} />
+        </ConfirmProvider>
       </Provider>
     </>
   );
