@@ -13,7 +13,9 @@ import {
   Search,
   ShieldAlert,
   UsersRound,
+    Search
 } from "lucide-react";
+
 import {
   getAdminChatDashboard,
   kickAdminChatUserFromGroup,
@@ -32,6 +34,10 @@ import {
   type AdminGroupStatus,
   type PageResponse,
 } from "../../../services/GroupService";
+import emptyChatImage from "../../../assets/img/no-mess.png";
+import emptyFriendImage from "../../../assets/img/no-friend.png";
+import emptyPostImage from "../../../assets/img/no-post.png";
+import emptyGroupImage from "../../../assets/img/group.png";
 
 const emptyDashboard: AdminChatDashboardResponse = {
   summary: {
@@ -83,6 +89,27 @@ function UserAvatar({
   return (
     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-xs font-semibold text-sky-700 ring-1 ring-sky-100">
       {getInitials(name)}
+    </div>
+  );
+}
+
+function EmptyState({
+  title,
+  image,
+  compact = false,
+}: {
+  title: string;
+  image: string;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`flex flex-col items-center justify-center text-center ${compact ? "py-3" : "py-6"}`}>
+      <img
+        src={image}
+        alt=""
+        className={`${compact ? "h-20" : "h-28"} w-auto object-contain`}
+      />
+      <p className="mt-3 text-sm font-semibold text-slate-700">{title}</p>
     </div>
   );
 }
@@ -591,8 +618,6 @@ export default function AdminDashboardPage() {
       title: "Tin nhắn nhóm",
       value: formatNumber(summary.totalMessages),
       helper: "Chỉ tính group conversations",
-      icon: MessageSquareWarning,
-      className: "bg-sky-50 text-sky-700",
     },
     {
       title: "Tin vi phạm",
@@ -601,22 +626,16 @@ export default function AdminDashboardPage() {
         summary.totalViolations,
         summary.totalMessages,
       )}% trên tổng tin`,
-      icon: ShieldAlert,
-      className: "bg-red-50 text-red-700",
     },
     {
       title: "Nhóm có vi phạm",
       value: formatNumber(summary.groupsWithViolations),
       helper: `${formatNumber(summary.violatingMembers)} thành viên cần theo dõi`,
-      icon: UsersRound,
-      className: "bg-blue-50 text-blue-700",
     },
     {
       title: "HATE",
       value: formatNumber(summary.hateMessages),
       helper: "Ưu tiên xử lý trước",
-      icon: Ban,
-      className: "bg-rose-50 text-rose-700",
     },
   ];
 
@@ -653,8 +672,6 @@ export default function AdminDashboardPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card) => {
-          const Icon = card.icon;
-
           return (
             <div
               key={card.title}
@@ -672,11 +689,6 @@ export default function AdminDashboardPage() {
                       card.value
                     )}
                   </p>
-                </div>
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${card.className}`}
-                >
-                  <Icon size={18} />
                 </div>
               </div>
               {loading ? (
@@ -700,7 +712,6 @@ export default function AdminDashboardPage() {
                 Sắp xếp theo tổng OFFENSIVE và HATE trong nhóm.
               </p>
             </div>
-            <Flag className="text-sand-400" size={18} />
           </div>
 
           <div className="mt-4 overflow-x-auto">
@@ -718,8 +729,11 @@ export default function AdminDashboardPage() {
               <tbody className="divide-y divide-sand-100">
                 {!loading && groupRows.length === 0 && (
                   <tr>
-                    <td className="py-6 text-sm text-sand-500" colSpan={6}>
-                      Chưa có nhóm nào có tin nhắn vi phạm.
+                    <td colSpan={6}>
+                      <EmptyState
+                        title="Chưa có nhóm vi phạm"
+                        image={emptyGroupImage}
+                      />
                     </td>
                   </tr>
                 )}
@@ -750,7 +764,7 @@ export default function AdminDashboardPage() {
                           {group.groupName}
                         </div>
                         <div className="mt-0.5 text-xs text-sand-400">
-                          Group #{group.groupId} · Conversation #
+                          Group {group.groupId} · Conversation{" "}
                           {group.conversationId}
                         </div>
                       </td>
@@ -792,7 +806,6 @@ export default function AdminDashboardPage() {
                 Chỉ tính các tin nhắn nhóm.
               </p>
             </div>
-            <BarChart3 className="text-sand-400" size={18} />
           </div>
 
           <div className="mt-5 space-y-4">
@@ -826,8 +839,12 @@ export default function AdminDashboardPage() {
             </h3>
             <div className="mt-3 flex h-32 items-end gap-3">
               {trendRows.length === 0 && !loading ? (
-                <div className="flex h-24 flex-1 items-center justify-center rounded bg-sand-50 text-xs text-sand-400">
-                  Chưa có dữ liệu
+                <div className="flex-1 rounded bg-sand-50">
+                  <EmptyState
+                    compact
+                    title="Chưa có xu hướng"
+                    image={emptyPostImage}
+                  />
                 </div>
               ) : (
                 trendRows.map((row) => {
@@ -875,7 +892,6 @@ export default function AdminDashboardPage() {
                 Dữ liệu dùng để cảnh báo, mute hoặc kick khỏi nhóm.
               </p>
             </div>
-            <Gavel className="text-sand-400" size={18} />
           </div>
 
           <form
@@ -883,10 +899,6 @@ export default function AdminDashboardPage() {
             className="mt-4 flex flex-col gap-2 sm:flex-row"
           >
             <div className="relative flex-1">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sand-400"
-                size={16}
-              />
               <input
                 value={userSearchKeyword}
                 onChange={(event) => {
@@ -899,17 +911,18 @@ export default function AdminDashboardPage() {
                     setUserSearchError(null);
                   }
                 }}
-                className="h-10 w-full rounded-lg border border-sand-200 bg-white pl-9 pr-3 text-sm text-sand-900 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-sand-200 bg-white px-3 text-sm text-sand-900 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
                 placeholder="Tìm theo tên, email hoặc user id"
               />
             </div>
             <button
               type="submit"
               disabled={userSearchLoading}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#3b82f6] px-4 text-sm font-medium text-white transition hover:bg-[#2563eb] shadow-md shadow-[#3b82f6]/20 disabled:cursor-not-allowed disabled:opacity-60"
+              title="Tìm user"
+              aria-label="Tìm user"
+              className="inline-flex h-10 w-10 items-center justify-center text-[#3b82f6] transition-colors hover:text-[#2563eb] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Search size={16} />
-              {userSearchLoading ? "Đang tìm" : "Tìm user"}
+              <Search size={17} className={userSearchLoading ? "animate-pulse" : ""} />
             </button>
           </form>
 
@@ -944,7 +957,7 @@ export default function AdminDashboardPage() {
                                 {user.fullName}
                               </p>
                               <p className="truncate text-xs text-sand-400">
-                                User #{user.userId}
+                                User {user.userId}
                                 {user.email ? ` · ${user.email}` : ""}
                               </p>
                             </div>
@@ -978,7 +991,7 @@ export default function AdminDashboardPage() {
                                     <td className="py-2 pr-3 text-sand-700">
                                       {group.groupName}
                                       <div className="text-[11px] text-sand-400">
-                                        Group #{group.groupId}
+                                        Group {group.groupId}
                                       </div>
                                     </td>
                                     <td className="py-2 pr-3 text-sand-700">
@@ -1007,8 +1020,11 @@ export default function AdminDashboardPage() {
           {!userSearchActive && (
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {!loading && memberRows.length === 0 && (
-              <div className="rounded-lg border border-sand-200 p-4 text-sm text-sand-500 md:col-span-2">
-                Chưa có thành viên nào vi phạm trong nhóm.
+              <div className="rounded-lg border border-sand-200 md:col-span-2">
+                <EmptyState
+                  title="Chưa có thành viên vi phạm"
+                  image={emptyFriendImage}
+                />
               </div>
             )}
 
@@ -1035,7 +1051,7 @@ export default function AdminDashboardPage() {
                           {member.senderName}
                         </p>
                         <p className="mt-0.5 truncate text-xs text-sand-400">
-                          User #{member.senderId} · {member.groupName}
+                          User {member.senderId} · {member.groupName}
                         </p>
                         {member.senderEmail && (
                           <p className="mt-0.5 truncate text-xs text-sand-400">
@@ -1100,13 +1116,16 @@ export default function AdminDashboardPage() {
                 Gợi ý dựa trên OFFENSIVE và HATE.
               </p>
             </div>
-            <AlertTriangle className="text-sand-400" size={18} />
           </div>
 
           <div className="mt-4 space-y-3">
             {!loading && reviewQueue.length === 0 && (
-              <div className="rounded-lg border border-sand-200 p-3 text-sm text-sand-500">
-                Chưa có đề xuất xử lý.
+              <div className="rounded-lg border border-sand-200">
+                <EmptyState
+                  compact
+                  title="Chưa có đề xuất xử lý"
+                  image={emptyChatImage}
+                />
               </div>
             )}
 
@@ -1165,17 +1184,13 @@ export default function AdminDashboardPage() {
             className="flex gap-2"
           >
             <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sand-400"
-                size={14}
-              />
               <input
                 value={groupsSearch}
                 onChange={(e) => {
                   setGroupsSearch(e.target.value);
                 }}
                 placeholder="Tìm theo tên nhóm..."
-                className="h-9 w-56 rounded-lg border border-sand-200 bg-sand-50 pl-8 pr-3 text-sm text-sand-800 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100"
+                className="h-9 w-56 rounded-lg border border-sand-200 bg-sand-50 px-3 text-sm text-sand-800 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100"
               />
             </div>
           </form>
@@ -1264,8 +1279,12 @@ export default function AdminDashboardPage() {
                     >
                       {/* Tên nhóm */}
                       <td className="px-5 py-3.5">
-                        <p className="font-medium text-sand-900">{group.name}</p>
-                        <p className="text-xs text-sand-400">#{group.id}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1.5 text-xs font-semibold text-slate-700">
+                            {group.id}
+                          </span>
+                          <p className="font-medium text-sand-900">{group.name}</p>
+                        </div>
                       </td>
 
                       {/* Loại */}
@@ -1364,7 +1383,6 @@ export default function AdminDashboardPage() {
                               }}
                               className="inline-flex h-7 items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                               Kích hoạt
                             </button>
                           )}
@@ -1481,7 +1499,7 @@ export default function AdminDashboardPage() {
                     {selectedViolationUser.fullName}
                   </h2>
                   <p className="mt-0.5 truncate text-sm text-sand-500">
-                    User #{selectedViolationUser.userId}
+                    User {selectedViolationUser.userId}
                     {selectedViolationUser.email
                       ? ` · ${selectedViolationUser.email}`
                       : ""}
@@ -1503,7 +1521,7 @@ export default function AdminDashboardPage() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-sand-400 transition hover:bg-sand-100 hover:text-sand-700"
                 aria-label="Đóng modal"
               >
-                <X size={18} />
+                <span aria-hidden="true" className="text-xl leading-none">×</span>
               </button>
             </div>
 
@@ -1648,7 +1666,7 @@ export default function AdminDashboardPage() {
                               <td className="px-3 py-3 text-sand-800">
                                 {group.groupName}
                                 <div className="text-xs text-sand-400">
-                                  Group #{group.groupId}
+                                  Group {group.groupId}
                                 </div>
                               </td>
                               <td className="px-3 py-3 text-sand-700">
@@ -1723,7 +1741,7 @@ export default function AdminDashboardPage() {
                   })()}
                 </div>
                 <p className="mt-1 text-sm text-sand-400">
-                  Group #{selectedGroupRisk.groupId} · Conversation #{selectedGroupRisk.conversationId}
+                  Group {selectedGroupRisk.groupId} · Conversation {selectedGroupRisk.conversationId}
                 </p>
                 {groupDetailLoading && (
                   <p className="mt-1 text-xs text-sand-400">Đang tải thông tin nhóm...</p>
@@ -1739,7 +1757,6 @@ export default function AdminDashboardPage() {
                     disabled={groupHideLoading || groupDeleteLoading}
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     {groupHideLoading ? "Đang xử lý..." : "Kích hoạt nhóm"}
                   </button>
                 ) : selectedGroupDetail?.status !== "DELETED" && (
@@ -1776,7 +1793,7 @@ export default function AdminDashboardPage() {
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-sand-400 transition hover:bg-sand-100 hover:text-sand-700"
                   aria-label="Đóng modal"
                 >
-                  <X size={18} />
+                  <span aria-hidden="true" className="text-xl leading-none">×</span>
                 </button>
               </div>
             </div>
