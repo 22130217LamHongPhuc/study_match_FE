@@ -22,6 +22,7 @@ import {
   ReportReason,
   ReportTargetType,
 } from "../../services/reportApi";
+import { useReportMetadata } from "../../hooks/useReportMetadata";
 
 type ReportModalProps = {
   open: boolean;
@@ -36,12 +37,14 @@ const REPORT_TITLES: Record<ReportTargetType, string> = {
   USER: "Báo cáo người dùng",
   POST: "Báo cáo bài viết",
   GROUP: "Báo cáo nhóm",
+  DOCUMENT: "Báo cáo tài liệu học tập",
 };
 
 const TARGET_LABELS: Record<ReportTargetType, string> = {
   USER: "",
   POST: "Bài viết",
   GROUP: "Nhóm",
+  DOCUMENT: "Tài liệu học tập",
 };
 
 const REPORT_REASON_OPTIONS: { value: ReportReason; label: string }[] = [
@@ -66,6 +69,8 @@ export default function ReportModal({
   const [description, setDescription] = useState("");
   const [reasonError, setReasonError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const { reasons } = useReportMetadata();
 
   useEffect(() => {
     setReason("");
@@ -234,7 +239,13 @@ export default function ReportModal({
           <MenuItem value="" disabled>
             Chọn lý do báo cáo
           </MenuItem>
-          {REPORT_REASON_OPTIONS.map((option) => (
+          {(reasons.length > 0
+            ? reasons.map((r) => ({
+                value: r.value as ReportReason,
+                label: r.title,
+              }))
+            : REPORT_REASON_OPTIONS
+          ).map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
             </MenuItem>

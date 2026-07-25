@@ -1,5 +1,21 @@
 import type { ReportResponse } from "../services/reportApi";
 
+const dynamicTargetTypes: Record<string, string> = {};
+const dynamicReasons: Record<string, string> = {};
+
+export function updateReportMetadataCache(
+  targetTypesList: { value: string; title: string }[],
+  reasonsList: { value: string; title: string }[],
+) {
+  targetTypesList.forEach((item) => {
+    dynamicTargetTypes[item.value] = item.title;
+  });
+  reasonsList.forEach((item) => {
+    dynamicReasons[item.value] = item.title;
+  });
+}
+
+
 type ReportStatusLabelVariant = "admin" | "user";
 
 const readValue = (
@@ -170,6 +186,9 @@ export function getReportStatusLabel(
 }
 
 export function getTargetTypeLabel(targetType?: string | null): string {
+  if (targetType && dynamicTargetTypes[targetType] !== undefined) {
+    return dynamicTargetTypes[targetType];
+  }
   switch (targetType) {
     case "USER":
       return "";
@@ -177,12 +196,17 @@ export function getTargetTypeLabel(targetType?: string | null): string {
       return "Bài viết";
     case "GROUP":
       return "Nhóm";
+    case "DOCUMENT":
+      return "Tài liệu học tập";
     default:
       return targetType?.trim() || "--";
   }
 }
 
 export function getReasonLabel(reason?: string | null): string {
+  if (reason && dynamicReasons[reason] !== undefined) {
+    return dynamicReasons[reason];
+  }
   switch (reason) {
     case "SPAM":
       return "Spam";

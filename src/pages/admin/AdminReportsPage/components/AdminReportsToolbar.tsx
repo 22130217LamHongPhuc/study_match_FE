@@ -3,6 +3,7 @@ import type {
   ReportStatus,
   ReportTargetType,
 } from "../../../../services/reportApi";
+import { useReportMetadata } from "../../../../hooks/useReportMetadata";
 import {
   REPORT_REASON_FILTER_OPTIONS,
   REPORT_STATUS_FILTER_OPTIONS,
@@ -26,6 +27,28 @@ export function AdminReportsToolbar({
   onTargetTypeChange,
   onReasonChange,
 }: AdminReportsToolbarProps) {
+  const { targetTypes, reasons } = useReportMetadata();
+
+  const targetTypeOptions = targetTypes.length > 0
+    ? [
+        { label: "Tất cả", value: null },
+        ...targetTypes.map((t) => ({
+          label: t.title,
+          value: t.value as ReportTargetType,
+        })),
+      ]
+    : REPORT_TARGET_TYPE_FILTER_OPTIONS;
+
+  const reasonOptions = reasons.length > 0
+    ? [
+        { label: "Tất cả", value: null },
+        ...reasons.map((r) => ({
+          label: r.title,
+          value: r.value as ReportReason,
+        })),
+      ]
+    : REPORT_REASON_FILTER_OPTIONS;
+
   return (
     <div className="space-y-6">
       <div>
@@ -56,7 +79,7 @@ export function AdminReportsToolbar({
                 value === "all" ? null : (value as ReportTargetType),
               )
             }
-            options={REPORT_TARGET_TYPE_FILTER_OPTIONS}
+            options={targetTypeOptions}
           />
 
           <FilterSelect
@@ -65,7 +88,7 @@ export function AdminReportsToolbar({
             onChange={(value) =>
               onReasonChange(value === "all" ? null : (value as ReportReason))
             }
-            options={REPORT_REASON_FILTER_OPTIONS}
+            options={reasonOptions}
           />
         </div>
       </div>
