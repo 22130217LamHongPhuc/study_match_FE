@@ -1,20 +1,13 @@
 import type { StudySessionVm } from "../types";
-import { Clock } from "lucide-react";
+import { Clock, ChevronLeft, ChevronRight, Repeat } from "lucide-react";
 
 interface WeeklyCalendarProps {
   sessions: StudySessionVm[];
   onSelectSession: (session: StudySessionVm) => void;
+  weekOffset: number;
+  onWeekOffsetChange: (offset: number) => void;
+  loading?: boolean;
 }
-
-const weekDays = [
-  { label: "Thứ 2", dayIndex: 1 },
-  { label: "Thứ 3", dayIndex: 2 },
-  { label: "Thứ 4", dayIndex: 3 },
-  { label: "Thứ 5", dayIndex: 4 },
-  { label: "Thứ 6", dayIndex: 5 },
-  { label: "Thứ 7", dayIndex: 6 },
-  { label: "Chủ Nhật", dayIndex: 0 },
-];
 
 function formatTime(value: string) {
   return new Date(value).toLocaleTimeString("vi-VN", {
@@ -23,44 +16,219 @@ function formatTime(value: string) {
   });
 }
 
-function getSessionsByDay(sessions: StudySessionVm[], dayIndex: number) {
+function getWeekRange(offset: number) {
+  const startOfWeek = new Date();
+  const day = startOfWeek.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  startOfWeek.setDate(startOfWeek.getDate() + diffToMonday + offset * 7);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 7);
+  endOfWeek.setHours(0, 0, 0, 0);
+
+  return {
+    startOfWeek,
+    endOfWeek,
+  };
+}
+
+function formatWeekRange(start: Date) {
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+
+  const startDay = start.getDate().toString().padStart(2, "0");
+  const startMonth = (start.getMonth() + 1).toString().padStart(2, "0");
+  const startYear = start.getFullYear();
+
+  const endDay = end.getDate().toString().padStart(2, "0");
+  const endMonth = (end.getMonth() + 1).toString().padStart(2, "0");
+  const endYear = end.getFullYear();
+
+  if (startYear === endYear) {
+    return `${startDay}/${startMonth} - ${endDay}/${endMonth}/${startYear}`;
+  }
+  return `${startDay}/${startMonth}/${startYear} - ${endDay}/${endMonth}/${endYear}`;
+}
+
+function getDaysOfWeek(offset: number) {
+  const { startOfWeek } = getWeekRange(offset);
+
+  const dayLabels = [
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+    "Chủ Nhật",
+  ];
+  const dayIndices = [1, 2, 3, 4, 5, 6, 0];
+
+  return Array.from({ length: 7 }).map((_, index) => {
+    const date = new Date(startOfWeek);
+    date.setDate(startOfWeek.getDate() + index);
+
+    return {
+      label: dayLabels[index],
+      dayIndex: dayIndices[index],
+      date,
+      dateString: date.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+      }),
+    };
+  });
+}
+
+function getSessionsByDate(sessions: StudySessionVm[], date: Date) {
+  const targetDateStr = date.toDateString();
   return sessions.filter(
-    (session) => new Date(session.startTime).getDay() === dayIndex,
+    (session) => new Date(session.startTime).toDateString() === targetDateStr,
+  );
+}
+
+export function WeeklyCalendarSkeleton() {
+  const dayLabels = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"];
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm animate-pulse">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="h-6 w-28 bg-gray-200 rounded mb-2" />
+          <div className="h-4 w-52 bg-gray-150 rounded" />
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="h-9 w-48 bg-gray-200 rounded-lg" />
+          <div className="h-9 w-20 bg-gray-200 rounded-lg" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        {dayLabels.map((label, idx) => (
+          <div
+            key={idx}
+            className="min-h-[380px] rounded-xl border border-gray-150 bg-gray-50/50 p-3 flex flex-col gap-3"
+          >
+            <div className="flex items-center justify-between shrink-0 mb-1">
+              <div className="h-4 w-16 bg-gray-200 rounded" />
+              <div className="h-4 w-6 bg-gray-150 rounded-lg" />
+            </div>
+            
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="rounded-xl bg-white p-3 border border-gray-100/80 shadow-sm flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="h-3 w-10 bg-gray-200 rounded" />
+                  <div className="h-3.5 w-8 bg-gray-150 rounded" />
+                </div>
+                <div className="h-4 w-full bg-gray-200 rounded mt-1" />
+                <div className="h-3 w-16 bg-gray-100 rounded mt-0.5" />
+              </div>
+              {idx % 3 !== 0 && (
+                <div className="rounded-xl bg-white p-3 border border-gray-100/80 shadow-sm flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="h-3 w-10 bg-gray-200 rounded" />
+                    <div className="h-3.5 w-8 bg-gray-150 rounded" />
+                  </div>
+                  <div className="h-4 w-4/5 bg-gray-200 rounded mt-1" />
+                  <div className="h-3 w-12 bg-gray-100 rounded mt-0.5" />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
 export function WeeklyCalendar({
   sessions,
   onSelectSession,
+  weekOffset,
+  onWeekOffsetChange,
+  loading,
 }: WeeklyCalendarProps) {
+  if (loading) {
+    return <WeeklyCalendarSkeleton />;
+  }
+  const { startOfWeek } = getWeekRange(weekOffset);
+  const weekRangeLabel = formatWeekRange(startOfWeek);
+  const daysOfWeek = getDaysOfWeek(weekOffset);
+
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5">
-      <div className="mb-5 flex items-center justify-between">
+    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-800">Lịch tuần</h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 mt-0.5">
             Tổng quan các buổi học trong tuần
           </p>
         </div>
-        <span className="rounded-lg bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-600">
-          {sessions.length} buổi
-        </span>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+            <button
+              onClick={() => onWeekOffsetChange(weekOffset - 1)}
+              className="rounded-md p-1.5 hover:bg-gray-50 text-gray-600 hover:text-blue-600 transition"
+              title="Tuần trước"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="px-3 py-1 text-sm font-semibold text-gray-700 min-w-[170px] text-center">
+              {weekRangeLabel}
+            </div>
+
+            <button
+              onClick={() => onWeekOffsetChange(weekOffset + 1)}
+              className="rounded-md p-1.5 hover:bg-gray-50 text-gray-600 hover:text-blue-600 transition"
+              title="Tuần sau"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {weekOffset !== 0 && (
+            <button
+              onClick={() => onWeekOffsetChange(0)}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-blue-600 hover:bg-blue-50/50 hover:border-blue-200 transition"
+            >
+              Tuần này
+            </button>
+          )}
+
+          <span className="rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-600">
+            {sessions.length} buổi
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-        {weekDays.map((day) => {
-          const daySessions = getSessionsByDay(sessions, day.dayIndex);
+        {daysOfWeek.map((day) => {
+          const daySessions = getSessionsByDate(sessions, day.date);
+          const isToday = day.date.toDateString() === new Date().toDateString();
 
           return (
             <div
               key={day.label}
-              className="min-h-[380px] rounded-xl border border-gray-200 bg-gray-50 p-3 flex flex-col"
+              className={`min-h-[380px] rounded-xl border p-3 flex flex-col transition-all ${
+                isToday
+                  ? "border-blue-200 bg-blue-50/15 ring-1 ring-blue-100/50 shadow-sm"
+                  : "border-gray-200 bg-gray-50"
+              }`}
             >
               <div className="mb-3 flex items-center justify-between shrink-0">
-                <span className="text-xs font-bold text-gray-700">
-                  {day.label}
+                <span className={`text-xs font-bold ${isToday ? "text-blue-600" : "text-gray-700"}`}>
+                  {day.label}{" "}
+                  <span className={`text-[10px] font-normal ${isToday ? "text-blue-400" : "text-gray-400"}`}>
+                    ({day.dateString})
+                  </span>
                 </span>
-                <span className="rounded-lg bg-white border border-gray-150 px-2 py-0.5 text-[10px] font-bold text-gray-500">
+                <span className={`rounded-lg bg-white border border-gray-150 px-2 py-0.5 text-[10px] font-bold ${
+                  isToday ? "text-blue-500 border-blue-100 shadow-sm" : "text-gray-500"
+                }`}>
                   {daySessions.length}
                 </span>
               </div>
@@ -85,15 +253,25 @@ export function WeeklyCalendar({
                             {formatTime(session.startTime)}
                           </span>
                         </div>
-                        <span
-                          className={`rounded border px-1 py-0.2 text-[8px] font-bold ${
-                            session.sessionType === "GROUP"
-                              ? "bg-rose-50 border-rose-100 text-rose-600"
-                              : "bg-emerald-50 border-emerald-100 text-emerald-600"
-                          }`}
-                        >
-                          {session.sessionType === "GROUP" ? "Nhóm" : "1-1"}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          {session.recurrenceType === "WEEKLY" && (
+                            <span title="Lặp lại hàng tuần" className="inline-flex shrink-0">
+                              <Repeat
+                                size={10}
+                                className="text-blue-500 shrink-0"
+                              />
+                            </span>
+                          )}
+                          <span
+                            className={`rounded border px-1 py-0.2 text-[8px] font-bold ${
+                              session.sessionType === "GROUP"
+                                ? "bg-rose-50 border-rose-100 text-rose-600"
+                                : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                            }`}
+                          >
+                            {session.sessionType === "GROUP" ? "Nhóm" : "1-1"}
+                          </span>
+                        </div>
                       </div>
                       <div className="line-clamp-2 text-xs font-bold text-gray-800 mt-2 leading-snug">
                         {session.title}
@@ -114,3 +292,4 @@ export function WeeklyCalendar({
     </section>
   );
 }
+

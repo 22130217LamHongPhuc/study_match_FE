@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { initFreeTime } from "../Onboarding/components/constants";
-import type { FreeTime, Subject } from "../Onboarding/components/types";
+import type { Subject } from "../Onboarding/components/types";
 import BasicInfoSection from "./components/BasicInfoSection";
 import AcademicInfoSection from "./components/AcademicInfoSection";
 import GroupSettingsSection from "./components/GroupSettingsSection";
@@ -53,7 +52,6 @@ export default function CreateGroupPage() {
   const [maxMembers, setMaxMembers] = useState<number>(5);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
 
-  const [freeTime, setFreeTime] = useState<FreeTime>(() => initFreeTime());
   const profileState = useSelector((state: any) => state.profile);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,27 +81,7 @@ export default function CreateGroupPage() {
       return;
     }
 
-    const validSlotCodes = new Set(["ca1", "ca2", "ca3", "ca4", "ca5", "ca6"]);
-
-    const freeTimeSlots: FreeTimeSlotRequest[] = Object.entries(
-      freeTime,
-    ).flatMap(([dayKey, slots]) => {
-      const dayNumber = Number(dayKey);
-      if (!Number.isInteger(dayNumber) || dayNumber < 0 || dayNumber > 6) {
-        return [];
-      }
-
-      const dayOfWeek = dayNumber as DayOfWeek;
-
-      return Object.entries(slots as Record<string, boolean>)
-        .filter(([slotCodeKey]) => validSlotCodes.has(slotCodeKey))
-        .filter(([, isAvailable]) => Boolean(isAvailable))
-        .map(([slotCodeKey, isAvailable]) => ({
-          dayOfWeek,
-          slotCode: slotCodeKey as SlotCode,
-          isAvailable: Boolean(isAvailable),
-        }));
-    });
+    const freeTimeSlots: FreeTimeSlotRequest[] = [];
 
     const payload: CreateStudyGroupRequest = {
       name: groupName.trim(),
@@ -142,8 +120,7 @@ export default function CreateGroupPage() {
             Tạo nhóm học tập
           </h1>
           <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-600">
-            Thiết lập nhóm học tập dựa trên môn học, mục tiêu, hình thức và thời
-            gian rảnh.
+            Thiết lập nhóm học tập dựa trên môn học, mục tiêu và hình thức hoạt động.
           </p>
         </header>
 
@@ -177,8 +154,6 @@ export default function CreateGroupPage() {
               onMaxMembersChange={setMaxMembers}
               visibility={visibility}
               onVisibilityChange={setVisibility}
-              freeTime={freeTime}
-              onFreeTimeChange={setFreeTime}
             />
           </div>
 
@@ -189,7 +164,6 @@ export default function CreateGroupPage() {
               mainSubject: mainSubject?.subjectName || "",
               maxMembers,
               visibility,
-              freeTime,
               avatarPreview,
             }}
             invitedUserIds={invitedUserIds}

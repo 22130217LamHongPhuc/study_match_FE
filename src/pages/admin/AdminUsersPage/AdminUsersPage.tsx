@@ -10,6 +10,7 @@ import {
 } from "./types";
 import { getAdminUsers } from "../../../services/UserService";
 import { AdminUserDetailModal } from "./components/AdminUserDetailModal";
+import { InviteAdminModal } from "./components/InviteAdminModal";
 
 function useDebounce<T>(value: T, delay = 400) {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -49,6 +50,24 @@ export default function AdminUsersPage() {
     null,
   );
 
+  const [openInviteModal, setOpenInviteModal] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      try {
+        const payload = JSON.parse(
+          atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+        );
+        setIsSuperAdmin(String(payload.role ?? "").toLowerCase() === "super_admin");
+      } catch {
+        setIsSuperAdmin(false);
+      }
+    }
+  }, []);
+
   const handleStatusUpdated = (userId: number, status: AdminUserStatus) => {
     setUsers((prev) =>
       prev.map((user) =>
@@ -58,9 +77,9 @@ export default function AdminUsersPage() {
               status,
             }
           : user,
-      ),
-    );
+    ));
   };
+
   useEffect(() => {
     setPage(1);
   }, [debouncedQuery, statusFilter, roleFilter]);
@@ -107,7 +126,7 @@ export default function AdminUsersPage() {
     return () => {
       ignore = true;
     };
-  }, [page, debouncedQuery, statusFilter, roleFilter]);
+  }, [page, debouncedQuery, statusFilter, roleFilter, refreshTrigger]);
 
   const handleStatusChange = (value: AdminUserStatus | null) => {
     setStatusFilter(value);
@@ -126,6 +145,8 @@ export default function AdminUsersPage() {
         onQueryChange={setQuery}
         onStatusChange={handleStatusChange}
         onRoleChange={handleRoleChange}
+        isSuperAdmin={isSuperAdmin}
+        onInviteClick={() => setOpenInviteModal(true)}
       />
 
       {error && (
@@ -154,6 +175,16 @@ export default function AdminUsersPage() {
         user={openUserDetail}
         onClose={() => setOpenUserDetail(null)}
       />
+
+      <InviteAdminModal
+        open={openInviteModal}
+        onClose={() => setOpenInviteModal(false)}
+        onSuccess={() => {
+          setPage(1);
+          setRefreshTrigger((prev) => prev + 1);
+        }}
+      />
     </main>
   );
 }
+

@@ -1,4 +1,5 @@
 import type { StudySessionVm } from "../types";
+import { Repeat } from "lucide-react";
 
 interface AllSessionListProps {
   sessions: StudySessionVm[];
@@ -10,6 +11,7 @@ interface AllSessionListProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onSelectSession: (session: StudySessionVm) => void;
+  loading?: boolean;
 }
 
 function formatDate(value: string) {
@@ -51,6 +53,69 @@ function getStatusLabel(status: string) {
   return status;
 }
 
+export function AllSessionListSkeleton() {
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-5 animate-pulse">
+      <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="h-6 w-36 bg-gray-200 rounded mb-2" />
+          <div className="h-4 w-52 bg-gray-150 rounded" />
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="h-9 w-24 bg-gray-150 rounded-lg" />
+          <div className="h-9 w-20 bg-gray-200 rounded-lg" />
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+        <div className="hidden grid-cols-[1.1fr_1.5fr_1fr_1fr_1fr] bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-500 md:grid">
+          <div>Thời gian</div>
+          <div>Nội dung</div>
+          <div>Loại</div>
+          <div>Hình thức</div>
+          <div>Trạng thái</div>
+        </div>
+
+        <div className="divide-y divide-gray-100">
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="grid w-full grid-cols-1 gap-3 px-4 py-5 md:grid-cols-[1.1fr_1.5fr_1fr_1fr_1fr] md:items-center"
+            >
+              <div className="flex flex-col gap-2">
+                <div className="h-4 w-20 bg-gray-200 rounded" />
+                <div className="h-3 w-24 bg-gray-100 rounded" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="h-4 w-40 bg-gray-200 rounded" />
+                <div className="h-3.5 w-28 bg-gray-100 rounded" />
+              </div>
+              <div>
+                <div className="h-6 w-14 bg-gray-150 rounded-md" />
+              </div>
+              <div>
+                <div className="h-4 w-16 bg-gray-200 rounded" />
+              </div>
+              <div>
+                <div className="h-6 w-24 bg-gray-150 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="h-4 w-44 bg-gray-150 rounded" />
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-16 bg-gray-200 rounded-lg" />
+          <div className="h-4 w-20 bg-gray-150 rounded" />
+          <div className="h-9 w-16 bg-gray-200 rounded-lg" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function AllSessionList({
   sessions,
   page,
@@ -61,7 +126,12 @@ export function AllSessionList({
   onPageChange,
   onPageSizeChange,
   onSelectSession,
+  loading,
 }: AllSessionListProps) {
+  if (loading) {
+    return <AllSessionListSkeleton />;
+  }
+
   const currentPage = totalPages === 0 ? 0 : page + 1;
   const startItem = totalElements === 0 ? 0 : page * pageSize + 1;
   const endItem = Math.min(startItem + sessions.length - 1, totalElements);
@@ -131,8 +201,17 @@ export function AllSessionList({
               </div>
 
               <div>
-                <div className="font-semibold text-gray-800">
+                <div className="flex items-center gap-1.5 font-semibold text-gray-800">
                   {session.title}
+                  {session.recurrenceType === "WEEKLY" && (
+                    <span
+                      title="Lặp lại hàng tuần"
+                      className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-100 px-1.5 py-0.5 text-[9px] font-semibold text-blue-600 whitespace-nowrap"
+                    >
+                      <Repeat size={9} className="shrink-0" />
+                      Lặp tuần
+                    </span>
+                  )}
                 </div>
                 <div className="text-sm text-gray-500">
                   {session.subjectName || "Chưa cập nhật môn học"}

@@ -10,7 +10,6 @@ export interface AuthResponse {
   emailVerified: boolean;
 }
 
-const API_BASE_URL = "http://localhost:8085/api/auth";
 export async function login(
   email: string,
   password: string,
@@ -100,6 +99,27 @@ export async function testApi(
 ): Promise<APIResponseData<string>> {
   const response = await apiFetch<string>(`/admin`, {
     method: "GET",
+  });
+  return response;
+}
+
+export async function adminForgetPassword(
+  email: string,
+): Promise<APIResponseData<String>> {
+  const response = await apiFetch<String>("/auth/admin/forget-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  return response;
+}
+
+export async function adminResetPassword(
+  token: string,
+  newPassword: string,
+): Promise<APIResponseData<String>> {
+  const response = await apiFetch<String>("/auth/admin/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, newPassword }),
   });
   return response;
 }
