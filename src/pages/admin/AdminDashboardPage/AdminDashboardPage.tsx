@@ -12,8 +12,7 @@ import {
   MessageSquareWarning,
   Search,
   ShieldAlert,
-  UsersRound,
-    Search
+  UsersRound
 } from "lucide-react";
 
 import {

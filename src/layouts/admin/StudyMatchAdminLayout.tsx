@@ -20,6 +20,8 @@ import {
   KeyRound,
   FileClock,
   Library,
+  ChevronDown,
+  ShieldAlert,
 } from "lucide-react";
 import { EditAdminProfileModal } from "./EditAdminProfileModal";
 import { ChangeAdminPasswordModal } from "./ChangeAdminPasswordModal";
@@ -91,10 +93,12 @@ function SidebarContent({
   onNavigate,
   adminProfile,
   onLogout,
+  isSuperAdmin,
 }: {
   onNavigate?: () => void;
   adminProfile: { fullName: string; avatarUrl?: string } | null;
   onLogout: () => void;
+  isSuperAdmin?: boolean;
 }) {
   const fullName = adminProfile?.fullName || "Admin";
   const avatarUrl = adminProfile?.avatarUrl;
@@ -208,11 +212,22 @@ function SidebarContent({
   );
 }
 
-function Sidebar({ isSuperAdmin  adminProfile,
-  onLogout}: { isSuperAdmin?: boolean }) {
+function Sidebar({
+  isSuperAdmin,
+  adminProfile,
+  onLogout,
+}: {
+  isSuperAdmin?: boolean;
+  adminProfile: { fullName: string; avatarUrl?: string } | null;
+  onLogout: () => void;
+}) {
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-slate-100 bg-slate-50/50 lg:flex lg:flex-col">
-      <SidebarContent isSuperAdmin={isSuperAdmin} />
+      <SidebarContent
+        isSuperAdmin={isSuperAdmin}
+        adminProfile={adminProfile}
+        onLogout={onLogout}
+      />
     </aside>
   );
 }
@@ -221,10 +236,14 @@ function MobileDrawer({
   open,
   onClose,
   isSuperAdmin,
+  adminProfile,
+  onLogout,
 }: {
   open: boolean;
   onClose: () => void;
   isSuperAdmin?: boolean;
+  adminProfile: { fullName: string; avatarUrl?: string } | null;
+  onLogout: () => void;
 }) {
   return (
     <>
@@ -570,11 +589,17 @@ export default function StudyMatchAdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-blue-50/20 font-sans text-slate-900">
-      <Sidebar isSuperAdmin={isSuperAdmin} />
+      <Sidebar
+        isSuperAdmin={isSuperAdmin}
+        adminProfile={adminProfile}
+        onLogout={handleLogout}
+      />
       <MobileDrawer
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isSuperAdmin={isSuperAdmin}
+        adminProfile={adminProfile}
+        onLogout={handleLogout}
       />
       <div className="flex flex-1 flex-col min-w-0">
         <Topbar
