@@ -27,21 +27,38 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+const getDisplayUrl = (config?: any): string => {
+  if (!config) return "";
+  const url = config.url || "";
+  const isAbsolute = url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//");
+  return isAbsolute ? url : `${config.baseURL || ""}${url}`;
+};
+
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
+    console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${getDisplayUrl(config)}`, {
+      headers: config.headers,
+      data: config.data,
+      params: config.params
+    });
     return config;
   },
   (error) => {
+    console.error("[API REQUEST ERROR]", error);
     return Promise.reject(error);
   }
 );
 
 apiClient.interceptors.response.use(
   (response) => {
+    console.log(`[API RESPONSE SUCCESS] ${response.config.method?.toUpperCase()} ${getDisplayUrl(response.config)}`, {
+      status: response.status,
+      data: response.data
+    });
     const resData = response.data;
 
     if (resData && (resData.code === StatusCode.USER_LOCKED || resData.code === "USER_LOCKED")) {
@@ -101,6 +118,11 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+    console.error(`[API RESPONSE ERROR] ${error.config?.method?.toUpperCase()} ${getDisplayUrl(error.config)}`, {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
     const originalRequest = error.config;
     const status = error.response?.status;
     const resData = error.response?.data as any;

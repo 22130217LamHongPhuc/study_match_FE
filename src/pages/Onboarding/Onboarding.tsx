@@ -27,12 +27,14 @@ import {
 } from "../../services/OnboardingService";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../../config/apiClient";
+import { useConfirm } from "../../components/modal/ConfirmModal";
 
 import { BASE_URL } from "../../config/BaseConfig";
 
 const API_BASE_URL = BASE_URL + "/api";
 
 export default function OnboardingFlow() {
+  const confirm = useConfirm();
   const [step, setStep] = useState<number>(1);
   const [goalSub, setGoalSub] = useState<number>(1);
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -430,13 +432,16 @@ export default function OnboardingFlow() {
     setStep((s) => s + 1);
   };
 
-  const handleBack = (): void => {
+  const handleBack = async (): Promise<void> => {
     if (step === 1 && goalSub === 1) {
-      if (
-        window.confirm(
-          "Bạn có chắc muốn thoát? Dữ liệu đã nhập sẽ không được lưu.",
-        )
-      ) {
+      const confirmed = await confirm({
+        title: "Xác nhận thoát",
+        message: "Bạn có chắc muốn thoát? Dữ liệu đã nhập sẽ không được lưu.",
+        type: "warning",
+        confirmText: "Thoát",
+        cancelText: "Hủy",
+      });
+      if (confirmed) {
         navigate("/login", { replace: true });
       }
 

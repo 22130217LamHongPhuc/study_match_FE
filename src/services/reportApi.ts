@@ -1,8 +1,14 @@
 import { BASE_URL } from "../config/BaseConfig";
 import { apiFetch } from "../config/apiClient";
+import { StatusCode } from "../config/APIResponse";
 import type { APIResponseData } from "../config/APIResponse";
 
-export type ReportTargetType = "USER" | "POST" | "GROUP";
+export type ReportTargetType = "USER" | "POST" | "GROUP" | "DOCUMENT";
+
+export interface ReportOption {
+  value: string;
+  title: string;
+}
 
 export type ReportReason =
   | "SPAM"
@@ -47,6 +53,7 @@ export interface ReportResponse {
   reporterUserId?: number;
   reporterName?: string;
   reviewerUserId?: number | null;
+  target_name?: string;
   [key: string]: unknown;
 }
 
@@ -228,3 +235,59 @@ export function getReportErrorMessage(
 
   return message;
 }
+
+let cachedTargetTypes: ReportOption[] | null = null;
+let cachedReasons: ReportOption[] | null = null;
+let cachedTargetTypesPromise: Promise<APIResponseData<ReportOption[]>> | null = null;
+let cachedReasonsPromise: Promise<APIResponseData<ReportOption[]>> | null = null;
+
+export async function getTargetTypes(): Promise<APIResponseData<ReportOption[]>> {
+  if (cachedTargetTypes) {
+    return {
+      success: true,
+      code: StatusCode.SUCCESS,
+      message: "Lấy danh sách loại đối tượng báo cáo thành công",
+      data: cachedTargetTypes,
+    };
+  }
+  if (cachedTargetTypesPromise) {
+    return cachedTargetTypesPromise;
+  }
+  cachedTargetTypesPromise = apiFetch<ReportOption[]>(
+    "/api/reports/target-types",
+    { method: "GET" },
+    BASE_URL,
+  );
+  const response = await cachedTargetTypesPromise;
+  if (response.success && response.data) {
+    cachedTargetTypes = response.data;
+  }
+  cachedTargetTypesPromise = null;
+  return response;
+}
+
+export async function getReasons(): Promise<APIResponseData<ReportOption[]>> {
+  if (cachedReasons) {
+    return {
+      success: true,
+      code: StatusCode.SUCCESS,
+      message: "Lấy danh sách lý do báo cáo thành công",
+      data: cachedReasons,
+    };
+  }
+  if (cachedReasonsPromise) {
+    return cachedReasonsPromise;
+  }
+  cachedReasonsPromise = apiFetch<ReportOption[]>(
+    "/api/reports/reasons",
+    { method: "GET" },
+    BASE_URL,
+  );
+  const response = await cachedReasonsPromise;
+  if (response.success && response.data) {
+    cachedReasons = response.data;
+  }
+  cachedReasonsPromise = null;
+  return response;
+}
+

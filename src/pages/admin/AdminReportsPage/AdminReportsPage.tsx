@@ -20,8 +20,10 @@ import {
   getDefaultUpdateStatus,
   getStatusValue,
 } from "./utils";
+import { useReportMetadata } from "../../../hooks/useReportMetadata";
 
 export default function AdminReportsPage() {
+  useReportMetadata();
   const [statusFilter, setStatusFilter] = useState<ReportStatus | null>(null);
   const [targetTypeFilter, setTargetTypeFilter] =
     useState<ReportTargetType | null>(null);

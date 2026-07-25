@@ -5,8 +5,10 @@ import { getMyReportDetail, getMyReports } from "../../services/reportApi";
 import { MyReportDetailModal } from "./components/MyReportDetailModal";
 import { MyReportsTable } from "./components/MyReportsTable";
 import { MY_REPORTS_PAGE_SIZE } from "./utils";
+import { useReportMetadata } from "../../hooks/useReportMetadata";
 
 export default function MyReportsPage() {
+  useReportMetadata();
   const [reports, setReports] = useState<ReportResponse[]>([]);
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);

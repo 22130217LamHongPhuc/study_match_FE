@@ -203,13 +203,13 @@ export function AllSessionList({
               <div>
                 <div className="flex items-center gap-1.5 font-semibold text-gray-800">
                   {session.title}
-                  {session.recurrenceType === "WEEKLY" && (
+                  {(session.recurrenceId || (session.recurrenceType && session.recurrenceType !== "NONE")) && (
                     <span
-                      title="Lặp lại hàng tuần"
+                      title={session.recurrenceType === "WEEKLY" ? "Lặp lại hàng tuần" : "Lặp lại"}
                       className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-100 px-1.5 py-0.5 text-[9px] font-semibold text-blue-600 whitespace-nowrap"
                     >
                       <Repeat size={9} className="shrink-0" />
-                      Lặp tuần
+                      {session.recurrenceType === "WEEKLY" ? "Lặp tuần" : "Lặp"}
                     </span>
                   )}
                 </div>

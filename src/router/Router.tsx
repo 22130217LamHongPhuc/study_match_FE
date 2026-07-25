@@ -37,6 +37,9 @@ import MyReportsPage from "../pages/MyReports/MyReportsPage";
 import ActivateAdminPage from "../pages/admin/ActivateAdminPage";
 import AdminResetPasswordPage from "../pages/admin/AdminResetPasswordPage";
 import AdminAuditLogsPage from "../pages/admin/AdminAuditLogsPage/AdminAuditLogsPage";
+import DocumentsPage from "../pages/Documents/DocumentsPage";
+import MyLibraryPage from "../pages/Documents/MyLibraryPage";
+import AdminDocumentsPage from "../pages/admin/AdminDocumentsPage/AdminDocumentsPage";
 
 
 function getRoleFromToken(token: string | null): "admin" | "student" | null {
@@ -141,6 +144,9 @@ export const router = createBrowserRouter([
           { path: "/search", element: <SearchPage /> },
           { path: "/reports/my", element: <MyReportsPage /> },
           { path: "/report", element: <Navigate to="/reports/my" replace /> },
+          { path: "/documents", element: <DocumentsPage /> },
+          { path: "/documents/:documentId", element: <DocumentsPage /> },
+          { path: "/documents/my-library", element: <MyLibraryPage /> },
         ],
       },
     ],
@@ -202,6 +208,10 @@ export const router = createBrowserRouter([
           {
             path: "reports",
             element: <AdminReportsPage />,
+          },
+          {
+            path: "documents",
+            element: <AdminDocumentsPage />,
           },
           {
             path: "audit-logs",

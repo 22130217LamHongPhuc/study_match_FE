@@ -1,4 +1,5 @@
 import { Box } from "@mui/system";
+import { useTheme, useMediaQuery } from "@mui/material";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import SideBar from "../../components/sidebar/SideBar";
@@ -73,6 +74,10 @@ const isZegoCreateSpanError = (error: unknown) => {
 
 
 export default function MainLayout() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const theme = useTheme();
+  const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
+  const effectiveCollapsed = sidebarCollapsed || isMdDown;
 
   const dispatch = useDispatch();
   const location = useLocation();
@@ -534,7 +539,7 @@ export default function MainLayout() {
 
       <Box sx={{ display: "flex", minHeight: "100vh", background: "#fafaf8" }}>
         <Box sx={{ flexShrink: 0 }}>
-          <SideBar />
+          <SideBar collapsed={effectiveCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>

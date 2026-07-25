@@ -10,6 +10,7 @@ import FeedbackIcon from "@mui/icons-material/Feedback";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import BadgeIcon from "@mui/icons-material/Badge";
 import SchoolIcon from "@mui/icons-material/School";
+import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
     path: "/conversation",
   },
   { label: "Nhóm", icon: <Diversity2Icon />, path: "/groups" },
+  { label: "Thư viện học tập", icon: <LibraryBooksIcon />, path: "/documents" },
   { label: "Báo cáo của tôi", icon: <Report />, path: "/reports/my" },
 ];
 

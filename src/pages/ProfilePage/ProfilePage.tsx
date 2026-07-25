@@ -1882,7 +1882,7 @@ export default function ProfilePage() {
             }}
           >
             <Typography variant="subtitle2" sx={{ color: "#64748b", fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", mb: 1 }}>
-              Trình độ học tập
+              Mục tiêu học tập
             </Typography>
             <Typography variant="body1" sx={{ color: "#1e293b", fontWeight: 700, fontSize: "15px" }}>
               {displayGoal}
@@ -1964,7 +1964,7 @@ export default function ProfilePage() {
 
         <Box sx={{ p: 3, borderRadius: "12px", border: "1px solid #e2e8f0", bgcolor: "#fff" }}>
           <Typography variant="subtitle2" sx={{ color: "#64748b", fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", mb: 2 }}>
-            Các môn học đang tham gia đăng ký khác
+            Các môn học đang học trong học kì hiện tại
           </Typography>
           {enrollments.length === 0 ? (
             <Typography variant="body2" sx={{ color: "#94a3b8", fontSize: "14px" }}>
@@ -2484,18 +2484,18 @@ export default function ProfilePage() {
                           {!profile?.friend &&
                             profile?.statusFriend === ProfileStatus.PENDING &&
                             pendingProfileFriendRequest?.direction === "sent" && (
-                            <Button disabled sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", mr: 2, fontSize: "14px" }}>
-                              Đã gửi lời mời
-                            </Button>
-                          )}
+                              <Button disabled sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", mr: 2, fontSize: "14px" }}>
+                                Đã gửi lời mời
+                              </Button>
+                            )}
                           {pendingProfileFriendRequest?.direction !== "received" && (
-                          <Button
-                            variant="outlined"
-                            sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", fontSize: "14px" }}
-                            onClick={sendMess}
-                          >
-                            Nhắn tin
-                          </Button>
+                            <Button
+                              variant="outlined"
+                              sx={{ borderRadius: "8px", py: 1, textTransform: "none", fontWeight: "bold", width: "50%", fontSize: "14px" }}
+                              onClick={sendMess}
+                            >
+                              Nhắn tin
+                            </Button>
                           )}
                         </Box>
                       </>

@@ -13,6 +13,7 @@ import PauseIcon from '@mui/icons-material/Pause'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { Avatar, Box, CircularProgress, Dialog, IconButton, Tooltip, Typography } from '@mui/material'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { MessageInterface } from '../../model/Conversation'
 import { submitReaction } from '../../services/ReactionService'
 import { useSelector } from 'react-redux'
@@ -187,6 +188,7 @@ type ListMessProps = {
 }
 
 function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessageStatus, onCallAgain, onLoadOlderMessages, loadingOlderMessages = false, hasMoreMessages = false, onRecallMessage, onForwardMessage, onPinMessage, isGroupConversation = false, seenStatuses = {}, senderProfiles = {} }: ListMessProps) {
+    const navigate = useNavigate()
     const appFontFamily = getFontFamilyValue(fontFamily)
     const [activeReactionMessageId, setActiveReactionMessageId] = useState<number | null>(null)
     const [activeMoreMessageId, setActiveMoreMessageId] = useState<number | null>(null)
@@ -1680,7 +1682,8 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
 
                                         <Avatar
                                             src={senderAvatar || undefined}
-                                            sx={{ width: 30, height: 30 }}
+                                            sx={{ width: 30, height: 30, cursor: "pointer", "&:hover": { opacity: 0.85 } }}
+                                            onClick={() => navigate(`/profile/${mess.senderId}`)}
                                         >
                                             {senderName.charAt(0).toUpperCase()}
                                         </Avatar>
@@ -1828,13 +1831,15 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
 
                                     <Avatar
                                         src={senderAvatar || undefined}
-                                        sx={{ width: 30, height: 30, mt: "18px" }}
+                                        sx={{ width: 30, height: 30, mt: "18px", cursor: "pointer", "&:hover": { opacity: 0.85 } }}
+                                        onClick={() => navigate(`/profile/${mess.senderId}`)}
                                     >
                                         {senderName.charAt(0).toUpperCase()}
                                     </Avatar>
                                     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", maxWidth: "70%" }}>
                                         {isGroupConversation && (
                                             <Box
+                                                onClick={() => navigate(`/profile/${mess.senderId}`)}
                                                 sx={{
                                                     ml: 1,
                                                     mb: 0.3,
@@ -1843,6 +1848,11 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                                                     fontWeight: 600,
                                                     lineHeight: "16px",
                                                     minHeight: 16,
+                                                    cursor: "pointer",
+                                                    "&:hover": {
+                                                        textDecoration: "underline",
+                                                        color: "#2563eb",
+                                                    },
                                                 }}
                                             >
                                                 {senderName}

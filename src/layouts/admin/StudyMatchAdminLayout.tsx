@@ -19,6 +19,7 @@ import {
   User,
   KeyRound,
   FileClock,
+  Library,
 } from "lucide-react";
 import { EditAdminProfileModal } from "./EditAdminProfileModal";
 import { ChangeAdminPasswordModal } from "./ChangeAdminPasswordModal";
@@ -53,6 +54,11 @@ const menuItems = [
     label: "Nhóm học",
     icon: BookOpenCheck,
     path: "/admin/groups",
+  },
+  {
+    label: "Quản lý tài liệu",
+    icon: Library,
+    path: "/admin/documents",
   },
   {
     label: "Lịch học",
