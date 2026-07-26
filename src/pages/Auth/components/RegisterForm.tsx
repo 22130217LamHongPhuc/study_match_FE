@@ -1,6 +1,7 @@
 import InputField from "./InputField";
 import Divider from "./Divider";
 import SocialAuthGroup from "./SocialLoginGroup";
+import PasswordField from "./PasswordField";
 import { AuthResponse, register } from "../../../services/AuthService";
 import { useState } from "react";
 import { APIResponseData } from "../../../config/APIResponse";
@@ -21,7 +22,6 @@ export default function RegisterForm() {
   const [errorFullName, setErrorFullName] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string>("");
 
-
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!validateFullName(fullName)) {
@@ -32,7 +32,6 @@ export default function RegisterForm() {
     }
 
     setErrorEmail(null);
-
 
     if (!validatePassword(password)) {
       setErrorPassword("Vui lòng nhập mật khẩu hợp lệ (ít nhất 6 ký tự)");
@@ -123,20 +122,18 @@ export default function RegisterForm() {
         />
         {errorEmail && <p className="text-sm text-red-500">{errorEmail}</p>}
 
-        <InputField
+        <PasswordField
           id="password"
           label="Mật khẩu"
-          type="password"
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         {errorPassword && <p className="text-sm text-red-500">{errorPassword}</p>}
 
-        <InputField
+        <PasswordField
           id="confirmPassword"
           label="Xác nhận mật khẩu"
-          type="password"
           placeholder="••••••••"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}

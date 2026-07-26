@@ -78,10 +78,11 @@ export default function LoginForm({
 
       <PasswordField
         id="password"
-        label="Password"
+        label="Mật khẩu"
         value={password}
         placeholder="••••••••"
         onChange={(e) => setPassword(e.target.value)}
+        showForgotPasswordLink={true}
       />
 
       <button

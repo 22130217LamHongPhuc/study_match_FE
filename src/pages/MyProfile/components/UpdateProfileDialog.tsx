@@ -141,12 +141,14 @@ interface UpdateProfileDialogProps {
   open: boolean;
   onClose: () => void;
   profile: ProfileViewModel;
+  preventClose?: boolean;
 }
 
 export default function UpdateProfileDialog({
   open,
   onClose,
   profile,
+  preventClose = false,
 }: UpdateProfileDialogProps) {
   const dispatch = useDispatch<AppDispatch>();
   const profileData = useSelector(
@@ -717,9 +719,10 @@ export default function UpdateProfileDialog({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={preventClose ? undefined : onClose}
       fullWidth
       maxWidth="md"
+      disableEscapeKeyDown={preventClose}
       PaperProps={{
         sx: {
           borderRadius: "24px",
@@ -731,14 +734,16 @@ export default function UpdateProfileDialog({
       <div className="flex flex-col max-h-[90vh] bg-slate-50/50">
         <div className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4 shrink-0 relative">
           <h2 className="text-lg font-bold text-gray-800">Cập nhật hồ sơ học tập</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-xl transition-all"
-          >
-            <X size={18} />
-          </button>
+          {!preventClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-xl transition-all"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
 
         <div className="border-b border-gray-100 bg-gray-50/50 py-3 shrink-0 select-none">
@@ -818,14 +823,18 @@ export default function UpdateProfileDialog({
         </div>
 
         <div className="px-6 pt-5 pb-6 border-t border-gray-150 flex items-center justify-between bg-white shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all"
-          >
-            Huỷ
-          </button>
+          {preventClose ? (
+            <div />
+          ) : (
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              className="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all"
+            >
+              Huỷ
+            </button>
+          )}
           <div className="flex items-center gap-2">
             {step > 1 && (
               <button
