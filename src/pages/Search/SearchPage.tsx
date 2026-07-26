@@ -543,10 +543,10 @@ export default function SearchPage() {
     } catch {}
   }, [buildFriendStatusMap]);
 
-  const fetchGroups = useCallback(async () => {
+  const fetchGroups = useCallback(async (keyword: string) => {
     setLoadingGroups(true);
     try {
-      const response = await browseGroups(undefined, undefined, 0, 100);
+      const response = await browseGroups(undefined, undefined, 0, 100, keyword);
       if (response.success) {
         const content = response.data?.content ?? [];
         const mapped = content.map(mapBrowseGroupToCommunityGroup);
@@ -560,7 +560,7 @@ export default function SearchPage() {
     }
   }, [loadGroupFriendCounts]);
 
-  useEffect(() => { fetchGroups(); }, [fetchGroups]);
+  useEffect(() => { fetchGroups(query); }, [fetchGroups, query]);
   useEffect(() => { fetchStudents(query); }, [fetchStudents, query]);
 
   const handleQueryChange = (value: string) => {

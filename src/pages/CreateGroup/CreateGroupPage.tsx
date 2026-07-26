@@ -9,6 +9,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   createStudyGroup,
+  sendGroupInvitation,
   type CreateStudyGroupRequest,
   type DayOfWeek,
   type FreeTimeSlotRequest,
@@ -92,7 +93,6 @@ export default function CreateGroupPage() {
       maxMembers,
       visibility,
       freeTimeSlots,
-      invitedUserIds: invitedUserIds.length > 0 ? invitedUserIds : undefined,
     };
     console.log("CreateGroupPage - payload:", payload);
 
@@ -100,6 +100,17 @@ export default function CreateGroupPage() {
     try {
       const res = await createStudyGroup(payload, avatarFile || undefined);
       if (res.success) {
+        const created = res.data as any;
+        const groupId = Number(
+          typeof created === "number"
+            ? created
+            : created?.id ?? created?.groupId ?? created?.group?.id,
+        );
+        if (Number.isFinite(groupId) && groupId > 0 && invitedUserIds.length > 0) {
+          await Promise.allSettled(
+            invitedUserIds.map((userId) => sendGroupInvitation(groupId, userId)),
+          );
+        }
         navigate("/groups");
         return;
       } else {

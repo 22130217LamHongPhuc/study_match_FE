@@ -743,6 +743,43 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   
                 </Typography>
                 
+                <TextField
+                  placeholder="Tìm kiếm bạn học, nhóm học..."
+                  variant="outlined"
+                  size="small"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IconButton onClick={handleSearch} size="small" sx={{ p: 0 }}>
+                          <SearchIcon sx={{ color: "#9ca3af", fontSize: "18px" }} />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      width: { xs: "180px", sm: "260px", md: "320px" },
+                      height: "36px",
+                      borderRadius: "10px",
+                      backgroundColor: "#f3f4f6",
+                      "& fieldset": { border: "none" },
+                      "&:hover fieldset": { border: "none" },
+                      "&.Mui-focused": {
+                        backgroundColor: "#ffffff",
+                        boxShadow: "0 0 0 2px rgba(37, 99, 235, 0.2)",
+                        "& fieldset": { border: "1px solid #2563eb" },
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      fontSize: "13px",
+                      color: "#1f2937",
+                      padding: "0px",
+                    },
+                  }}
+                />
               </Box>
 
               <Box

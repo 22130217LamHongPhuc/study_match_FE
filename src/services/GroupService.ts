@@ -295,11 +295,13 @@ export async function browseGroups(
   subject?: number,
   page: number = 0,
   limit: number = 10,
+  keyword?: string,
 ): Promise<APIResponseData<PageResponse<BrowseGroupResponse>>> {
 
   const userId = localStorage.getItem("userId");
   const params = new URLSearchParams();
   if (typeof subject === "number") params.set("subject", String(subject));
+  if (keyword?.trim()) params.set("keyword", keyword.trim());
   params.set("page", String(page));
   params.set("limit", String(limit));
 

@@ -140,7 +140,11 @@ const SidebarSkeleton = () => (
     </Box>
 );
 
-export default function ListFriends() {
+interface ListFriendsProps {
+    onBootstrapStateChange?: (state: { ready: boolean; hasConversations: boolean }) => void;
+}
+
+export default function ListFriends({ onBootstrapStateChange }: ListFriendsProps) {
     const navigate = useNavigate();
     const autoRedirectedRef = React.useRef(false);
     const location = useLocation();
@@ -169,6 +173,19 @@ export default function ListFriends() {
         () => new Set(friends.map((friend) => Number(friend.userId)).filter((id) => Number.isFinite(id) && id > 0)),
         [friends],
     );
+    const groupConversationIdSet = useMemo(
+        () => new Set(
+            groups
+                .map((group) => Number(group.conversationId))
+                .filter((id) => Number.isFinite(id) && id > 0),
+        ),
+        [groups],
+    );
+    const groupConversationIdsRef = React.useRef<Set<number>>(new Set());
+
+    useEffect(() => {
+        groupConversationIdsRef.current = groupConversationIdSet;
+    }, [groupConversationIdSet]);
 
     const loadProfilesByRequests = useCallback(async (
         requests: MessageRequestItem[],
@@ -371,6 +388,23 @@ export default function ListFriends() {
 
     // Mỗi lần mở tab Tin nhắn chờ → call API message-requests
     useEffect(() => {
+        const refreshAfterFriendStatusChange = async () => {
+            try {
+                const nextFriends = await loadAllFriendsService();
+                setFriends(nextFriends);
+                await fetchMessageRequestLists({ showLoading: false, replaceAll: true });
+            } catch (error) {
+                console.error("Cannot refresh conversations after friend status update", error);
+            }
+        };
+
+        window.addEventListener("friend_status_updated", refreshAfterFriendStatusChange);
+        return () => {
+            window.removeEventListener("friend_status_updated", refreshAfterFriendStatusChange);
+        };
+    }, [fetchMessageRequestLists]);
+
+    useEffect(() => {
         if (activeView !== "requests") return;
         if (!Number.isFinite(currentUserId) || currentUserId <= 0) return;
         void fetchMessageRequestLists({ showLoading: true, replaceAll: true });
@@ -438,6 +472,7 @@ export default function ListFriends() {
             const msg = socketPayload.message;
             const senderId = Number(msg?.senderId);
             const isOwnMessage = senderId === currentUserId;
+            const isGroupMessage = groupConversationIdsRef.current.has(convId);
 
             setGroups((prev) =>
                 prev.map((g) =>
@@ -446,6 +481,10 @@ export default function ListFriends() {
                         : g
                 )
             );
+
+            // Tin nhóm chỉ cập nhật item nhóm; không được tạo thêm tin nhắn chờ
+            // theo senderId của thành viên trong nhóm.
+            if (isGroupMessage) return;
 
             // Khi mình reply tin nhắn chờ → chuyển sang tab Bạn bè ngay
             if (isOwnMessage) {
@@ -564,7 +603,15 @@ export default function ListFriends() {
         );
         const requests = messageRequests
             // Nếu đã nằm ở accepted-direct (đã reply) thì không còn ở tin nhắn chờ
-            .filter((request) => !acceptedUserIds.has(Number(request.otherUserId)))
+            .filter((request) => {
+                const otherUserId = Number(request.otherUserId);
+                const conversationId = Number(request.conversationId);
+                return (
+                    !acceptedUserIds.has(otherUserId) &&
+                    !friendIdSet.has(otherUserId) &&
+                    !groupConversationIdSet.has(conversationId)
+                );
+            })
             .map((request) => {
                 const profile = requestProfiles[request.otherUserId] || directProfiles[request.otherUserId];
                 return {
@@ -579,7 +626,15 @@ export default function ListFriends() {
             )
             : requests;
         return sortByLatestMessage(filteredRequests);
-    }, [messageRequests, acceptedDirectConversations, requestProfiles, directProfiles, searchText]);
+    }, [
+        messageRequests,
+        acceptedDirectConversations,
+        requestProfiles,
+        directProfiles,
+        friendIdSet,
+        groupConversationIdSet,
+        searchText,
+    ]);
 
     // Tab Bạn bè: conversation đã accept/reply + bạn bè
     const visibleAcceptedDirectForMain = useMemo(() => {
@@ -703,8 +758,23 @@ export default function ListFriends() {
             if (Number.isFinite(currentUserId)) {
                 const response = await loadGroupConversation(currentUserId, group.id, 0);
                 const conversationId = response?.data?.conversationId;
+                const latestMessage = Array.isArray(response?.data?.listMess)
+                    ? response.data.listMess[0] ?? null
+                    : null;
                 if (conversationId) {
                     dispatch(updateCurrentConverId({ currentConversationId: Number(conversationId) }));
+                    setGroups((previousGroups) =>
+                        previousGroups.map((currentGroup) =>
+                            currentGroup.id === group.id
+                                ? {
+                                    ...currentGroup,
+                                    conversationId: Number(conversationId),
+                                    lastMessage: latestMessage,
+                                    updatedAt: latestMessage?.createdAt || currentGroup.updatedAt,
+                                }
+                                : currentGroup
+                        )
+                    );
                 }
             }
         } catch (error) {
@@ -754,6 +824,13 @@ export default function ListFriends() {
 
     const routeState = location.state as { targetUserId?: any; groupId?: any; conversationKey?: any } | null;
     const hasActiveChat = Boolean(routeState?.targetUserId || routeState?.groupId || routeState?.conversationKey);
+
+    useEffect(() => {
+        onBootstrapStateChange?.({
+            ready: !loading,
+            hasConversations: unifiedConversations.length > 0,
+        });
+    }, [loading, onBootstrapStateChange, unifiedConversations.length]);
 
     useEffect(() => {
         if (location.pathname !== "/conversation") {

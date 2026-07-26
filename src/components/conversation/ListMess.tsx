@@ -1029,6 +1029,19 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
             : `Cuộc gọi ${callType === "AUDIO" ? "thoại" : "video"}`
         const subtitle = isMissed ? timeText : durationText
         const Icon = isMissed ? PhoneMissedIcon : callType === "AUDIO" ? CallIcon : VideocamIcon
+        const senderProfile = senderProfiles[mess.senderId]
+        const senderAvatar = normalizeAvatarUrl(
+            senderProfile?.avatarUrl ||
+            senderProfile?.avatar_url ||
+            senderProfile?.avatar ||
+            null
+        )
+        const senderName =
+            senderProfile?.fullName ||
+            senderProfile?.full_name ||
+            senderProfile?.name ||
+            senderProfile?.username ||
+            "Người dùng"
 
         return (
             <Box
@@ -1039,8 +1052,26 @@ function ListMess({ theme, fontFamily, conversation, setReplyMess, visibleMessag
                     justifyContent: isMine ? "flex-end" : "flex-start",
                     mb: 1,
                     pl: isMine ? 0 : 4.75,
+                    position: "relative",
                 }}
             >
+                {!isMine && (
+                    <Avatar
+                        src={senderAvatar || undefined}
+                        alt={senderName}
+                        sx={{
+                            position: "absolute",
+                            left: 0,
+                            bottom: 0,
+                            width: 36,
+                            height: 36,
+                            bgcolor: "#e2e8f0",
+                            fontSize: 14,
+                        }}
+                    >
+                        {senderName.charAt(0).toUpperCase()}
+                    </Avatar>
+                )}
                 <Box
                     sx={{
                         width: 290,

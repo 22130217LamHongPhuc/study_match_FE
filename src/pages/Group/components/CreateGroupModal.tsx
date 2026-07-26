@@ -17,6 +17,7 @@ import type { Subject } from "../../Onboarding/components/types";
 
 import {
   createStudyGroup,
+  sendGroupInvitation,
   getAllSubjectsByCurriculum,
   type CreateStudyGroupRequest,
   type DayOfWeek,
@@ -184,13 +185,23 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       maxMembers,
       visibility,
       freeTimeSlots,
-      invitedUserIds: invitedUserIds.length > 0 ? invitedUserIds : undefined,
     };
 
     setIsSubmitting(true);
     try {
       const res = await createStudyGroup(payload, avatarFile || undefined);
       if (res.success) {
+        const created = res.data as any;
+        const groupId = Number(
+          typeof created === "number"
+            ? created
+            : created?.id ?? created?.groupId ?? created?.group?.id,
+        );
+        if (Number.isFinite(groupId) && groupId > 0 && invitedUserIds.length > 0) {
+          await Promise.allSettled(
+            invitedUserIds.map((userId) => sendGroupInvitation(groupId, userId)),
+          );
+        }
         onCreated();
         handleClose();
       } else {
@@ -567,7 +578,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                                 : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600"
                               }`}
                           >
-                            {isInvited ? "Đã chọn" : "Chọn"}
+                            {isInvited ? "Đã mời" : "Mời"}
                           </button>
                         </div>
                       );

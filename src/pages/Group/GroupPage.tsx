@@ -1,4 +1,5 @@
 import { BookOpen, ChevronRight, Crown, Loader2, Plus, Send, UserPlus, UserX, Users, X, Camera, LogOut } from "lucide-react";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import { useNavigate } from "react-router-dom";
 import ReportModal from "../../components/modal/ReportModal";
 import { useConfirm } from "../../components/modal/ConfirmModal";
@@ -60,26 +61,6 @@ const getRoleLabel = (role?: string | null, isOwnerByGroupDetail = false) => {
   return "Thành viên";
 };
 
-const getInitials = (name: string) => {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-};
-
-const getAvatarBg = (id: number) => {
-  const colors = [
-    "from-blue-500 to-blue-500",
-    "from-rose-500 to-pink-500",
-    "from-blue-500 to-indigo-500",
-    "from-emerald-500 to-teal-500",
-    "from-violet-500 to-purple-500",
-  ];
-  return colors[id % colors.length];
-};
-
 function GroupPreviewCard({
   group,
   onOpenDetail,
@@ -114,9 +95,10 @@ function GroupPreviewCard({
             />
           ) : (
             <div
-              className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center text-white font-bold text-sm tracking-wider shadow-sm shrink-0"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm"
+              aria-label="Avatar nhóm mặc định"
             >
-              {getInitials(group.name)}
+              <GroupsRoundedIcon sx={{ fontSize: 26 }} />
             </div>
           )}
           <div className="min-w-0 flex-1">
