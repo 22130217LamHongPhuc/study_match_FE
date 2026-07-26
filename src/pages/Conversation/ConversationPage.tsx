@@ -39,7 +39,6 @@ import ListFriends from "../../components/conversation/ListFriends";
 import ListMess from "../../components/conversation/ListMess";
 import ForwardMessageModal from "../../components/conversation/ForwardMessageModal";
 import ReplyMessage from "../../components/conversation/ReplyMessage";
-import VideoCallModal from "../../components/conversation/VideoCallModal";
 import { MessageInterface } from "../../model/Conversation";
 import { APIResponse } from "../../model/APIResponse";
 import { MessageStatusData, SocketData } from "../../model/SocketResponse";
@@ -47,7 +46,6 @@ import ColorPickerModal from "./components/ColorPickerModal";
 import MediaFilesModal from "./components/MediaFilesModal";
 import { getThemeById } from "../../theme/ConversationThemes";
 import { ReactionData, ReactionDTO } from "../../model/Reaction";
-import { VideoCallInfo } from "../../model/VideoCall";
 import {
   loadConversation,
   loadConversationById,
@@ -65,6 +63,9 @@ import {
 import { getActiveGroupMemberIds, getGroupAvatarUrl, getGroupById } from "../../services/GroupService";
 import { FriendUser, loadFriendProfilesService, normalizeAvatarUrl, loadFriendOnlineStatusesService } from "../../services/FriendService";
 import { getGroupStudySessions } from "../../services/StudySessionService";
+import { useCall } from "../../features/call/CallProvider";
+import VideoCallModal from "../../components/conversation/VideoCallModal";
+import { VideoCallInfo } from "../../model/VideoCall";
 import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
 import { StudySessionResponse } from "../StudySession/types";
 import { SocketEvent } from "../../enum/SocketEvent";
@@ -331,6 +332,7 @@ const formatRecordingTime = (elapsedMs: number) => {
 };
 
 export default function ConversationPage() {
+  const { state: callState, startCall: startManagedCall } = useCall();
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
@@ -387,11 +389,11 @@ export default function ConversationPage() {
     return selectedConversationKey !== "none";
   });
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
-  const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [waitingVideoCall, setWaitingVideoCall] = useState<VideoCallInfo | null>(null);
   const [rejectedVideoCall, setRejectedVideoCall] = useState(false);
   const [cancelCallLoading, setCancelCallLoading] = useState(false);
   const [videoCallLoading, setVideoCallLoading] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [badWordsWarningOpen, setBadWordsWarningOpen] = useState(false);
   const [pinnedMessagesOpen, setPinnedMessagesOpen] = useState(false);
   const [studyScheduleOpen, setStudyScheduleOpen] = useState(false);
@@ -414,6 +416,10 @@ export default function ConversationPage() {
     isGroupConversation ? routeAvatar : null,
   );
   const [friendsPanelWidth, setFriendsPanelWidth] = useState(420);
+  const [conversationListBootstrap, setConversationListBootstrap] = useState({
+    ready: false,
+    hasConversations: false,
+  });
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [recordingElapsedMs, setRecordingElapsedMs] = useState(0);
 
@@ -431,12 +437,24 @@ export default function ConversationPage() {
   const loadingOlderMessagesRef = useRef(false);
   const hasMoreMessagesRef = useRef(true);
   const activeConversationKeyRef = useRef("none");
+  const loadingConversationKeyRef = useRef<string | null>(null);
+  const loadedConversationKeyRef = useRef<string | null>(null);
   const conversationHydratedRef = useRef(false);
   const emojiPickerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const documentInputRef = useRef<HTMLInputElement | null>(null);
   const loadedPrivateProfileIdsRef = useRef<Set<number>>(new Set());
   const conversationRef = useRef<MessageInterface[]>([]);
+  const handleConversationListBootstrap = useCallback((
+    state: { ready: boolean; hasConversations: boolean },
+  ) => {
+    setConversationListBootstrap((previous) => (
+      previous.ready === state.ready &&
+      previous.hasConversations === state.hasConversations
+        ? previous
+        : state
+    ));
+  }, []);
 
   useLayoutEffect(() => {
     conversationRef.current = conversation;
@@ -516,7 +534,7 @@ export default function ConversationPage() {
     : normalizeAvatarUrl(privatePeerProfile?.avatarUrl || routeAvatar);
   const callTargetName = isGroupConversation ? groupName || "Nhóm hoc" : fullName;
   const displayCallTargetName = callTargetName || displayName;
-  const callTargetAvatar = isGroupConversation ? null : avatar;
+  const callTargetAvatar = isGroupConversation ? groupAvatar : avatar;
   const canOpenPeerProfile = !isGroupConversation && Boolean(profileUserId);
   const handleOpenPeerProfile = useCallback(() => {
     if (!canOpenPeerProfile || !profileUserId) return;
@@ -526,6 +544,15 @@ export default function ConversationPage() {
     () => conversation.filter((message) => isMessagePinned(message) && !message.isDeleted),
     [conversation],
   );
+  const isBareConversationRoute =
+    !targetUserId &&
+    !groupId &&
+    !(Number.isFinite(conversationIdFromState) && conversationIdFromState > 0);
+  const isConversationBootstrapLoading =
+    isBareConversationRoute &&
+    (!conversationListBootstrap.ready || conversationListBootstrap.hasConversations);
+  const isConversationViewLoading =
+    loadingConversation || isConversationBootstrapLoading;
 
   const [isOnline, setIsOnline] = useState<boolean>(false);
 
@@ -684,18 +711,32 @@ export default function ConversationPage() {
       activeConversationKeyRef.current = loadKey;
 
       if (!isGroupConversation && !targetUserId && !fallbackConversationId) {
+        loadingConversationKeyRef.current = null;
+        loadedConversationKeyRef.current = null;
         setConversation([]);
         conversationId.current = null;
         setLoadingConversation(false);
         return;
       }
       if (isGroupConversation && !groupId) {
+        loadingConversationKeyRef.current = null;
+        loadedConversationKeyRef.current = null;
         setConversation([]);
         conversationId.current = null;
         setLoadingConversation(false);
         return;
       }
 
+      // React StrictMode re-runs effects in development. Do not start the same
+      // conversation request twice or flash the skeleton for an already loaded chat.
+      if (
+        loadingConversationKeyRef.current === loadKey ||
+        loadedConversationKeyRef.current === loadKey
+      ) {
+        return;
+      }
+
+      loadingConversationKeyRef.current = loadKey;
       const loadingStartedAt = Date.now();
       nextMessagePageRef.current = 1;
       hasMoreMessagesRef.current = true;
@@ -790,6 +831,7 @@ export default function ConversationPage() {
         // Merge with any realtime messages that arrived during loading
         setConversation((prev) => mergeConversationMessages(prev, loadedMessages));
         conversationHydratedRef.current = true;
+        loadedConversationKeyRef.current = loadKey;
 
         const hasNextPage = loadedMessages.length === MESSAGE_PAGE_SIZE;
         hasMoreMessagesRef.current = hasNextPage;
@@ -807,6 +849,9 @@ export default function ConversationPage() {
         conversationHydratedRef.current = true;
       } finally {
         await waitForMinLoading(loadingStartedAt);
+        if (loadingConversationKeyRef.current === loadKey) {
+          loadingConversationKeyRef.current = null;
+        }
         if (activeConversationKeyRef.current === loadKey) {
           setLoadingConversation(false);
         }
@@ -1817,6 +1862,34 @@ export default function ConversationPage() {
     }
   };
 
+  const handleManagedStartCall = useCallback(async (callType: "AUDIO" | "VIDEO") => {
+    if (!conversationId.current || callState.status !== "IDLE") return;
+    await startManagedCall(conversationId.current, callType, {
+      callerName: isGroupConversation
+        ? callTargetName || "Nhóm học"
+        : currentUser.username || `User ${currentUserId}`,
+      callerAvatar: isGroupConversation
+        ? callTargetAvatar
+        : currentUser.avatar || localStorage.getItem("avatarUrl"),
+      peer: {
+        userId: targetUserId || 0,
+        name: callTargetName || (isGroupConversation ? "Nhóm học" : "Người dùng"),
+        avatar: callTargetAvatar,
+        isGroupCall: isGroupConversation,
+      },
+    });
+  }, [
+    callState.status,
+    callTargetAvatar,
+    callTargetName,
+    currentUser.avatar,
+    currentUser.username,
+    currentUserId,
+    isGroupConversation,
+    startManagedCall,
+    targetUserId,
+  ]);
+
   const clampFriendsPanelWidth = useCallback((width: number, layoutWidth?: number) => {
     const availableWidth = layoutWidth ?? conversationLayoutRef.current?.getBoundingClientRect().width ?? 0;
     const maxWidthByLayout = availableWidth > 0
@@ -1932,7 +2005,7 @@ export default function ConversationPage() {
                 : undefined,
             }}
           >
-            {loadingConversation ? (
+            {isConversationViewLoading ? (
               <>
                 <Skeleton
                   variant="circular"
@@ -1993,10 +2066,10 @@ export default function ConversationPage() {
             )}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("AUDIO")} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
+            <IconButton disabled={callState.status !== "IDLE"} onClick={() => handleManagedStartCall("AUDIO")} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
               <CallIcon sx={{ fontSize: 22 }} />
             </IconButton>
-            <IconButton disabled={videoCallLoading} onClick={() => handleStartCall("VIDEO")} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
+            <IconButton disabled={callState.status !== "IDLE"} onClick={() => handleManagedStartCall("VIDEO")} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
               <VideocamIcon sx={{ fontSize: 23 }} />
             </IconButton>
             <IconButton onClick={() => setIsColorPickerOpen(true)} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
@@ -2023,7 +2096,7 @@ export default function ConversationPage() {
         </Box>
         )}
 
-        {loadingConversation ? (
+        {isConversationViewLoading ? (
           <Box
             sx={{
               height: 44,
@@ -2128,7 +2201,7 @@ export default function ConversationPage() {
           </Box>
         ) : null}
 
-        {loadingConversation ? (
+        {isConversationViewLoading ? (
           <ConversationSkeleton />
         ) : conversation.length > 0 ? (
           <ListMess
@@ -2137,7 +2210,7 @@ export default function ConversationPage() {
             conversation={conversation}
             setReplyMess={setReplyMess}
             visibleMessageStatus={visibleMessageStatus}
-            onCallAgain={handleStartCall}
+            onCallAgain={handleManagedStartCall}
             onLoadOlderMessages={loadOlderMessages}
             loadingOlderMessages={loadingOlderMessages}
             hasMoreMessages={hasMoreMessages}
@@ -2483,7 +2556,7 @@ export default function ConversationPage() {
           bgcolor: "#f4f6fb",
         }}
       >
-        <ListFriends />
+        <ListFriends onBootstrapStateChange={handleConversationListBootstrap} />
       </Box>
       <ForwardMessageModal
         open={!!forwardmess}
@@ -2492,7 +2565,7 @@ export default function ConversationPage() {
         onClose={() => setForwardMess(null)}
       />
       <VideoCallModal
-        open={!!waitingVideoCall}
+        open={false}
         mode="outgoing"
         name={displayCallTargetName}
         avatar={callTargetAvatar}
@@ -2501,7 +2574,7 @@ export default function ConversationPage() {
         onReject={handleCancelWaitingCall}
       />
       <VideoCallModal
-        open={rejectedVideoCall}
+        open={false}
         mode="rejected"
         name={displayCallTargetName}
         avatar={callTargetAvatar}

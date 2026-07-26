@@ -732,7 +732,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 >
                   {/* Trang chủ */}
                 </Typography>
-                {/* <TextField
+                <TextField
                   placeholder="Tìm kiếm bạn học, nhóm học..."
                   variant="outlined"
                   size="small"
@@ -750,7 +750,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      width: "320px",
+                      width: { xs: "180px", sm: "260px", md: "320px" },
                       height: "36px",
                       borderRadius: "10px",
                       backgroundColor: "#f3f4f6",
@@ -768,7 +768,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                       padding: "0px",
                     },
                   }}
-                /> */}
+                />
               </Box>
 
               <Box

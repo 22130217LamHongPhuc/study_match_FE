@@ -50,8 +50,12 @@ export default function LoginForm({
         }
         navigate("/home");
       } else {
-        setErrorMsg(response.message || "Đăng nhập thất bại. Vui lòng thử lại");
-        toast.error(response.message || "Đăng nhập thất bại. Vui lòng thử lại");
+        const message =
+          response.code === "USER_LOCKED"
+            ? "Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động bởi quản trị viên"
+            : response.message || "Đăng nhập thất bại. Vui lòng thử lại";
+        setErrorMsg(message);
+        toast.error(message);
       }
     } catch (error) {
       console.error("Login error:", error);
