@@ -8,6 +8,7 @@ import {
   FeedbackEligibilityResponse,
   SubmitStudyFeedbackRequest,
   SubmitStudyFeedbackResponse,
+  DetailedUserStatsResponse,
 } from "../pages/StudySession/types";
 import type {
   GroupStudySessionStatus,
@@ -45,6 +46,7 @@ export interface UserStudySessionParams {
   sessionStatus?: GroupStudySessionStatus | null;
   startFrom?: string | null;
   startTo?: string | null;
+  search?: string;
   page?: number;
   size?: number;
 }
@@ -77,6 +79,7 @@ export async function getUserStudySessions(
   if (params.sessionStatus) query.set("sessionStatus", params.sessionStatus);
   if (params.startFrom) query.set("startFrom", params.startFrom);
   if (params.startTo) query.set("startTo", params.startTo);
+  if (params.search) query.set("search", params.search);
   query.set("page", String(params.page ?? 0));
   query.set("size", String(params.size ?? 20));
 
@@ -358,3 +361,17 @@ export async function getTopUpcomingSessions(
   );
   return response;
 }
+
+export async function getDetailedUserStats(
+  userId: number,
+): Promise<APIResponseData<DetailedUserStatsResponse>> {
+  const response = await apiFetch<DetailedUserStatsResponse>(
+    `/api/study-sessions/user/${userId}/detailed-stats`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL,
+  );
+  return response;
+}
+

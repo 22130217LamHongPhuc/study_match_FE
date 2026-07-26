@@ -187,3 +187,26 @@ export interface SubmitStudyFeedbackResponse {
   eligibleForModel: boolean;
   createdAt: string;
 }
+
+export interface DailyStudyTrend {
+  date: string;
+  durationSeconds: number;
+  sessionCount: number;
+}
+
+export interface SubjectStudyStats {
+  subjectName: string;
+  durationSeconds: number;
+  sessionCount: number;
+}
+
+export interface DetailedUserStatsResponse {
+  totalStudyDurationSeconds: number;
+  attendanceRate: number;
+  joinedCount: number;
+  absentCount: number;
+  declinedCount: number;
+  pendingCount: number;
+  dailyTrends: DailyStudyTrend[];
+  subjectStats: SubjectStudyStats[];
+}

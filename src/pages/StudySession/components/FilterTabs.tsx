@@ -7,34 +7,32 @@ interface FilterTabsProps {
 
 const filters: Array<{ label: string; value: ScheduleFilter }> = [
   { label: "Tất cả", value: "ALL" },
-  { label: "1-1", value: "USER_PAIR" },
-  { label: "Nhóm", value: "GROUP" },
+  { label: "Lịch 1-1", value: "USER_PAIR" },
+  { label: "Lịch nhóm", value: "GROUP" },
   { label: "Chờ xác nhận", value: "PENDING" },
 ];
 
 export function FilterTabs({ activeFilter, onChange }: FilterTabsProps) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-3">
-      <div className="flex flex-wrap gap-2">
-        {filters.map((filter) => {
-          const active = activeFilter === filter.value;
+    <div className="inline-flex items-center p-1 bg-white border border-gray-200/80 shadow-sm rounded-full gap-1 self-start sm:self-auto">
+      {filters.map((filter) => {
+        const active = activeFilter === filter.value;
 
-          return (
-            <button
-              key={filter.value}
-              type="button"
-              onClick={() => onChange(filter.value)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                active
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-              }`}
-            >
-              {filter.label}
-            </button>
-          );
-        })}
-      </div>
-    </section>
+        return (
+          <button
+            key={filter.value}
+            type="button"
+            onClick={() => onChange(filter.value)}
+            className={`rounded-full px-4 py-2 text-xs md:text-sm font-semibold transition-all duration-200 cursor-pointer ${
+              active
+                ? "bg-blue-50 text-blue-600 border border-blue-100 shadow-sm"
+                : "text-gray-500 hover:text-gray-700 bg-transparent border border-transparent"
+            }`}
+          >
+            {filter.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
