@@ -1,7 +1,7 @@
 import WebSocketManager from "../socket/WebSocketManager"
 import { SocketEvent } from "../enum/SocketEvent"
 import { BASE_CHAT_SERVICE, SOCKET_SEND_MESSAGE } from "../config/BaseConfig"
-import { apiFetch } from "../config/apiClient"
+import { apiFetch, isApiSuccess } from "../config/apiClient"
 
 export type MessageRequestItem = {
     conversationId: number;
@@ -196,7 +196,7 @@ export const forwardMessage = async (messageId: number, targetConversationId: nu
 export const loadGroupConversationPins = async (currentUserId: number, groupIds: number[]): Promise<any[]> => {
     const url = `${BASE_CHAT_SERVICE}/conversation/group/pins?currentUser=${currentUserId}&groupIds=${groupIds.join(',')}`;
     const res = await apiFetch<any>(url, { method: 'GET' });
-    if (!res.success) return [];
+    if (!isApiSuccess(res)) return [];
     return res.data || [];
 };
 

@@ -65,8 +65,10 @@ export function Step2({ data, update }: Step2Props) {
               className="block w-full rounded-lg border-2 border-gray-200 bg-white py-2 px-3 pr-10 text-gray-800 text-sm truncate focus:outline-none focus:border-accent"
               title={data.region || ""}
             >
+
+
               <option value="" disabled>
-                -- Chọn quên quán --
+                -- Chọn quê quán --
               </option>
               {cities.map((c) => (
                 <option key={c} value={c} title={c}>

@@ -305,12 +305,19 @@ export const loadFriendOnlineStatusesService = async (friendIds: number[]): Prom
             BASE_CHAT_SERVICE
         );
 
-        if (!isApiSuccess(res)) {
-            console.error(`Cannot load online statuses. ${res.message}`);
+        // chat_service returns the status map directly:
+        // { "12": true, "18": false }, not the shared API envelope.
+        const payload = isApiSuccess(res)
+            ? unwrapPayload(res.data !== undefined ? res.data : res)
+            : res;
+        if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+            console.error("Cannot load online statuses: invalid response", res);
             return {};
         }
 
-        return unwrapPayload(res.data !== undefined ? res.data : res) ?? {};
+        return Object.fromEntries(
+            Object.entries(payload).map(([userId, online]) => [String(userId), online === true])
+        );
     } catch (err) {
         console.error(err);
         return {};

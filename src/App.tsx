@@ -6,6 +6,8 @@ import store from "./redux/store";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmProvider } from "./components/modal/ConfirmModal";
+import { CallProvider } from "./features/call/CallProvider";
+import CallOverlay from "./features/call/components/CallOverlay";
 
 function App() {
   return (
@@ -14,7 +16,10 @@ function App() {
 
       <Provider store={store}>
         <ConfirmProvider>
-          <RouterProvider router={router} />
+          <CallProvider>
+            <RouterProvider router={router} />
+            <CallOverlay />
+          </CallProvider>
         </ConfirmProvider>
       </Provider>
     </>

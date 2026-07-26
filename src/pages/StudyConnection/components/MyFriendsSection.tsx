@@ -240,14 +240,11 @@ export default function MyFriendsSection() {
                       >
                         {displayName}
                       </h3>
-                      <span
-                        className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${friend.online
-                          ? "bg-green-50 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                          }`}
-                      >
-                        {friend.online ? "Trực tuyến" : "Ngoại tuyến"}
-                      </span>
+                      {friend.online && (
+                        <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                          Trực tuyến
+                        </span>
+                      )}
                     </div>
                   </div>
 
