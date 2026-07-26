@@ -18,7 +18,7 @@ export function Step3Mode({ data, update }: Step3ModeProps) {
         {goalObj?.title}
       </div>
       <p className="text-sm text-gray-500">
-        Dựa trên trình độ của bạn, hãy chọn{" "}
+        Dựa trên mục tiêu học tập của bạn, hãy chọn{" "}
         <strong>cách bạn muốn học cùng người khác</strong>:
       </p>
       <div className="space-y-3">
@@ -29,11 +29,10 @@ export function Step3Mode({ data, update }: Step3ModeProps) {
             <button
               key={mKey}
               onClick={() => update("studyMode", mKey)}
-              className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-150 bg-white ${
-                active
-                  ? "border-accent"
-                  : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
-              }`}
+              className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-150 bg-white ${active
+                ? "border-accent"
+                : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                }`}
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1">
@@ -43,9 +42,8 @@ export function Step3Mode({ data, update }: Step3ModeProps) {
                   </p>
                 </div>
                 <div
-                  className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center mt-0.5 ${
-                    active ? "border-accent" : "border-gray-200"
-                  }`}
+                  className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center mt-0.5 ${active ? "border-accent" : "border-gray-200"
+                    }`}
                 >
                   {active && (
                     <div className="w-2.5 h-2.5 rounded-full bg-accent" />

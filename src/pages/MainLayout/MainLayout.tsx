@@ -22,7 +22,10 @@ import {
   VideoCallInviteData,
   VideoCallPeerInfo,
 } from "../../model/VideoCall";
-
+import { checkTermUpdateStatus, TermUpdateStatus } from "../../services/TermStatusService";
+import UpdateProfileDialog from "../MyProfile/components/UpdateProfileDialog";
+import { loadProfileByUserId } from "../../redux/ProfileReducer";
+import { AppDispatch } from "../../redux/store";
 
 type NewMessageData = {
   conversationId: number;
@@ -72,15 +75,19 @@ const isZegoCreateSpanError = (error: unknown) => {
   return message.includes("createSpan");
 };
 
-
 export default function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const theme = useTheme();
   const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
   const effectiveCollapsed = sidebarCollapsed || isMdDown;
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
+
+  const profileVm = useSelector((state: RootState) => state.profile.profileVm);
+  const [needsTermUpdate, setNeedsTermUpdate] = useState<boolean>(false);
+  const [termUpdateStatus, setTermUpdateStatus] = useState<TermUpdateStatus | null>(null);
+  const [showUpdateDialog, setShowUpdateDialog] = useState<boolean>(false);
 
   const currentConverId = useSelector(
     (state: RootState) => state.chat.currentConversationId,
@@ -137,6 +144,26 @@ export default function MainLayout() {
   }, []);
 
   useLayoutEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const userId = Number(localStorage.getItem("userId"));
+        if (!userId) return;
+
+        const res = await checkTermUpdateStatus();
+        if (res.success && res.data?.needsUpdate) {
+          setNeedsTermUpdate(true);
+          setTermUpdateStatus(res.data);
+          
+          dispatch(loadProfileByUserId(userId));
+        }
+      } catch (err) {
+        console.error("Failed to check term update status:", err);
+      }
+    };
+    checkStatus();
+  }, [dispatch]);
+
+  useLayoutEffect(() => {
     const ws = WebSocketManager.getInstance();
 
     let isMounted = true;
@@ -167,11 +194,9 @@ export default function MainLayout() {
           ) {
             console.log("[VideoCall][FE][socket][invite]", parsed.data);
 
-
             const currentUserId = Number(localStorage.getItem("userId"));
 
             if (parsed.data.callerId === currentUserId) return;
-
 
             const isGroupCall = Boolean(
               parsed.data.isGroupCall ||
@@ -533,6 +558,21 @@ export default function MainLayout() {
       });
   };
 
+  const handleDialogClose = async () => {
+    try {
+      const res = await checkTermUpdateStatus();
+      if (res.success && !res.data?.needsUpdate) {
+        setNeedsTermUpdate(false);
+        setShowUpdateDialog(false);
+        toast.success("Hồ sơ học tập của bạn đã được cập nhật thành công!");
+      } else {
+        toast.error("Vui lòng hoàn thành tất cả các bước để cập nhật hồ sơ học kỳ mới.");
+      }
+    } catch (err) {
+      toast.error("Lỗi khi kiểm tra trạng thái cập nhật.");
+    }
+  };
+
   return (
     <div>
       <ToastContainer style={{ zIndex: 99999 }} />
@@ -569,6 +609,58 @@ export default function MainLayout() {
         onAccept={acceptIncomingCall}
         onReject={rejectIncomingCall}
       />
+
+      {needsTermUpdate && !showUpdateDialog && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/65 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md overflow-hidden rounded-3xl border border-blue-50 bg-white p-8 shadow-2xl text-center animate-in fade-in zoom-in-95 duration-200">
+
+            <h3 className="text-xl font-bold tracking-tight text-slate-900">
+              Học kỳ mới đã bắt đầu!
+            </h3>
+
+            <p className="mt-4 text-sm text-slate-500 leading-relaxed">
+              Hệ thống StudyMatch đã được chuyển sang học kỳ hoạt động mới:
+            </p>
+            <div className="mt-3 inline-block rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold text-blue-500">
+              {termUpdateStatus?.activeTermName || "Học kỳ mới"}
+            </div>
+
+            <p className="mt-5 text-xs text-slate-400 leading-relaxed">
+              Vui lòng cập nhật hồ sơ học tập (môn học học kỳ này, lịch học và thời gian rảnh...) để tiếp tục kết nối với nhóm học tập và bạn bè phù hợp nhất.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (profileVm) {
+                  setShowUpdateDialog(true);
+                } else {
+                  const userId = Number(localStorage.getItem("userId"));
+                  dispatch(loadProfileByUserId(userId)).then((actionResult) => {
+                    if (loadProfileByUserId.fulfilled.match(actionResult)) {
+                      setShowUpdateDialog(true);
+                    } else {
+                      toast.error("Không thể tải thông tin hồ sơ của bạn. Vui lòng tải lại trang!");
+                    }
+                  });
+                }
+              }}
+              className="mt-6 flex h-11 w-full items-center justify-center rounded-xl bg-blue-500 hover:bg-blue-600 text-sm font-bold text-white transition-all shadow-md shadow-blue-600/10 focus:outline-none cursor-pointer"
+            >
+              Cập nhật hồ sơ học kỳ mới
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showUpdateDialog && profileVm && (
+        <UpdateProfileDialog
+          open={showUpdateDialog}
+          onClose={handleDialogClose}
+          profile={profileVm}
+          preventClose={true}
+        />
+      )}
     </div>
   );
 }

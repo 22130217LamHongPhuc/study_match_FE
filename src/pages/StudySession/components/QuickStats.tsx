@@ -1,4 +1,7 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import type { StudySessionVm } from "../types";
+import { BarChart3 } from "lucide-react";
 
 interface QuickStatsProps {
   sessions: StudySessionVm[];
@@ -7,24 +10,32 @@ interface QuickStatsProps {
 
 export function QuickStatsSkeleton() {
   return (
-    <section className="grid grid-cols-2 gap-4 lg:grid-cols-4 animate-pulse">
-      {Array.from({ length: 4 }).map((_, idx) => (
-        <div
-          key={idx}
-          className="rounded-xl border border-gray-200 bg-white p-5 text-left"
-        >
-          <div className="mb-4 inline-flex h-6 w-20 bg-gray-200 rounded-lg" />
-          <div>
-            <div className="h-9 w-12 bg-gray-300 rounded" />
-            <div className="mt-2 h-4 w-32 bg-gray-150 rounded" />
+    <div className="space-y-4 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="h-5 w-40 bg-gray-250 rounded-md" />
+        <div className="h-8 w-32 bg-gray-200 rounded-lg" />
+      </div>
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div
+            key={idx}
+            className="rounded-xl border border-gray-200 bg-white p-5 text-left"
+          >
+            <div className="mb-4 inline-flex h-6 w-20 bg-gray-200 rounded-lg" />
+            <div>
+              <div className="h-9 w-12 bg-gray-300 rounded" />
+              <div className="mt-2 h-4 w-32 bg-gray-150 rounded" />
+            </div>
           </div>
-        </div>
-      ))}
-    </section>
+        ))}
+      </section>
+    </div>
   );
 }
 
 export function QuickStats({ sessions, loading }: QuickStatsProps) {
+  const navigate = useNavigate();
+
   if (loading) {
     return <QuickStatsSkeleton />;
   }
@@ -75,24 +86,26 @@ export function QuickStats({ sessions, loading }: QuickStatsProps) {
   ];
 
   return (
-    <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      {stats.map((item) => (
-        <div
-          key={item.label}
-          className="rounded-xl border border-gray-200 bg-white p-5 text-left transition-all duration-200 hover:shadow-sm"
-        >
+    <div className="space-y-4">
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {stats.map((item) => (
           <div
-            className="mb-4 inline-flex rounded-lg px-3 py-1.5 text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200"
+            key={item.label}
+            className="rounded-xl border border-gray-200 bg-white p-5 text-left transition-all duration-200 hover:shadow-sm"
           >
-            {item.label}
+            <div
+              className="mb-4 inline-flex rounded-lg px-3 py-1.5 text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200"
+            >
+              {item.label}
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-gray-800">{item.value}</div>
+              <p className="mt-1 text-sm text-gray-500">{item.helper}</p>
+            </div>
           </div>
-          <div>
-            <div className="text-3xl font-bold text-gray-800">{item.value}</div>
-            <p className="mt-1 text-sm text-gray-500">{item.helper}</p>
-          </div>
-        </div>
-      ))}
-    </section>
+        ))}
+      </section>
+    </div>
   );
 }
-

@@ -29,6 +29,16 @@ import type {
   JoinStudySessionResponse,
   StudySessionResponse,
 } from "./types";
+import {
+  Clock,
+  Award,
+  TrendingUp,
+  BookOpen,
+  PieChart as PieIcon,
+  Calendar,
+  Loader2,
+  AlertCircle
+} from "lucide-react";
 
 const DEFAULT_SESSION_PAGE_SIZE = 10;
 const CALENDAR_SESSION_PAGE_SIZE = 200;
@@ -194,6 +204,17 @@ export default function StudySessionPage() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_SESSION_PAGE_SIZE);
   const [filter, setFilter] = useState<ScheduleFilter>("ALL");
+  const [bottomFilter, setBottomFilter] = useState<ScheduleFilter>("ALL");
+  const [bottomSearchTerm, setBottomSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(bottomSearchTerm);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [bottomSearchTerm]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<StudySessionVm | null>(
     null,
@@ -215,8 +236,11 @@ export default function StudySessionPage() {
   const [reloadTrigger, setReloadTrigger] = useState(0);
   const [weekOffset, setWeekOffset] = useState(0);
   const [todaySessions, setTodaySessions] = useState<StudySessionVm[]>([]);
+  const [currentWeekSessions, setCurrentWeekSessions] = useState<StudySessionVm[]>([]);
+  const [loadingCurrentWeek, setLoadingCurrentWeek] = useState(true);
 
   const currentUserId = Number(localStorage.getItem("userId"));
+
   const querySessionId = searchParams.get("sessionId");
 
   const currentUserName =
@@ -227,6 +251,11 @@ export default function StudySessionPage() {
 
   const handleFilterChange = (nextFilter: ScheduleFilter) => {
     setFilter(nextFilter);
+    setPage(0);
+  };
+
+  const handleBottomFilterChange = (nextFilter: ScheduleFilter) => {
+    setBottomFilter(nextFilter);
     setPage(0);
   };
 
@@ -289,6 +318,12 @@ export default function StudySessionPage() {
         partnerName: resolvePartnerName(session, friendsById) || session.partnerName,
       }))
     );
+    setCurrentWeekSessions((prev) =>
+      prev.map((session) => ({
+        ...session,
+        partnerName: resolvePartnerName(session, friendsById) || session.partnerName,
+      }))
+    );
     setTodaySessions((prev) =>
       prev.map((session) => ({
         ...session,
@@ -315,9 +350,10 @@ export default function StudySessionPage() {
         setLoadingAll(true);
         setSessionError("");
 
-        const filterParams = getSessionParamsByFilter(filter);
+        const filterParams = getSessionParamsByFilter(bottomFilter);
         const response = await getUserStudySessions(currentUserId, {
           ...filterParams,
+          search: debouncedSearchTerm,
           page,
           size: pageSize,
         });
@@ -346,7 +382,7 @@ export default function StudySessionPage() {
     return () => {
       mounted = false;
     };
-  }, [currentUserId, filter, page, pageSize, reloadTrigger]);
+  }, [currentUserId, bottomFilter, debouncedSearchTerm, page, pageSize, reloadTrigger]);
 
   useEffect(() => {
     let mounted = true;
@@ -442,6 +478,68 @@ export default function StudySessionPage() {
     };
   }, [currentUserId, filter, reloadTrigger]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadCurrentWeek() {
+      if (!Number.isFinite(currentUserId) || currentUserId <= 0) {
+        if (mounted) {
+          setCurrentWeekSessions([]);
+          setLoadingCurrentWeek(false);
+        }
+        return;
+      }
+
+      try {
+        setLoadingCurrentWeek(true);
+
+        const currentWeekRange = getWeekRange(0);
+        const response = await getUserStudySessions(currentUserId, {
+          ...currentWeekRange,
+          page: 0,
+          size: CALENDAR_SESSION_PAGE_SIZE,
+        });
+
+        if (!mounted) return;
+
+        const content = response.data?.content ?? [];
+        setCurrentWeekSessions(
+          content.map((session: any) => mapSessionToVm(session, friendsById)),
+        );
+      } catch {
+        if (!mounted) return;
+        setCurrentWeekSessions([]);
+      } finally {
+        if (mounted) {
+          setLoadingCurrentWeek(false);
+        }
+      }
+    }
+
+    loadCurrentWeek();
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentUserId, reloadTrigger]);
+
+  const parsedCurrentWeekSessions = useMemo(() => {
+    const { startOfWeek, endOfWeek } = getWeekRange(0);
+
+    return currentWeekSessions
+      .filter((session) => {
+        const startTime = new Date(session.startTime).getTime();
+        return (
+          startTime >= startOfWeek.getTime() &&
+          startTime < endOfWeek.getTime()
+        );
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+      );
+  }, [currentWeekSessions]);
+
   const weekSessions = useMemo(() => {
     const { startOfWeek, endOfWeek } = getWeekRange(weekOffset);
 
@@ -476,6 +574,10 @@ export default function StudySessionPage() {
 
     if (matchesFilter(newSession, filter) && isSessionInWeek(newSession, weekOffset)) {
       setCalendarSessions((prev) => [newSession, ...prev]);
+    }
+
+    if (matchesFilter(newSession, filter) && isSessionInWeek(newSession, 0)) {
+      setCurrentWeekSessions((prev) => [newSession, ...prev]);
     }
 
     if (matchesFilter(newSession, filter) && isSessionToday(newSession)) {
@@ -517,6 +619,9 @@ export default function StudySessionPage() {
         setCalendarSessions((prev) =>
           applySessionUpdate(prev, updatedSession, filter),
         );
+        setCurrentWeekSessions((prev) =>
+          applySessionUpdate(prev, updatedSession, filter),
+        );
         setTodaySessions((prev) =>
           applySessionUpdate(prev, updatedSession, filter),
         );
@@ -537,8 +642,6 @@ export default function StudySessionPage() {
     }
   }, [currentUserId, filter, joinedSession, sessions]);
 
-
-
   return (
     <div className="min-h-screen bg-blue-50/30 px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
@@ -550,7 +653,7 @@ export default function StudySessionPage() {
           </div>
         )}
 
-        <QuickStats sessions={weekSessions} loading={loadingCalendar} />
+        <QuickStats sessions={parsedCurrentWeekSessions} loading={loadingCurrentWeek} />
 
         <FilterTabs activeFilter={filter} onChange={handleFilterChange} />
 
@@ -577,6 +680,10 @@ export default function StudySessionPage() {
             }}
             onSelectSession={setSelectedSession}
             loading={loadingAll}
+            filter={bottomFilter}
+            onFilterChange={handleBottomFilterChange}
+            searchTerm={bottomSearchTerm}
+            onSearchChange={setBottomSearchTerm}
           />
           <TodaySessionList
             sessions={todaySessions}
@@ -600,6 +707,9 @@ export default function StudySessionPage() {
             applySessionUpdate(prev, updatedSession, filter),
           );
           setCalendarSessions((prev) =>
+            applySessionUpdate(prev, updatedSession, filter),
+          );
+          setCurrentWeekSessions((prev) =>
             applySessionUpdate(prev, updatedSession, filter),
           );
           setTodaySessions((prev) =>

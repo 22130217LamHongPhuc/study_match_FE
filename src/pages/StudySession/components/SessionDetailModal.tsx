@@ -174,6 +174,19 @@ function hasSessionEnded(session: StudySessionVm | null) {
   return now > endTime;
 }
 
+const extractErrorMessage = (res: any, fallback: string): string => {
+  if (!res) return fallback;
+  if (typeof res === "string") return res;
+  if (res.message && res.message !== "No message available") return res.message;
+  if (res.error && typeof res.error === "string") return res.error;
+  if (res.errors && Array.isArray(res.errors) && res.errors.length > 0) {
+    const firstErr = res.errors[0];
+    if (typeof firstErr === "string") return firstErr;
+    if (firstErr.defaultMessage) return firstErr.defaultMessage;
+  }
+  return fallback;
+};
+
 export function SessionDetailModal({
   session,
   onClose,
@@ -335,22 +348,24 @@ export function SessionDetailModal({
       setError("");
       const response = await respondToStudySession(session.id, userIdVal, status);
       if (response.data) {
-        setDetail(response.data);
+        toast.success(
+          status === "ACCEPTED"
+            ? "Đã xác nhận tham gia buổi học"
+            : "Đã từ chối tham gia buổi học"
+        );
         const updatedSession = mapResponseToVm(response.data, session);
         onSessionUpdated?.(updatedSession);
-      }
-      if (session) {
-        const statsUserId = Number(localStorage.getItem("userId"));
-        if (Number.isFinite(statsUserId) && statsUserId > 0) {
-          const statsResponse = await getConfirmationStats(
-            session.id,
-            statsUserId,
-          );
-          setConfirmationStats(statsResponse.data);
-        }
+        window.dispatchEvent(new Event("study_session_updated"));
+        onClose();
+      } else {
+        const errorMsg = extractErrorMessage(response, "Không thể gửi phản hồi cho lịch học");
+        toast.error(errorMsg);
+        onClose();
       }
     } catch {
-      setError("Không thể gửi phản hồi cho lịch học");
+      const errorMsg = "Không thể gửi phản hồi cho lịch học";
+      toast.error(errorMsg);
+      onClose();
     } finally {
       setResponding(null);
     }
@@ -375,13 +390,13 @@ export function SessionDetailModal({
       setError("");
       const response = await getSessionsByRecurrenceId(recId, userIdVal);
       if (response.data) {
-        // Filter to only pending sessions for the user
+        
         const pendingSessions = response.data.filter(
           (s) => s.participantStatus === "PENDING"
         );
 
         if (pendingSessions.length <= 1) {
-          // If only 1 or less pending sessions are left, handle directly as a single session response!
+          
           await handleRespond(status);
           return;
         }
@@ -435,16 +450,22 @@ export function SessionDetailModal({
         setShowRecurrenceModal(false);
         const detailResponse = await getStudySessionById(session.id, userIdVal);
         if (detailResponse.data) {
-          setDetail(detailResponse.data);
           const updatedSession = mapResponseToVm(detailResponse.data, session);
           onSessionUpdated?.(updatedSession);
         }
         window.dispatchEvent(new Event("study_session_updated"));
+        onClose();
       } else {
-        setError("Không thể cập nhật trạng thái chuỗi lịch học");
+        const errorMsg = extractErrorMessage(response, "Không thể cập nhật trạng thái chuỗi lịch học");
+        toast.error(errorMsg);
+        setShowRecurrenceModal(false);
+        onClose();
       }
     } catch {
-      setError("Có lỗi xảy ra khi cập nhật trạng thái chuỗi lịch học");
+      const errorMsg = "Có lỗi xảy ra khi cập nhật trạng thái chuỗi lịch học";
+      toast.error(errorMsg);
+      setShowRecurrenceModal(false);
+      onClose();
     } finally {
       setLoadingRecurrence(false);
       setResponding(null);
@@ -556,7 +577,7 @@ export function SessionDetailModal({
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Thời gian */}
+                
                 <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Thời gian</span>
                   <div className="mt-1.5 text-sm font-bold text-gray-800">
@@ -567,7 +588,6 @@ export function SessionDetailModal({
                   </div>
                 </div>
 
-                {/* Hình thức */}
                 <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hình thức</span>
                   <div className="mt-1.5 text-sm font-bold text-gray-800">
@@ -575,7 +595,6 @@ export function SessionDetailModal({
                   </div>
                 </div>
 
-                {/* Bạn học / Nhóm học */}
                 <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     {isGroup ? "Nhóm học" : "Bạn học"}
@@ -592,7 +611,6 @@ export function SessionDetailModal({
                   )}
                 </div>
 
-                {/* Địa điểm / Link học */}
                 <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Địa điểm / Link học</span>
                   {currentSession?.location || currentSession?.meetingUrl || session.location || session.meetingUrl ? (
@@ -623,7 +641,6 @@ export function SessionDetailModal({
                   )}
                 </div>
 
-                {/* Nội dung học (Span full width) */}
                 <div className="md:col-span-2 bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nội dung học</span>
                   <p className="mt-1.5 text-xs leading-relaxed text-gray-600 whitespace-pre-wrap">

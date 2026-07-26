@@ -43,7 +43,6 @@ function OverviewEmptyState({
   );
 }
 
-// Neutral & Balanced Chart Colors
 const CHART_COLORS = {
   primary: "#3b82f6",
   secondary: "#64748b",
@@ -55,7 +54,7 @@ const CHART_COLORS = {
 };
 
 export default function AdminOverviewPage() {
-  // TIME PERIOD FILTER STATE
+  
   const [timePreset, setTimePreset] = useState<"THIS_WEEK" | "THIS_MONTH" | "ALL_TIME" | "CUSTOM">("THIS_WEEK");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -64,10 +63,8 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Realtime online users state
   const [onlineCount, setOnlineCount] = useState<number>(0);
 
-  // API Data State (No mock data fallback)
   const [apiData, setApiData] = useState<AdminOverviewResponse | null>(null);
 
   const formatDateInput = (date: Date) => {
@@ -96,7 +93,6 @@ export default function AdminOverviewPage() {
     setTimePreset("CUSTOM");
   };
 
-  // Fetch API Data from Backend
   const fetchData = useCallback(() => {
     setLoading(true);
     setError(null);
@@ -130,7 +126,6 @@ export default function AdminOverviewPage() {
     fetchData();
   }, [fetchData]);
 
-  // Realtime Socket Listener for Online Users
   useEffect(() => {
     let ws = WebSocketManager.getInstance();
     let isSubscribed = true;
@@ -169,11 +164,9 @@ export default function AdminOverviewPage() {
     };
   }, []);
 
-  // Summary Metrics
   const totalUsers = apiData?.totalUsers ?? 0;
   const pendingReportsCount = apiData?.pendingReportsCount ?? 0;
 
-  // --- CHART 1 SORT & FILTER STATE (Top Subjects) ---
   const [subjectVisibilityFilter, setSubjectVisibilityFilter] = useState<"ALL" | "PUBLIC_ONLY" | "PRIVATE_ONLY">("ALL");
   const [subjectSortBy, setSubjectSortBy] = useState<"TOTAL_DESC" | "TOTAL_ASC" | "NAME_ASC" | "MEMBERS_DESC">("TOTAL_DESC");
   const [subjectSearch, setSubjectSearch] = useState("");
@@ -197,7 +190,6 @@ export default function AdminOverviewPage() {
     return list;
   }, [apiData, subjectSearch, subjectSortBy]);
 
-  // --- CHART 2 SORT & FILTER STATE (Reports) ---
   const [reportTargetFilter, setReportTargetFilter] = useState<string>("ALL");
   const [reportSortBy, setReportSortBy] = useState<"TOTAL_DESC" | "PENDING_DESC" | "NAME_ASC">("TOTAL_DESC");
 
@@ -223,7 +215,6 @@ export default function AdminOverviewPage() {
     return apiData?.reportsPie || [];
   }, [apiData]);
 
-  // --- CHART 3 SORT & FILTER STATE (Messages Timeline) ---
   const [messageSortBy, setMessageSortBy] = useState<"CHRONO" | "TOTAL_DESC" | "TOTAL_ASC">("CHRONO");
 
   const processedMessagesData = useMemo(() => {
@@ -239,7 +230,6 @@ export default function AdminOverviewPage() {
     return list;
   }, [apiData, messageSortBy]);
 
-  // --- CHART 4 SORT & FILTER STATE (New Users) ---
   const [userSortBy, setUserSortBy] = useState<"CHRONO" | "NEW_DESC" | "NEW_ASC">("CHRONO");
 
   const processedNewUsersData = useMemo(() => {
@@ -255,7 +245,6 @@ export default function AdminOverviewPage() {
     return list;
   }, [apiData, userSortBy]);
 
-  // --- CHART 5 SORT & FILTER STATE (Study Duration) ---
   const [studySortBy, setStudySortBy] = useState<"CHRONO" | "HOURS_DESC" | "HOURS_ASC">("CHRONO");
 
   const processedStudyData = useMemo(() => {
@@ -278,7 +267,7 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="space-y-6 pb-12 text-slate-800">
-      {/* Header Bar */}
+      
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -305,7 +294,6 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
-      {/* ERROR ALERT BANNER */}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -321,7 +309,6 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      {/* TIME PERIOD FILTER BAR */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -342,36 +329,32 @@ export default function AdminOverviewPage() {
           <div className="inline-flex flex-wrap items-center rounded-lg border border-slate-200 bg-slate-50 p-1 text-xs font-medium text-slate-600 gap-1">
             <button
               onClick={() => setTimePreset("THIS_WEEK")}
-              className={`rounded-md px-3 py-1.5 transition-colors ${
-                timePreset === "THIS_WEEK" ? "bg-[#3b82f6] text-white font-medium" : "hover:bg-white"
-              }`}
+              className={`rounded-md px-3 py-1.5 transition-colors ${timePreset === "THIS_WEEK" ? "bg-[#3b82f6] text-white font-medium" : "hover:bg-white"
+                }`}
             >
               Chỉ Tuần này
             </button>
 
             <button
               onClick={() => setTimePreset("THIS_MONTH")}
-              className={`rounded-md px-3 py-1.5 transition-colors ${
-                timePreset === "THIS_MONTH" ? "bg-[#3b82f6] text-white font-medium" : "hover:bg-white"
-              }`}
+              className={`rounded-md px-3 py-1.5 transition-colors ${timePreset === "THIS_MONTH" ? "bg-[#3b82f6] text-white font-medium" : "hover:bg-white"
+                }`}
             >
               Tháng này
             </button>
 
             <button
               onClick={() => setTimePreset("ALL_TIME")}
-              className={`rounded-md px-3 py-1.5 transition-colors ${
-                timePreset === "ALL_TIME" ? "bg-[#3b82f6] text-white font-medium" : "hover:bg-white"
-              }`}
+              className={`rounded-md px-3 py-1.5 transition-colors ${timePreset === "ALL_TIME" ? "bg-[#3b82f6] text-white font-medium" : "hover:bg-white"
+                }`}
             >
               Từ trước đến nay (Tất cả)
             </button>
 
             <button
               onClick={selectCustomTimePreset}
-              className={`rounded-md px-3 py-1.5 transition-colors ${
-                timePreset === "CUSTOM" ? "bg-[#3b82f6] text-white font-medium" : "hover:bg-white"
-              }`}
+              className={`rounded-md px-3 py-1.5 transition-colors ${timePreset === "CUSTOM" ? "bg-[#3b82f6] text-white font-medium" : "hover:bg-white"
+                }`}
             >
               Tùy chỉnh khoảng thời gian
             </button>
@@ -398,10 +381,9 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
-      {/* SKELETON LOADER WHEN LOADING FIRST TIME */}
       {loading && !apiData ? (
         <div className="space-y-6">
-          {/* Metric Cards Skeleton */}
+          
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((idx) => (
               <div key={idx} className="h-28 rounded-xl border border-slate-200 bg-slate-100 animate-pulse p-5 space-y-3">
@@ -411,7 +393,6 @@ export default function AdminOverviewPage() {
             ))}
           </div>
 
-          {/* Charts Skeleton */}
           <div className="grid gap-6 lg:grid-cols-2">
             {[1, 2, 3, 4].map((idx) => (
               <div key={idx} className="h-80 rounded-xl border border-slate-200 bg-slate-100 animate-pulse p-5 space-y-4">
@@ -423,9 +404,9 @@ export default function AdminOverviewPage() {
         </div>
       ) : (
         <>
-          {/* Top 3 Core Metric Cards */}
+          
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {/* 1. Tổng số người dùng */}
+            
             <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 Tổng số người dùng
@@ -435,11 +416,10 @@ export default function AdminOverviewPage() {
               </h3>
             </div>
 
-            {/* 2. Người dùng đang Online (Realtime) */}
             <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Đang Online (Realtime)
+                  Đang Online
                 </p>
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
               </div>
@@ -448,7 +428,6 @@ export default function AdminOverviewPage() {
               </h3>
             </div>
 
-            {/* 3. Báo cáo đang chờ xử lý */}
             <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3 sm:col-span-2 lg:col-span-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 Báo cáo chờ xử lý
@@ -459,9 +438,8 @@ export default function AdminOverviewPage() {
             </div>
           </div>
 
-          {/* Main Charts Grid */}
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* CHART 1: Top Subjects */}
+            
             <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
@@ -475,7 +453,6 @@ export default function AdminOverviewPage() {
                 </p>
               </div>
 
-              {/* Controls */}
               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
                 <div className="flex-1 min-w-[130px]">
                   <input
@@ -572,7 +549,6 @@ export default function AdminOverviewPage() {
               )}
             </div>
 
-            {/* CHART 2: Reports Breakdown */}
             <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
               <div className="flex flex-col gap-1">
                 <h2 className="text-sm font-bold text-slate-900">
@@ -583,7 +559,6 @@ export default function AdminOverviewPage() {
                 </p>
               </div>
 
-              {/* Controls */}
               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
                 <select
                   value={reportTargetFilter}
@@ -678,7 +653,6 @@ export default function AdminOverviewPage() {
               )}
             </div>
 
-            {/* CHART 3: Messages Volume */}
             <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
@@ -691,7 +665,6 @@ export default function AdminOverviewPage() {
                 </p>
               </div>
 
-              {/* Controls */}
               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
                 <select
                   value={messageSortBy}
@@ -750,7 +723,6 @@ export default function AdminOverviewPage() {
               )}
             </div>
 
-            {/* CHART 4: New Registered Users */}
             <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
@@ -763,7 +735,6 @@ export default function AdminOverviewPage() {
                 </p>
               </div>
 
-              {/* Controls */}
               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
                 <select
                   value={userSortBy}
@@ -805,7 +776,6 @@ export default function AdminOverviewPage() {
               )}
             </div>
 
-            {/* CHART 5: Study Duration */}
             <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4 lg:col-span-2">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
@@ -818,7 +788,6 @@ export default function AdminOverviewPage() {
                 </p>
               </div>
 
-              {/* Controls */}
               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
                 <select
                   value={studySortBy}

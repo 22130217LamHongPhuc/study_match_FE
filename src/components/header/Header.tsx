@@ -31,7 +31,6 @@ import { logout } from "../../services/AuthService";
 import { useNavigate } from "react-router-dom";
 import WebSocketManager from "../../socket/WebSocketManager";
 
-
 import {
   loadFriendRequestsService,
   loadFriendProfilesService,
@@ -86,6 +85,19 @@ function getStudyModeBadge(mode: string) {
   }
   return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200">Kết hợp</span>;
 }
+
+const extractErrorMessage = (res: any, fallback: string): string => {
+  if (!res) return fallback;
+  if (typeof res === "string") return res;
+  if (res.message && res.message !== "No message available") return res.message;
+  if (res.error && typeof res.error === "string") return res.error;
+  if (res.errors && Array.isArray(res.errors) && res.errors.length > 0) {
+    const firstErr = res.errors[0];
+    if (typeof firstErr === "string") return firstErr;
+    if (firstErr.defaultMessage) return firstErr.defaultMessage;
+  }
+  return fallback;
+};
 
 function formatSessionSingleOptionDate(s: StudySessionResponse) {
   const start = new Date(s.startTime);
@@ -360,7 +372,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         const inviteeId = Number(d?.inviteeUserId);
         const groupName = d?.groupName || "học";
         const ts = Date.now();
-        // Fetch invitee profile to get their display name
+        
         if (inviteeId) {
           loadFriendProfilesService([inviteeId])
             .then((profiles) => {
@@ -423,7 +435,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           }
         }
 
-
         fetchPendingRequests();
         window.dispatchEvent(new Event("friend_status_updated"));
       } else {
@@ -434,7 +445,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       toast.error("Đã xảy ra lỗi.");
     }
   };
-
 
   const handleDeclineRequest = async (requestId: number) => {
     try {
@@ -467,7 +477,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         fetchPendingSessions();
         window.dispatchEvent(new Event("study_session_updated"));
       } else {
-        toast.error("Thao tác thất bại.");
+        toast.error(extractErrorMessage(res, "Thao tác thất bại."));
       }
     } catch (error) {
       toast.error("Đã xảy ra lỗi.");
@@ -489,7 +499,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         fetchPendingSessions();
         window.dispatchEvent(new Event("study_session_updated"));
       } else {
-        toast.error("Thao tác thất bại.");
+        toast.error(extractErrorMessage(res, "Thao tác thất bại."));
       }
     } catch (error) {
       toast.error("Đã xảy ra lỗi.");
@@ -686,7 +696,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         fetchPendingSessions();
         window.dispatchEvent(new Event("study_session_updated"));
       } else {
-        toast.error("Không thể cập nhật trạng thái chuỗi lịch học");
+        toast.error(extractErrorMessage(res, "Không thể cập nhật trạng thái chuỗi lịch học"));
       }
     } catch (error) {
       toast.error("Có lỗi xảy ra khi cập nhật trạng thái chuỗi lịch học");
@@ -730,8 +740,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   }}
                   onClick={() => navigate("/home")}
                 >
-                  {/* Trang chủ */}
+                  
                 </Typography>
+                
                 <TextField
                   placeholder="Tìm kiếm bạn học, nhóm học..."
                   variant="outlined"
@@ -838,56 +849,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         ) : (
           <>
             <Box sx={{ display: "flex", alignItems: "center", gap: "24px" }}>
-              {/* <Typography
-                component={"h1"}
-                sx={{
-                  marginY: "auto",
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  color: "#1f2937",
-                  cursor: "pointer",
-                }}
-                onClick={() => navigate("/")}
-              > */}
-              {/* Trang chủ */}
-              {/* </Typography>
-              <TextField
-                placeholder="Tìm kiếm bạn học, nhóm học..."
-                variant="outlined"
-                size="small"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <IconButton onClick={handleSearch} size="small" sx={{ p: 0 }}>
-                        <SearchIcon sx={{ color: "#9ca3af", fontSize: "18px" }} />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    width: "320px",
-                    height: "36px",
-                    borderRadius: "10px",
-                    backgroundColor: "#f3f4f6",
-                    "& fieldset": { border: "none" },
-                    "&:hover fieldset": { border: "none" },
-                    "&.Mui-focused": {
-                      backgroundColor: "#ffffff",
-                      boxShadow: "0 0 0 2px rgba(37, 99, 235, 0.2)",
-                      "& fieldset": { border: "1px solid #2563eb" },
-                    },
-                  },
-                  "& .MuiInputBase-input": {
-                    fontSize: "13px",
-                    color: "#1f2937",
-                    padding: "0px",
-                  },
-                }}
-              /> */}
+
             </Box>
             <Box>
               <Button
@@ -1162,7 +1124,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
 
-              {/* Rejection notifications from socket */}
               {rejectedInvitations.map((rej, idx) => (
                 <Box
                   key={`rej-${idx}-${rej.timestamp}`}
@@ -1197,7 +1158,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 </Box>
               ))}
 
-              {/* Friend requests */}
               {pendingRequests.map((req) => (
                 <Box
                   key={`fr-${req.id}`}
@@ -1427,7 +1387,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 </Box>
               )}
 
-              {/* Group invitations */}
               {pendingGroupInvitations.map((inv) => (
                 <Box
                   key={`gi-${inv.invitationId}`}
@@ -1515,7 +1474,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 </Box>
               ))}
 
-              {/* Group join requests */}
               {groupJoinRequests.map((req) => (
                 <Box
                   key={`gjr-${req.invitationId}`}
@@ -1853,8 +1811,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             onClick={handleHeaderRecurrenceSubmit}
             disabled={headerSubmittingRecurrence}
             className={`rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 transition-colors ${headerRespondingType === "ACCEPTED"
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-rose-600 hover:bg-rose-700"
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-rose-600 hover:bg-rose-700"
               }`}
           >
             {headerSubmittingRecurrence

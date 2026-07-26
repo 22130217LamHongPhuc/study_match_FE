@@ -31,7 +31,7 @@ import logoImg from "../../assets/img/logo.png";
 import { toast } from "react-toastify";
 import WebSocketManager from "../../socket/WebSocketManager";
 
-const menuItems = [
+const menuItemsTop = [
   {
     label: "Tổng quan",
     icon: LayoutDashboard,
@@ -47,11 +47,9 @@ const menuItems = [
     icon: Users,
     path: "/admin/users",
   },
-  // {
-  //   label: "Hồ sơ học tập",
-  //   icon: GraduationCap,
-  //   path: "/admin/profiles",
-  // },
+];
+
+const menuItemsBottom = [
   {
     label: "Nhóm học",
     icon: BookOpenCheck,
@@ -72,16 +70,6 @@ const menuItems = [
     icon: BrainCircuit,
     path: "/admin/matching",
   },
-  // {
-  //   label: "Phản hồi",
-  //   icon: MessageSquareWarning,
-  //   path: "/admin/feedbacks",
-  // },
-  // {
-  //   label: "Chat & Video",
-  //   icon: Video,
-  //   path: "/admin/communication",
-  // },
   {
     label: "Báo cáo",
     icon: BarChart3,
@@ -100,6 +88,7 @@ function SidebarContent({
   onLogout: () => void;
   isSuperAdmin?: boolean;
 }) {
+  const [isAcademicOpen, setIsAcademicOpen] = useState(false);
   const fullName = adminProfile?.fullName || "Admin";
   const avatarUrl = adminProfile?.avatarUrl;
   const initials = fullName
@@ -128,8 +117,8 @@ function SidebarContent({
         </p>
       </div>
 
-      <nav className="flex-1 space-y-0.5 px-3 py-4">
-        {menuItems.map((item) => {
+      <nav className="flex-1 overflow-y-auto space-y-0.5 px-3 py-4">
+        {menuItemsTop.map((item) => {
           const Icon = item.icon;
 
           return (
@@ -149,6 +138,103 @@ function SidebarContent({
             </NavLink>
           );
         })}
+
+        <div className="space-y-0.5">
+          <button
+            type="button"
+            onClick={() => setIsAcademicOpen(!isAcademicOpen)}
+            className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isAcademicOpen
+              ? "text-slate-900 bg-slate-50/50"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+              }`}
+          >
+            <div className="flex items-center gap-3">
+              <GraduationCap size={16} className="text-slate-500" />
+              <span>Quản lý Học tập</span>
+            </div>
+            <ChevronDown
+              size={14}
+              className={`text-slate-400 transition-transform duration-200 ${isAcademicOpen ? "rotate-180" : ""
+                }`}
+            />
+          </button>
+
+          {isAcademicOpen && (
+            <div className="mt-0.5 pl-9 space-y-0.5 border-l border-slate-100 ml-5">
+              
+              <NavLink
+                to="/admin/curriculums"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${isActive
+                    ? "bg-blue-50 text-[#3b82f6]"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                  }`
+                }
+              >
+                Chương trình đào tạo
+              </NavLink>
+              <NavLink
+                to="/admin/subjects"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${isActive
+                    ? "bg-blue-50 text-[#3b82f6]"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                  }`
+                }
+              >
+                Danh mục Môn học
+              </NavLink>
+              <NavLink
+                to="/admin/cohorts"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${isActive
+                    ? "bg-blue-50 text-[#3b82f6]"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                  }`
+                }
+              >
+                Khóa học
+              </NavLink>
+              <NavLink
+                to="/admin/academic-terms"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${isActive
+                    ? "bg-blue-50 text-[#3b82f6]"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                  }`
+                }
+              >
+                Cài đặt Học kỳ
+              </NavLink>
+            </div>
+          )}
+        </div>
+
+        {menuItemsBottom.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <NavLink
+              key={item.label}
+              to={item.path}
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+                  ? "bg-blue-50 text-[#3b82f6]"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+                }`
+              }
+            >
+              <Icon size={16} />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
+
         {isSuperAdmin && (
           <NavLink
             to="/admin/audit-logs"
@@ -166,7 +252,7 @@ function SidebarContent({
         )}
       </nav>
 
-      <div className="border-t border-slate-200 p-3">
+      <div className="mt-auto border-t border-slate-200 p-3">
         <div className="flex items-center gap-2.5 px-2 py-2">
           {avatarUrl ? (
             <img
@@ -193,21 +279,6 @@ function SidebarContent({
         </button>
       </div>
 
-      {/* <div className="border-t border-sand-200 p-3">
-        <NavLink
-          to="/admin/settings"
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-              ? "bg-sand-200/70 text-sand-900"
-              : "text-sand-500 hover:bg-sand-100 hover:text-sand-800"
-            }`
-          }
-        >
-          <Settings size={16} />
-          <span>Cài đặt hệ thống</span>
-        </NavLink>
-      </div> */}
     </>
   );
 }
@@ -384,34 +455,13 @@ function Topbar({
                   Đổi mật khẩu
                 </button>
                 <div className="h-px bg-slate-100 my-1" />
-                <button
-                  type="button"
-                  onClick={handleLogoutClick}
-                  className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50/50 rounded-lg transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" x2="9" y1="12" y2="12" />
-                  </svg>
-                  Đăng xuất
-                </button>
+                
               </div>
             </>
           )}
         </div>
       </div>
-      <div />
+
     </header>
   );
 }
@@ -442,7 +492,7 @@ function LockedOutModal({
         <h3 className="mt-4 text-lg font-bold tracking-tight text-slate-900">
           Tài khoản đã bị khóa
         </h3>
-        
+
         <p className="mt-2 text-sm text-slate-500">
           Phiên làm việc của bạn đã kết thúc vì tài khoản của bạn bị khóa hoặc ngừng hoạt động bởi Super Admin.
         </p>

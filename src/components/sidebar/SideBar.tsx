@@ -13,6 +13,7 @@ import SchoolIcon from "@mui/icons-material/School";
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logo from "../../assets/img/logo.png";
@@ -29,8 +30,9 @@ const navItems: NavItem[] = [
   { label: "Trang chủ", icon: <HomeIcon />, path: "/home" },
   { label: "Hồ sơ học tập", icon: <BadgeIcon />, path: "/my-profile" },
   { label: "Lịch học", icon: <CalendarMonthIcon />, path: "/schedule" },
+  { label: "Thống kê học tập", icon: <AssessmentIcon />, path: "/analytics" },
   { label: "Kết nối học tập", icon: <BarChartIcon />, path: "/recommendation" },
-  // { label: "Bạn bè", icon: <PersonIcon />, path: "/friends" },
+  
   {
     label: "Cuộc hội thoại",
     icon: <QuestionAnswerIcon />,
@@ -79,10 +81,10 @@ export default function SideBar({ collapsed = false, onToggle }: SideBarProps) {
         flexDirection: "column",
         zIndex: 999,
         transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        overflow: "visible", // Critical to allow absolute toggle button to display
+        overflow: "visible", 
       }}
     >
-      {/* Floating Toggle Button sitting on the border */}
+      
       {(isHovered || collapsed) && onToggle && (
         <Box
           onClick={(e) => {

@@ -29,6 +29,7 @@ import AdminSchedulesPage from "../pages/admin/AdminSchedulesPage/AdminSchedules
 import AdminAIMatchingPage from "../pages/admin/AdminAIMatchingPage/AdminAIMatchingPage";
 import AdminReportsPage from "../pages/admin/AdminReportsPage/AdminReportsPage";
 import StudySessionPage from "../pages/StudySession/StudySessionPage";
+import DetailedStatsPage from "../pages/StudySession/DetailedStatsPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage/AdminDashboardPage";
 import AdminOverviewPage from "../pages/admin/AdminOverviewPage/AdminOverviewPage";
 import LandingPage from "../pages/Landing/LandingPage";
@@ -40,7 +41,11 @@ import AdminAuditLogsPage from "../pages/admin/AdminAuditLogsPage/AdminAuditLogs
 import DocumentsPage from "../pages/Documents/DocumentsPage";
 import MyLibraryPage from "../pages/Documents/MyLibraryPage";
 import AdminDocumentsPage from "../pages/admin/AdminDocumentsPage/AdminDocumentsPage";
-
+import AcademicProfilesPage from "../pages/admin/AcademicProfilesPage/AcademicProfilesPage";
+import AcademicSubjectsPage from "../pages/admin/AcademicSubjectsPage/AcademicSubjectsPage";
+import AcademicCurriculumsPage from "../pages/admin/AcademicCurriculumsPage/AcademicCurriculumsPage";
+import AcademicCohortsPage from "../pages/admin/AcademicCohortsPage/AcademicCohortsPage";
+import AcademicTermsPage from "../pages/admin/AcademicTermsPage/AcademicTermsPage";
 
 function getRoleFromToken(token: string | null): "admin" | "student" | null {
   if (!token) return null;
@@ -126,7 +131,6 @@ export const router = createBrowserRouter([
     ],
   },
 
-
   {
     element: <ProtectedRoute />,
     children: [
@@ -136,6 +140,7 @@ export const router = createBrowserRouter([
           { path: "/home", element: <HomePage /> },
           { path: "/friends", element: <HomePage /> },
           { path: "/schedule", element: <StudySessionPage /> },
+          { path: "/analytics", element: <DetailedStatsPage /> },
           { path: "/profile/:id", element: <ProfilePage /> },
           { path: "/my-profile", element: <MyProfilePage /> },
           { path: "/conversation", element: <ConversationPage /> },
@@ -192,6 +197,26 @@ export const router = createBrowserRouter([
           {
             path: "users",
             element: <AdminUsersPage />,
+          },
+          {
+            path: "profiles",
+            element: <AcademicProfilesPage />,
+          },
+          {
+            path: "curriculums",
+            element: <AcademicCurriculumsPage />,
+          },
+          {
+            path: "subjects",
+            element: <AcademicSubjectsPage />,
+          },
+          {
+            path: "cohorts",
+            element: <AcademicCohortsPage />,
+          },
+          {
+            path: "academic-terms",
+            element: <AcademicTermsPage />,
           },
           {
             path: "groups",
