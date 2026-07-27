@@ -151,7 +151,7 @@ export function AIMatchingTabs({
             onClick={() => setActiveTab(tab.key)}
             className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "bg-sand-900 text-white"
+                ? "bg-accent-600 text-white"
                 : "text-sand-600 hover:bg-sand-50 hover:text-sand-800"
             }`}
           >
