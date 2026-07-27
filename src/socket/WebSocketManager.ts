@@ -7,7 +7,7 @@ class WebSocketManager {
     private connected = false;
     private connectingPromise: Promise<void> | null = null;
     private subscriptions: Map<string, StompSubscription> = new Map();
-    private messageHandlers: Map<string, (msg: string) => void> = new Map();
+    private messageHandlers: Map<string, Set<(msg: string) => void>> = new Map();
     private connectListeners: Set<() => void> = new Set();
 
     private constructor() { }
@@ -30,10 +30,16 @@ class WebSocketManager {
         }
 
         this.connectingPromise = new Promise((resolve, reject) => {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken || accessToken.split('.').length !== 3) {
+                this.connectingPromise = null;
+                reject(new Error('Access token không hợp lệ'));
+                return;
+            }
             this.client = new Client({
                 brokerURL: SOCKET_URL,
                 connectHeaders: {
-                    Authorization: `Bearer ${localStorage.getItem('accessToken') as string}`
+                    Authorization: `Bearer ${accessToken}`
                 },
                 reconnectDelay: 5000,
                 debug: (str: any) => console.log('[STOMP]', str),
@@ -91,8 +97,15 @@ class WebSocketManager {
     }
 
     public onMessage(destination: string, cb: (msg: string) => void) {
-        this.messageHandlers.set(destination, cb);
+        const handlers = this.messageHandlers.get(destination) || new Set();
+        handlers.add(cb);
+        this.messageHandlers.set(destination, handlers);
         this.subscribe(destination);
+        return () => {
+            const current = this.messageHandlers.get(destination);
+            current?.delete(cb);
+            if (current && current.size === 0) this.messageHandlers.delete(destination);
+        };
     }
 
     public onConnected(cb: () => void) {
@@ -110,7 +123,7 @@ class WebSocketManager {
         if (this.subscriptions.has(destination)) return;
 
         const subscription = this.client.subscribe(destination, (message: IMessage) => {
-            this.messageHandlers.get(destination)?.(message.body);
+            this.messageHandlers.get(destination)?.forEach((handler) => handler(message.body));
         });
         this.subscriptions.set(destination, subscription);
     }

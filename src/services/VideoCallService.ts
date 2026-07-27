@@ -74,3 +74,12 @@ export const rejectVideoCall = async (sessionId: number): Promise<void> => {
     })
     console.log("[VideoCall][FE][reject][response]", response)
 }
+
+export const cancelVideoCall = async (sessionId: number): Promise<void> => {
+    const url = `${BASE_CHAT_SERVICE}/video-calls/${sessionId}/cancel`
+    const response = await apiFetch<any>(url, { method: "POST" })
+    console.log("[VideoCall][FE][cancel][response]", response)
+    if (!response?.success && !(typeof response?.code === "number" && response.code >= 200 && response.code < 300)) {
+        throw new Error(response?.message || "Không thể hủy cuộc gọi")
+    }
+}

@@ -3,6 +3,9 @@ import { APIResponseData, StatusCode } from "./APIResponse";
 
 const API_BASE_URL = (process.env.API_BASE_URL || process.env.REACT_APP_API_BASE_URL || "http://localhost:8080") + "/api";
 
+const isJwtFormat = (token: string | null): token is string =>
+  !!token && token.split(".").length === 3;
+
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -37,8 +40,10 @@ const getDisplayUrl = (config?: any): string => {
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const accessToken = localStorage.getItem("accessToken");
-    if (accessToken && config.headers) {
+    if (isJwtFormat(accessToken) && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+    } else if (accessToken) {
+      localStorage.removeItem("accessToken");
     }
     console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${getDisplayUrl(config)}`, {
       headers: config.headers,

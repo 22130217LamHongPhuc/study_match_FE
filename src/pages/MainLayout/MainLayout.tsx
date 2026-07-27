@@ -591,16 +591,16 @@ export default function MainLayout() {
         </Box>
       </Box>
 
-      {activeVideoCall && (
+      {false && activeVideoCall && (
         <VideoCallRoom
-          call={activeVideoCall}
+          call={activeVideoCall!}
           peer={incomingPeer}
           onClose={() => setActiveVideoCall(null)}
         />
       )}
 
       <VideoCallModal
-        open={!!incomingVideoCall}
+        open={false}
         mode="incoming"
         name={incomingPeer?.fullName || ""}
         avatar={incomingPeer?.avatar || null}
