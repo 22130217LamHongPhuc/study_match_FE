@@ -75,7 +75,7 @@ export function MatchingActionsTable({
                   onClick={() => onStatusFilterChange(option.value)}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
                     statusFilter === option.value
-                      ? "border-sand-800 bg-sand-900 text-white"
+                      ? "border-accent-600 bg-accent-600 text-white"
                       : "border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
                   }`}
                 >

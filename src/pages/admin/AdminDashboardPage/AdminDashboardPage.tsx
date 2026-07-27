@@ -570,11 +570,11 @@ export default function AdminDashboardPage() {
       setSelectedViolationUser((prev) =>
         prev
           ? {
-              ...prev,
-              groups: prev.groups.filter(
-                (group) => group.groupId !== selectedKickGroupId,
-              ),
-            }
+            ...prev,
+            groups: prev.groups.filter(
+              (group) => group.groupId !== selectedKickGroupId,
+            ),
+          }
           : prev,
       );
       setSelectedKickGroupId(null);
@@ -655,823 +655,516 @@ export default function AdminDashboardPage() {
   return (
     <>
       <main className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-sand-900">
-            Dashboard tin nhắn nhóm
-          </h1>
-        </div>
-      </div>
-
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card) => {
-          return (
-            <div
-              key={card.title}
-              className="rounded-lg border border-sand-200 bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium uppercase text-sand-400">
-                    {card.title}
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-sand-900">
-                    {loading ? (
-                      <span className="inline-block h-8 w-24 animate-pulse rounded bg-sand-200" />
-                    ) : (
-                      card.value
-                    )}
-                  </p>
-                </div>
-              </div>
-              {loading ? (
-                <div className="mt-3 h-4 w-32 animate-pulse rounded bg-sand-100" />
-              ) : (
-                <p className="mt-3 text-xs text-sand-500">{card.helper}</p>
-              )}
-            </div>
-          );
-        })}
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-3">
-        <div className="rounded-lg border border-sand-200 bg-white p-5 shadow-sm xl:col-span-2">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold text-sand-900">
-                Top nhóm rủi ro
-              </h2>
-              <p className="mt-1 text-xs text-sand-500">
-                Sắp xếp theo tổng OFFENSIVE và HATE trong nhóm.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-sand-200 text-xs uppercase text-sand-400">
-                  <th className="py-3 pr-4 font-medium">Nhóm</th>
-                  <th className="py-3 pr-4 font-medium">Tin</th>
-                  <th className="py-3 pr-4 font-medium">OFF</th>
-                  <th className="py-3 pr-4 font-medium">HATE</th>
-                  <th className="py-3 pr-4 font-medium">Tỉ lệ</th>
-                  <th className="py-3 pr-4 font-medium">Rủi ro</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-sand-100">
-                {!loading && groupRows.length === 0 && (
-                  <tr>
-                    <td colSpan={6}>
-                      <EmptyState
-                        title="Chưa có nhóm vi phạm"
-                        image={emptyGroupImage}
-                      />
-                    </td>
-                  </tr>
-                )}
-
-                {groupRows.map((group) => {
-                  const violations = getViolationCount(group);
-                  const rate = getViolationRate(
-                    violations,
-                    group.totalMessages,
-                  );
-                  const risk = getGroupRisk(group);
-
-                  return (
-                    <tr
-                      key={group.groupId}
-                      onClick={() => openGroupDetail(group)}
-                      className="cursor-pointer align-top transition hover:bg-sky-50/50"
-                      tabIndex={0}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          openGroupDetail(group);
-                        }
-                      }}
-                    >
-                      <td className="py-3 pr-4">
-                        <div className="font-medium text-sand-900">
-                          {group.groupName}
-                        </div>
-                        <div className="mt-0.5 text-xs text-sand-400">
-                          Group {group.groupId} · Conversation{" "}
-                          {group.conversationId}
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4 text-sand-700">
-                        {formatNumber(group.totalMessages)}
-                        <div className="text-xs text-sand-400">
-                          {formatNumber(violations)} vi phạm
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4 text-blue-700">
-                        {formatNumber(group.offensiveMessages)}
-                      </td>
-                      <td className="py-3 pr-4 text-red-700">
-                        {formatNumber(group.hateMessages)}
-                      </td>
-                      <td className="py-3 pr-4 text-sand-700">{rate}%</td>
-                      <td className="py-3 pr-4">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${risk.className}`}
-                        >
-                          {risk.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-sand-900">
+              Dashboard tin nhắn nhóm
+            </h1>
           </div>
         </div>
 
-        <div className="rounded-lg border border-sand-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-sand-900">
-                Phân bố status
-              </h2>
-              <p className="mt-1 text-xs text-sand-500">
-                Chỉ tính các tin nhắn nhóm.
-              </p>
-            </div>
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
           </div>
+        )}
 
-          <div className="mt-5 space-y-4">
-            {statusRows.map((item) => {
-              const width = getViolationRate(item.value, summary.totalMessages);
-
-              return (
-                <div key={item.label}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="font-medium text-sand-700">
-                      {item.label}
-                    </span>
-                    <span className="text-sand-500">
-                      {loading ? "..." : formatNumber(item.value)}
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full bg-sand-100">
-                    <div
-                      className={`h-2 rounded-full ${item.color}`}
-                      style={{ width: `${summary.totalMessages ? Math.max(width, 2) : 0}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-xs font-semibold uppercase text-sand-400">
-              Xu hướng 5 ngày
-            </h3>
-            <div className="mt-3 flex h-32 items-end gap-3">
-              {trendRows.length === 0 && !loading ? (
-                <div className="flex-1 rounded bg-sand-50">
-                  <EmptyState
-                    compact
-                    title="Chưa có xu hướng"
-                    image={emptyPostImage}
-                  />
-                </div>
-              ) : (
-                trendRows.map((row) => {
-                  const total = row.offensive + row.hate;
-                  const height = Math.max((total / maxTrendValue) * 100, 8);
-
-                  return (
-                    <div key={row.label} className="flex flex-1 flex-col gap-2">
-                      <div className="flex h-24 items-end rounded bg-sand-50 px-1">
-                        <div
-                          className="w-full rounded-t bg-blue-400"
-                          style={{ height: `${height}%` }}
-                        >
-                          <div
-                            className="w-full rounded-t bg-red-500"
-                            style={{
-                              height: `${Math.max(
-                                total ? (row.hate / total) * 100 : 0,
-                                row.hate > 0 ? 12 : 0,
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <span className="text-center text-[11px] text-sand-400">
-                        {row.label}
-                      </span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-3">
-        <div className="rounded-lg border border-sand-200 bg-white p-5 shadow-sm xl:col-span-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-sand-900">
-                Thành viên vi phạm trong nhóm
-              </h2>
-              <p className="mt-1 text-xs text-sand-500">
-                Dữ liệu dùng để cảnh báo, mute hoặc kick khỏi nhóm.
-              </p>
-            </div>
-          </div>
-
-          <form
-            onSubmit={handleUserSearch}
-            className="mt-4 flex flex-col gap-2 sm:flex-row"
-          >
-            <div className="relative flex-1">
-              <input
-                value={userSearchKeyword}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setUserSearchKeyword(value);
-
-                  if (!value.trim()) {
-                    setUserSearchActive(false);
-                    setUserSearchResults([]);
-                    setUserSearchError(null);
-                  }
-                }}
-                className="h-10 w-full rounded-lg border border-sand-200 bg-white px-3 text-sm text-sand-900 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                placeholder="Tìm theo tên, email hoặc user id"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={userSearchLoading}
-              title="Tìm user"
-              aria-label="Tìm user"
-              className="inline-flex h-10 w-10 items-center justify-center text-[#3b82f6] transition-colors hover:text-[#2563eb] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Search size={17} className={userSearchLoading ? "animate-pulse" : ""} />
-            </button>
-          </form>
-
-          {userSearchActive && (
-            <div className="mt-4 rounded-lg border border-sand-200 bg-sand-50 p-3">
-              {userSearchLoading && (
-                <p className="text-sm text-sand-500">Đang tìm kiếm user...</p>
-              )}
-
-              {userSearchError && (
-                <p className="text-sm text-sand-500">{userSearchError}</p>
-              )}
-
-              {!userSearchLoading && userSearchResults.length > 0 && (
-                <div className="space-y-3">
-                  {userSearchResults.map((user) => {
-                    const violations = getViolationCount(user);
-
-                    return (
-                      <div
-                        key={user.userId}
-                        className="rounded-lg border border-sand-200 bg-white p-3"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-3">
-                            <UserAvatar
-                              name={user.fullName}
-                              avatarUrl={user.avatarUrl}
-                            />
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-sand-900">
-                                {user.fullName}
-                              </p>
-                              <p className="truncate text-xs text-sand-400">
-                                User {user.userId}
-                                {user.email ? ` · ${user.email}` : ""}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right text-xs text-sand-500">
-                            <p className="font-semibold text-red-700">
-                              {formatNumber(violations)} vi phạm
-                            </p>
-                            <p>{formatNumber(user.totalMessages)} tin nhóm</p>
-                          </div>
-                        </div>
-
-                        {user.groups.length === 0 ? (
-                          <p className="mt-3 text-xs text-sand-500">
-                            User này chưa có tin nhắn OFFENSIVE hoặc HATE trong nhóm.
-                          </p>
-                        ) : (
-                          <div className="mt-3 overflow-x-auto">
-                            <table className="min-w-full text-left text-xs">
-                              <thead className="text-sand-400">
-                                <tr>
-                                  <th className="py-2 pr-3 font-medium">Nhóm</th>
-                                  <th className="py-2 pr-3 font-medium">Tin</th>
-                                  <th className="py-2 pr-3 font-medium">OFF</th>
-                                  <th className="py-2 pr-3 font-medium">HATE</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-sand-100">
-                                {user.groups.map((group) => (
-                                  <tr key={`${user.userId}-${group.groupId}`}>
-                                    <td className="py-2 pr-3 text-sand-700">
-                                      {group.groupName}
-                                      <div className="text-[11px] text-sand-400">
-                                        Group {group.groupId}
-                                      </div>
-                                    </td>
-                                    <td className="py-2 pr-3 text-sand-700">
-                                      {formatNumber(group.totalMessages)}
-                                    </td>
-                                    <td className="py-2 pr-3 text-blue-700">
-                                      {formatNumber(group.offensiveMessages)}
-                                    </td>
-                                    <td className="py-2 pr-3 text-red-700">
-                                      {formatNumber(group.hateMessages)}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {!userSearchActive && (
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {!loading && memberRows.length === 0 && (
-              <div className="rounded-lg border border-sand-200 md:col-span-2">
-                <EmptyState
-                  title="Chưa có thành viên vi phạm"
-                  image={emptyFriendImage}
-                />
-              </div>
-            )}
-
-            {memberRows.map((member) => {
-              const violations = getViolationCount(member);
-              const rate = getViolationRate(violations, member.totalMessages);
-              const suggestion = getMemberSuggestion(member);
-
-              return (
-                <button
-                  type="button"
-                  onClick={() => openViolationDetail(member)}
-                  key={`${member.groupId}-${member.senderId}`}
-                  className="rounded-lg border border-sand-200 p-4 text-left transition hover:border-sky-200 hover:bg-sky-50/40 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-100"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <UserAvatar
-                        name={member.senderName}
-                        avatarUrl={member.senderAvatarUrl}
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-sand-900">
-                          {member.senderName}
-                        </p>
-                        <p className="mt-0.5 truncate text-xs text-sand-400">
-                          User {member.senderId} · {member.groupName}
-                        </p>
-                        {member.senderEmail && (
-                          <p className="mt-0.5 truncate text-xs text-sand-400">
-                            {member.senderEmail}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                        suggestion.includes("kick")
-                          ? "bg-red-50 text-red-700"
-                          : suggestion.includes("mute")
-                            ? "bg-blue-50 text-blue-700"
-                            : "bg-sky-50 text-sky-700"
-                      }`}
-                    >
-                      {suggestion}
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-4 gap-2 text-center">
-                    <div className="rounded bg-sand-50 px-2 py-2">
-                      <p className="text-sm font-semibold text-sand-900">
-                        {formatNumber(member.totalMessages)}
-                      </p>
-                      <p className="text-[11px] text-sand-400">Tin</p>
-                    </div>
-                    <div className="rounded bg-blue-50 px-2 py-2">
-                      <p className="text-sm font-semibold text-blue-700">
-                        {formatNumber(member.offensiveMessages)}
-                      </p>
-                      <p className="text-[11px] text-blue-700">OFF</p>
-                    </div>
-                    <div className="rounded bg-red-50 px-2 py-2">
-                      <p className="text-sm font-semibold text-red-700">
-                        {formatNumber(member.hateMessages)}
-                      </p>
-                      <p className="text-[11px] text-red-700">HATE</p>
-                    </div>
-                    <div className="rounded bg-sky-50 px-2 py-2">
-                      <p className="text-sm font-semibold text-sky-700">
-                        {rate}%
-                      </p>
-                      <p className="text-[11px] text-sky-700">Tỉ lệ</p>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          )}
-        </div>
-
-        <div className="rounded-lg border border-sand-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-sand-900">
-                Cần xử lý
-              </h2>
-              <p className="mt-1 text-xs text-sand-500">
-                Gợi ý dựa trên OFFENSIVE và HATE.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {!loading && reviewQueue.length === 0 && (
-              <div className="rounded-lg border border-sand-200">
-                <EmptyState
-                  compact
-                  title="Chưa có đề xuất xử lý"
-                  image={emptyChatImage}
-                />
-              </div>
-            )}
-
-            {reviewQueue.map((item) => (
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {statCards.map((card) => {
+            return (
               <div
-                key={item.id}
-                className="rounded-lg border border-sand-200 p-3"
+                key={card.title}
+                className="rounded-lg border border-sand-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-sand-900">
-                      {item.senderName}
+                    <p className="text-xs font-medium uppercase text-sand-400">
+                      {card.title}
                     </p>
-                    <p className="mt-0.5 text-xs text-sand-400">
-                      {item.groupName}
+                    <p className="mt-2 text-2xl font-semibold text-sand-900">
+                      {loading ? (
+                        <span className="inline-block h-8 w-24 animate-pulse rounded bg-sand-200" />
+                      ) : (
+                        card.value
+                      )}
                     </p>
                   </div>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      item.priority === "HIGH"
-                        ? "bg-red-50 text-red-700"
-                        : "bg-blue-50 text-blue-700"
-                    }`}
-                  >
-                    {item.priority}
-                  </span>
                 </div>
-                <p className="mt-3 text-xs leading-5 text-sand-600">
-                  {item.reason}
-                </p>
-                <p className="mt-2 text-xs font-medium text-sand-900">
-                  {item.suggestion}
+                {loading ? (
+                  <div className="mt-3 h-4 w-32 animate-pulse rounded bg-sand-100" />
+                ) : (
+                  <p className="mt-3 text-xs text-sand-500">{card.helper}</p>
+                )}
+              </div>
+            );
+          })}
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-3">
+          <div className="rounded-lg border border-sand-200 bg-white p-5 shadow-sm xl:col-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-sand-900">
+                  Top nhóm rủi ro
+                </h2>
+                <p className="mt-1 text-xs text-sand-500">
+                  Sắp xếp theo tổng OFFENSIVE và HATE trong nhóm.
                 </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Bảng nhóm: Active & Ẩn ── */}
-      <section className="rounded-lg border border-sand-200 bg-white shadow-sm">
-        {/* Header */}
-        <div className="flex flex-col gap-3 border-b border-sand-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-sm font-semibold text-sand-900">Danh sách nhóm</h2>
-            <p className="mt-0.5 text-xs text-sand-500">
-              Quản lý trạng thái các nhóm học và nhóm cộng đồng.
-            </p>
-          </div>
-
-          {/* Search */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-            className="flex gap-2"
-          >
-            <div className="relative">
-              <input
-                value={groupsSearch}
-                onChange={(e) => {
-                  setGroupsSearch(e.target.value);
-                }}
-                placeholder="Tìm theo tên nhóm..."
-                className="h-9 w-56 rounded-lg border border-sand-200 bg-sand-50 px-3 text-sm text-sand-800 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100"
-              />
             </div>
-          </form>
-        </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-sand-200 px-5">
-          {(["ACTIVE", "INACTIVE"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => {
-                setGroupsTab(tab);
-                setGroupsPage(0);
-              }}
-              className={`-mb-px border-b-2 px-4 py-3 text-xs font-semibold transition ${
-                groupsTab === tab
-                  ? tab === "ACTIVE"
-                    ? "border-emerald-500 text-emerald-700"
-                    : "border-blue-500 text-blue-700"
-                  : "border-transparent text-sand-500 hover:text-sand-700"
-              }`}
-            >
-              {tab === "ACTIVE" ? "Đang hoạt động" : "Đã ẩn"}
-              <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                groupsTab === tab
-                  ? tab === "ACTIVE"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-blue-100 text-blue-700"
-                  : "bg-sand-100 text-sand-500"
-              }`}>
-                {tab === "ACTIVE" ? activeGroupsCount : inactiveGroupsCount}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Error */}
-        {groupsError && (
-          <div className="mx-5 mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {groupsError}
-          </div>
-        )}
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-sand-100 text-xs font-medium uppercase text-sand-400">
-                <th className="px-5 py-3">Nhóm</th>
-                <th className="px-5 py-3">Loại</th>
-                <th className="px-5 py-3">Môn học</th>
-                <th className="px-5 py-3">Thành viên</th>
-                <th className="px-5 py-3">Trạng thái</th>
-                <th className="px-5 py-3">Ngày tạo</th>
-                <th className="px-5 py-3 text-right">Hành động</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-sand-50 relative">
-              {groupsLoading && (!groupsData || groupsData.content.length === 0) && (
-                <tr>
-                  <td className="px-5 py-8 text-center text-sm text-sand-400" colSpan={7}>
-                    Đang tải...
-                  </td>
-                </tr>
-              )}
-
-              {!groupsLoading && (!groupsData || groupsData.content.length === 0) && (
-                <tr>
-                  <td className="px-5 py-8 text-center text-sm text-sand-400" colSpan={7}>
-                    {groupsTab === "ACTIVE"
-                      ? "Không có nhóm nào đang hoạt động."
-                      : "Không có nhóm nào đang bị ẩn."}
-                  </td>
-                </tr>
-              )}
-
-              {groupsData?.content.map((group) => {
-                  const isActive = group.status === "ACTIVE";
-                  const isInactive = group.status === "INACTIVE";
-
-                  return (
-                    <tr
-                      key={group.id}
-                      className={`transition hover:bg-sand-50/60 ${groupsLoading ? "opacity-50 pointer-events-none" : ""}`}
-                    >
-                      {/* Tên nhóm */}
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1.5 text-xs font-semibold text-slate-700">
-                            {group.id}
-                          </span>
-                          <p className="font-medium text-sand-900">{group.name}</p>
-                        </div>
-                      </td>
-
-                      {/* Loại */}
-                      <td className="px-5 py-3.5">
-                        <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide ${
-                          group.visibility === "COMMUNITY"
-                            ? "bg-sky-50 text-sky-700 ring-1 ring-sky-200"
-                            : group.visibility === "PRIVATE"
-                            ? "bg-rose-50 text-rose-700 ring-1 ring-rose-200"
-                            : "bg-violet-50 text-violet-700 ring-1 ring-violet-200"
-                        }`}>
-                          {group.visibility || group.type}
-                        </span>
-                      </td>
-
-                      {/* Môn học */}
-                      <td className="px-5 py-3.5 text-sand-700">
-                        {group.subjectName || "—"}
-                      </td>
-
-                      {/* Thành viên */}
-                      <td className="px-5 py-3.5 text-sand-700">
-                        {formatNumber(group.memberCount)}
-                      </td>
-
-                      {/* Status badge */}
-                      <td className="px-5 py-3.5">
-                        <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
-                          isActive
-                            ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                            : "bg-blue-50 text-blue-700 ring-blue-200"
-                        }`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-blue-500"}`} />
-                          {isActive ? "Hoạt động" : "Đã ẩn"}
-                        </span>
-                      </td>
-
-                      {/* Ngày tạo */}
-                      <td className="px-5 py-3.5 text-xs text-sand-500">
-                        {group.createdAt
-                          ? new Date(group.createdAt).toLocaleDateString("vi-VN")
-                          : "—"}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center justify-end gap-2">
-                          {isActive && (
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const confirmed = await confirm({
-                                  title: "Ẩn nhóm học",
-                                  message: `Bạn có chắc chắn muốn ẩn nhóm "${group.name}"?`,
-                                  type: "warning",
-                                  confirmText: "Ẩn",
-                                  cancelText: "Hủy",
-                                });
-                                if (!confirmed) return;
-                                const res = await updateAdminGroupStatus(group.id, "INACTIVE");
-                                if (res.success) {
-                                  setGroupsData((prev) =>
-                                    prev
-                                      ? {
-                                          ...prev,
-                                          content: prev.content.filter((g) => g.id !== group.id),
-                                          totalElements: prev.totalElements - 1,
-                                        }
-                                      : prev,
-                                  );
-                                }
-                              }}
-                              className="inline-flex h-7 items-center gap-1 rounded-md border border-blue-300 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                              Ẩn
-                            </button>
-                          )}
-
-                          {isInactive && (
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const res = await updateAdminGroupStatus(group.id, "ACTIVE");
-                                if (res.success) {
-                                  setGroupsData((prev) =>
-                                    prev
-                                      ? {
-                                          ...prev,
-                                          content: prev.content.filter((g) => g.id !== group.id),
-                                          totalElements: prev.totalElements - 1,
-                                        }
-                                      : prev,
-                                  );
-                                }
-                              }}
-                              className="inline-flex h-7 items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
-                            >
-                              Kích hoạt
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const confirmed = await confirm({
-                                title: "Xóa nhóm học",
-                                message: `Bạn có chắc chắn muốn xóa nhóm "${group.name}"? Hành động này không thể hoàn tác.`,
-                                type: "danger",
-                                confirmText: "Xóa",
-                                cancelText: "Hủy",
-                              });
-                              if (!confirmed) return;
-                              const res = await updateAdminGroupStatus(group.id, "DELETED");
-                              if (res.success) {
-                                setGroupsData((prev) =>
-                                  prev
-                                    ? {
-                                        ...prev,
-                                        content: prev.content.filter((g) => g.id !== group.id),
-                                        totalElements: prev.totalElements - 1,
-                                      }
-                                    : prev,
-                                );
-                              }
-                            }}
-                            className="inline-flex h-7 items-center gap-1 rounded-md bg-red-600 px-2.5 text-xs font-medium text-white transition hover:bg-red-700"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                            Xóa
-                          </button>
-                        </div>
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-sand-200 text-xs uppercase text-sand-400">
+                    <th className="py-3 pr-4 font-medium">Nhóm</th>
+                    <th className="py-3 pr-4 font-medium">Tin</th>
+                    <th className="py-3 pr-4 font-medium">OFF</th>
+                    <th className="py-3 pr-4 font-medium">HATE</th>
+                    <th className="py-3 pr-4 font-medium">Tỉ lệ</th>
+                    <th className="py-3 pr-4 font-medium">Rủi ro</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-sand-100">
+                  {!loading && groupRows.length === 0 && (
+                    <tr>
+                      <td colSpan={6}>
+                        <EmptyState
+                          title="Chưa có nhóm vi phạm"
+                          image={emptyGroupImage}
+                        />
                       </td>
                     </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
+                  )}
 
-        {/* Pagination */}
-        {groupsData && groupsData.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-sand-100 px-5 py-3">
-            <p className="text-xs text-sand-500">
-              Trang {groupsData.number + 1} / {groupsData.totalPages} &nbsp;·&nbsp;
-              {formatNumber(groupsData.totalElements)} nhóm
-            </p>
-            <div className="flex gap-1">
-              <button
-                type="button"
-                onClick={() => setGroupsPage((p) => Math.max(0, p - 1))}
-                disabled={groupsData.first}
-                className="h-8 rounded-lg border border-sand-200 px-3 text-xs font-medium text-sand-700 transition hover:bg-sand-50 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                ← Trước
-              </button>
-              {Array.from({ length: Math.min(groupsData.totalPages, 5) }, (_, i) => {
-                const start = Math.max(0, Math.min(groupsData.number - 2, groupsData.totalPages - 5));
-                const pageNum = start + i;
-                return (
-                  <button
-                    key={pageNum}
-                    type="button"
-                    onClick={() => setGroupsPage(pageNum)}
-                    className={`h-8 w-8 rounded-lg text-xs font-medium transition ${
-                      pageNum === groupsData.number
-                        ? "bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
-                        : "border border-sand-200 text-sand-700 hover:bg-sand-50"
-                    }`}
-                  >
-                    {pageNum + 1}
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                onClick={() => setGroupsPage((p) => p + 1)}
-                disabled={groupsData.last}
-                className="h-8 rounded-lg border border-sand-200 px-3 text-xs font-medium text-sand-700 transition hover:bg-sand-50 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Sau →
-              </button>
+                  {groupRows.map((group) => {
+                    const violations = getViolationCount(group);
+                    const rate = getViolationRate(
+                      violations,
+                      group.totalMessages,
+                    );
+                    const risk = getGroupRisk(group);
+
+                    return (
+                      <tr
+                        key={group.groupId}
+                        onClick={() => openGroupDetail(group)}
+                        className="cursor-pointer align-top transition hover:bg-sky-50/50"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openGroupDetail(group);
+                          }
+                        }}
+                      >
+                        <td className="py-3 pr-4">
+                          <div className="font-medium text-sand-900">
+                            {group.groupName}
+                          </div>
+                          <div className="mt-0.5 text-xs text-sand-400">
+                            Group {group.groupId} · Conversation{" "}
+                            {group.conversationId}
+                          </div>
+                        </td>
+                        <td className="py-3 pr-4 text-sand-700">
+                          {formatNumber(group.totalMessages)}
+                          <div className="text-xs text-sand-400">
+                            {formatNumber(violations)} vi phạm
+                          </div>
+                        </td>
+                        <td className="py-3 pr-4 text-blue-700">
+                          {formatNumber(group.offensiveMessages)}
+                        </td>
+                        <td className="py-3 pr-4 text-red-700">
+                          {formatNumber(group.hateMessages)}
+                        </td>
+                        <td className="py-3 pr-4 text-sand-700">{rate}%</td>
+                        <td className="py-3 pr-4">
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${risk.className}`}
+                          >
+                            {risk.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
-        )}
-      </section>
 
-    </main>
+          <div className="rounded-lg border border-sand-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-sand-900">
+                  Phân bố status
+                </h2>
+                <p className="mt-1 text-xs text-sand-500">
+                  Chỉ tính các tin nhắn nhóm.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              {statusRows.map((item) => {
+                const width = getViolationRate(item.value, summary.totalMessages);
+
+                return (
+                  <div key={item.label}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="font-medium text-sand-700">
+                        {item.label}
+                      </span>
+                      <span className="text-sand-500">
+                        {loading ? "..." : formatNumber(item.value)}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full bg-sand-100">
+                      <div
+                        className={`h-2 rounded-full ${item.color}`}
+                        style={{ width: `${summary.totalMessages ? Math.max(width, 2) : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-xs font-semibold uppercase text-sand-400">
+                Xu hướng 5 ngày
+              </h3>
+              <div className="mt-3 flex h-32 items-end gap-3">
+                {trendRows.length === 0 && !loading ? (
+                  <div className="flex-1 rounded bg-sand-50">
+                    <EmptyState
+                      compact
+                      title="Chưa có xu hướng"
+                      image={emptyPostImage}
+                    />
+                  </div>
+                ) : (
+                  trendRows.map((row) => {
+                    const total = row.offensive + row.hate;
+                    const height = Math.max((total / maxTrendValue) * 100, 8);
+
+                    return (
+                      <div key={row.label} className="flex flex-1 flex-col gap-2">
+                        <div className="flex h-24 items-end rounded bg-sand-50 px-1">
+                          <div
+                            className="w-full rounded-t bg-blue-400"
+                            style={{ height: `${height}%` }}
+                          >
+                            <div
+                              className="w-full rounded-t bg-red-500"
+                              style={{
+                                height: `${Math.max(
+                                  total ? (row.hate / total) * 100 : 0,
+                                  row.hate > 0 ? 12 : 0,
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-center text-[11px] text-sand-400">
+                          {row.label}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-3">
+          <div className="rounded-lg border border-sand-200 bg-white p-5 shadow-sm xl:col-span-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-sand-900">
+                  Thành viên vi phạm trong nhóm
+                </h2>
+                <p className="mt-1 text-xs text-sand-500">
+                  Dữ liệu dùng để cảnh báo, mute hoặc kick khỏi nhóm.
+                </p>
+              </div>
+            </div>
+
+            <form
+              onSubmit={handleUserSearch}
+              className="mt-4 flex flex-col gap-2 sm:flex-row"
+            >
+              <div className="relative flex-1">
+                <input
+                  value={userSearchKeyword}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setUserSearchKeyword(value);
+
+                    if (!value.trim()) {
+                      setUserSearchActive(false);
+                      setUserSearchResults([]);
+                      setUserSearchError(null);
+                    }
+                  }}
+                  className="h-10 w-full rounded-lg border border-sand-200 bg-white px-3 text-sm text-sand-900 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                  placeholder="Tìm theo tên, email hoặc user id"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={userSearchLoading}
+                title="Tìm user"
+                aria-label="Tìm user"
+                className="inline-flex h-10 w-10 items-center justify-center text-[#3b82f6] transition-colors hover:text-[#2563eb] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Search size={17} className={userSearchLoading ? "animate-pulse" : ""} />
+              </button>
+            </form>
+
+            {userSearchActive && (
+              <div className="mt-4 rounded-lg border border-sand-200 bg-sand-50 p-3">
+                {userSearchLoading && (
+                  <p className="text-sm text-sand-500">Đang tìm kiếm user...</p>
+                )}
+
+                {userSearchError && (
+                  <p className="text-sm text-sand-500">{userSearchError}</p>
+                )}
+
+                {!userSearchLoading && userSearchResults.length > 0 && (
+                  <div className="space-y-3">
+                    {userSearchResults.map((user) => {
+                      const violations = getViolationCount(user);
+
+                      return (
+                        <div
+                          key={user.userId}
+                          className="rounded-lg border border-sand-200 bg-white p-3"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <UserAvatar
+                                name={user.fullName}
+                                avatarUrl={user.avatarUrl}
+                              />
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-sand-900">
+                                  {user.fullName}
+                                </p>
+                                <p className="truncate text-xs text-sand-400">
+                                  User {user.userId}
+                                  {user.email ? ` · ${user.email}` : ""}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right text-xs text-sand-500">
+                              <p className="font-semibold text-red-700">
+                                {formatNumber(violations)} vi phạm
+                              </p>
+                              <p>{formatNumber(user.totalMessages)} tin nhóm</p>
+                            </div>
+                          </div>
+
+                          {user.groups.length === 0 ? (
+                            <p className="mt-3 text-xs text-sand-500">
+                              User này chưa có tin nhắn OFFENSIVE hoặc HATE trong nhóm.
+                            </p>
+                          ) : (
+                            <div className="mt-3 overflow-x-auto">
+                              <table className="min-w-full text-left text-xs">
+                                <thead className="text-sand-400">
+                                  <tr>
+                                    <th className="py-2 pr-3 font-medium">Nhóm</th>
+                                    <th className="py-2 pr-3 font-medium">Tin</th>
+                                    <th className="py-2 pr-3 font-medium">OFF</th>
+                                    <th className="py-2 pr-3 font-medium">HATE</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-sand-100">
+                                  {user.groups.map((group) => (
+                                    <tr key={`${user.userId}-${group.groupId}`}>
+                                      <td className="py-2 pr-3 text-sand-700">
+                                        {group.groupName}
+                                        <div className="text-[11px] text-sand-400">
+                                          Group {group.groupId}
+                                        </div>
+                                      </td>
+                                      <td className="py-2 pr-3 text-sand-700">
+                                        {formatNumber(group.totalMessages)}
+                                      </td>
+                                      <td className="py-2 pr-3 text-blue-700">
+                                        {formatNumber(group.offensiveMessages)}
+                                      </td>
+                                      <td className="py-2 pr-3 text-red-700">
+                                        {formatNumber(group.hateMessages)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!userSearchActive && (
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {!loading && memberRows.length === 0 && (
+                  <div className="rounded-lg border border-sand-200 md:col-span-2">
+                    <EmptyState
+                      title="Chưa có thành viên vi phạm"
+                      image={emptyFriendImage}
+                    />
+                  </div>
+                )}
+
+                {memberRows.map((member) => {
+                  const violations = getViolationCount(member);
+                  const rate = getViolationRate(violations, member.totalMessages);
+                  const suggestion = getMemberSuggestion(member);
+
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => openViolationDetail(member)}
+                      key={`${member.groupId}-${member.senderId}`}
+                      className="rounded-lg border border-sand-200 p-4 text-left transition hover:border-sky-200 hover:bg-sky-50/40 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-100"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <UserAvatar
+                            name={member.senderName}
+                            avatarUrl={member.senderAvatarUrl}
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-sand-900">
+                              {member.senderName}
+                            </p>
+                            <p className="mt-0.5 truncate text-xs text-sand-400">
+                              User {member.senderId} · {member.groupName}
+                            </p>
+                            {member.senderEmail && (
+                              <p className="mt-0.5 truncate text-xs text-sand-400">
+                                {member.senderEmail}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${suggestion.includes("kick")
+                            ? "bg-red-50 text-red-700"
+                            : suggestion.includes("mute")
+                              ? "bg-blue-50 text-blue-700"
+                              : "bg-sky-50 text-sky-700"
+                            }`}
+                        >
+                          {suggestion}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+                        <div className="rounded bg-sand-50 px-2 py-2">
+                          <p className="text-sm font-semibold text-sand-900">
+                            {formatNumber(member.totalMessages)}
+                          </p>
+                          <p className="text-[11px] text-sand-400">Tin</p>
+                        </div>
+                        <div className="rounded bg-blue-50 px-2 py-2">
+                          <p className="text-sm font-semibold text-blue-700">
+                            {formatNumber(member.offensiveMessages)}
+                          </p>
+                          <p className="text-[11px] text-blue-700">OFF</p>
+                        </div>
+                        <div className="rounded bg-red-50 px-2 py-2">
+                          <p className="text-sm font-semibold text-red-700">
+                            {formatNumber(member.hateMessages)}
+                          </p>
+                          <p className="text-[11px] text-red-700">HATE</p>
+                        </div>
+                        <div className="rounded bg-sky-50 px-2 py-2">
+                          <p className="text-sm font-semibold text-sky-700">
+                            {rate}%
+                          </p>
+                          <p className="text-[11px] text-sky-700">Tỉ lệ</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-sand-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-sand-900">
+                  Cần xử lý
+                </h2>
+                <p className="mt-1 text-xs text-sand-500">
+                  Gợi ý dựa trên OFFENSIVE và HATE.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {!loading && reviewQueue.length === 0 && (
+                <div className="rounded-lg border border-sand-200">
+                  <EmptyState
+                    compact
+                    title="Chưa có đề xuất xử lý"
+                    image={emptyChatImage}
+                  />
+                </div>
+              )}
+
+              {reviewQueue.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-lg border border-sand-200 p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-sand-900">
+                        {item.senderName}
+                      </p>
+                      <p className="mt-0.5 text-xs text-sand-400">
+                        {item.groupName}
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${item.priority === "HIGH"
+                        ? "bg-red-50 text-red-700"
+                        : "bg-blue-50 text-blue-700"
+                        }`}
+                    >
+                      {item.priority}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-sand-600">
+                    {item.reason}
+                  </p>
+                  <p className="mt-2 text-xs font-medium text-sand-900">
+                    {item.suggestion}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+
+
+      </main>
 
       {selectedViolationUser && createPortal((
         <div
@@ -1765,7 +1458,7 @@ export default function AdminDashboardPage() {
                     disabled={groupHideLoading || groupDeleteLoading}
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-3 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
                     {groupHideLoading ? "Đang ẩn..." : "Ẩn nhóm"}
                   </button>
                 )}
@@ -1781,7 +1474,7 @@ export default function AdminDashboardPage() {
                   }
                   className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-red-600 px-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>
                   {groupDeleteLoading ? "Đang xóa..." : "Xóa nhóm"}
                 </button>
 
@@ -1799,11 +1492,10 @@ export default function AdminDashboardPage() {
 
             {/* Inline confirm dialog */}
             {confirmDialog.open && (
-              <div className={`mx-6 mt-4 flex items-start gap-3 rounded-lg border p-4 ${
-                confirmDialog.type === "delete"
-                  ? "border-red-200 bg-red-50"
-                  : "border-blue-200 bg-blue-50"
-              }`}>
+              <div className={`mx-6 mt-4 flex items-start gap-3 rounded-lg border p-4 ${confirmDialog.type === "delete"
+                ? "border-red-200 bg-red-50"
+                : "border-blue-200 bg-blue-50"
+                }`}>
                 <div className="flex-1">
                   <p className={`text-sm font-semibold ${confirmDialog.type === "delete" ? "text-red-800" : "text-blue-800"}`}>
                     {confirmDialog.type === "delete"
@@ -1827,9 +1519,8 @@ export default function AdminDashboardPage() {
                   <button
                     type="button"
                     onClick={confirmDialog.type === "delete" ? handleDeleteSelectedGroup : handleHideSelectedGroup}
-                    className={`h-8 rounded-lg px-3 text-xs font-medium text-white transition ${
-                      confirmDialog.type === "delete" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
-                    }`}
+                    className={`h-8 rounded-lg px-3 text-xs font-medium text-white transition ${confirmDialog.type === "delete" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
+                      }`}
                   >
                     {confirmDialog.type === "delete" ? "Xóa" : "Ẩn nhóm"}
                   </button>

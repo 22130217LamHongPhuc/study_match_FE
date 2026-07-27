@@ -48,7 +48,7 @@ export function DateRangeFilter({
       <button
         type="button"
         onClick={onFilter}
-        className="flex items-center gap-1.5 rounded-lg bg-sand-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-sand-800"
+        className="flex items-center gap-1.5 rounded-lg bg-accent-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-accent-700"
       >
         <Filter size={14} />
         Lọc
