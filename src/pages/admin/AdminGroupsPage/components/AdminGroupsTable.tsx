@@ -14,6 +14,7 @@ import type { GroupRow } from "../types";
 import { GroupStatusBadge, GroupTypeBadge } from "./GroupBadges";
 import { Pagination } from "../../../../components/admin/Pagination";
 import { AdminGroupDetailSheet } from "./AdminGroupDetailSheet";
+import { normalizeAvatarUrl } from "../../../../services/FriendService";
 import {
   AdminGroupStatus,
   updateAdminGroupStatus,
@@ -292,19 +293,27 @@ export function AdminGroupsTable({
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded ${
-                        group.type === "COMMUNITY"
-                          ? "bg-accent-50 text-accent-600"
-                          : "bg-sand-100 text-sand-600"
-                      }`}
-                    >
-                      {group.type === "COMMUNITY" ? (
-                        <Globe2 size={15} />
-                      ) : (
-                        <UsersRound size={15} />
-                      )}
-                    </div>
+                    {group.avatarUrl ? (
+                      <img
+                        src={normalizeAvatarUrl(group.avatarUrl) || ""}
+                        alt={group.name}
+                        className="h-8 w-8 shrink-0 rounded object-cover border border-sand-100 bg-sand-100"
+                      />
+                    ) : (
+                      <div
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded ${
+                          group.type === "COMMUNITY"
+                            ? "bg-accent-50 text-accent-600"
+                            : "bg-sand-100 text-sand-600"
+                        }`}
+                      >
+                        {group.type === "COMMUNITY" ? (
+                          <Globe2 size={15} />
+                        ) : (
+                          <UsersRound size={15} />
+                        )}
+                      </div>
+                    )}
 
                     <div>
                       <p className="text-sm font-medium text-sand-800">

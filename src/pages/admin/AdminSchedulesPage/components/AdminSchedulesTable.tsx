@@ -15,6 +15,7 @@ import {
   StudyModeBadge,
 } from "./ScheduleBadges";
 import { Pagination } from "../../../../components/admin/Pagination";
+import { Cancel, CancelOutlined } from "@mui/icons-material";
 
 type AdminSchedulesTableProps = {
   schedules: ScheduleRow[];
@@ -78,7 +79,11 @@ export function AdminSchedulesTable({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpenMenuId(null);
     };
-    const onMouseDown = () => setOpenMenuId(null);
+    const onMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest(".dropdown-menu-container")) return;
+      setOpenMenuId(null);
+    };
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("mousedown", onMouseDown);
@@ -207,7 +212,7 @@ export function AdminSchedulesTable({
                         >
                           <Eye size={15} />
                         </button>
-                        <div className="relative">
+                        <div className="relative dropdown-menu-container">
                           <button
                             type="button"
                             onClick={() => {
@@ -225,18 +230,20 @@ export function AdminSchedulesTable({
                               role="menu"
                               className="absolute right-0 top-[calc(100%+6px)] z-10 w-40 overflow-hidden rounded-lg border border-sand-200 bg-white shadow-lg"
                             >
-                              <button
-                                type="button"
-                                role="menuitem"
-                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-sand-700 hover:bg-sand-50"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  onEdit?.(s.id);
-                                }}
-                              >
-                                <Pencil size={14} className="text-sand-500" />
-                                Chỉnh sửa
-                              </button>
+                              {s.status !== "CANCELLED" && (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-sand-700 hover:bg-sand-50"
+                                  onClick={() => {
+                                    setOpenMenuId(null);
+                                    onEdit?.(s.id);
+                                  }}
+                                >
+                                  <CancelOutlined className="text-sand-500" fontSize="small" />
+                                  Hủy lịch học
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 role="menuitem"

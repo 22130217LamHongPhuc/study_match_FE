@@ -267,4 +267,26 @@ export async function changeAdminPassword(
   return response;
 }
 
+export interface UpdateUserProfileRequest {
+  fullName?: string;
+  bio?: string;
+  avatarUrl?: string | null;
+}
+
+export async function updateAdminUserProfile(
+  userId: number,
+  payload: UpdateUserProfileRequest,
+): Promise<APIResponseData<void>> {
+  const response = await apiFetch<void>(
+    `/api/admin/users/${userId}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+    API_BASE_URL_USER,
+  );
+  return response;
+}
+
+
 

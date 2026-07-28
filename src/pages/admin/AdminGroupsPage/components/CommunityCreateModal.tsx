@@ -1,5 +1,6 @@
 import { Globe2, Plus, X } from "lucide-react";
 import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   createCommunityGroup,
   CreateStudyGroupRequest,
@@ -89,6 +90,11 @@ export function CommunityCreateModal({
 
     const res = await createCommunityGroup(createGroupRequest);
     if (res.success) {
+      onCreate({
+        name: name.trim(),
+        subjectName: subjects.find((s) => s.subjectId === selectedSubjectId)?.subjectName || "",
+        description: description.trim(),
+      });
       onClose();
     }
     setLoading(false);
@@ -96,9 +102,9 @@ export function CommunityCreateModal({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center rounded-xl"
+      className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-label="Tạo cộng đồng"
@@ -207,19 +213,20 @@ export function CommunityCreateModal({
                 >
                   Hủy
                 </button>
-                 <button
-                   type="button"
-                   onClick={handleCreateCommunity}
-                   className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#3b82f6] text-sm font-medium text-white transition-all hover:bg-[#2563eb] shadow-md shadow-[#3b82f6]/20"
-                 >
-                   <Plus size={14} />
-                   Tạo cộng đồng
-                 </button>
+                <button
+                  type="button"
+                  onClick={handleCreateCommunity}
+                  className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#3b82f6] text-sm font-medium text-white transition-all hover:bg-[#2563eb] shadow-md shadow-[#3b82f6]/20"
+                >
+                  <Plus size={14} />
+                  Tạo cộng đồng
+                </button>
               </div>
             </div>
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -15,6 +15,7 @@ export interface GroupRow {
   memberCount: number;
   status: GroupStatus;
   createdAt: string;
+  avatarUrl?: string | null;
 }
 
 export interface GroupStats {

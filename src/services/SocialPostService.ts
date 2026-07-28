@@ -5,7 +5,7 @@ const unwrap = (payload: any) => payload?.data ?? payload?.result ?? payload;
 
 const requireSocialOk = (res: any, label: string) => {
   if (!isApiSuccess(res)) {
-    throw new Error(`${label}. ${res?.message ?? "Unknown error"}`);
+    throw new Error(res?.message || label);
   }
   if (res && typeof res === "object" && "data" in res) {
     return unwrap(res.data);
@@ -44,6 +44,7 @@ export type PostComment = {
   authorAvatarUrl?: string | null;
   content: string;
   createdAt: string;
+  moderationStatus?: string | null;
 };
 
 export type ProfileSocialStats = {
@@ -62,11 +63,19 @@ export type Achievement = {
   target: number;
 };
 
-export async function loadProfilePosts(userId: number, viewerId?: number): Promise<SocialPost[]> {
-  const query = viewerId ? `?viewerId=${viewerId}` : "";
-  const res = await apiFetch<any>(`${BASE_SOCIAL_SERVICE}/social/posts/user/${userId}${query}`);
-  return requireSocialOk(res, "Cannot load posts") || [];
+export async function loadProfilePosts(
+  userId: number,
+  page: number,
+  size: number,
+  viewerId?: number
+): Promise<SocialFeedPageResponse<SocialPost>> {
+  const viewerQuery = viewerId ? `&viewerId=${viewerId}` : "";
+  const res = await apiFetch<any>(
+    `${BASE_SOCIAL_SERVICE}/social/posts/user/${userId}?page=${page}&size=${size}${viewerQuery}`
+  );
+  return requireSocialOk(res, "Cannot load posts");
 }
+
 
 export async function createPost(payload: {
   authorId: number;

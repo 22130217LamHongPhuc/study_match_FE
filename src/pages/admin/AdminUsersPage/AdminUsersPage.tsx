@@ -11,6 +11,7 @@ import {
 import { getAdminUsers } from "../../../services/UserService";
 import { AdminUserDetailModal } from "./components/AdminUserDetailModal";
 import { InviteAdminModal } from "./components/InviteAdminModal";
+import { EditUserModal } from "./components/EditUserModal";
 
 function useDebounce<T>(value: T, delay = 400) {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -47,6 +48,10 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [openUserDetail, setOpenUserDetail] = useState<AdminUserDbRow | null>(
+    null,
+  );
+
+  const [openEditUser, setOpenEditUser] = useState<AdminUserDbRow | null>(
     null,
   );
 
@@ -168,12 +173,25 @@ export default function AdminUsersPage() {
           const user = users.find((item) => item.user_id === userId) ?? null;
           setOpenUserDetail(user);
         }}
+        onEditUser={(userId) => {
+          const user = users.find((item) => item.user_id === userId) ?? null;
+          setOpenEditUser(user);
+        }}
       />
 
       <AdminUserDetailModal
         open={openUserDetail !== null}
         user={openUserDetail}
         onClose={() => setOpenUserDetail(null)}
+      />
+
+      <EditUserModal
+        open={openEditUser !== null}
+        user={openEditUser}
+        onClose={() => setOpenEditUser(null)}
+        onSuccess={() => {
+          setRefreshTrigger((prev) => prev + 1);
+        }}
       />
 
       <InviteAdminModal

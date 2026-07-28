@@ -375,3 +375,30 @@ export async function getDetailedUserStats(
   return response;
 }
 
+export async function cancelStudySessionForAdmin(
+  sessionId: number,
+): Promise<APIResponseData<void>> {
+  const response = await apiFetch<void>(
+    `/api/admin/sessions/${sessionId}/cancel`,
+    {
+      method: "PATCH",
+    },
+    API_BASE_URL,
+  );
+  return response;
+}
+
+export async function deleteStudySessionForAdmin(
+  sessionId: number,
+): Promise<APIResponseData<void>> {
+  const response = await apiFetch<void>(
+    `/api/admin/sessions/${sessionId}`,
+    {
+      method: "DELETE",
+    },
+    API_BASE_URL,
+  );
+  return response;
+}
+
+

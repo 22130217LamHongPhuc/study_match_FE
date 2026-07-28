@@ -5,6 +5,7 @@ import { GroupRatioCard } from "./components/GroupRatioCard";
 import { GroupStatCard } from "./components/GroupStatCard";
 import { GroupsFilterBar, GroupsToolbar } from "./components/GroupsToolbar";
 import { RecentActivityCard } from "./components/RecentActivityCard";
+import { EditGroupModal } from "./components/EditGroupModal";
 
 import type { FilterGroup, GroupRow, GroupStats } from "./types";
 import { BookOpenCheck, Globe2, UsersRound } from "lucide-react";
@@ -23,6 +24,9 @@ const filters: FilterGroup[] = [
 
 export default function AdminGroupsPage() {
   const [createOpen, setCreateOpen] = useState(false);
+  const [editGroupId, setEditGroupId] = useState<number | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const reloadGroups = () => setRefreshKey((prev) => prev + 1);
 
   const [groups, setGroups] = useState<GroupRow[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
@@ -88,7 +92,7 @@ export default function AdminGroupsPage() {
     return () => {
       cancelled = true;
     };
-  }, [page, selectedFilter, debouncedKeyword]);
+  }, [page, selectedFilter, debouncedKeyword, refreshKey]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -125,7 +129,7 @@ export default function AdminGroupsPage() {
     };
 
     fetchStats();
-  }, []);
+  }, [refreshKey]);
 
   const onFilterChange = (filter: FilterGroup) => {
     setSelectedFilter(filter);
@@ -177,15 +181,28 @@ export default function AdminGroupsPage() {
                 prev.map((g) => (g.id === groupId ? { ...g, status } : g)),
               );
             }}
+            onEditGroup={(groupId) => setEditGroupId(groupId)}
           />
         </div>
       </div>
 
-
       <CommunityCreateModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreate={() => setCreateOpen(false)}
+        onCreate={() => {
+          setCreateOpen(false);
+          reloadGroups();
+        }}
+      />
+
+      <EditGroupModal
+        open={editGroupId !== null}
+        groupId={editGroupId}
+        onClose={() => setEditGroupId(null)}
+        onSuccess={() => {
+          reloadGroups();
+          setEditGroupId(null);
+        }}
       />
     </main>
   );
