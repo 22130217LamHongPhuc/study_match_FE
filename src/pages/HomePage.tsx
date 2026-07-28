@@ -141,6 +141,11 @@ export default function HomePage() {
     setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
+  const handlePostCreated = () => {
+    setPosts([]);
+    void fetchPosts(0, false);
+  };
+
   const [schedules, setSchedules] = useState<StudySessionResponse[]>([]);
   const [loadingSchedules, setLoadingSchedules] = useState(false);
 
@@ -248,6 +253,7 @@ export default function HomePage() {
               }}
               onPostChanged={handlePostChanged}
               onPostDeleted={handlePostDeleted}
+              onPostCreated={handlePostCreated}
               isPosting={isPosting}
               onLoadMore={() => fetchPosts(page + 1, true)}
               hasMore={page < totalPages - 1}

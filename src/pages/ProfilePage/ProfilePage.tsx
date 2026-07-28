@@ -388,6 +388,24 @@ export default function ProfilePage() {
     }
   };
   const [posts, setPosts] = useState<SocialPost[]>([]);
+  const [profilePostsPage, setProfilePostsPage] = useState(0);
+  const [hasMoreProfilePosts, setHasMoreProfilePosts] = useState(false);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const PROFILE_POSTS_PAGE_SIZE = 5;
+
+
+  const loadMoreProfilePosts = async () => {
+    if (!profileUserId) return;
+    const nextPage = profilePostsPage + 1;
+    try {
+      const res = await loadProfilePosts(profileUserId, nextPage, PROFILE_POSTS_PAGE_SIZE, currentUserId);
+      setPosts((prev) => [...prev, ...res.items]);
+      setProfilePostsPage(nextPage);
+      setHasMoreProfilePosts(res.hasNext);
+    } catch (error) {
+      console.error("Cannot load more profile posts", error);
+    }
+  };
   const [stats, setStats] = useState<ProfileSocialStats | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [createPostOpen, setCreatePostOpen] = useState(false);
@@ -717,35 +735,43 @@ export default function ProfilePage() {
   ]);
   useEffect(() => {
     if (!profileUserId) return;
+    setProfilePostsPage(0);
+    setLoadingPosts(true);
     Promise.all([
-      loadProfilePosts(profileUserId, currentUserId),
+      loadProfilePosts(profileUserId, 0, PROFILE_POSTS_PAGE_SIZE, currentUserId),
       loadProfileSocialStats(profileUserId),
       loadAchievements(profileUserId),
     ])
       .then(([postList, statData, achievementList]) => {
-        setPosts(postList);
+        setPosts(postList.items);
+        setHasMoreProfilePosts(postList.hasNext);
         setStats(statData);
         setAchievements(achievementList);
       })
-      .catch((error) => console.error("Cannot load profile social data", error));
+      .catch((error) => console.error("Cannot load profile social data", error))
+      .finally(() => setLoadingPosts(false));
   }, [profileUserId, currentUserId]);
 
   useEffect(() => {
     const handleStatusUpdate = () => {
       if (!profileUserId) return;
       refreshFriendshipData();
+      setProfilePostsPage(0);
+      setLoadingPosts(true);
 
       Promise.all([
-        loadProfilePosts(profileUserId, currentUserId),
+        loadProfilePosts(profileUserId, 0, PROFILE_POSTS_PAGE_SIZE, currentUserId),
         loadProfileSocialStats(profileUserId),
         loadAchievements(profileUserId),
       ])
         .then(([postList, statData, achievementList]) => {
-          setPosts(postList);
+          setPosts(postList.items);
+          setHasMoreProfilePosts(postList.hasNext);
           setStats(statData);
           setAchievements(achievementList);
         })
-        .catch((error) => console.error("Cannot load profile social data", error));
+        .catch((error) => console.error("Cannot load profile social data", error))
+        .finally(() => setLoadingPosts(false));
     };
 
     window.addEventListener("friend_status_updated", handleStatusUpdate);
@@ -753,6 +779,8 @@ export default function ProfilePage() {
       window.removeEventListener("friend_status_updated", handleStatusUpdate);
     };
   }, [profileUserId, currentUserId, refreshFriendshipData]);
+
+
 
   useEffect(() => {
     const friendEvents = new Set<string | null>([
@@ -956,7 +984,12 @@ export default function ProfilePage() {
 
       {isPosting && <PostSkeleton />}
 
-      {posts.length === 0 ? (
+      {loadingPosts ? (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <PostSkeleton />
+          <PostSkeleton />
+        </Box>
+      ) : posts.length === 0 ? (
         !isPosting && (
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", py: 6, gap: 1.5 }}>
             <Box
@@ -997,6 +1030,29 @@ export default function ProfilePage() {
             }}
           />
         ))
+      )}
+
+      {hasMoreProfilePosts && (
+        <Box sx={{ display: "flex", justifyContent: "center", pt: 2, pb: 4 }}>
+          <Button
+            onClick={loadMoreProfilePosts}
+            variant="outlined"
+            sx={{
+              borderRadius: "20px",
+              textTransform: "none",
+              fontSize: "13px",
+              fontWeight: 600,
+              color: "#475569",
+              borderColor: "#e2e8f0",
+              "&:hover": {
+                bgcolor: "#f8fafc",
+                borderColor: "#cbd5e1",
+              },
+            }}
+          >
+            Xem thêm bài viết
+          </Button>
+        </Box>
       )}
     </>
   );
@@ -1525,9 +1581,15 @@ export default function ProfilePage() {
                   <Typography sx={{ fontSize: "11px", fontWeight: 700, color: "#1e293b", mb: 0.25 }}>
                     {comment.authorName}
                   </Typography>
-                  <Typography sx={{ fontSize: "12px", color: "#334155", wordBreak: "break-word", lineHeight: 1.3 }}>
-                    {comment.content}
-                  </Typography>
+                  {comment.moderationStatus === "HATE" || comment.moderationStatus === "OFFENSIVE" ? (
+                    <Typography sx={{ fontSize: "12px", color: "#94a3b8", wordBreak: "break-word", lineHeight: 1.3, fontStyle: "italic" }}>
+                      Bình luận đã bị ẩn do vi phạm chính sách cộng đồng
+                    </Typography>
+                  ) : (
+                    <Typography sx={{ fontSize: "12px", color: "#334155", wordBreak: "break-word", lineHeight: 1.3 }}>
+                      {comment.content}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             ))

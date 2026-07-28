@@ -6,6 +6,29 @@ import reportWebVitals from "./reportWebVitals";
 import "./index.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import CallFramePage from "./features/call/CallFramePage";
+
+// Suppress known ZegoCloud tracer runtime errors globally in both parent and iframe windows
+const isZegoCreateSpanError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error || "");
+  return message.includes("createSpan");
+};
+
+window.addEventListener("error", (event: ErrorEvent) => {
+  if (isZegoCreateSpanError(event.error || event.message)) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    console.warn("[VideoCall][FE] Suppressed ZegoCloud tracer runtime error globally");
+  }
+}, true);
+
+window.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
+  if (isZegoCreateSpanError(event.reason)) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    console.warn("[VideoCall][FE] Suppressed ZegoCloud tracer promise rejection globally");
+  }
+}, true);
+
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );

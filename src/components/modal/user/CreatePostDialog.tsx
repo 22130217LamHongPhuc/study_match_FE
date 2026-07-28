@@ -225,9 +225,9 @@ export default function CreatePostDialog({
       const post = await createPost(payload);
       onPostCreated(post);
       handleCloseCreatePost();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Không thể tạo bài viết");
+      toast.error(error?.message || "Không thể tạo bài viết");
     } finally {
       setPosting(false);
       onPostingChange?.(false);

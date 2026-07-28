@@ -509,6 +509,8 @@ function MediaRenderer({
 }
 
 export default function Post({ post, currentUserId, authorName, authorAvatarUrl, onPostChanged, onPostDeleted, onImageClick, onPostCreated, onViewSharedPost }: PostProps) {
+  const navigate = useNavigate();
+  const goToProfile = () => navigate(`/profile/${post.authorId}`);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<PostComment[]>([]);
@@ -785,11 +787,24 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
     >
       <Box sx={{ p: "12px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Avatar src={post.authorAvatarUrl || undefined} sx={{ width: 44, height: 44, mr: 1.5, border: "1px solid #f0f2f5" }}>
+          <Avatar
+            src={post.authorAvatarUrl || undefined}
+            onClick={goToProfile}
+            sx={{ width: 44, height: 44, mr: 1.5, border: "1px solid #f0f2f5", cursor: "pointer" }}
+          >
             {post.authorName?.charAt(0)?.toUpperCase()}
           </Avatar>
           <Box>
-            <Typography sx={{ fontWeight: 700, color: "#050505", leadingHeight: 1.2 }}>
+            <Typography
+              onClick={goToProfile}
+              sx={{
+                fontWeight: 700,
+                color: "#050505",
+                leadingHeight: 1.2,
+                cursor: "pointer",
+                "&:hover": { textDecoration: "underline" },
+              }}
+            >
               {post.authorName}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.2 }}>
@@ -1000,12 +1015,10 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
             <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>{post.commentCount}</Typography>
           </Box>
 
-          {!isOwner && (
-            <Box onClick={() => setShareModalOpen(true)} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer", "&:hover": { color: "#1877f2" } }}>
-              <Reply sx={{ fontSize: 24, color: "#65676b", transform: "scaleX(-1)" }} />
-              <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>Chia sẻ</Typography>
-            </Box>
-          )}
+          <Box onClick={() => setShareModalOpen(true)} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer", "&:hover": { color: "#1877f2" } }}>
+            <Reply sx={{ fontSize: 24, color: "#65676b", transform: "scaleX(-1)" }} />
+            <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>Chia sẻ</Typography>
+          </Box>
         </Box>
         {renderTopReactions(post.topReactions)}
       </Box>
@@ -1019,7 +1032,13 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
               </Avatar>
               <Box sx={{ bgcolor: "#f0f2f5", borderRadius: "8px", px: 1.25, py: 0.75 }}>
                 <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{comment.authorName}</Typography>
-                <Typography sx={{ fontSize: 14 }}>{comment.content}</Typography>
+                {comment.moderationStatus === "HATE" || comment.moderationStatus === "OFFENSIVE" ? (
+                  <Typography sx={{ fontSize: 14, fontStyle: "italic", color: "#8e8e8e" }}>
+                    Bình luận đã bị ẩn do vi phạm chính sách cộng đồng
+                  </Typography>
+                ) : (
+                  <Typography sx={{ fontSize: 14 }}>{comment.content}</Typography>
+                )}
               </Box>
             </Box>
           ))}
@@ -1099,8 +1118,8 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
         onClose={() => setShareModalOpen(false)}
         post={post}
         currentUserId={currentUserId}
-        authorName={authorName || post.authorName}
-        authorAvatarUrl={authorAvatarUrl ?? post.authorAvatarUrl}
+        authorName={localStorage.getItem("fullName") || "Người dùng"}
+        authorAvatarUrl={localStorage.getItem("avatarUrl") || undefined}
         onPostShared={(newPost) => {
           onPostCreated?.(newPost);
           setShareModalOpen(false);

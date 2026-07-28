@@ -67,6 +67,9 @@ import { useCall } from "../../features/call/CallProvider";
 import VideoCallModal from "../../components/conversation/VideoCallModal";
 import { VideoCallInfo } from "../../model/VideoCall";
 import { rejectVideoCall, startVideoCall } from "../../services/VideoCallService";
+import ringbackSound from "../../assets/audio/ringback tone sound effect.mp3";
+import busyToneSound from "../../assets/audio/busy tone sound effect.mp3";
+
 import { StudySessionResponse } from "../StudySession/types";
 import { SocketEvent } from "../../enum/SocketEvent";
 import { RootState } from "../../redux/store";
@@ -393,6 +396,52 @@ export default function ConversationPage() {
   const [rejectedVideoCall, setRejectedVideoCall] = useState(false);
   const [cancelCallLoading, setCancelCallLoading] = useState(false);
   const [videoCallLoading, setVideoCallLoading] = useState(false);
+
+  const outgoingAudioRef = useRef<HTMLAudioElement | null>(null);
+  const busyAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playBusyTone = () => {
+    if (outgoingAudioRef.current) {
+      outgoingAudioRef.current.pause();
+      outgoingAudioRef.current.currentTime = 0;
+    }
+    if (!busyAudioRef.current) {
+      busyAudioRef.current = new Audio(busyToneSound);
+    }
+    busyAudioRef.current.currentTime = 0;
+    busyAudioRef.current.play().catch((err) => console.error("Error playing busy audio:", err));
+    setTimeout(() => {
+      if (busyAudioRef.current) {
+        busyAudioRef.current.pause();
+        busyAudioRef.current.currentTime = 0;
+      }
+    }, 4000);
+  };
+
+  useEffect(() => {
+    if (callState.status === "OUTGOING_RINGING") {
+      if (!outgoingAudioRef.current) {
+        outgoingAudioRef.current = new Audio(ringbackSound);
+        outgoingAudioRef.current.loop = true;
+      }
+      outgoingAudioRef.current.play().catch((err) => console.error("Error playing ringback audio:", err));
+    } else {
+      if (outgoingAudioRef.current) {
+        outgoingAudioRef.current.pause();
+        outgoingAudioRef.current.currentTime = 0;
+      }
+    }
+  }, [callState.status]);
+
+  useEffect(() => {
+    if (
+      callState.status === "REJECTED" ||
+      callState.status === "EXPIRED" ||
+      (callState.status === "ENDED" && callState.reason === "REMOTE_ENDED")
+    ) {
+      playBusyTone();
+    }
+  }, [callState.status, callState.reason]);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [badWordsWarningOpen, setBadWordsWarningOpen] = useState(false);
   const [pinnedMessagesOpen, setPinnedMessagesOpen] = useState(false);
@@ -1370,11 +1419,21 @@ export default function ConversationPage() {
     }
 
     if (storeEvent === SocketEvent.VIDEO_CALL_ENDED) {
-      setWaitingVideoCall(null);
+      setWaitingVideoCall((current) => {
+        if (current) {
+          playBusyTone();
+        }
+        return null;
+      });
     }
 
     if (storeEvent === SocketEvent.VIDEO_CALL_ACCEPTED || storeEvent === SocketEvent.VIDEO_CALL_REJECTED) {
-      setWaitingVideoCall(null);
+      setWaitingVideoCall((current) => {
+        if (current && storeEvent === SocketEvent.VIDEO_CALL_REJECTED) {
+          playBusyTone();
+        }
+        return null;
+      });
       if (storeEvent === SocketEvent.VIDEO_CALL_REJECTED) {
         setRejectedVideoCall(true);
       }
@@ -1849,6 +1908,11 @@ export default function ConversationPage() {
 
   const handleCancelWaitingCall = async () => {
     if (!waitingVideoCall || cancelCallLoading) return;
+
+    if (outgoingAudioRef.current) {
+      outgoingAudioRef.current.pause();
+      outgoingAudioRef.current.currentTime = 0;
+    }
 
     setCancelCallLoading(true);
     try {

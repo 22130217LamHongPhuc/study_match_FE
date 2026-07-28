@@ -470,9 +470,15 @@ export default function PostMediaModal({
                     <Typography sx={{ fontSize: "13px", fontWeight: 700, color: "#1e293b", mb: 0.5 }}>
                       {comment.authorName}
                     </Typography>
-                    <Typography sx={{ fontSize: "14px", color: "#334155", lineHeight: 1.4, wordBreak: "break-word" }}>
-                      {comment.content}
-                    </Typography>
+                    {comment.moderationStatus === "HATE" || comment.moderationStatus === "OFFENSIVE" ? (
+                      <Typography sx={{ fontSize: "14px", color: "#94a3b8", lineHeight: 1.4, wordBreak: "break-word", fontStyle: "italic" }}>
+                        Bình luận đã bị ẩn do vi phạm chính sách cộng đồng
+                      </Typography>
+                    ) : (
+                      <Typography sx={{ fontSize: "14px", color: "#334155", lineHeight: 1.4, wordBreak: "break-word" }}>
+                        {comment.content}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               ))

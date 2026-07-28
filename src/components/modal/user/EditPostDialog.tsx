@@ -220,9 +220,9 @@ export default function EditPostDialog({
       const updated = await updatePost(post.id, payload);
       onPostUpdated(updated);
       handleCloseEditPost();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Không thể cập nhật bài viết");
+      toast.error(error?.message || "Không thể cập nhật bài viết");
     } finally {
       setPosting(false);
       onPostingChange?.(false);

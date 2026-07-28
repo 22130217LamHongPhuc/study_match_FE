@@ -9,6 +9,7 @@ interface StudyPostsProps {
   onAddPost?: () => void;
   onPostChanged: (post: SocialPost) => void;
   onPostDeleted: (postId: number) => void;
+  onPostCreated?: (post: SocialPost) => void;
   isPosting?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
@@ -21,6 +22,7 @@ export default function StudyPosts({
   onAddPost,
   onPostChanged,
   onPostDeleted,
+  onPostCreated,
   isPosting = false,
   onLoadMore,
   hasMore = false,
@@ -49,13 +51,12 @@ export default function StudyPosts({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4 w-[90%]">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <h2 className="text-base font-bold text-gray-800">Bài đăng</h2>
-
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-4">
         {isPosting && <PostSkeleton />}
         {posts.map((post) => (
           <Post
@@ -64,6 +65,7 @@ export default function StudyPosts({
             currentUserId={currentUserId}
             onPostChanged={onPostChanged}
             onPostDeleted={onPostDeleted}
+            onPostCreated={onPostCreated}
           />
         ))}
         {loadingMore && posts.length === 0 && (

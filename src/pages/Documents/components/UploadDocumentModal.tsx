@@ -108,16 +108,18 @@ export default function UploadDocumentModal({ open, onClose, onSuccess }: Upload
 
   const handleRequestClose = async () => {
     if (uploading) return;
-    if (isDirty) {
-      const confirmClose = await confirm({
-        title: "Đóng cửa sổ",
-        message: "Dữ liệu đang nhập sẽ bị mất. Bạn chắc chắn muốn đóng?",
-        type: "warning",
-        confirmText: "Đóng",
-        cancelText: "Hủy",
-      });
-      if (!confirmClose) return;
-    }
+    // if (isDirty) {
+    //   const confirmClose = await confirm({
+    //     title: "Đóng cửa sổ",
+    //     message: "Dữ liệu đang nhập sẽ bị mất. Bạn chắc chắn muốn đóng?",
+    //     type: "warning",
+    //     confirmText: "Đóng",
+    //     cancelText: "Hủy",
+    //     showIcon: false,
+    //     showClose: false,
+    //   });
+    //   if (!confirmClose) return;
+    // }
     onClose();
   };
 
@@ -241,11 +243,10 @@ export default function UploadDocumentModal({ open, onClose, onSuccess }: Upload
                   className="hidden"
                 />
                 <div
-                  className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition ${
-                    formErrors.file
+                  className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition ${formErrors.file
                       ? "border-red-300 bg-red-50/30 hover:bg-red-50/50"
                       : "border-gray-300 bg-gray-50/50 hover:bg-gray-100/50"
-                  } ${uploading ? "cursor-not-allowed opacity-60" : ""}`}
+                    } ${uploading ? "cursor-not-allowed opacity-60" : ""}`}
                 >
                   <div className={`mb-2 flex h-10 w-10 items-center justify-center rounded-full ${formErrors.file ? "bg-red-100 text-red-500" : "bg-blue-100 text-blue-500"}`}>
                     <Upload size={20} />
