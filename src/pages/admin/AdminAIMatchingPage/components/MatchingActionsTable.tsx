@@ -51,7 +51,7 @@ export function MatchingActionsTable({
       <div className="rounded-lg border border-sand-200 bg-white p-3">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <FilterInput
+            {/* <FilterInput
               value={userId}
               onChange={onUserIdChange}
               placeholder="User ID"
@@ -60,7 +60,7 @@ export function MatchingActionsTable({
               value={recommendedUserId}
               onChange={onRecommendedUserIdChange}
               placeholder="Recommended user ID"
-            />
+            /> */}
           </div>
 
           <div className="flex items-center gap-2">
@@ -73,11 +73,10 @@ export function MatchingActionsTable({
                   key={option.value ?? "all"}
                   type="button"
                   onClick={() => onStatusFilterChange(option.value)}
-                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
-                    statusFilter === option.value
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${statusFilter === option.value
                       ? "border-accent-600 bg-accent-600 text-white"
                       : "border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
-                  }`}
+                    }`}
                 >
                   {option.label}
                 </button>
@@ -116,42 +115,42 @@ export function MatchingActionsTable({
 
             <tbody>
               {loading &&
-              Array.from({ length: 8 }).map((_, index) => (
-                <tr key={index} className="border-b border-sand-100 last:border-b-0 animate-pulse">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-9 w-9 rounded-full bg-sand-200" />
-                      <div className="space-y-1">
-                        <div className="h-3.5 w-24 bg-sand-200 rounded" />
-                        <div className="h-3 w-32 bg-sand-100 rounded" />
+                Array.from({ length: 8 }).map((_, index) => (
+                  <tr key={index} className="border-b border-sand-100 last:border-b-0 animate-pulse">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-9 w-9 rounded-full bg-sand-200" />
+                        <div className="space-y-1">
+                          <div className="h-3.5 w-24 bg-sand-200 rounded" />
+                          <div className="h-3 w-32 bg-sand-100 rounded" />
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-9 w-9 rounded-full bg-sand-200" />
-                      <div className="space-y-1">
-                        <div className="h-3.5 w-24 bg-sand-200 rounded" />
-                        <div className="h-3 w-32 bg-sand-100 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-9 w-9 rounded-full bg-sand-200" />
+                        <div className="space-y-1">
+                          <div className="h-3.5 w-24 bg-sand-200 rounded" />
+                          <div className="h-3 w-32 bg-sand-100 rounded" />
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="h-5 w-20 bg-sand-200 rounded-full" />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="h-4 w-28 bg-sand-200 rounded" />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="h-4 w-28 bg-sand-200 rounded" />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end">
-                      <div className="h-7 w-7 bg-sand-100 rounded" />
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-5 w-20 bg-sand-200 rounded-full" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-28 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-28 bg-sand-200 rounded" />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end">
+                        <div className="h-7 w-7 bg-sand-100 rounded" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
 
               {!loading &&
                 actions.map((action) => (

@@ -1,6 +1,6 @@
 import { Box } from "@mui/system";
 import { useTheme, useMediaQuery } from "@mui/material";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import SideBar from "../../components/sidebar/SideBar";
 import Header from "../../components/header/Header";
@@ -26,6 +26,9 @@ import { checkTermUpdateStatus, TermUpdateStatus } from "../../services/TermStat
 import UpdateProfileDialog from "../MyProfile/components/UpdateProfileDialog";
 import { loadProfileByUserId } from "../../redux/ProfileReducer";
 import { AppDispatch } from "../../redux/store";
+import { useCall } from "../../features/call/CallProvider";
+import incomingCallSound from "../../assets/audio/incoming call ringtone.mp3";
+import busyToneSound from "../../assets/audio/busy tone sound effect.mp3";
 
 type NewMessageData = {
   conversationId: number;
@@ -83,6 +86,7 @@ export default function MainLayout() {
 
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
+  const { state: callState } = useCall();
 
   const profileVm = useSelector((state: RootState) => state.profile.profileVm);
   const [needsTermUpdate, setNeedsTermUpdate] = useState<boolean>(false);
@@ -108,6 +112,42 @@ export default function MainLayout() {
   );
 
   const [callActionLoading, setCallActionLoading] = useState(false);
+
+  const incomingAudioRef = useRef<HTMLAudioElement | null>(null);
+  const busyAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playBusyTone = () => {
+    if (incomingAudioRef.current) {
+      incomingAudioRef.current.pause();
+      incomingAudioRef.current.currentTime = 0;
+    }
+    if (!busyAudioRef.current) {
+      busyAudioRef.current = new Audio(busyToneSound);
+    }
+    busyAudioRef.current.currentTime = 0;
+    busyAudioRef.current.play().catch((err) => console.error("Error playing busy audio:", err));
+    setTimeout(() => {
+      if (busyAudioRef.current) {
+        busyAudioRef.current.pause();
+        busyAudioRef.current.currentTime = 0;
+      }
+    }, 4000);
+  };
+
+  useEffect(() => {
+    if (callState.status === "INCOMING_RINGING") {
+      if (!incomingAudioRef.current) {
+        incomingAudioRef.current = new Audio(incomingCallSound);
+        incomingAudioRef.current.loop = true;
+      }
+      incomingAudioRef.current.play().catch((err) => console.error("Error playing incoming call audio:", err));
+    } else {
+      if (incomingAudioRef.current) {
+        incomingAudioRef.current.pause();
+        incomingAudioRef.current.currentTime = 0;
+      }
+    }
+  }, [callState.status]);
 
   useLayoutEffect(() => {
     currentConverIdRef.current = currentConverId;
@@ -294,9 +334,13 @@ export default function MainLayout() {
               sessionId: closedSessionId,
             });
 
-            setIncomingVideoCall((current) =>
-              current?.sessionId === closedSessionId ? null : current,
-            );
+            setIncomingVideoCall((current) => {
+              if (current?.sessionId === closedSessionId) {
+                playBusyTone();
+                return null;
+              }
+              return current;
+            });
             setActiveVideoCall((current) =>
               current?.sessionId === closedSessionId ? null : current,
             );
@@ -500,6 +544,11 @@ export default function MainLayout() {
 
     setCallActionLoading(true);
 
+    if (incomingAudioRef.current) {
+      incomingAudioRef.current.pause();
+      incomingAudioRef.current.currentTime = 0;
+    }
+
     console.log("[VideoCall][FE][modal][accept]", incomingVideoCall);
 
     joinVideoCall(incomingVideoCall.sessionId)
@@ -545,6 +594,11 @@ export default function MainLayout() {
 
     setCallActionLoading(true);
 
+    if (incomingAudioRef.current) {
+      incomingAudioRef.current.pause();
+      incomingAudioRef.current.currentTime = 0;
+    }
+
     console.log("[VideoCall][FE][modal][reject]", incomingVideoCall);
 
     rejectVideoCall(incomingVideoCall.sessionId)
@@ -555,6 +609,7 @@ export default function MainLayout() {
         setIncomingVideoCall(null);
         setIncomingPeer(null);
         setCallActionLoading(false);
+        playBusyTone();
       });
   };
 

@@ -28,9 +28,8 @@ export default function ReasonModal({
       <div className="w-full max-w-md rounded-xl bg-white shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-              type === "REJECT" ? "bg-rose-50 text-rose-600" : "bg-gray-100 text-gray-600"
-            }`}>
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${type === "REJECT" ? "bg-rose-50 text-rose-600" : "bg-gray-100 text-gray-600"
+              }`}>
               <AlertTriangle size={18} />
             </div>
             <div>
@@ -59,9 +58,8 @@ export default function ReasonModal({
                 }}
                 rows={4}
                 placeholder={type === "REJECT" ? "Lý do từ chối duyệt..." : "Lý do ẩn tài liệu..."}
-                className={`w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all resize-none ${
-                  reasonError ? "border-red-400" : ""
-                }`}
+                className={`w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all resize-none ${reasonError ? "border-red-400" : ""
+                  }`}
               />
               {reasonError && <p className="text-xs font-semibold text-red-500">{reasonError}</p>}
             </label>
@@ -77,9 +75,8 @@ export default function ReasonModal({
             </button>
             <button
               type="submit"
-              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${
-                type === "REJECT" ? "bg-rose-600 hover:bg-rose-700" : "bg-gray-700 hover:bg-gray-800"
-              }`}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${type === "REJECT" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-600 hover:bg-blue-700"
+                }`}
             >
               Xác nhận
             </button>

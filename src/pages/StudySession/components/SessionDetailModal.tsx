@@ -49,10 +49,10 @@ function formatDateTime(value: string) {
 function formatSessionTimeRange(startTimeStr: string, endTimeStr: string) {
   const start = new Date(startTimeStr);
   const end = new Date(endTimeStr);
-  
+
   const timeStr = `${start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
   const dateStr = start.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
-  
+
   return { timeStr, dateStr };
 }
 
@@ -390,13 +390,13 @@ export function SessionDetailModal({
       setError("");
       const response = await getSessionsByRecurrenceId(recId, userIdVal);
       if (response.data) {
-        
+
         const pendingSessions = response.data.filter(
           (s) => s.participantStatus === "PENDING"
         );
 
         if (pendingSessions.length <= 1) {
-          
+
           await handleRespond(status);
           return;
         }
@@ -577,7 +577,7 @@ export function SessionDetailModal({
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
+
                 <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Thời gian</span>
                   <div className="mt-1.5 text-sm font-bold text-gray-800">
@@ -611,7 +611,7 @@ export function SessionDetailModal({
                   )}
                 </div>
 
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                {/* <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Địa điểm / Link học</span>
                   {currentSession?.location || currentSession?.meetingUrl || session.location || session.meetingUrl ? (
                     <div className="mt-1.5 min-w-0">
@@ -639,7 +639,7 @@ export function SessionDetailModal({
                       Chưa cập nhật địa điểm hoặc link
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 <div className="md:col-span-2 bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nội dung học</span>
@@ -920,11 +920,10 @@ export function SessionDetailModal({
                   {recurrenceSessions.map((s) => {
                     const isSel = selectedRecurrenceSessionIds.includes(s.id);
                     return (
-                       <label
+                      <label
                         key={s.id}
-                        className={`flex items-start gap-3 px-4 py-3.5 hover:bg-white cursor-pointer select-none transition-colors ${
-                          isSel ? "bg-blue-50/20" : ""
-                        }`}
+                        className={`flex items-start gap-3 px-4 py-3.5 hover:bg-white cursor-pointer select-none transition-colors ${isSel ? "bg-blue-50/20" : ""
+                          }`}
                       >
                         <input
                           type="checkbox"
@@ -950,7 +949,7 @@ export function SessionDetailModal({
                             </div>
                             {getStudyModeBadge(s.studyMode)}
                           </div>
-                          
+
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
                             <span className="flex items-center gap-1">
                               <Clock className="h-3.5 w-3.5 text-gray-400" />
@@ -1018,11 +1017,10 @@ export function SessionDetailModal({
                 type="button"
                 onClick={handleRecurrenceRespondSubmit}
                 disabled={loadingRecurrence}
-                className={`rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 transition-colors ${
-                  responding === "ACCEPTED"
+                className={`rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 transition-colors ${responding === "ACCEPTED"
                     ? "bg-blue-600 hover:bg-blue-700"
                     : "bg-rose-600 hover:bg-rose-700"
-                }`}
+                  }`}
               >
                 {loadingRecurrence
                   ? "Đang xử lý..."

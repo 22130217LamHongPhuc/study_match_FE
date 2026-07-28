@@ -536,9 +536,15 @@ export default function DocumentDetailModal({ documentId, onClose, onBookmarkCha
                           </div>
 
                           {rev.review ? (
-                            <p className="text-xs text-gray-600 leading-relaxed break-words whitespace-pre-wrap bg-gray-50/50 rounded-lg p-2.5">
-                              {rev.review}
-                            </p>
+                            rev.moderationStatus === "HATE" || rev.moderationStatus === "OFFENSIVE" || rev.moderation_status === "HATE" || rev.moderation_status === "OFFENSIVE" ? (
+                              <p className="text-xs text-gray-400 italic bg-gray-50/50 rounded-lg p-2.5">
+                                Nhận xét đã bị ẩn do vi phạm chính sách cộng đồng
+                              </p>
+                            ) : (
+                              <p className="text-xs text-gray-600 leading-relaxed break-words whitespace-pre-wrap bg-gray-50/50 rounded-lg p-2.5">
+                                {rev.review}
+                              </p>
+                            )
                           ) : (
                             <p className="text-xs text-gray-400 italic">Không có nhận xét</p>
                           )}

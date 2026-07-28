@@ -229,7 +229,7 @@ export default function AdminDocumentDetailModal({
                     </div>
                     <p className="text-sm font-semibold text-gray-700">{doc.originalFileName}</p>
                     <p className="text-xs text-gray-400">
-                      {isOfficeDoc 
+                      {isOfficeDoc
                         ? `Hệ thống chưa hỗ trợ xem trước cho định dạng ${doc.fileType?.toUpperCase()}`
                         : `Tài liệu định dạng ${doc.fileType?.toUpperCase()} không hỗ trợ preview trực tuyến.`
                       }
@@ -282,7 +282,7 @@ export default function AdminDocumentDetailModal({
                 <button
                   onClick={() => onHide(doc.id, doc.title)}
                   disabled={isActionLoading}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
                 >
                   Ẩn tài liệu
                 </button>

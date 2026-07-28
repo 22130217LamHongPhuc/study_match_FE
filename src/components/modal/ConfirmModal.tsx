@@ -8,6 +8,8 @@ export interface ConfirmOptions {
   confirmText?: string;
   cancelText?: string;
   type?: "info" | "warning" | "danger";
+  showIcon?: boolean;
+  showClose?: boolean;
 }
 
 type ConfirmFunction = (options: ConfirmOptions) => Promise<boolean>;
@@ -100,16 +102,18 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
             {/* Modal Card */}
             <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl border border-sand-200 bg-white p-6 shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200">
               {/* Close Button */}
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="absolute right-4 top-4 rounded-lg p-1.5 text-sand-400 hover:bg-sand-50 hover:text-sand-600 transition-colors focus:outline-none focus:ring-2 focus:ring-sand-200"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              {options.showClose !== false && (
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="absolute right-4 top-4 rounded-lg p-1.5 text-sand-400 hover:bg-sand-50 hover:text-sand-600 transition-colors focus:outline-none focus:ring-2 focus:ring-sand-200"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
 
               <div className="flex items-start gap-4">
-                {getIcon()}
+                {options.showIcon !== false && getIcon()}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-semibold text-sand-900 leading-6">
                     {options.title}

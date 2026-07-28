@@ -40,6 +40,8 @@ export interface DocumentRatingResponse {
   review?: string;
   createdAt: string;
   updatedAt: string;
+  moderationStatus?: string | null;
+  moderation_status?: string | null;
 }
 
 export interface DocumentListQuery {

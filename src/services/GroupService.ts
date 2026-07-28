@@ -663,3 +663,29 @@ export async function leaveGroup(
   );
   return response;
 }
+
+export async function updateAdminGroupDetails(
+  groupId: number,
+  request: UpdateStudyGroupRequest,
+  avatar?: File,
+): Promise<APIResponseData<unknown>> {
+  const formData = new FormData();
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(request)], { type: "application/json" }),
+  );
+  if (avatar) {
+    formData.append("avatar", avatar);
+  }
+
+  const response = await apiFetch<unknown>(
+    `/api/admin/groups/${groupId}`,
+    {
+      method: "PUT",
+      body: formData,
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+

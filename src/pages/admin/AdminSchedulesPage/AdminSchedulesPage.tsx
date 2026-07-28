@@ -20,7 +20,12 @@ import { SCHEDULE_PAGE_SIZE } from "./types";
 import {
   getAdminSessionStats,
   getAdminSessions,
+  cancelStudySessionForAdmin,
+  deleteStudySessionForAdmin,
 } from "../../../services/StudySessionService";
+import { toast } from "react-toastify";
+import { createPortal } from "react-dom";
+import { AlertTriangle, Trash2 } from "lucide-react";
 
 function toLocalDateTimeString(date: Date) {
   const pad = (value: number) => String(value).padStart(2, "0");
@@ -127,6 +132,55 @@ export default function AdminSchedulesPage() {
   const [detailSchedule, setDetailSchedule] = useState<ScheduleRow | null>(
     null,
   );
+  const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ScheduleRow | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const handleCancelSchedule = (id: number) => {
+    setCancelTargetId(id);
+  };
+
+  const handleDeleteSchedule = (schedule: ScheduleRow) => {
+    setDeleteTarget(schedule);
+  };
+
+  const confirmCancelSchedule = async () => {
+    if (!cancelTargetId) return;
+    setActionLoading(true);
+    try {
+      const res = await cancelStudySessionForAdmin(cancelTargetId);
+      if (res.success) {
+        toast.success("Hủy lịch học thành công");
+        handleRefresh();
+      } else {
+        toast.error(res.message || "Hủy lịch học thất bại");
+      }
+    } catch {
+      toast.error("Đã xảy ra lỗi khi hủy lịch học");
+    } finally {
+      setActionLoading(false);
+      setCancelTargetId(null);
+    }
+  };
+
+  const confirmDeleteSchedule = async () => {
+    if (!deleteTarget) return;
+    setActionLoading(true);
+    try {
+      const res = await deleteStudySessionForAdmin(deleteTarget.id);
+      if (res.success) {
+        toast.success("Xóa lịch học thành công");
+        handleRefresh();
+      } else {
+        toast.error(res.message || "Xóa lịch học thất bại");
+      }
+    } catch {
+      toast.error("Đã xảy ra lỗi khi xóa lịch học");
+    } finally {
+      setActionLoading(false);
+      setDeleteTarget(null);
+    }
+  };
 
   const loadStats = async () => {
     try {
@@ -303,6 +357,8 @@ export default function AdminSchedulesPage() {
         loading={loading}
         onPageChange={setPage}
         onViewDetail={(s) => setDetailSchedule(s)}
+        onEdit={handleCancelSchedule}
+        onDelete={handleDeleteSchedule}
       />
 
       <ScheduleDetailModal
@@ -310,6 +366,98 @@ export default function AdminSchedulesPage() {
         schedule={detailSchedule}
         onClose={() => setDetailSchedule(null)}
       />
+
+      {cancelTargetId !== null &&
+        createPortal(
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/35"
+              onClick={() => !actionLoading && setCancelTargetId(null)}
+              aria-label="Đóng"
+            />
+            <div className="relative z-10 w-full max-w-md rounded-xl border border-sand-200 bg-white p-5 shadow-xl">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+                  <AlertTriangle size={20} />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-sand-900">
+                    Xác nhận hủy lịch học
+                  </h3>
+                  <p className="text-sm font-medium text-sand-600">
+                    Bạn có chắc chắn muốn hủy lịch học này? Trạng thái của buổi học sẽ được chuyển sang CANCELLED và thông báo tới các thành viên tham gia.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => setCancelTargetId(null)}
+                  className="rounded-lg border border-sand-200 bg-white px-4 py-2 text-sm font-medium text-sand-600 transition-colors hover:bg-sand-50 disabled:opacity-50"
+                >
+                  Quay lại
+                </button>
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={confirmCancelSchedule}
+                  className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700 disabled:opacity-50"
+                >
+                  {actionLoading ? "Đang xử lý..." : "Hủy lịch học"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {deleteTarget !== null &&
+        createPortal(
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/35"
+              onClick={() => !actionLoading && setDeleteTarget(null)}
+              aria-label="Đóng"
+            />
+            <div className="relative z-10 w-full max-w-md rounded-xl border border-sand-200 bg-white p-5 shadow-xl">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+                  <Trash2 size={20} />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-sand-900">
+                    Xác nhận xóa lịch học
+                  </h3>
+                  <p className="text-sm font-medium text-sand-600">
+                    Bạn có chắc chắn muốn xóa lịch học "{deleteTarget.sessionName}"? Thao tác này sẽ thực hiện xóa mềm khỏi hệ thống.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => setDeleteTarget(null)}
+                  className="rounded-lg border border-sand-200 bg-white px-4 py-2 text-sm font-medium text-sand-600 transition-colors hover:bg-sand-50 disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={confirmDeleteSchedule}
+                  className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700 disabled:opacity-50"
+                >
+                  {actionLoading ? "Đang xóa..." : "Xóa lịch học"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </main>
   );
 }

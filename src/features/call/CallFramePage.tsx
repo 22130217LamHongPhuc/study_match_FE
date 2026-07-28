@@ -56,12 +56,14 @@ export default function CallFramePage() {
         isGroupCall,
       });
       try {
+        const localFullName = localStorage.getItem("fullName");
+        const displayName = localFullName || call.userName || `user_${call.userId}`;
         const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(
           call.appId,
           call.token,
           call.roomId,
           String(call.userId),
-          call.userName || `user_${call.userId}`,
+          displayName,
         );
         const zego = ZegoUIKitPrebuilt.create(kitToken);
         zego.joinRoom({

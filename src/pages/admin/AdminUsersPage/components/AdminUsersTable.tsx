@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 
 import { updateAdminUserStatus, updateAdminStatus } from "../../../../services/UserService";
 import { normalizeAvatarUrl } from "../../../../services/FriendService";
+
 import {
   Eye,
   Lock,
@@ -20,6 +21,8 @@ import {
   getStatusClassName,
   getStatusLabel,
 } from "../utils";
+
+const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239ca3af'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
 
 type PendingUserStatusChange = {
   kind: "status" | "delete";
@@ -84,11 +87,11 @@ function ConfirmUserStatusChangePopup({
   const content =
     pending.kind === "delete"
       ? `Bạn có chắc muốn xóa người dùng ${pending.userName}? Thao tác sẽ chuyển trạng thái sang ${statusLabel(
-          pending.toStatus,
-        )}.`
+        pending.toStatus,
+      )}.`
       : `Bạn có chắc muốn chuyển trạng thái người dùng ${pending.userName} từ ${statusLabel(
-          pending.fromStatus,
-        )} sang ${statusLabel(pending.toStatus)}?`;
+        pending.fromStatus,
+      )} sang ${statusLabel(pending.toStatus)}?`;
 
   return createPortal(
     <div
@@ -267,7 +270,7 @@ export function AdminUsersTable({
           <thead>
             <tr className="border-b border-sand-200 bg-sand-50 text-left">
               <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
-                
+
               </th>
               <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-sand-500">
                 Vai trò
@@ -352,11 +355,11 @@ export function AdminUsersTable({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img
-                        src={normalizeAvatarUrl(user.avatar_url) || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80"}
+                        src={normalizeAvatarUrl(user.avatar_url) || DEFAULT_AVATAR}
                         alt={user.full_name || "User Avatar"}
-                        className="h-9 w-9 shrink-0 rounded-full object-cover border border-slate-100 shadow-sm"
+                        className="h-9 w-9 shrink-0 rounded-full object-cover border border-slate-100 shadow-sm bg-slate-100"
                         onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80";
+                          e.currentTarget.src = DEFAULT_AVATAR;
                         }}
                       />
                       <div>
@@ -418,11 +421,10 @@ export function AdminUsersTable({
                         onClick={() => startToggleStatus(user)}
                         disabled={toggleDisabled}
                         aria-disabled={toggleDisabled}
-                        className={`rounded p-1.5 text-sand-400 transition-colors ${
-                          toggleDisabled
-                            ? "cursor-not-allowed opacity-50"
-                            : "hover:bg-sand-100 hover:text-sand-600"
-                        }`}
+                        className={`rounded p-1.5 text-sand-400 transition-colors ${toggleDisabled
+                          ? "cursor-not-allowed opacity-50"
+                          : "hover:bg-sand-100 hover:text-sand-600"
+                          }`}
                         aria-label={
                           status?.toUpperCase() === "ACTIVE" || status?.toUpperCase() === "PENDING"
                             ? "Khóa người dùng"
@@ -452,11 +454,10 @@ export function AdminUsersTable({
                           aria-disabled={isDeleted}
                           aria-haspopup="menu"
                           aria-expanded={openMenuUserId === user.user_id}
-                          className={`rounded p-1.5 text-sand-400 transition-colors ${
-                            isDeleted
-                              ? "cursor-not-allowed opacity-50"
-                              : "hover:bg-sand-100 hover:text-sand-700"
-                          }`}
+                          className={`rounded p-1.5 text-sand-400 transition-colors ${isDeleted
+                            ? "cursor-not-allowed opacity-50"
+                            : "hover:bg-sand-100 hover:text-sand-700"
+                            }`}
                         >
                           <MoreHorizontal size={15} />
                         </button>
@@ -522,11 +523,10 @@ export function AdminUsersTable({
                   key={pageNumber}
                   onClick={() => onPageChange(pageNumber)}
                   disabled={totalPages === 0}
-                  className={`h-8 min-w-8 rounded-lg px-2 text-xs font-medium transition ${
-                    page === pageNumber
-                      ? "bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
-                      : "border border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
-                  } disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`h-8 min-w-8 rounded-lg px-2 text-xs font-medium transition ${page === pageNumber
+                    ? "bg-[#3b82f6] text-white shadow-sm shadow-[#3b82f6]/20"
+                    : "border border-sand-300 bg-white text-sand-600 hover:bg-sand-50"
+                    } disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {pageNumber}
                 </button>
