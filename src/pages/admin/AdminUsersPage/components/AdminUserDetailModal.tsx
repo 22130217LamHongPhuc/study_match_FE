@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import { createPortal } from "react-dom";
 import {
   CalendarDays,
@@ -10,7 +11,6 @@ import {
 } from "lucide-react";
 import type { AdminUserDbRow } from "../types";
 import { normalizeAvatarUrl } from "../../../../services/FriendService";
-
 import {
   formatDateTime,
   getBooleanBadgeClass,
