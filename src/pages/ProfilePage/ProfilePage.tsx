@@ -2061,9 +2061,9 @@ export default function ProfilePage() {
   if (loadingProfile && !profile) {
     return (
       <ThemeProvider theme={profileTheme}>
-        <Box component="div" sx={{ display: "flex", mt: "20px" }}>
+        <Box component="div" sx={{ display: "flex", flexDirection: { xs: "column", lg: "row" }, mt: "20px", px: { xs: "12px", sm: "16px", lg: "0px" } }}>
           {/* Left Column Skeleton */}
-          <Box sx={{ width: "30%", ml: "20px", mr: "10px", display: "flex", flexDirection: "column", gap: "16px", position: "sticky", top: "64px", height: "fit-content" }}>
+          <Box sx={{ width: { xs: "100%", lg: "30%" }, ml: { xs: "0px", lg: "20px" }, mr: { xs: "0px", lg: "10px" }, mb: { xs: "20px", lg: "0px" }, display: "flex", flexDirection: "column", gap: "16px", position: { xs: "static", lg: "sticky" }, top: "64px", height: "fit-content" }}>
             <Box
               sx={{
                 position: "relative",
@@ -2153,7 +2153,7 @@ export default function ProfilePage() {
           </Box>
 
           {/* Right Column Skeleton */}
-          <Box width="70%" sx={{ px: "20px" }}>
+          <Box width={{ xs: "100%", lg: "70%" }} sx={{ px: { xs: "0px", lg: "20px" } }}>
             {/* Tabs skeleton wrapper */}
             <Box sx={{
               position: "sticky",
@@ -2254,8 +2254,8 @@ export default function ProfilePage() {
 
   return (
     <ThemeProvider theme={profileTheme}>
-      <Box component="div" sx={{ display: "flex", mt: "20px" }}>
-        <Box sx={{ width: "30%", ml: "20px", mr: "10px", display: "flex", flexDirection: "column", gap: "16px", position: "sticky", top: "64px", height: "fit-content" }}>
+      <Box component="div" sx={{ display: "flex", flexDirection: { xs: "column", lg: "row" }, mt: "20px", px: { xs: "12px", sm: "16px", lg: "0px" } }}>
+        <Box sx={{ width: { xs: "100%", lg: "30%" }, ml: { xs: "0px", lg: "20px" }, mr: { xs: "0px", lg: "10px" }, mb: { xs: "20px", lg: "0px" }, display: "flex", flexDirection: "column", gap: "16px", position: { xs: "static", lg: "sticky" }, top: "64px", height: "fit-content" }}>
           {activeViewingPost ? (
             renderInlinePostDetails()
           ) : (
@@ -2694,7 +2694,7 @@ export default function ProfilePage() {
           )}
         </Box>
 
-        <Box width="70%" sx={{ px: "20px" }}>
+        <Box width={{ xs: "100%", lg: "70%" }} sx={{ px: { xs: "0px", lg: "20px" } }}>
           {/* Sticky Tabs wrapper */}
           <Box sx={{
             position: "sticky",

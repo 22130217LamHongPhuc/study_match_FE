@@ -5,6 +5,7 @@ export const actionStatusLabel: Record<MatchingActionStatus, string> = {
   FRIEND_REQUEST_SENT: "Đã gửi lời mời",
   ACCEPTED: "Đã chấp nhận",
   REJECTED: "Đã từ chối",
+  SKIPPED: "Đã bỏ qua",
 };
 
 export const actionStatusStyle: Record<MatchingActionStatus, string> = {
@@ -12,6 +13,7 @@ export const actionStatusStyle: Record<MatchingActionStatus, string> = {
   FRIEND_REQUEST_SENT: "bg-blue-50 text-blue-700",
   ACCEPTED: "bg-sage-50 text-sage-700",
   REJECTED: "bg-rose-50 text-rose-700",
+  SKIPPED: "bg-amber-50 text-amber-700",
 };
 
 export const sessionTypeLabel: Record<StudySessionType, string> = {
@@ -40,7 +42,9 @@ export function formatScore(score: number): string {
   return score.toFixed(2);
 }
 
-export function formatPercentage(part: number, total: number): string {
-  if (total === 0) return "0%";
-  return `${Math.round((part / total) * 100)}%`;
+export function formatPercentage(part: number | undefined | null, total: number | undefined | null): string {
+  const p = part ?? 0;
+  const t = total ?? 0;
+  if (t === 0) return "0%";
+  return `${Math.round((p / t) * 100)}%`;
 }

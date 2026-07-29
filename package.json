@@ -35,6 +35,7 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
+    "postinstall": "node scripts/patch-zego-tracer.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

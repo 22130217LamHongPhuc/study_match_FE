@@ -9,7 +9,7 @@ import {
 import type { ActionDistributionItem } from "../types";
 import { actionStatusLabel } from "../utils";
 
-const COLORS = ["#B8B3A8", "#D97706", "#6B8F71", "#E11D48"];
+const COLORS = ["#B8B3A8", "#D97706", "#6B8F71", "#E11D48", "#F59E0B"];
 
 export function ActionDistributionChart({
   data,

@@ -57,6 +57,23 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("vi-VN").format(value);
 }
 
+function formatDateTime(value: string | null) {
+  if (!value) return "Chưa có dữ liệu";
+  try {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  } catch {
+    return value;
+  }
+}
+
 function getInitials(name?: string | null) {
   if (!name) return "?";
   return name
@@ -996,10 +1013,10 @@ export default function AdminDashboardPage() {
                                       <td className="py-2 pr-3 text-sand-700">
                                         {formatNumber(group.totalMessages)}
                                       </td>
-                                      <td className="py-2 pr-3 text-blue-700">
+                                      <td className="py-2 pr-3 text-sand-700">
                                         {formatNumber(group.offensiveMessages)}
                                       </td>
-                                      <td className="py-2 pr-3 text-red-700">
+                                      <td className="py-2 pr-3 text-sand-700">
                                         {formatNumber(group.hateMessages)}
                                       </td>
                                     </tr>
@@ -1060,11 +1077,11 @@ export default function AdminDashboardPage() {
                           </div>
                         </div>
                         <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${suggestion.includes("kick")
-                            ? "bg-red-50 text-red-700"
+                          className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${suggestion.includes("kick")
+                            ? "border-rose-100 bg-rose-50 text-rose-700"
                             : suggestion.includes("mute")
-                              ? "bg-blue-50 text-blue-700"
-                              : "bg-sky-50 text-sky-700"
+                              ? "border-amber-100 bg-amber-50 text-amber-700"
+                              : "border-sand-200 bg-sand-50 text-sand-600"
                             }`}
                         >
                           {suggestion}
@@ -1073,28 +1090,28 @@ export default function AdminDashboardPage() {
 
                       <div className="mt-4 grid grid-cols-4 gap-2 text-center">
                         <div className="rounded bg-sand-50 px-2 py-2">
-                          <p className="text-sm font-semibold text-sand-900">
+                          <p className="text-sm font-semibold text-sand-800">
                             {formatNumber(member.totalMessages)}
                           </p>
                           <p className="text-[11px] text-sand-400">Tin</p>
                         </div>
-                        <div className="rounded bg-blue-50 px-2 py-2">
-                          <p className="text-sm font-semibold text-blue-700">
+                        <div className="rounded bg-sand-50 px-2 py-2">
+                          <p className="text-sm font-semibold text-sand-800">
                             {formatNumber(member.offensiveMessages)}
                           </p>
-                          <p className="text-[11px] text-blue-700">OFF</p>
+                          <p className="text-[11px] text-sand-400">OFF</p>
                         </div>
-                        <div className="rounded bg-red-50 px-2 py-2">
-                          <p className="text-sm font-semibold text-red-700">
+                        <div className="rounded bg-sand-50 px-2 py-2">
+                          <p className="text-sm font-semibold text-sand-800">
                             {formatNumber(member.hateMessages)}
                           </p>
-                          <p className="text-[11px] text-red-700">HATE</p>
+                          <p className="text-[11px] text-sand-400">HATE</p>
                         </div>
-                        <div className="rounded bg-sky-50 px-2 py-2">
-                          <p className="text-sm font-semibold text-sky-700">
+                        <div className="rounded bg-sand-50 px-2 py-2">
+                          <p className="text-sm font-semibold text-sand-800">
                             {rate}%
                           </p>
-                          <p className="text-[11px] text-sky-700">Tỉ lệ</p>
+                          <p className="text-[11px] text-sand-400">Tỉ lệ</p>
                         </div>
                       </div>
                     </button>
@@ -1394,17 +1411,17 @@ export default function AdminDashboardPage() {
 
       {selectedGroupRisk && createPortal((
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-10"
+          className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto bg-black/40 px-4 py-10"
           role="dialog"
           aria-modal="true"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeGroupModal();
           }}
         >
-          <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
+          <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-sand-200 bg-white shadow-xl">
 
             {/* Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-sand-100 px-6 py-5">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-sand-200 px-6 py-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="truncate text-lg font-semibold text-sand-900">
@@ -1414,10 +1431,10 @@ export default function AdminDashboardPage() {
                     const s = selectedGroupDetail?.status;
                     if (!s) return null;
                     const cfg: Record<string, string> = {
-                      ACTIVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-                      INACTIVE: "bg-blue-50 text-blue-700 ring-blue-200",
-                      ARCHIVED: "bg-sand-100 text-sand-600 ring-sand-200",
-                      DELETED: "bg-red-50 text-red-700 ring-red-200",
+                      ACTIVE: "border-sage-100 bg-sage-50 text-sage-700",
+                      INACTIVE: "border-sand-200 bg-sand-50 text-sand-600",
+                      ARCHIVED: "border-sand-200 bg-sand-50 text-sand-600",
+                      DELETED: "border-rose-100 bg-rose-50 text-rose-700",
                     };
                     const label: Record<string, string> = {
                       ACTIVE: "Hoạt động",
@@ -1426,17 +1443,17 @@ export default function AdminDashboardPage() {
                       DELETED: "Đã xóa",
                     };
                     return (
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${cfg[s] ?? "bg-sand-50 text-sand-600"}`}>
+                      <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${cfg[s] ?? "border-sand-200 bg-sand-50 text-sand-600"}`}>
                         {label[s] ?? s}
                       </span>
                     );
                   })()}
                 </div>
-                <p className="mt-1 text-sm text-sand-400">
+                <p className="mt-1 text-xs text-sand-400">
                   Group {selectedGroupRisk.groupId} · Conversation {selectedGroupRisk.conversationId}
                 </p>
                 {groupDetailLoading && (
-                  <p className="mt-1 text-xs text-sand-400">Đang tải thông tin nhóm...</p>
+                  <p className="mt-1 text-[11px] text-sand-400">Đang tải thông tin nhóm...</p>
                 )}
               </div>
 
@@ -1447,7 +1464,7 @@ export default function AdminDashboardPage() {
                     type="button"
                     onClick={handleActivateSelectedGroup}
                     disabled={groupHideLoading || groupDeleteLoading}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sage-200 bg-sage-50 px-3 text-sm font-medium text-sage-700 transition hover:bg-sage-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {groupHideLoading ? "Đang xử lý..." : "Kích hoạt nhóm"}
                   </button>
@@ -1456,7 +1473,7 @@ export default function AdminDashboardPage() {
                     type="button"
                     onClick={() => setConfirmDialog({ open: true, type: "hide" })}
                     disabled={groupHideLoading || groupDeleteLoading}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-3 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sand-300 bg-white px-3 text-sm font-medium text-sand-700 transition hover:bg-sand-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
                     {groupHideLoading ? "Đang ẩn..." : "Ẩn nhóm"}
@@ -1472,7 +1489,7 @@ export default function AdminDashboardPage() {
                     groupHideLoading ||
                     selectedGroupDetail?.status === "DELETED"
                   }
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-red-600 px-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-rose-600 px-3 text-sm font-medium text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>
                   {groupDeleteLoading ? "Đang xóa..." : "Xóa nhóm"}
@@ -1482,10 +1499,10 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={closeGroupModal}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-sand-400 transition hover:bg-sand-100 hover:text-sand-700"
+                  className="rounded p-1.5 text-sand-400 transition-colors hover:bg-sand-100 hover:text-sand-600"
                   aria-label="Đóng modal"
                 >
-                  <span aria-hidden="true" className="text-xl leading-none">×</span>
+                  <X size={18} />
                 </button>
               </div>
             </div>
@@ -1493,16 +1510,16 @@ export default function AdminDashboardPage() {
             {/* Inline confirm dialog */}
             {confirmDialog.open && (
               <div className={`mx-6 mt-4 flex items-start gap-3 rounded-lg border p-4 ${confirmDialog.type === "delete"
-                ? "border-red-200 bg-red-50"
-                : "border-blue-200 bg-blue-50"
+                ? "border-rose-200 bg-rose-50"
+                : "border-sand-200 bg-sand-50"
                 }`}>
                 <div className="flex-1">
-                  <p className={`text-sm font-semibold ${confirmDialog.type === "delete" ? "text-red-800" : "text-blue-800"}`}>
+                  <p className={`text-sm font-semibold ${confirmDialog.type === "delete" ? "text-rose-800" : "text-sand-800"}`}>
                     {confirmDialog.type === "delete"
                       ? `Xác nhận xóa nhóm "${selectedGroupDetail?.name || selectedGroupRisk.groupName}"?`
                       : `Xác nhận ẩn nhóm "${selectedGroupDetail?.name || selectedGroupRisk.groupName}"?`}
                   </p>
-                  <p className={`mt-1 text-xs ${confirmDialog.type === "delete" ? "text-red-600" : "text-blue-600"}`}>
+                  <p className={`mt-1 text-xs ${confirmDialog.type === "delete" ? "text-rose-600" : "text-sand-600"}`}>
                     {confirmDialog.type === "delete"
                       ? "Hành động này không thể hoàn tác. Nhóm sẽ bị xóa vĩnh viễn."
                       : "Nhóm sẽ bị ẩn và thành viên không thể truy cập. Có thể kích hoạt lại sau."}
@@ -1519,7 +1536,7 @@ export default function AdminDashboardPage() {
                   <button
                     type="button"
                     onClick={confirmDialog.type === "delete" ? handleDeleteSelectedGroup : handleHideSelectedGroup}
-                    className={`h-8 rounded-lg px-3 text-xs font-medium text-white transition ${confirmDialog.type === "delete" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
+                    className={`h-8 rounded-lg px-3 text-xs font-medium text-white transition ${confirmDialog.type === "delete" ? "bg-rose-600 hover:bg-rose-700" : "bg-blue-600 hover:bg-blue-700"
                       }`}
                   >
                     {confirmDialog.type === "delete" ? "Xóa" : "Ẩn nhóm"}
@@ -1530,82 +1547,115 @@ export default function AdminDashboardPage() {
 
             {/* Error */}
             {groupDetailError && (
-              <div className="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="mx-6 mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {groupDetailError}
               </div>
             )}
 
             {/* Body */}
-            <div className="space-y-4 p-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {/* Stats */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-lg bg-sand-50 p-3 text-center">
-                  <p className="text-[11px] font-medium uppercase text-sand-400">Tin nhắn</p>
-                  <p className="mt-1 text-xl font-bold text-sand-900">{formatNumber(selectedGroupRisk.totalMessages)}</p>
+                <div className="rounded-lg border border-sand-200 bg-white p-3.5 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-sand-400">Tin nhắn</p>
+                  <p className="mt-1 text-xl font-bold text-sand-800">{formatNumber(selectedGroupRisk.totalMessages)}</p>
                 </div>
-                <div className="rounded-lg bg-red-50 p-3 text-center">
-                  <p className="text-[11px] font-medium uppercase text-red-500">Vi phạm</p>
-                  <p className="mt-1 text-xl font-bold text-red-700">{formatNumber(getViolationCount(selectedGroupRisk))}</p>
+
+                <div className="rounded-lg border border-sand-200 bg-white p-3.5 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-sand-400">Vi phạm</p>
+                  <p className="mt-1 text-xl font-bold text-sand-800">
+                    {formatNumber(getViolationCount(selectedGroupRisk))}
+                  </p>
                 </div>
-                <div className="rounded-lg bg-sky-50 p-3 text-center">
-                  <p className="text-[11px] font-medium uppercase text-sky-500">Tỷ lệ</p>
-                  <p className="mt-1 text-xl font-bold text-sky-700">
+
+                <div className="rounded-lg border border-sand-200 bg-white p-3.5 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-sand-400">Tỷ lệ</p>
+                  <p className="mt-1 text-xl font-bold text-sand-800">
                     {getViolationRate(getViolationCount(selectedGroupRisk), selectedGroupRisk.totalMessages)}%
                   </p>
                 </div>
-                <div className="rounded-lg bg-blue-50 p-3 text-center">
-                  <p className="text-[11px] font-medium uppercase text-blue-600">TV vi phạm</p>
-                  <p className="mt-1 text-xl font-bold text-blue-700">{formatNumber(selectedGroupRisk.violatingMembers)}</p>
+
+                <div className="rounded-lg border border-sand-200 bg-white p-3.5 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-sand-400">TV vi phạm</p>
+                  <p className="mt-1 text-xl font-bold text-sand-800">
+                    {formatNumber(selectedGroupRisk.violatingMembers)}
+                  </p>
                 </div>
               </div>
 
               {/* OFFENSIVE / HATE */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center gap-3 rounded-lg border border-sand-200 px-4 py-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-50">
-                    <span className="text-xs font-bold text-blue-700">OFF</span>
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-sand-400">OFFENSIVE</p>
-                    <p className="text-lg font-bold text-blue-700">{formatNumber(selectedGroupRisk.offensiveMessages)}</p>
+                <div className="flex items-center justify-between rounded-lg border border-sand-200 bg-white px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span className="rounded border border-sand-200 bg-sand-50 px-1.5 py-0.5 text-[10px] font-bold text-sand-600">
+                      OFF
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-sand-400">Offensive</p>
+                      <p className="mt-0.5 text-base font-bold text-sand-800">{formatNumber(selectedGroupRisk.offensiveMessages)}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 rounded-lg border border-sand-200 px-4 py-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-red-50">
-                    <span className="text-xs font-bold text-red-700">HT</span>
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-sand-400">HATE</p>
-                    <p className="text-lg font-bold text-red-700">{formatNumber(selectedGroupRisk.hateMessages)}</p>
+                <div className="flex items-center justify-between rounded-lg border border-sand-200 bg-white px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span className="rounded border border-sand-200 bg-sand-50 px-1.5 py-0.5 text-[10px] font-bold text-sand-600">
+                      HT
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-sand-400">Hate</p>
+                      <p className="mt-0.5 text-base font-bold text-sand-800">{formatNumber(selectedGroupRisk.hateMessages)}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Meta */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-sand-200 px-4 py-3">
+                <div className="rounded-lg border border-sand-200 bg-white px-4 py-3">
                   <p className="text-[11px] font-medium text-sand-400">Loại nhóm</p>
                   <p className="mt-1 text-sm font-semibold text-sand-800">{selectedGroupDetail?.groupType || "—"}</p>
                 </div>
-                <div className="rounded-lg border border-sand-200 px-4 py-3">
+                <div className="rounded-lg border border-sand-200 bg-white px-4 py-3">
                   <p className="text-[11px] font-medium text-sand-400">Trạng thái</p>
-                  <p className="mt-1 text-sm font-semibold text-sand-800">{selectedGroupDetail?.status || "—"}</p>
+                  <div className="mt-1">
+                    {(() => {
+                      const s = selectedGroupDetail?.status;
+                      if (!s) return <p className="text-sm font-semibold text-sand-800">—</p>;
+                      const label: Record<string, string> = {
+                        ACTIVE: "Hoạt động",
+                        INACTIVE: "Đã ẩn",
+                        ARCHIVED: "Lưu trữ",
+                        DELETED: "Đã xóa",
+                      };
+                      const colorClass: Record<string, string> = {
+                        ACTIVE: "border-sage-100 bg-sage-50 text-sage-700",
+                        INACTIVE: "border-sand-200 bg-sand-50 text-sand-600",
+                        ARCHIVED: "border-sand-200 bg-sand-50 text-sand-600",
+                        DELETED: "border-rose-100 bg-rose-50 text-rose-700",
+                      };
+                      return (
+                        <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${colorClass[s] ?? "border-sand-200 bg-sand-50 text-sand-600"}`}>
+                          {label[s] ?? s}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
-                <div className="rounded-lg border border-sand-200 px-4 py-3">
+                <div className="rounded-lg border border-sand-200 bg-white px-4 py-3">
                   <p className="text-[11px] font-medium text-sand-400">Thành viên hiện tại</p>
                   <p className="mt-1 text-sm font-semibold text-sand-800">
                     {formatNumber(selectedGroupDetail?.memberCount ?? selectedGroupRisk.activeMembers)}
                     {selectedGroupDetail?.maxMembers ? ` / ${formatNumber(selectedGroupDetail.maxMembers)}` : ""}
                   </p>
                 </div>
-                <div className="rounded-lg border border-sand-200 px-4 py-3">
+                <div className="rounded-lg border border-sand-200 bg-white px-4 py-3">
                   <p className="text-[11px] font-medium text-sand-400">Môn học</p>
                   <p className="mt-1 text-sm font-semibold text-sand-800">{selectedGroupDetail?.subjectName || "—"}</p>
                 </div>
               </div>
 
               {/* Description */}
-              <div className="rounded-lg border border-sand-200 px-4 py-3">
+              <div className="rounded-lg border border-sand-200 bg-white px-4 py-3">
                 <p className="text-[11px] font-medium text-sand-400">Mô tả</p>
                 <p className="mt-1.5 text-sm leading-6 text-sand-700">
                   {selectedGroupDetail?.description || "Nhóm chưa có mô tả."}
@@ -1613,10 +1663,10 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Last violation */}
-              <div className="rounded-lg border border-red-100 bg-red-50/40 px-4 py-3">
-                <p className="text-[11px] font-medium text-red-400">Lần vi phạm gần nhất</p>
-                <p className="mt-1 text-sm font-semibold text-red-700">
-                  {selectedGroupRisk.lastViolationAt || "Chưa có dữ liệu"}
+              <div className="rounded-lg border border-sand-200 bg-white px-4 py-3">
+                <p className="text-[11px] font-medium text-sand-400">Lần vi phạm gần nhất</p>
+                <p className="mt-1 text-sm font-semibold text-sand-800">
+                  {formatDateTime(selectedGroupRisk.lastViolationAt)}
                 </p>
               </div>
             </div>

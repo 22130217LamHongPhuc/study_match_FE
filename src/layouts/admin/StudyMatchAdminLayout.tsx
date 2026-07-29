@@ -352,12 +352,14 @@ function Topbar({
   onLogout,
   onEditProfile,
   onChangePassword,
+  isSuperAdmin,
 }: {
   onMenuClick: () => void;
   adminProfile: { fullName: string; avatarUrl?: string } | null;
   onLogout: () => void;
   onEditProfile: () => void;
   onChangePassword: () => void;
+  isSuperAdmin?: boolean;
 }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const fullName = adminProfile?.fullName || "Admin";
@@ -410,7 +412,7 @@ function Topbar({
               {fullName}
             </p>
             <p className="mt-1 text-[10px] uppercase text-slate-400">
-              Root Admin
+              {isSuperAdmin ? "Super Admin" : "Quản trị viên"}
             </p>
           </div>
           <ChevronDown
@@ -658,6 +660,7 @@ export default function StudyMatchAdminLayout() {
           onLogout={handleLogout}
           onEditProfile={() => setProfileModalOpen(true)}
           onChangePassword={() => setPasswordModalOpen(true)}
+          isSuperAdmin={isSuperAdmin}
         />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />

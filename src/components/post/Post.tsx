@@ -1,6 +1,9 @@
 import { Lock, MoreHoriz, People, Public, Description, Send, Reply } from "@mui/icons-material";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
+import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import {
   Avatar,
   Box,
@@ -11,14 +14,12 @@ import {
   Typography,
   Skeleton,
   CircularProgress,
+  Divider,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  addPostComment,
   deletePost,
-  loadPostComments,
-  PostComment,
   SocialPost,
   togglePostLike,
 } from "../../services/SocialPostService";
@@ -28,6 +29,7 @@ import EditPostDialog from "../modal/user/EditPostDialog";
 import PostMediaModal from "../modal/user/PostMediaModal";
 import PostReactionsModal from "../modal/user/PostReactionsModal";
 import SharePostModal from "../modal/user/SharePostModal";
+import PostCommentsModal from "../modal/user/PostCommentsModal";
 
 const isImageUrl = (url: string) => {
   const lower = url.toLowerCase();
@@ -145,7 +147,8 @@ const getVisibilityOption = (value?: string) =>
 const formatTime = (value: string) => {
   const date = new Date(value);
   const diffMs = Date.now() - date.getTime();
-  const minutes = Math.max(1, Math.floor(diffMs / 60000));
+  if (diffMs < 60000) return "Vừa xong";
+  const minutes = Math.floor(diffMs / 60000);
   if (minutes < 60) return `${minutes} phút`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} giờ`;
@@ -197,10 +200,10 @@ function SharedPostCard({
     <>
       <Box
         sx={{
-          mx: 2,
-          mb: 1.5,
-          border: "1px solid #dde3ec",
-          borderRadius: "14px",
+          mx: 2.5,
+          mb: 2,
+          border: "1px solid #e2e8f0",
+          borderRadius: "16px",
           overflow: "hidden",
           bgcolor: "#f8fafc",
         }}
@@ -513,8 +516,6 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
   const goToProfile = () => navigate(`/profile/${post.authorId}`);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [comments, setComments] = useState<PostComment[]>([]);
-  const [commentText, setCommentText] = useState("");
   const [editing, setEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
@@ -552,7 +553,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
     setIsExpanded(false);
   }, [post.content, post.visibility]);
 
-  const sortedComments = useMemo(() => comments, [comments]);
+
 
   const handleToggleLike = async (reactionType?: string) => {
     const next = await togglePostLike(post.id, currentUserId, reactionType);
@@ -560,7 +561,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
   };
 
   const getReactionUI = (reactionType?: string | null) => {
-    if (!reactionType) return { icon: <ThumbUpIcon sx={{ fontSize: 22, color: "#65676b" }} />, color: "#65676b" };
+    if (!reactionType) return { icon: <ThumbUpOutlinedIcon sx={{ fontSize: 20, color: "#8898aa" }} />, color: "#8898aa" };
     switch (reactionType.toUpperCase()) {
       case "LOVE":
         return { icon: <span style={{ fontSize: 22 }}>❤️</span>, color: "#f43f5e" };
@@ -746,21 +747,8 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
     );
   };
 
-  const handleToggleComments = async () => {
-    const nextOpen = !commentsOpen;
-    setCommentsOpen(nextOpen);
-    if (nextOpen && comments.length === 0) {
-      setComments(await loadPostComments(post.id));
-    }
-  };
-
-  const handleAddComment = async () => {
-    const content = commentText.trim();
-    if (!content) return;
-    const comment = await addPostComment(post.id, currentUserId, content);
-    setComments((prev) => [...prev, comment]);
-    setCommentText("");
-    onPostChanged({ ...post, commentCount: post.commentCount + 1 });
+  const handleToggleComments = () => {
+    setCommentsOpen(!commentsOpen);
   };
 
 
@@ -778,14 +766,17 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
       sx={{
         width: "100%",
         mx: "auto",
-        my: "20px",
+        my: { xs: "12px", sm: "24px" },
         bgcolor: "white",
-        borderRadius: "8px",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+        borderRadius: { xs: "0px", sm: "16px" },
+        boxShadow: { xs: "none", sm: "0 4px 20px rgba(15, 23, 42, 0.06)" },
+        border: { xs: "none", sm: "1px solid #e2e8f0" },
+        borderTop: { xs: "1px solid #f1f5f9", sm: "1px solid #e2e8f0" },
+        borderBottom: { xs: "1px solid #f1f5f9", sm: "1px solid #e2e8f0" },
         overflow: "hidden",
       }}
     >
-      <Box sx={{ p: "12px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+      <Box sx={{ p: { xs: "16px 16px 12px 16px", sm: "20px 24px 12px 24px" }, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Avatar
             src={post.authorAvatarUrl || undefined}
@@ -799,8 +790,9 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
               onClick={goToProfile}
               sx={{
                 fontWeight: 700,
-                color: "#050505",
-                leadingHeight: 1.2,
+                color: "#0f172a",
+                lineHeight: 1.2,
+                fontSize: "15px",
                 cursor: "pointer",
                 "&:hover": { textDecoration: "underline" },
               }}
@@ -808,11 +800,11 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
               {post.authorName}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.2 }}>
-              <Typography sx={{ fontSize: "0.8125rem", color: "#65676b" }}>
+              <Typography sx={{ fontSize: "12px", color: "#64748b" }}>
                 {formatTime(post.createdAt)} ·
               </Typography>
               {visibility.icon}
-              <Typography sx={{ fontSize: "0.8125rem", color: "#65676b" }}>{visibility.label}</Typography>
+              <Typography sx={{ fontSize: "12px", color: "#64748b" }}>{visibility.label}</Typography>
             </Box>
           </Box>
         </Box>
@@ -843,7 +835,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
         )}
       </Box>
 
-      <Box sx={{ px: 2, pb: 1 }}>
+      <Box sx={{ px: { xs: 2, sm: 3 }, pb: 1.5 }}>
         {hasBackground ? (
           <Box
             sx={{
@@ -915,7 +907,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
         )}
       </Box>
 
-      <Box sx={{ px: 2, pb: 0.5 }}>
+      <Box sx={{ px: 3, pb: 1 }}>
         {renderMediaGrid()}
       </Box>
 
@@ -941,150 +933,195 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
         );
       })()}
 
-      <Box sx={{ p: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Box sx={{ display: "flex", gap: 2.5 }}>
-          <Box
-            onMouseEnter={() => setShowReactionsPopup(true)}
-            onMouseLeave={() => setShowReactionsPopup(false)}
-            sx={{ position: "relative", display: "flex", alignItems: "center" }}
+      {/* Stats/Reactions Count Row */}
+      <Box sx={{ px: 3, py: 1.25, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {renderTopReactions(post.topReactions)}
+          <Typography
+            onClick={() => setReactionsModalOpen(true)}
+            sx={{ fontSize: "0.85rem", color: "#64748b", cursor: "pointer", fontWeight: 500, "&:hover": { textDecoration: "underline", color: "#1877f2" } }}
           >
-            <Box
-              onClick={() => void handleToggleLike()}
-              sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}
-            >
-              {rxUI.icon}
-              <Typography sx={{ fontSize: "0.9rem", color: rxUI.color, fontWeight: 500 }}>
-                {post.likeCount}
-              </Typography>
-            </Box>
-
-            {showReactionsPopup && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  bottom: "85%",
-                  left: 0,
-                  bgcolor: "white",
-                  borderRadius: "30px",
-                  boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-                  border: "1px solid #e2e8f0",
-                  p: "6px 12px",
-                  display: "flex",
-                  gap: "12px",
-                  zIndex: 20,
-                  mb: 0,
-                  animation: "fadeInUp 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
-                  "@keyframes fadeInUp": {
-                    from: { opacity: 0, transform: "translateY(10px)" },
-                    to: { opacity: 1, transform: "translateY(0)" },
-                  },
-                }}
-              >
-                {[
-                  { emoji: "👍", name: "LIKE" },
-                  { emoji: "❤️", name: "LOVE" },
-                  { emoji: "😆", name: "HAHA" },
-                  { emoji: "😮", name: "WOW" },
-                  { emoji: "😢", name: "SAD" },
-                  { emoji: "😡", name: "ANGRY" }
-                ].map(({ emoji, name }) => (
-                  <Box
-                    key={name}
-                    onClick={() => {
-                      void handleToggleLike(name);
-                      setShowReactionsPopup(false);
-                    }}
-                    sx={{
-                      fontSize: "24px",
-                      cursor: "pointer",
-                      transition: "transform 0.15s ease",
-                      "&:hover": {
-                        transform: "scale(1.35) translateY(-4px)",
-                      },
-                    }}
-                  >
-                    {emoji}
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
-
-          <Box onClick={handleToggleComments} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer" }}>
-            <ChatBubbleIcon sx={{ fontSize: 22, color: "#65676b" }} />
-            <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>{post.commentCount}</Typography>
-          </Box>
-
-          <Box onClick={() => setShareModalOpen(true)} sx={{ display: "flex", alignItems: "center", gap: 0.8, cursor: "pointer", "&:hover": { color: "#1877f2" } }}>
-            <Reply sx={{ fontSize: 24, color: "#65676b", transform: "scaleX(-1)" }} />
-            <Typography sx={{ fontSize: "0.9rem", color: "#65676b", fontWeight: 500 }}>Chia sẻ</Typography>
-          </Box>
+            {post.likeCount > 0 ? post.likeCount : ""}
+          </Typography>
         </Box>
-        {renderTopReactions(post.topReactions)}
+        <Typography
+          onClick={handleToggleComments}
+          sx={{ fontSize: "0.85rem", color: "#64748b", cursor: "pointer", fontWeight: 500, "&:hover": { textDecoration: "underline", color: "#1877f2" } }}
+        >
+          {post.commentCount} bình luận
+        </Typography>
       </Box>
 
-      {commentsOpen && (
-        <Box sx={{ borderTop: "1px solid #edf0f3", px: 2, py: 1.5 }}>
-          {sortedComments.map((comment) => (
-            <Box key={comment.id} sx={{ display: "flex", gap: 1, mb: 1.25 }}>
-              <Avatar src={comment.authorAvatarUrl || undefined} sx={{ width: 32, height: 32 }}>
-                {comment.authorName?.charAt(0)?.toUpperCase()}
-              </Avatar>
-              <Box sx={{ bgcolor: "#f0f2f5", borderRadius: "8px", px: 1.25, py: 0.75 }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{comment.authorName}</Typography>
-                {comment.moderationStatus === "HATE" || comment.moderationStatus === "OFFENSIVE" ? (
-                  <Typography sx={{ fontSize: 14, fontStyle: "italic", color: "#8e8e8e" }}>
-                    Bình luận đã bị ẩn do vi phạm chính sách cộng đồng
-                  </Typography>
-                ) : (
-                  <Typography sx={{ fontSize: 14 }}>{comment.content}</Typography>
-                )}
-              </Box>
-            </Box>
-          ))}
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Viết bình luận..."
-              value={commentText}
-              onChange={(event) => setCommentText(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void handleAddComment();
-                }
-              }}
+      <Divider sx={{ mx: 3 }} />
+
+      {/* Action Buttons Row */}
+      <Box sx={{ px: 3, py: 1.5, display: "flex", gap: 2, justifyContent: "space-between" }}>
+        {/* Like Button */}
+        <Box
+          onMouseEnter={() => setShowReactionsPopup(true)}
+          onMouseLeave={() => setShowReactionsPopup(false)}
+          sx={{ position: "relative", flex: 1, display: "flex" }}
+        >
+          <Box
+            onClick={() => void handleToggleLike()}
+            sx={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              py: 1,
+              cursor: "pointer",
+              borderRadius: "30px",
+              bgcolor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              color: rxUI.color,
+              "&:hover": {
+                bgcolor: "#f1f5f9",
+                borderColor: "#cbd5e1",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 12px rgba(15, 23, 42, 0.05)",
+                color: rxUI.color === "#8898aa" ? "#1877f2" : rxUI.color,
+              },
+              "&:active": {
+                transform: "translateY(0) scale(0.97)",
+              },
+            }}
+          >
+            {rxUI.icon}
+            <Typography sx={{ fontSize: "0.85rem", fontWeight: "normal" }}>
+              Thích
+            </Typography>
+          </Box>
+
+          {showReactionsPopup && (
+            <Box
               sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "20px",
-                  fontSize: "13px",
-                  bgcolor: "#f1f5f9",
-                  "& fieldset": { borderColor: "transparent" },
-                  "&:hover fieldset": { borderColor: "transparent" },
+                position: "absolute",
+                bottom: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                bgcolor: "white",
+                borderRadius: "30px",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+                border: "1px solid #e2e8f0",
+                p: "6px 12px",
+                display: "flex",
+                gap: "12px",
+                zIndex: 20,
+                mb: 1,
+                animation: "fadeInUp 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
+                "@keyframes fadeInUp": {
+                  from: { opacity: 0, transform: "translateX(-50%) translateY(10px)" },
+                  to: { opacity: 1, transform: "translateX(-50%) translateY(0)" },
                 },
               }}
-            />
-            <IconButton
-              onClick={handleAddComment}
-              disabled={!commentText.trim()}
-              color="primary"
-              size="small"
-              sx={{
-                bgcolor: "#1877f2",
-                color: "white",
-                "&:hover": { bgcolor: "#166fe5" },
-                "&.Mui-disabled": { bgcolor: "#e2e8f0", color: "#94a3b8" },
-                width: 32,
-                height: 32,
-                flexShrink: 0,
-              }}
             >
-              <Send sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Box>
+              {[
+                { emoji: "👍", name: "LIKE" },
+                { emoji: "❤️", name: "LOVE" },
+                { emoji: "😆", name: "HAHA" },
+                { emoji: "😮", name: "WOW" },
+                { emoji: "😢", name: "SAD" },
+                { emoji: "😡", name: "ANGRY" }
+              ].map(({ emoji, name }) => (
+                <Box
+                  key={name}
+                  onClick={() => {
+                    void handleToggleLike(name);
+                    setShowReactionsPopup(false);
+                  }}
+                  sx={{
+                    fontSize: "22px",
+                    cursor: "pointer",
+                    transition: "transform 0.15s ease",
+                    "&:hover": {
+                      transform: "scale(1.35) translateY(-4px)",
+                    },
+                  }}
+                >
+                  {emoji}
+                </Box>
+              ))}
+            </Box>
+          )}
         </Box>
-      )}
+
+        {/* Comment Button */}
+        <Box
+          onClick={handleToggleComments}
+          sx={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            py: 1,
+            cursor: "pointer",
+            borderRadius: "30px",
+            bgcolor: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            color: "#8898aa",
+            "&:hover": {
+              bgcolor: "#f1f5f9",
+              borderColor: "#cbd5e1",
+              transform: "translateY(-1px)",
+              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.05)",
+              color: "#059669",
+              "& svg": { color: "#059669", transform: "scale(1.1)" }
+            },
+            "& svg": { transition: "transform 0.2s" },
+            "&:active": {
+              transform: "translateY(0) scale(0.97)",
+            },
+          }}
+        >
+          <ChatBubbleOutlineIcon sx={{ fontSize: 18, color: "#8898aa" }} />
+          <Typography sx={{ fontSize: "0.85rem", fontWeight: "normal" }}>
+            Bình luận
+          </Typography>
+        </Box>
+
+        {/* Share Button */}
+        <Box
+          onClick={() => setShareModalOpen(true)}
+          sx={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            py: 1,
+            cursor: "pointer",
+            borderRadius: "30px",
+            bgcolor: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            color: "#8898aa",
+            "&:hover": {
+              bgcolor: "#f1f5f9",
+              borderColor: "#cbd5e1",
+              transform: "translateY(-1px)",
+              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.05)",
+              color: "#7c3aed",
+              "& svg": { color: "#7c3aed", transform: "scale(1.1)" }
+            },
+            "& svg": { transition: "transform 0.2s" },
+            "&:active": {
+              transform: "translateY(0) scale(0.97)",
+            },
+          }}
+        >
+          <ShareOutlinedIcon sx={{ fontSize: 18, color: "#8898aa" }} />
+          <Typography sx={{ fontSize: "0.85rem", fontWeight: "normal" }}>
+            Chia sẻ
+          </Typography>
+        </Box>
+      </Box>
+
+
 
       <EditPostDialog
         open={editing}
@@ -1132,6 +1169,14 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
         targetType="POST"
         targetId={post.id}
         targetName={post.authorName ? `Bài viết của ${post.authorName}` : undefined}
+      />
+
+      <PostCommentsModal
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        post={post}
+        currentUserId={currentUserId}
+        onPostChanged={onPostChanged}
       />
     </Box>
   );
