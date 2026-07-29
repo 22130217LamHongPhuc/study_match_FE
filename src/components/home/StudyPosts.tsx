@@ -51,7 +51,7 @@ export default function StudyPosts({
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4 w-[90%]">
+    <div className="w-[calc(100%+2rem)] -mx-4 sm:mx-0 sm:w-full lg:w-[90%] bg-white border-y border-slate-200 sm:border sm:rounded-2xl p-4 sm:p-6 shadow-none sm:shadow-sm space-y-4">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <h2 className="text-base font-bold text-gray-800">Bài đăng</h2>
       </div>

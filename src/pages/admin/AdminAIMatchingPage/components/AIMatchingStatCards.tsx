@@ -5,6 +5,7 @@ import {
   UserPlus,
   UserCheck,
   UserX,
+  SkipForward,
   MessageSquare,
   BrainCircuit,
   Star,
@@ -52,6 +53,14 @@ const cardConfigs: StatCardConfig[] = [
     format: (v) => v.toLocaleString("vi-VN"),
     sub: (s) =>
       `Tỷ lệ từ chối ${formatPercentage(s.totalRejected, s.totalFriendRequestSent)}`,
+  },
+  {
+    key: "totalSkipped",
+    label: "Đã bỏ qua",
+    icon: SkipForward,
+    format: (v) => v.toLocaleString("vi-VN"),
+    sub: (s) =>
+      `Tỷ lệ bỏ qua ${formatPercentage(s.totalSkipped, s.totalRecommendationItems)}`,
   },
   {
     key: "totalFeedbacks",
@@ -108,7 +117,7 @@ export function AIMatchingStatCards({
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cardConfigs.map((cfg) => {
-        const value = stats[cfg.key];
+        const value = (stats && stats[cfg.key]) ?? 0;
         return (
           <div
             key={cfg.key}
@@ -125,7 +134,7 @@ export function AIMatchingStatCards({
                 {cfg.format(value)}
               </h3>
               <span className="rounded-md bg-sage-50 px-1.5 py-0.5 text-xs font-medium text-sage-700">
-                {cfg.sub(stats)}
+                {cfg.sub(stats || {})}
               </span>
             </div>
           </div>

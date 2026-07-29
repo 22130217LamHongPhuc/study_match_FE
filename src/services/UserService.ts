@@ -43,10 +43,13 @@ export async function getUserById(
 ): Promise<UserBasicInfo | null> {
   try {
     const res = await apiFetch<UserBasicInfo>(
-      `/api/admin/${userId}`,
+      `/api/users/${userId}`,
       { method: "GET" },
       API_BASE_URL_USER,
     );
+    if (res && (res as any).userId) {
+      return res as unknown as UserBasicInfo;
+    }
     return res.success ? res.data : null;
   } catch {
     return null;

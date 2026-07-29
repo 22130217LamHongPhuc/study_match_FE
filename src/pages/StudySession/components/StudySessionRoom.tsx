@@ -13,16 +13,22 @@ interface StudySessionRoomProps {
   onLeave: (sessionId: number) => void;
 }
 
-async function safeDestroyZego(zego: any): Promise<void> {
+async function safeDestroyZego(
+  zego: any,
+  requestLeave = true,
+): Promise<void> {
   if (!zego) return;
 
-  try {
-    if (typeof zego.hangUp === "function") {
-      await zego.hangUp();
-    }
-  } catch {}
+  if (requestLeave) {
+    try {
+      if (typeof zego.hangUp === "function") {
+        zego.hangUp();
+      }
+    } catch {}
 
-  await new Promise((r) => setTimeout(r, 200));
+    // Give Zego's leave event time to finish before destroying its singleton.
+    await new Promise((resolve) => window.setTimeout(resolve, 300));
+  }
 
   try {
     zego.destroy();
@@ -52,8 +58,14 @@ export function StudySessionRoom({
   const requestedLeaveRef = useRef(false);
   const roomJoinedRef = useRef(false);
   const destroyingRef = useRef(false);
+  const onLeaveRef = useRef(onLeave);
   const [roomError, setRoomError] = useState("");
   const [leaving, setLeaving] = useState(false);
+  const { roomId, sessionId, token } = joinData;
+
+  useEffect(() => {
+    onLeaveRef.current = onLeave;
+  }, [onLeave]);
 
   const notifyLeave = useCallback(async () => {
     if (leaveApiCalledRef.current) return;
@@ -62,16 +74,16 @@ export function StudySessionRoom({
     leaveApiCalledRef.current = true;
 
     try {
-      await leaveStudySession(joinData.sessionId, userId);
+      await leaveStudySession(sessionId, userId);
     } catch {}
-  }, [joinData.sessionId, userId]);
+  }, [sessionId, userId]);
 
   const finishLeave = useCallback(async () => {
     if (finishCalledRef.current) return;
     finishCalledRef.current = true;
     await notifyLeave();
-    onLeave(joinData.sessionId);
-  }, [joinData.sessionId, notifyLeave, onLeave]);
+    onLeaveRef.current(sessionId);
+  }, [notifyLeave, sessionId]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -88,15 +100,15 @@ export function StudySessionRoom({
       const appId = Number(process.env.REACT_APP_ZEGO_APP_ID);
       const zegoUserId = String(userId || localStorage.getItem("userId") || Date.now());
 
-      if (!Number.isFinite(appId) || appId <= 0 || !joinData.token || !joinData.roomId) {
+      if (!Number.isFinite(appId) || appId <= 0 || !token || !roomId) {
         setRoomError("Không thể tạo phòng học. Vui lòng thử lại sau.");
         return;
       }
 
       const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(
         appId,
-        joinData.token,
-        joinData.roomId,
+        token,
+        roomId,
         zegoUserId,
         userName,
       );
@@ -122,10 +134,16 @@ export function StudySessionRoom({
           if (destroyingRef.current) return;
           if (!roomJoinedRef.current && !requestedLeaveRef.current) return;
           requestedLeaveRef.current = true;
+          destroyingRef.current = true;
+          const z = zegoRef.current;
           zegoRef.current = null;
-          setTimeout(() => {
-            finishLeave();
-          }, 300);
+
+          // Run outside Zego's callback to avoid re-entering its leave flow.
+          window.setTimeout(() => {
+            safeDestroyZego(z, false).finally(() => {
+              void finishLeave();
+            });
+          }, 0);
         },
       });
     }, 0);
@@ -135,7 +153,7 @@ export function StudySessionRoom({
       if (!Number.isFinite(userId) || userId <= 0) return;
       if (!zegoRef.current && !roomJoinedRef.current) return;
       leaveApiCalledRef.current = true;
-      leaveStudySessionOnUnload(joinData.sessionId, userId);
+      leaveStudySessionOnUnload(sessionId, userId);
     };
 
     window.addEventListener("pagehide", handlePageHide);
@@ -152,10 +170,10 @@ export function StudySessionRoom({
         const z = zegoRef.current;
         zegoRef.current = null;
         destroyingRef.current = true;
-        safeDestroyZego(z);
+        void safeDestroyZego(z);
       }
     };
-  }, [finishLeave, joinData, notifyLeave, userId, userName]);
+  }, [finishLeave, roomId, sessionId, token, userId, userName]);
 
   const handleLeave = () => {
     if (leaving || finishCalledRef.current) return;
@@ -167,7 +185,7 @@ export function StudySessionRoom({
     zegoRef.current = null;
 
     safeDestroyZego(z).finally(() => {
-      finishLeave();
+      void finishLeave();
     });
   };
 

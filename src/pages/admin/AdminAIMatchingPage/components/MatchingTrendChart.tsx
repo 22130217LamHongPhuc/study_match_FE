@@ -17,6 +17,7 @@ const LINES = [
   { dataKey: "friendRequestSent", name: "Gửi lời mời", color: "#D97706" },
   { dataKey: "accepted", name: "Chấp nhận", color: "#6B8F71" },
   { dataKey: "rejected", name: "Từ chối", color: "#E11D48" },
+  { dataKey: "skipped", name: "Bỏ qua", color: "#F59E0B" },
 ];
 
 export function MatchingTrendChart({ data }: { data: MatchingTrendItem[] }) {

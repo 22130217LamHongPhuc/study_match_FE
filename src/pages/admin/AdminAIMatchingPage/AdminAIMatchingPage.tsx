@@ -29,10 +29,12 @@ const emptyStatistics: MatchingStatisticsResponse = {
   totalFriendRequestSent: 0,
   totalRejected: 0,
   totalAccepted: 0,
+  totalSkipped: 0,
   viewRate: 0,
   friendRequestRate: 0,
   acceptRate: 0,
   rejectRate: 0,
+  skipRate: 0,
   averageFinalScore: 0,
   totalFeedbacks: 0,
   averageRating: 0,
@@ -58,6 +60,7 @@ const emptyActionDistribution: ActionDistributionItem[] = [
   { status: "FRIEND_REQUEST_SENT", count: 0 },
   { status: "ACCEPTED", count: 0 },
   { status: "REJECTED", count: 0 },
+  { status: "SKIPPED", count: 0 },
 ];
 
 const emptyTrendData: MatchingTrendItem[] = [];

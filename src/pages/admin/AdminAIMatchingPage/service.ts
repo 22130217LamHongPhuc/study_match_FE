@@ -201,6 +201,7 @@ export async function getMatchingActionDistribution(
     },
     { status: "ACCEPTED", count: data.ACCEPTED ?? 0 },
     { status: "REJECTED", count: data.REJECTED ?? 0 },
+    { status: "SKIPPED", count: data.SKIPPED ?? 0 },
   ];
 }
 
@@ -229,5 +230,6 @@ export async function getMatchingTrend(
     friendRequestSent: item.totalFriendRequestSent,
     accepted: item.totalAccepted,
     rejected: item.totalRejected,
+    skipped: item.totalSkipped,
   }));
 }

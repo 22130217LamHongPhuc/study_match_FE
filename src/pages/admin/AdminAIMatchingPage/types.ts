@@ -2,7 +2,8 @@ export type MatchingActionStatus =
   | "VIEWED"
   | "FRIEND_REQUEST_SENT"
   | "ACCEPTED"
-  | "REJECTED";
+  | "REJECTED"
+  | "SKIPPED";
 
 export type StudySessionType = "USER_PAIR" | "GROUP";
 
@@ -14,10 +15,12 @@ export interface MatchingStatisticsResponse {
   totalFriendRequestSent: number;
   totalAccepted: number;
   totalRejected: number;
+  totalSkipped: number;
   viewRate: number;
   friendRequestRate: number;
   acceptRate: number;
   rejectRate: number;
+  skipRate: number;
   totalFeedbacks: number;
   averageFinalScore: number;
   averageRating: number;
@@ -71,6 +74,7 @@ export interface MatchingTrendItem {
   friendRequestSent: number;
   accepted: number;
   rejected: number;
+  skipped: number;
 }
 
 export interface MatchingTrendResponse {
@@ -80,6 +84,7 @@ export interface MatchingTrendResponse {
   totalFriendRequestSent: number;
   totalAccepted: number;
   totalRejected: number;
+  totalSkipped: number;
 }
 
 export interface ActionDistributionItem {

@@ -728,7 +728,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               sx={{ display: "flex", width: "100%", alignItems: "center" }}
             >
               <Box
-                sx={{ width: "75%", display: "flex", alignItems: "center", gap: "24px" }}
+                sx={{ width: { xs: "auto", md: "75%" }, flexGrow: { xs: 1, md: 0 }, display: "flex", alignItems: "center", gap: { xs: "12px", md: "24px" } }}
               >
                 <Typography
                   sx={{
@@ -761,7 +761,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      width: { xs: "180px", sm: "260px", md: "320px" },
+                      width: { xs: "100%", sm: "260px", md: "320px" },
                       height: "36px",
                       borderRadius: "10px",
                       backgroundColor: "#f3f4f6",
@@ -786,9 +786,10 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 sx={{
                   display: "flex",
                   justifyContent: "end",
-                  width: "25%",
+                  width: { xs: "auto", md: "25%" },
                   alignItems: "center",
                   gap: "8px",
+                  flexShrink: 0,
                 }}
               >
                 <Tooltip title="Thông báo">
@@ -812,19 +813,19 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 </Tooltip>
                 <Button
                   onClick={handleOpenMenu}
-                  endIcon={<ExpandMoreIcon sx={{ color: "#9ca3af" }} />}
+                  endIcon={<ExpandMoreIcon sx={{ color: "#9ca3af", display: { xs: "none", md: "inline-flex" } }} />}
                   sx={{
                     textTransform: "none",
                     borderRadius: "10px",
-                    padding: "5px 10px",
-                    background: "#fafaf8",
-                    border: "1px solid #e5e0d8",
+                    padding: { xs: "4px", md: "5px 10px" },
+                    background: { xs: "transparent", md: "#fafaf8" },
+                    border: { xs: "none", md: "1px solid #e5e0d8" },
                     color: "#1f2937",
                     gap: "6px",
                     minWidth: "auto",
                     "&:hover": {
-                      background: "#f0f7ff",
-                      borderColor: "#2563eb",
+                      background: { xs: "rgba(0, 0, 0, 0.04)", md: "#f0f7ff" },
+                      borderColor: { xs: "transparent", md: "#2563eb" },
                     },
                   }}
                 >
@@ -832,7 +833,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     src={currentUserProfile?.avatarUrl || user?.avatar || localStorage.getItem("avatarUrl") || undefined}
                     sx={{ width: 32, height: 32 }}
                   />
-                  <Box sx={{ textAlign: "left" }}>
+                  <Box sx={{ textAlign: "left", display: { xs: "none", md: "block" } }}>
                     <Typography
                       sx={{ fontWeight: 700, fontSize: 13, color: "#1f2937" }}
                     >
@@ -854,25 +855,25 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             <Box>
               <Button
                 onClick={handleOpenMenu}
-                endIcon={<ExpandMoreIcon sx={{ color: "#9ca3af" }} />}
+                endIcon={<ExpandMoreIcon sx={{ color: "#9ca3af", display: { xs: "none", md: "inline-flex" } }} />}
                 sx={{
                   textTransform: "none",
                   borderRadius: "10px",
-                  padding: "5px 10px",
-                  background: "#fafaf8",
-                  border: "1px solid #e5e0d8",
+                  padding: { xs: "4px", md: "5px 10px" },
+                  background: { xs: "transparent", md: "#fafaf8" },
+                  border: { xs: "none", md: "1px solid #e5e0d8" },
                   color: "#1f2937",
                   gap: "6px",
                   "&:hover": {
-                    background: "#f0f7ff",
-                    borderColor: "#2563eb",
+                    background: { xs: "rgba(0, 0, 0, 0.04)", md: "#f0f7ff" },
+                    borderColor: { xs: "transparent", md: "#2563eb" },
                   },
                 }}
               >
                 <Avatar sx={{ width: 30, height: 30, bgcolor: "#f0f7ff" }}>
                   <PersonOutlineIcon sx={{ color: "#2563eb" }} />
                 </Avatar>
-                <Box sx={{ textAlign: "left" }}>
+                <Box sx={{ textAlign: "left", display: { xs: "none", md: "block" } }}>
                   <Typography
                     sx={{ fontWeight: 700, fontSize: 13, color: "#1f2937" }}
                   >
