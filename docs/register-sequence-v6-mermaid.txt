@@ -1,0 +1,75 @@
+sequenceDiagram
+    autonumber off
+    actor SV as Sinh viên
+    participant FE as Frontend<br/>Trang Đăng ký
+    participant API as Auth API<br/>POST /api/auth/register
+    participant US as User Service
+    participant UDB as CSDL người dùng
+    participant TS as Email Verification Service
+    participant TDB as CSDL mã xác thực
+    participant MAIL as Mail Service
+    participant VERIFY as Verify Email API<br/>GET /api/verify-email/confirm
+
+    SV->>FE: 3.1.0. Nhập họ tên, email, mật khẩu,<br/>xác nhận mật khẩu và nhấn Tạo tài khoản
+    FE->>FE: 3.1.1. Kiểm tra biểu mẫu đăng ký
+
+    alt 3.2. Dữ liệu đăng ký không hợp lệ
+        FE-->>SV: 3.2.2–3.2.3. Hiển thị lỗi,<br/>yêu cầu nhập lại
+        Note over SV,FE: 3.2.4. Quay lại bước 3.1.0
+    else Dữ liệu hợp lệ
+        FE->>API: 3.1.2. POST /api/auth/register
+        API->>US: 3.1.3. Kiểm tra email
+        US->>UDB: existsByEmail(email)
+        UDB-->>US: Kết quả kiểm tra
+
+        alt 3.3. Email đã được sử dụng
+            US-->>API: 3.3.4. Email đã tồn tại
+            API-->>FE: 3.3.5. Đăng ký thất bại
+            FE-->>SV: 3.3.6. “Email đã được sử dụng”
+            Note over SV,FE: 3.3.7. Quay lại bước 3.1.0
+        else Email chưa được sử dụng
+            US->>US: 3.1.4. Mã hóa mật khẩu<br/>và tạo tài khoản sinh viên
+            US->>UDB: Lưu tài khoản
+
+            alt 3.4. Không thể tạo tài khoản
+                UDB-->>US: 3.4.5. Lưu/xử lý thất bại
+                US-->>API: 3.4.6. Đăng ký thất bại
+                API-->>FE: Kết quả thất bại
+                FE-->>SV: 3.4.7. Thông báo đăng ký thất bại
+                Note over SV,FE: 3.4.8. Có thể đăng ký lại từ bước 3.1.0
+            else Tạo tài khoản thành công
+                UDB-->>US: Đã lưu tài khoản
+                US->>TS: 3.1.5. Tạo mã xác thực<br/>có thời hạn 15 phút
+                TS->>TDB: 3.1.6. Lưu mã xác thực
+                TDB-->>TS: Đã lưu mã
+                TS->>MAIL: Gửi email chứa liên kết xác thực
+                MAIL-->>TS: Đã tiếp nhận email
+                TS-->>US: Hoàn tất tạo mã và gửi email
+                US-->>API: Đăng ký thành công
+                API-->>FE: 3.1.7. Kết quả đăng ký thành công
+                FE-->>SV: 3.1.8. Thông báo thành công<br/>và chuyển đến trang Đăng nhập
+            end
+        end
+    end
+
+    opt Sinh viên thực hiện xác thực email
+        SV->>MAIL: 3.1.9. Mở email
+        MAIL-->>SV: Hiển thị email xác thực
+        SV->>VERIFY: Nhấn liên kết xác thực
+        VERIFY->>TS: 3.1.10. Kiểm tra mã xác thực
+        TS->>TDB: Tìm mã xác thực
+        TDB-->>TS: Thông tin mã
+
+        alt 3.5. Mã không tồn tại / đã dùng / hết hạn
+            TS-->>VERIFY: 3.5.11. Mã không hợp lệ
+            VERIFY-->>SV: 3.5.12. Xác thực không thành công
+            Note over SV,VERIFY: 3.5.13. Sinh viên có thể yêu cầu<br/>gửi lại email xác thực
+        else Mã xác thực hợp lệ
+            TS->>UDB: 3.1.11. Cập nhật emailVerified = true
+            TS->>TDB: Đánh dấu mã đã được sử dụng
+            UDB-->>TS: Đã cập nhật tài khoản
+            TDB-->>TS: Đã cập nhật mã
+            TS-->>VERIFY: Xác thực thành công
+            VERIFY-->>SV: 3.1.12. Thông báo thành công<br/>và cho phép quay lại trang Đăng nhập
+        end
+    end

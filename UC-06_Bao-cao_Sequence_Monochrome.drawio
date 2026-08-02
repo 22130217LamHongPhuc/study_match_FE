@@ -1,0 +1,562 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" agent="Antigravity" version="24.7.17" type="device">
+  <diagram id="uc06-reports-sequence-mono" name="UC-06 Báo cáo">
+    <mxGraphModel dx="1420" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="3400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="UC-06 - SEQUENCE DIAGRAM BÁO CÁO VI PHẠM (MONOCHROME DETAILED)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=18;fontColor=#111111;" vertex="1" parent="1">
+          <mxGeometry x="200" y="15" width="1000" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Luồng xem danh sách, xem chi tiết, báo cáo người dùng, nhóm học tập, bài viết vi phạm ánh xạ qua ReportController &amp; ReportServiceImpl" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="200" y="50" width="1000" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="user_top" value="Người dùng&#10;(Sinh viên / Admin)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontStyle=1;fontSize=13;fontColor=#111111;" vertex="1" parent="1">
+          <mxGeometry x="40.0" y="90" width="50" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="user_bottom" value="Người dùng&#10;(Sinh viên / Admin)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontStyle=1;fontSize=13;fontColor=#111111;" vertex="1" parent="1">
+          <mxGeometry x="40.0" y="3250" width="50" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="user_life" value="" style="endArrow=none;dashed=1;dashPattern=6 6;html=1;strokeColor=#666666;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="165" as="sourcePoint" />
+            <mxPoint x="65" y="3250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ui_top" value="Frontend&#10;(ReportView)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160.0" y="95" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ui_bottom" value="Frontend&#10;(ReportView)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160.0" y="3250" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ui_life" value="" style="endArrow=none;dashed=1;dashPattern=6 6;html=1;strokeColor=#666666;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="165" as="sourcePoint" />
+            <mxPoint x="250" y="3250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="report_ctrl_top" value="ReportController / AdminReportController" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="390.0" y="95" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="report_ctrl_bottom" value="ReportController / AdminReportController" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="390.0" y="3250" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="report_ctrl_life" value="" style="endArrow=none;dashed=1;dashPattern=6 6;html=1;strokeColor=#666666;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="165" as="sourcePoint" />
+            <mxPoint x="480" y="3250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="report_svc_top" value="ReportServiceImpl&#10;(user-service)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620.0" y="95" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="report_svc_bottom" value="ReportServiceImpl&#10;(user-service)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620.0" y="3250" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="report_svc_life" value="" style="endArrow=none;dashed=1;dashPattern=6 6;html=1;strokeColor=#666666;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="165" as="sourcePoint" />
+            <mxPoint x="710" y="3250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="clients_top" value="Other Clients / Repositories&#10;(UserRepo, PostClient, GroupClient)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850.0" y="95" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="clients_bottom" value="Other Clients / Repositories&#10;(UserRepo, PostClient, GroupClient)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850.0" y="3250" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="clients_life" value="" style="endArrow=none;dashed=1;dashPattern=6 6;html=1;strokeColor=#666666;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="940" y="165" as="sourcePoint" />
+            <mxPoint x="940" y="3250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="db_top" value="Repositories / Database&#10;(ReportRepository / Database)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1080.0" y="95" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="db_bottom" value="Repositories / Database&#10;(ReportRepository / Database)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;fillColor=#FFFFFF;strokeColor=#111111;strokeWidth=1.2;fontColor=#111111;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1080.0" y="3250" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="db_life" value="" style="endArrow=none;dashed=1;dashPattern=6 6;html=1;strokeColor=#666666;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1170" y="165" as="sourcePoint" />
+            <mxPoint x="1170" y="3250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6110" value="&lt;b&gt;6.1.1.0.&lt;/b&gt; Mở chức năng Báo cáo từ menu hệ thống" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="195" as="sourcePoint" />
+            <mxPoint x="250" y="195" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6111" value="&lt;b&gt;6.1.1.1.&lt;/b&gt; Hiển thị giao diện danh sách báo cáo với các bộ lọc" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="235" as="sourcePoint" />
+            <mxPoint x="250" y="270" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="235" />
+              <mxPoint x="310" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6112" value="&lt;b&gt;6.1.1.2.&lt;/b&gt; GET /api/reports/my hoặc /api/admin/reports" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="290" as="sourcePoint" />
+            <mxPoint x="480" y="290" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6113" value="&lt;b&gt;6.1.1.3.&lt;/b&gt; Xác thực phiên đăng nhập, lấy định danh người dùng từ token/session &amp; kiểm tra quyền" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="330" as="sourcePoint" />
+            <mxPoint x="480" y="365" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="540" y="330" />
+              <mxPoint x="540" y="365" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6114" value="&lt;b&gt;6.1.1.4.&lt;/b&gt; getMyReports(reporterUserId, pageable) / getAllReports(status, targetType, reason, pageable)" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="385" as="sourcePoint" />
+            <mxPoint x="710" y="385" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6115" value="&lt;b&gt;6.1.1.5.&lt;/b&gt; Kiểm tra các tham số lọc như loại báo cáo, trạng thái, khoảng thời gian và phân trang" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="425" as="sourcePoint" />
+            <mxPoint x="710" y="460" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="425" />
+              <mxPoint x="770" y="460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6116" value="&lt;b&gt;6.1.1.6.&lt;/b&gt; findByReporterUserIdOrderByCreatedAtDesc() / findForAdmin()" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="475" as="sourcePoint" />
+            <mxPoint x="1170" y="475" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alt61" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#111111;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="45" y="515" width="1215" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="alt61_tag" value="&lt;b&gt;alt&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;align=center;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="45" y="515" width="65" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="alt61_cond" value="[Không tải được danh sách báo cáo]" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=2;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="120" y="515" width="500" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="m612" value="&lt;b&gt;6.1.2.&lt;/b&gt; Throws Exception / Lỗi truy vấn Database" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1170" y="550" as="sourcePoint" />
+            <mxPoint x="710" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m613" value="&lt;b&gt;6.1.3.&lt;/b&gt; ResponseEntity.status(500).body(ApiResponse(success=false))" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="600" as="sourcePoint" />
+            <mxPoint x="250" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m614" value="&lt;b&gt;6.1.4.&lt;/b&gt; Frontend hiển thị thông báo không thể tải danh sách báo cáo" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="640" as="sourcePoint" />
+            <mxPoint x="250" y="675" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="640" />
+              <mxPoint x="310" y="675" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n615" value="&lt;b&gt;6.1.5.&lt;/b&gt; Người dùng có thể tải lại dữ liệu hoặc thử lại sau" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="130" y="650" width="220" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="m6116_db" value="Trả về Page&amp;lt;Report&amp;gt;" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1170" y="730" as="sourcePoint" />
+            <mxPoint x="710" y="730" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6117" value="&lt;b&gt;6.1.1.7.&lt;/b&gt; Sắp xếp danh sách theo thời gian tạo mới nhất hoặc độ ưu tiên" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="770" as="sourcePoint" />
+            <mxPoint x="710" y="805" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="770" />
+              <mxPoint x="770" y="805" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6118" value="&lt;b&gt;6.1.1.8.&lt;/b&gt; map(reportMapper::toResponse) (ẩn các thông tin nội bộ)" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="810" as="sourcePoint" />
+            <mxPoint x="710" y="845" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="810" />
+              <mxPoint x="770" y="845" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6119" value="&lt;b&gt;6.1.1.9.&lt;/b&gt; ResponseEntity.ok(ApiResponse(success=true, data=Page&amp;lt;ReportResponse&amp;gt;))" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="860" as="sourcePoint" />
+            <mxPoint x="250" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m61110" value="&lt;b&gt;6.1.1.10.&lt;/b&gt; Frontend hiển thị danh sách báo cáo lên giao diện" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="900" as="sourcePoint" />
+            <mxPoint x="250" y="935" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="900" />
+              <mxPoint x="310" y="935" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6210" value="&lt;b&gt;6.2.1.0.&lt;/b&gt; Người dùng chọn một báo cáo trong danh sách" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="970" as="sourcePoint" />
+            <mxPoint x="250" y="970" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6211" value="&lt;b&gt;6.2.1.1.&lt;/b&gt; Frontend lấy mã báo cáo được chọn (reportId)" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="1010" as="sourcePoint" />
+            <mxPoint x="250" y="1045" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="1010" />
+              <mxPoint x="310" y="1045" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6212" value="&lt;b&gt;6.2.1.2.&lt;/b&gt; GET /api/reports/my/{reportId} hoặc /api/admin/reports/{reportId}" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="1060" as="sourcePoint" />
+            <mxPoint x="480" y="1060" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6213" value="&lt;b&gt;6.2.1.3.&lt;/b&gt; Xác thực người dùng và kiểm tra quyền xem báo cáo đó" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="1100" as="sourcePoint" />
+            <mxPoint x="480" y="1135" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="540" y="1100" />
+              <mxPoint x="540" y="1135" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6214" value="&lt;b&gt;6.2.1.4.&lt;/b&gt; getMyReportDetail(reporterUserId, reportId) / getReportDetailForAdmin(reportId)" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="1155" as="sourcePoint" />
+            <mxPoint x="710" y="1155" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6214_db" value="&lt;b&gt;6.2.1.4.&lt;/b&gt; findById(reportId) : Optional&amp;lt;Report&amp;gt;" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="1195" as="sourcePoint" />
+            <mxPoint x="1170" y="1195" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alt62" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#111111;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="45" y="1235" width="1215" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="alt62_tag" value="&lt;b&gt;alt&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;align=center;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="45" y="1235" width="65" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="alt62_cond" value="[Không tìm thấy báo cáo chi tiết]" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=2;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1235" width="500" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="m622" value="&lt;b&gt;6.2.2.&lt;/b&gt; findById(reportId) == empty / Không được phép xem" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1170" y="1270" as="sourcePoint" />
+            <mxPoint x="710" y="1270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m623" value="&lt;b&gt;6.2.3.&lt;/b&gt; ResponseEntity.status(404).body(ApiResponse(success=false, code=REPORT_NOT_FOUND))" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="1320" as="sourcePoint" />
+            <mxPoint x="250" y="1320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m624" value="&lt;b&gt;6.2.4.&lt;/b&gt; Frontend hiển thị thông báo không thể xem chi tiết báo cáo" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="1360" as="sourcePoint" />
+            <mxPoint x="250" y="1395" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="1360" />
+              <mxPoint x="310" y="1395" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n625" value="&lt;b&gt;6.2.5.&lt;/b&gt; Người dùng quay lại danh sách báo cáo" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="130" y="1375" width="220" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="m6215" value="&lt;b&gt;6.2.1.5.&lt;/b&gt; Lấy thông tin người gửi, lý do, minh chứng &amp; trạng thái" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="1450" as="sourcePoint" />
+            <mxPoint x="1170" y="1450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6216" value="&lt;b&gt;6.2.1.6.&lt;/b&gt; Truy vấn thêm thông tin đối tượng bị báo cáo (existsById)" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="1490" as="sourcePoint" />
+            <mxPoint x="940" y="1490" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6217" value="&lt;b&gt;6.2.1.7.&lt;/b&gt; map(reportMapper::toResponse) (che các thông tin nhạy cảm)" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="1530" as="sourcePoint" />
+            <mxPoint x="710" y="1565" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="1530" />
+              <mxPoint x="770" y="1565" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6218" value="&lt;b&gt;6.2.1.8.&lt;/b&gt; ResponseEntity.ok(ApiResponse(success=true, data=ReportResponse))" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="1580" as="sourcePoint" />
+            <mxPoint x="250" y="1580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6219" value="&lt;b&gt;6.2.1.9.&lt;/b&gt; Frontend hiển thị màn hình hoặc hộp thoại chi tiết báo cáo" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="1620" as="sourcePoint" />
+            <mxPoint x="250" y="1655" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="1620" />
+              <mxPoint x="310" y="1655" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6310" value="&lt;b&gt;6.3.1.0.&lt;/b&gt; Mở hồ sơ người dùng khác &amp; chọn Báo cáo người dùng" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="1690" as="sourcePoint" />
+            <mxPoint x="250" y="1690" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6311" value="&lt;b&gt;6.3.1.1.&lt;/b&gt; Frontend hiển thị form báo cáo gồm lý do, mô tả &amp; minh chứng" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="1730" as="sourcePoint" />
+            <mxPoint x="250" y="1765" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="1730" />
+              <mxPoint x="310" y="1765" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6312" value="&lt;b&gt;6.3.1.2.&lt;/b&gt; Nhập nội dung báo cáo &amp; nhấn Gửi báo cáo" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="1785" as="sourcePoint" />
+            <mxPoint x="250" y="1785" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6313" value="&lt;b&gt;6.3.1.3.&lt;/b&gt; Frontend kiểm tra dữ liệu bắt buộc &amp; tệp đính kèm" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="1825" as="sourcePoint" />
+            <mxPoint x="250" y="1860" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="1825" />
+              <mxPoint x="310" y="1860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6314" value="&lt;b&gt;6.3.1.4.&lt;/b&gt; POST /api/reports (CreateReportRequest)" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="1880" as="sourcePoint" />
+            <mxPoint x="480" y="1880" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6315" value="&lt;b&gt;6.3.1.5.&lt;/b&gt; createReport(reporterUserId, request) : ReportResponse" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="1920" as="sourcePoint" />
+            <mxPoint x="710" y="1920" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6315_chk" value="&lt;b&gt;6.3.1.5.&lt;/b&gt; existsById(targetId) : boolean" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="1960" as="sourcePoint" />
+            <mxPoint x="940" y="1960" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6316" value="&lt;b&gt;6.3.1.6.&lt;/b&gt; Kiểm tra tự báo cáo bản thân &amp; trùng lặp" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="2000" as="sourcePoint" />
+            <mxPoint x="710" y="2035" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="2000" />
+              <mxPoint x="770" y="2035" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6317" value="&lt;b&gt;6.3.1.7.&lt;/b&gt; Kiểm tra lý do báo cáo hợp lệ và mô tả không rỗng" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="2040" as="sourcePoint" />
+            <mxPoint x="710" y="2075" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="2040" />
+              <mxPoint x="770" y="2075" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alt63" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#111111;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="45" y="2085" width="1215" height="205" as="geometry" />
+        </mxCell>
+        <mxCell id="alt63_tag" value="&lt;b&gt;alt&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;align=center;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="45" y="2085" width="65" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="alt63_cond" value="[Dữ liệu báo cáo người dùng không hợp lệ]" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=2;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="120" y="2085" width="500" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="m632" value="&lt;b&gt;6.3.2.&lt;/b&gt; throw AppException(StatusCode.SELF_REPORT_NOT_ALLOWED / DUPLICATE_REPORT / USER_NOT_FOUND)" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="2120" as="sourcePoint" />
+            <mxPoint x="480" y="2120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m633" value="&lt;b&gt;6.3.3.&lt;/b&gt; ResponseEntity.status(400).body(ApiResponse(success=false, code=ERROR))" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="2170" as="sourcePoint" />
+            <mxPoint x="250" y="2170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m634" value="&lt;b&gt;6.3.4.&lt;/b&gt; Frontend hiển thị lỗi và yêu cầu Sinh viên chỉnh sửa thông tin báo cáo" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="2210" as="sourcePoint" />
+            <mxPoint x="250" y="2245" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="2210" />
+              <mxPoint x="310" y="2245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n635" value="&lt;b&gt;6.3.5.&lt;/b&gt; Sinh viên nhập lại thông tin và gửi lại báo cáo từ bước &lt;b&gt;6.3.1.2&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="130" y="2225" width="220" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="alt66" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#111111;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="45" y="2305" width="1215" height="205" as="geometry" />
+        </mxCell>
+        <mxCell id="alt66_tag" value="&lt;b&gt;alt&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;align=center;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="45" y="2305" width="65" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="alt66_cond" value="[Tệp minh chứng không hợp lệ]" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=2;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="120" y="2305" width="500" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="m661" value="&lt;b&gt;6.6.1.&lt;/b&gt; Phát hiện tệp minh chứng vượt dung lượng, sai định dạng hoặc không thể lưu trữ" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="2340" as="sourcePoint" />
+            <mxPoint x="710" y="2375" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="2340" />
+              <mxPoint x="770" y="2375" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m662" value="&lt;b&gt;6.6.2.&lt;/b&gt; ResponseEntity.status(400).body(ApiResponse(success=false, code=INVALID_EVIDENCE))" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="780" y="2390" as="sourcePoint" />
+            <mxPoint x="250" y="2390" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m663" value="&lt;b&gt;6.6.3.&lt;/b&gt; Frontend hiển thị lỗi tại trường minh chứng" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="2430" as="sourcePoint" />
+            <mxPoint x="250" y="2465" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="2430" />
+              <mxPoint x="310" y="2465" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n664" value="&lt;b&gt;6.6.4.&lt;/b&gt; Sinh viên thay đổi hoặc xóa tệp minh chứng rồi gửi lại" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="130" y="2445" width="220" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="m6319" value="&lt;b&gt;6.3.1.9.&lt;/b&gt; Tạo bản ghi báo cáo với loại USER và trạng thái PENDING" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="2530" as="sourcePoint" />
+            <mxPoint x="710" y="2565" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="2530" />
+              <mxPoint x="770" y="2565" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m63110" value="&lt;b&gt;6.3.1.10.&lt;/b&gt; save(report) (lưu báo cáo vào Database)" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="2575" as="sourcePoint" />
+            <mxPoint x="1170" y="2575" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m63111" value="&lt;b&gt;6.3.1.11.&lt;/b&gt; Tạo thông báo / log nghiệp vụ cho bộ phận quản trị" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="2615" as="sourcePoint" />
+            <mxPoint x="710" y="2650" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="2615" />
+              <mxPoint x="770" y="2650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m63112" value="&lt;b&gt;6.3.1.12.&lt;/b&gt; ResponseEntity.ok(ApiResponse(success=true, data=ReportResponse))" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="2665" as="sourcePoint" />
+            <mxPoint x="250" y="2665" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m63113" value="&lt;b&gt;6.3.1.13.&lt;/b&gt; Frontend hiển thị thông báo đã gửi báo cáo và đóng form" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;dashed=1;dashPattern=6 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="2705" as="sourcePoint" />
+            <mxPoint x="250" y="2740" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="2705" />
+              <mxPoint x="310" y="2740" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6410" value="&lt;b&gt;6.4.1.0.&lt;/b&gt; Sinh viên mở trang nhóm học tập &amp; chọn Báo cáo nhóm" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="2775" as="sourcePoint" />
+            <mxPoint x="250" y="2775" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6411" value="&lt;b&gt;6.4.1.1.&lt;/b&gt; Frontend hiển thị form báo cáo nhóm" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=5;endArrow=block;endFill=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="2815" as="sourcePoint" />
+            <mxPoint x="250" y="2850" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="2815" />
+              <mxPoint x="310" y="2850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6412" value="&lt;b&gt;6.4.1.2.&lt;/b&gt; Nhập thông tin báo cáo &amp; nhấn Gửi báo cáo" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="65" y="2865" as="sourcePoint" />
+            <mxPoint x="250" y="2865" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6414" value="&lt;b&gt;6.4.1.4.&lt;/b&gt; POST /api/reports (CreateReportRequest)" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="2905" as="sourcePoint" />
+            <mxPoint x="480" y="2905" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6415" value="&lt;b&gt;6.4.1.5.&lt;/b&gt; createReport(reporterUserId, request) : ReportResponse" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="480" y="2945" as="sourcePoint" />
+            <mxPoint x="710" y="2945" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6415_chk" value="&lt;b&gt;6.4.1.5.&lt;/b&gt; existsById(targetId) : boolean (kiểm tra tồn tại nhóm)" style="html=1;endArrow=block;endFill=1;strokeWidth=1;strokeColor=#111111;fontColor=#111111;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="2985" as="sourcePoint" />
+            <mxPoint x="940" y="2985" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;Quy ước:&lt;/b&gt; Mũi tên liền: lời gọi (Request)  |  Mũi tên đứt: phản hồi (Response)  |  Khung alt: luồng ngoại lệ/thay thế  |  Các số khớp 1-1 với UC-06" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="200" y="3120" width="1000" height="38" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

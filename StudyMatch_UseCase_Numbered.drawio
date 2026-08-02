@@ -1,0 +1,185 @@
+<mxfile host="app.diagrams.net" modified="2026-08-02T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="studymatch-numbered" name="StudyMatch Use Case">
+<mxGraphModel dx="1605" dy="1944" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="1040" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="D3uvF3qQc-sSzD019I93-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="" vertex="1">
+      <mxGeometry height="1290" width="985" x="290" y="-125" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_teacher" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontColor=#000000;fillColor=none;strokeColor=#000000;strokeWidth=1;" value="Sinh viên" vertex="1">
+      <mxGeometry height="92" width="62" x="80" y="480" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_student" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontColor=#000000;fillColor=none;strokeColor=#000000;strokeWidth=1;" value="Admin" vertex="1">
+      <mxGeometry height="92" width="62" x="1520" y="560" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_shared" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-05. Đăng Nhập" vertex="1">
+      <mxGeometry height="64" width="190" x="660" y="350" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_teacher_shared" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_shared">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_student_shared" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_shared">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_admin_users" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-01. Quản lí hồ sơ học tập" vertex="1">
+      <mxGeometry height="64" width="210" x="360" y="-60" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_admin_system" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-02. Kết nối bạn bè" vertex="1">
+      <mxGeometry height="64" width="210" x="450" y="46" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_admin_supervise" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-11. Nhắn tin" vertex="1">
+      <mxGeometry height="64" width="235" x="365" y="960" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_teacher_lessons" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-04. Quản lí lịch học" vertex="1">
+      <mxGeometry height="64" width="235" x="600" y="250" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_teacher_teacher_lessons" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_teacher_lessons">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_teacher_tests" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-06. Báo cáo" vertex="1">
+      <mxGeometry height="64" width="235" x="590" y="460" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_teacher_teacher_tests" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_teacher_tests">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_teacher_classes" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-08. Tài liệu học tập" vertex="1">
+      <mxGeometry height="64" width="235" x="525" y="670" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_teacher_teacher_classes" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_teacher_classes">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_teacher_tools" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-09. Thống kê học tập" vertex="1">
+      <mxGeometry height="64" width="235" x="497.5" y="760" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_teacher_teacher_tools" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_teacher_tools">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_student_classes" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-12. Quản lí người dùng" vertex="1">
+      <mxGeometry height="64" width="235" x="900" y="58" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_student_student_classes" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_student_classes">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_student_lessons" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-13. Quản lí tin nhắn" vertex="1">
+      <mxGeometry height="64" width="235" x="850" y="186" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_student_student_lessons" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_student_lessons">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_student_tests" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-14. Thống kê" vertex="1">
+      <mxGeometry height="64" width="235" x="880" y="330" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_student_student_tests" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_student_tests">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="overall_student_tools" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-15. Quản lí chương trình học tập" vertex="1">
+      <mxGeometry height="64" width="235" x="890" y="550" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_student_student_tools" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_student_tools">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="assoc_teacher_support" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="overall_admin_supervise">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="661.6439759335158" y="852.5375045372834" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="assoc_student_support" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="D3uvF3qQc-sSzD019I93-8">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="752.5750401226182" y="852.4482517563442" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-1" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-03. Đăng kí" vertex="1">
+      <mxGeometry height="64" width="210" x="510" y="150" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-2" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-10. Quản lí mạng xã hội" vertex="1">
+      <mxGeometry height="64" width="235" x="440" y="860" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-4" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-20. Nhật ký hoạt động" vertex="1">
+      <mxGeometry height="64" width="235" x="990" y="-40" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-5" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-17. Quản lí nhóm học" vertex="1">
+      <mxGeometry height="64" width="235" x="820" y="797" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-6" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-18. Quản lí báo cáo" vertex="1">
+      <mxGeometry height="64" width="235" x="870" y="923" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-7" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-19. Quản lí tài liệu học tập" vertex="1">
+      <mxGeometry height="64" width="235" x="910" y="1024" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-8" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-16. AI Matching" vertex="1">
+      <mxGeometry height="64" width="235" x="850" y="670" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-11" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_admin_users">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="540" y="496" as="sourcePoint" />
+        <mxPoint x="1027" y="310" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-13" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="overall_admin_system">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="460" y="502" as="sourcePoint" />
+        <mxPoint x="962" y="330" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-14" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="D3uvF3qQc-sSzD019I93-1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="500" y="485" as="sourcePoint" />
+        <mxPoint x="1016" y="330" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-15" edge="1" parent="1" source="D3uvF3qQc-sSzD019I93-2" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="actor_teacher">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="450" y="870" as="sourcePoint" />
+        <mxPoint x="801" y="1339" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-17" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;fontSize=13;fontColor=#000000;" value="UC-07. Quản lí nhóm" vertex="1">
+      <mxGeometry height="64" width="235" x="570" y="570" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-18" edge="1" parent="1" source="actor_teacher" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="D3uvF3qQc-sSzD019I93-17">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="640" as="sourcePoint" />
+        <mxPoint x="934" y="852" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-19" edge="1" parent="1" source="overall_teacher_tools" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;innerLoopWaypoints=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="overall_teacher_tools">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-20" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="D3uvF3qQc-sSzD019I93-5">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1658" y="869" as="sourcePoint" />
+        <mxPoint x="1250" y="810" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-21" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="D3uvF3qQc-sSzD019I93-6">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1937" y="950" as="sourcePoint" />
+        <mxPoint x="1450" y="998" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-22" edge="1" parent="1" source="actor_student" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="D3uvF3qQc-sSzD019I93-7">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1888" y="910" as="sourcePoint" />
+        <mxPoint x="1430" y="1064" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-23" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontColor=#000000;fillColor=none;strokeColor=#000000;strokeWidth=1;" value="Super Admin" vertex="1">
+      <mxGeometry height="92" width="62" x="1520" y="122" as="geometry" />
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-24" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="actor_student" value="">
+      <mxGeometry height="50" relative="1" width="50" as="geometry">
+        <mxPoint x="1551" y="250" as="sourcePoint" />
+        <mxPoint x="1010" y="380" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="D3uvF3qQc-sSzD019I93-25" edge="1" parent="1" source="D3uvF3qQc-sSzD019I93-23" style="html=1;endArrow=none;startArrow=none;strokeColor=#000000;strokeWidth=1;" target="D3uvF3qQc-sSzD019I93-4">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1823" y="823" as="sourcePoint" />
+        <mxPoint x="1390" y="370" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
+  </diagram>
+</mxfile>

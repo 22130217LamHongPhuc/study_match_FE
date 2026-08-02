@@ -1,0 +1,70 @@
+@startuml
+left to right direction
+skinparam monochrome true
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle stickman
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  ArrowColor black
+  FontColor black
+}
+
+actor "Học sinh" as Student
+actor "Admin" as Admin
+
+rectangle "StudyMatch" {
+  usecase "Quản lí tài khoản" as UC_Account
+  usecase "Quản lí lịch học" as UC_Schedule
+  usecase "Đăng nhập" as UC_Login
+  usecase "Đăng ký" as UC_Register
+  usecase "Kết nối bạn bè" as UC_Friends
+  usecase "Nhắn tin" as UC_Message
+  usecase "Quản lí nhóm" as UC_Groups
+  usecase "Báo cáo" as UC_Report
+
+  usecase "Thống kê" as UC_Stats
+  usecase "Quản lí người dùng" as UC_Users
+  usecase "Quản lí nhóm cộng đồng" as UC_CommunityGroups
+  usecase "Quản lí báo cáo" as UC_Reports
+}
+
+' Các liên kết của Học sinh
+Student .. UC_Account
+Student .. UC_Schedule
+Student .. UC_Login
+Student .. UC_Register
+Student .. UC_Friends
+Student .. UC_Message
+Student .. UC_Groups
+Student .. UC_Report
+
+' Các liên kết của Admin
+Admin .. UC_Stats
+Admin .. UC_Users
+Admin .. UC_Login
+Admin .. UC_CommunityGroups
+Admin .. UC_Reports
+
+' Ép bố cục gần giống hình mẫu
+UC_Account -[hidden]down- UC_Schedule
+UC_Schedule -[hidden]down- UC_Login
+UC_Login -[hidden]down- UC_Register
+UC_Register -[hidden]down- UC_Friends
+UC_Friends -[hidden]down- UC_Message
+UC_Message -[hidden]down- UC_Groups
+UC_Groups -[hidden]down- UC_Report
+
+UC_Stats -[hidden]down- UC_Users
+UC_Users -[hidden]down- UC_CommunityGroups
+UC_CommunityGroups -[hidden]down- UC_Reports
+
+UC_Account -[hidden]right- UC_Stats
+UC_Login -[hidden]right- UC_Users
+UC_Friends -[hidden]right- UC_CommunityGroups
+UC_Report -[hidden]right- UC_Reports
+
+Student -[hidden]right- UC_Login
+UC_Login -[hidden]right- Admin
+@enduml
