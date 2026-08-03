@@ -34,7 +34,7 @@ const chatReducer = createSlice({
     name: 'chat',
     initialState,
     reducers: {
-        updateCurrentConverId(state, action: PayloadAction<{ currentConversationId: number }>) {
+        updateCurrentConverId(state, action: PayloadAction<{ currentConversationId: number | null }>) {
             state.currentConversationId = action.payload.currentConversationId
         },
         updateNewMess(state, action: PayloadAction<SocketResponse>) {

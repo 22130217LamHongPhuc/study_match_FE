@@ -166,7 +166,7 @@ export const sendDelivered = (conversationId: number, messageIds: number[]) => {
 export const updateConversationColor = async (conversationId: number, color: string): Promise<any> => {
     const url = `${BASE_CHAT_SERVICE}/conversation/${conversationId}/color?color=${encodeURIComponent(color)}`;
     const res = await apiFetch<any>(url, { method: 'PUT' });
-    if (!res.success) {
+    if (!isApiSuccess(res)) {
         throw new Error('Failed to update conversation color');
     }
     return res;
@@ -175,7 +175,7 @@ export const updateConversationColor = async (conversationId: number, color: str
 export const updateConversationFont = async (conversationId: number, font: string): Promise<any> => {
     const url = `${BASE_CHAT_SERVICE}/conversation/${conversationId}/font?font=${encodeURIComponent(font)}`;
     const res = await apiFetch<any>(url, { method: 'PUT' });
-    if (!res.success) {
+    if (!isApiSuccess(res)) {
         throw new Error('Failed to update conversation font');
     }
     return res;
@@ -206,20 +206,20 @@ export const setGroupConversationPinned = async (userId: number, groupId: number
         method: 'POST',
         body: JSON.stringify({ userId, groupId, pinned })
     });
-    if (!res.success) throw new Error('Cannot pin group conversation');
+    if (!isApiSuccess(res)) throw new Error('Cannot pin group conversation');
     return res;
 };
 
 export const setMessagePinned = async (conversationId: number, messageId: number, pinned: boolean): Promise<any> => {
     const url = `${BASE_CHAT_SERVICE}/messages/${messageId}/pin?conversationId=${conversationId}&pinned=${pinned}`;
     const res = await apiFetch<any>(url, { method: 'PATCH' });
-    if (!res.success) throw new Error('Cannot pin message');
+    if (!isApiSuccess(res)) throw new Error('Cannot pin message');
     return res;
 };
 
 export const loadMediaAndFiles = async (conversationId: number, currentUserId: number): Promise<any> => {
     const url = `${BASE_CHAT_SERVICE}/conversation/${conversationId}/media-files?currentUser=${currentUserId}`;
     const res = await apiFetch<any>(url, { method: 'GET' });
-    if (!res.success) throw new Error('Cannot load media and files');
+    if (!isApiSuccess(res)) throw new Error('Cannot load media and files');
     return res.data || [];
 };

@@ -362,8 +362,10 @@ function Topbar({
   isSuperAdmin?: boolean;
 }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const fullName = adminProfile?.fullName || "Admin";
   const avatarUrl = adminProfile?.avatarUrl;
+  const hasAvatar = avatarUrl && avatarUrl !== "null" && avatarUrl !== "undefined" && avatarUrl.trim() !== "";
 
   const initials = fullName
     ? fullName
@@ -396,10 +398,11 @@ function Topbar({
           className="group relative flex cursor-pointer items-center gap-2 select-none"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         >
-          {avatarUrl ? (
+          {hasAvatar && !imageError ? (
             <img
               src={avatarUrl}
               alt={fullName}
+              onError={() => setImageError(true)}
               className="h-8 w-8 rounded-full object-cover"
             />
           ) : (

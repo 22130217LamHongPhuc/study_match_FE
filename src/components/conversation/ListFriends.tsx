@@ -838,6 +838,11 @@ export default function ListFriends({ onBootstrapStateChange }: ListFriendsProps
             return;
         }
 
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+        if (isMobile) {
+            return;
+        }
+
         // Chỉ auto-open 1 lần khi vào trang và chưa chọn conversation nào
         if (!loading && !hasActiveChat && unifiedConversations.length > 0 && !autoRedirectedRef.current) {
             autoRedirectedRef.current = true;

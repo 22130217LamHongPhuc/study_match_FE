@@ -250,10 +250,24 @@ async function refreshToken(): Promise<string | null> {
 /** social_service uses {code:200,message:"Success"}; user_service uses {success:true} */
 export function isApiSuccess(res: any): boolean {
   if (res == null) return false;
+  
+  console.log("[isApiSuccess] Checking response:", res);
+
   if (res.success === true) return true;
   if (res.success === false) return false;
-  if (typeof res.code === "number" && res.code >= 200 && res.code < 300) return true;
-  if (res.code === StatusCode.SUCCESS || res.code === "SUCCESS") return true;
+  
+  const codeVal = res.code;
+  if (codeVal !== undefined && codeVal !== null) {
+    if (typeof codeVal === "number" && codeVal >= 200 && codeVal < 300) return true;
+    if (typeof codeVal === "string") {
+      const parsed = parseInt(codeVal, 10);
+      if (!isNaN(parsed) && parsed >= 200 && parsed < 300) return true;
+      if (codeVal.toUpperCase() === "SUCCESS") return true;
+    }
+  }
+  
+  if (res.message && res.message.toUpperCase() === "SUCCESS") return true;
+  
   return false;
 }
 

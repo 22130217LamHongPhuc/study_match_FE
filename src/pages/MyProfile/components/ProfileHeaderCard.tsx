@@ -28,17 +28,20 @@ function getGenderLabel(gender: string): string {
 
 export default function ProfileHeaderCard({ profile }: ProfileHeaderCardProps) {
   const [openEdit, setOpenEdit] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const avatarUrl = localStorage.getItem("avatarUrl");
+  const hasAvatar = avatarUrl && avatarUrl !== "null" && avatarUrl !== "undefined" && avatarUrl.trim() !== "";
   const initials = getInitials(profile.fullName);
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left w-full sm:w-auto">
-          {avatarUrl ? (
+          {hasAvatar && !imageError ? (
             <img
               src={avatarUrl}
               alt={profile.fullName}
+              onError={() => setImageError(true)}
               className="h-16 w-16 rounded-full object-cover border-2 border-blue-100 shadow-sm shrink-0"
             />
           ) : (

@@ -14,6 +14,7 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import InfoIcon from "@mui/icons-material/Info";
 import StopCircleIcon from "@mui/icons-material/StopCircle";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { toast } from "react-toastify";
 import {
   Avatar,
@@ -29,6 +30,7 @@ import {
   Paper,
   Typography,
   Skeleton,
+  useMediaQuery,
 } from "@mui/material";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -432,6 +434,18 @@ export default function ConversationPage() {
       }
     }
   }, [callState.status]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(updateCurrentConverId({ currentConversationId: null }));
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!routeState) {
+      dispatch(updateCurrentConverId({ currentConversationId: null }));
+    }
+  }, [routeState, dispatch]);
 
   useEffect(() => {
     if (
@@ -2004,6 +2018,7 @@ export default function ConversationPage() {
     ));
   }, [clampFriendsPanelWidth]);
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const currentTheme = getThemeById(themeId);
 
   return (
@@ -2020,9 +2035,11 @@ export default function ConversationPage() {
       <Box
         sx={{
           flex: 1,
-          display: "flex",
+          display: isMobile 
+            ? (hasSelectedConversation ? "flex" : "none") 
+            : "flex",
           flexDirection: "column",
-          minWidth: CHAT_PANEL_MIN_WIDTH,
+          minWidth: isMobile ? 0 : CHAT_PANEL_MIN_WIDTH,
           minHeight: 0,
           background: currentTheme.background || "#eef1f8",
           overflow: "hidden",
@@ -2042,33 +2059,42 @@ export default function ConversationPage() {
             bgcolor: "#fff",
           }}
         >
-          <Box
-            onClick={canOpenPeerProfile ? handleOpenPeerProfile : undefined}
-            onKeyDown={(event) => {
-              if (!canOpenPeerProfile) return;
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                handleOpenPeerProfile();
-              }
-            }}
-            role={canOpenPeerProfile ? "button" : undefined}
-            tabIndex={canOpenPeerProfile ? 0 : undefined}
-            title={canOpenPeerProfile ? "Xem hồ sơ" : undefined}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.25,
-              minWidth: 0,
-              borderRadius: "10px",
-              cursor: canOpenPeerProfile ? "pointer" : "default",
-              pr: 0,
-              transition: "background-color 0.15s ease, padding-right 0.15s ease",
-              "&:hover": canOpenPeerProfile ? { bgcolor: "rgba(15, 23, 42, 0.04)", pr: "20px" } : undefined,
-              "&:focus-visible": canOpenPeerProfile
-                ? { outline: "2px solid #2563eb", outlineOffset: 3 }
-                : undefined,
-            }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", minWidth: 0, gap: 0.5 }}>
+            {isMobile && (
+              <IconButton
+                onClick={() => navigate("/conversation", { state: null })}
+                sx={{ mr: 0.5, ml: -1.25, color: "rgb(55, 145, 250)" }}
+              >
+                <ArrowBackIcon sx={{ fontSize: 22 }} />
+              </IconButton>
+            )}
+            <Box
+              onClick={canOpenPeerProfile ? handleOpenPeerProfile : undefined}
+              onKeyDown={(event) => {
+                if (!canOpenPeerProfile) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleOpenPeerProfile();
+                }
+              }}
+              role={canOpenPeerProfile ? "button" : undefined}
+              tabIndex={canOpenPeerProfile ? 0 : undefined}
+              title={canOpenPeerProfile ? "Xem hồ sơ" : undefined}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.25,
+                minWidth: 0,
+                borderRadius: "10px",
+                cursor: canOpenPeerProfile ? "pointer" : "default",
+                pr: 0,
+                transition: "background-color 0.15s ease, padding-right 0.15s ease",
+                "&:hover": canOpenPeerProfile ? { bgcolor: "rgba(15, 23, 42, 0.04)", pr: "20px" } : undefined,
+                "&:focus-visible": canOpenPeerProfile
+                  ? { outline: "2px solid #2563eb", outlineOffset: 3 }
+                  : undefined,
+              }}
+            >
             {isConversationViewLoading ? (
               <>
                 <Skeleton
@@ -2121,7 +2147,7 @@ export default function ConversationPage() {
                     />
                   )}
                 </Box>
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography sx={{ fontWeight: 750, fontSize: 16.5, color: "#111827", lineHeight: 1.25 }} noWrap>
                     {displayName}
                   </Typography>
@@ -2129,7 +2155,8 @@ export default function ConversationPage() {
               </>
             )}
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
             <IconButton disabled={callState.status !== "IDLE"} onClick={() => handleManagedStartCall("AUDIO")} sx={{ color: "rgb(55, 145, 250)", p: 0.85 }}>
               <CallIcon sx={{ fontSize: 22 }} />
             </IconButton>
@@ -2577,6 +2604,7 @@ export default function ConversationPage() {
         onPointerDown={handleFriendsPanelResizeStart}
         onKeyDown={handleFriendsPanelResizeKeyDown}
         sx={{
+          display: isMobile ? "none" : "flex",
           width: 8,
           flexShrink: 0,
           cursor: "col-resize",
@@ -2610,14 +2638,17 @@ export default function ConversationPage() {
 
       <Box
         sx={{
-          width: friendsPanelWidth,
-          minWidth: FRIENDS_PANEL_MIN_WIDTH,
-          maxWidth: FRIENDS_PANEL_MAX_WIDTH,
+          width: isMobile ? "100%" : friendsPanelWidth,
+          minWidth: isMobile ? 0 : FRIENDS_PANEL_MIN_WIDTH,
+          maxWidth: isMobile ? "100%" : FRIENDS_PANEL_MAX_WIDTH,
           height: "100%",
           minHeight: 0,
           flexShrink: 0,
           overflow: "hidden",
           bgcolor: "#f4f6fb",
+          display: isMobile 
+            ? (hasSelectedConversation ? "none" : "block") 
+            : "block",
         }}
       >
         <ListFriends onBootstrapStateChange={handleConversationListBootstrap} />

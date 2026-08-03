@@ -830,7 +830,10 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   }}
                 >
                   <Avatar
-                    src={currentUserProfile?.avatarUrl || user?.avatar || localStorage.getItem("avatarUrl") || undefined}
+                    src={(() => {
+                      const url = currentUserProfile?.avatarUrl || user?.avatar || localStorage.getItem("avatarUrl");
+                      return (url && url !== "null" && url !== "undefined" && url.trim() !== "") ? url : undefined;
+                    })()}
                     sx={{ width: 32, height: 32 }}
                   />
                   <Box sx={{ textAlign: "left", display: { xs: "none", md: "block" } }}>
