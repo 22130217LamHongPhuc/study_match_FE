@@ -152,22 +152,17 @@ export default function FeedbackSubmitSheet({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex justify-center bg-gray-900/35 py-2">
-      <section className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl rounded-xl">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 p-4">
+      <section className="flex w-full max-w-md max-h-[90vh] flex-col bg-white shadow-2xl rounded-xl overflow-hidden">
         <div className="border-b border-gray-100 px-5 py-4">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <MessageSquareText size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  {getFeedbackTitle(type)}
-                </h3>
-                <p className="mt-1 text-sm leading-5 text-gray-500">
-                  {getFeedbackHint(type)}
-                </p>
-              </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">
+                {getFeedbackTitle(type)}
+              </h3>
+              <p className="mt-1 text-sm leading-5 text-gray-500">
+                {getFeedbackHint(type)}
+              </p>
             </div>
 
             <button
@@ -190,12 +185,12 @@ export default function FeedbackSubmitSheet({
           {!canSubmit ? (
             <EmptyState text="Hiện tại bạn chưa thể gửi phản hồi cho buổi học này." />
           ) : submitted ? (
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-5 text-center">
-              <CheckCircle2 className="mx-auto text-emerald-600" size={34} />
-              <div className="mt-3 text-sm font-bold text-emerald-800">
+            <div className="rounded-xl border border-gray-100 bg-gray-50/50 px-4 py-5 text-center">
+              <CheckCircle2 className="mx-auto text-emerald-500" size={32} />
+              <div className="mt-3 text-sm font-bold text-gray-900">
                 Cảm ơn bạn đã gửi đánh giá
               </div>
-              <p className="mt-1 text-sm leading-5 text-emerald-700">
+              <p className="mt-1 text-sm leading-5 text-gray-500">
                 Phản hồi của bạn sẽ giúp buổi học sau phù hợp hơn.
               </p>
             </div>
@@ -249,7 +244,7 @@ export default function FeedbackSubmitSheet({
                 <select
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 >
                   <option value="">Chọn lý do rời sớm</option>
                   <option value="network">Mất kết nối</option>
@@ -263,7 +258,7 @@ export default function FeedbackSubmitSheet({
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
                 rows={isFullFeedback ? 5 : 4}
-                className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm leading-6 text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm leading-6 text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
                 placeholder={type ? getFeedbackPlaceholder(type) : ""}
               />
 
@@ -276,7 +271,7 @@ export default function FeedbackSubmitSheet({
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "Đang gửi..." : "Gửi đánh giá"}
               </button>
@@ -321,7 +316,7 @@ function StarRating({
       className={
         compact
           ? "rounded-xl border border-gray-100 bg-white px-3 py-3"
-          : "rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4"
+          : "rounded-xl border border-amber-100/70 bg-amber-50/20 px-4 py-4"
       }
     >
       <div className="mb-2 flex items-center justify-between gap-3">
@@ -340,8 +335,8 @@ function StarRating({
               aria-label={`${score} sao`}
               className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
                 active
-                  ? "bg-blue-100 text-blue-500"
-                  : "bg-gray-100 text-gray-300 hover:bg-blue-50 hover:text-blue-400"
+                  ? "bg-amber-100 text-amber-500"
+                  : "bg-gray-100 text-gray-300 hover:bg-amber-50 hover:text-amber-400"
               }`}
             >
               <Star

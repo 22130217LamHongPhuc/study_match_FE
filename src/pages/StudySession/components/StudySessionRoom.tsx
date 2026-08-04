@@ -190,7 +190,7 @@ export function StudySessionRoom({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-[#0b0f19]">
+    <div className="fixed inset-0 z-[9999] flex flex-col bg-[#0b0f19] overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3">
         <div className="flex items-center gap-3">
           <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" />
@@ -221,7 +221,7 @@ export function StudySessionRoom({
           </div>
         </div>
       ) : (
-        <div ref={containerRef} className="flex-1" />
+        <div ref={containerRef} className="w-full flex-1 min-h-0 zego-custom-container" />
       )}
     </div>
   );

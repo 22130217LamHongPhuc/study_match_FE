@@ -210,3 +210,8 @@ html {
 .Toastify__progress-bar--info {
   background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;
 }
+
+/* Make Zego Cloud video elements fill the containers without black bars */
+.zego-custom-container video {
+  object-fit: cover !important;
+}

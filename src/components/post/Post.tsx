@@ -561,7 +561,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
   };
 
   const getReactionUI = (reactionType?: string | null) => {
-    if (!reactionType) return { icon: <ThumbUpOutlinedIcon sx={{ fontSize: 20, color: "#8898aa" }} />, color: "#8898aa" };
+    if (!reactionType) return { icon: <ThumbUpOutlinedIcon sx={{ fontSize: 20, color: "inherit" }} />, color: "#8898aa" };
     switch (reactionType.toUpperCase()) {
       case "LOVE":
         return { icon: <span style={{ fontSize: 22 }}>❤️</span>, color: "#f43f5e" };
@@ -575,7 +575,7 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
         return { icon: <span style={{ fontSize: 22 }}>😡</span>, color: "#2563eb" };
       case "LIKE":
       default:
-        return { icon: <ThumbUpIcon sx={{ fontSize: 22, color: "#1877f2" }} />, color: "#1877f2" };
+        return { icon: <ThumbUpIcon sx={{ fontSize: 22, color: "inherit" }} />, color: "#1877f2" };
     }
   };
 
@@ -972,20 +972,15 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
               gap: 1,
               py: 1,
               cursor: "pointer",
-              borderRadius: "30px",
-              bgcolor: "#f8fafc",
-              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+              bgcolor: post.likedByViewer ? "#eff6ff" : "transparent",
               transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
               color: rxUI.color,
               "&:hover": {
-                bgcolor: "#f1f5f9",
-                borderColor: "#cbd5e1",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 12px rgba(15, 23, 42, 0.05)",
-                color: rxUI.color === "#8898aa" ? "#1877f2" : rxUI.color,
+                bgcolor: post.likedByViewer ? "#dbeafe" : "#f1f5f9",
               },
               "&:active": {
-                transform: "translateY(0) scale(0.97)",
+                transform: "scale(0.97)",
               },
             }}
           >
@@ -1059,22 +1054,15 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
             gap: 1,
             py: 1,
             cursor: "pointer",
-            borderRadius: "30px",
-            bgcolor: "#f8fafc",
-            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            bgcolor: "transparent",
             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
             color: "#8898aa",
             "&:hover": {
               bgcolor: "#f1f5f9",
-              borderColor: "#cbd5e1",
-              transform: "translateY(-1px)",
-              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.05)",
-              color: "#059669",
-              "& svg": { color: "#059669", transform: "scale(1.1)" }
             },
-            "& svg": { transition: "transform 0.2s" },
             "&:active": {
-              transform: "translateY(0) scale(0.97)",
+              transform: "scale(0.97)",
             },
           }}
         >
@@ -1095,22 +1083,15 @@ export default function Post({ post, currentUserId, authorName, authorAvatarUrl,
             gap: 1,
             py: 1,
             cursor: "pointer",
-            borderRadius: "30px",
-            bgcolor: "#f8fafc",
-            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            bgcolor: "transparent",
             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
             color: "#8898aa",
             "&:hover": {
               bgcolor: "#f1f5f9",
-              borderColor: "#cbd5e1",
-              transform: "translateY(-1px)",
-              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.05)",
-              color: "#7c3aed",
-              "& svg": { color: "#7c3aed", transform: "scale(1.1)" }
             },
-            "& svg": { transition: "transform 0.2s" },
             "&:active": {
-              transform: "translateY(0) scale(0.97)",
+              transform: "scale(0.97)",
             },
           }}
         >

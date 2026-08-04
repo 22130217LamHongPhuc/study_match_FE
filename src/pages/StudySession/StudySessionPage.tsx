@@ -612,9 +612,16 @@ export default function StudySessionPage() {
     }
 
     try {
-      const response = await getStudySessionById(sessionId, currentUserId);
-      if (response.data) {
-        const updatedSession = mapSessionToVm(response.data, new Map());
+      const [sessionResponse, eligibilityResponse] = await Promise.all([
+        getStudySessionById(sessionId, currentUserId).catch(() => null),
+        getFeedbackEligibility(sessionId, currentUserId).catch(() => null),
+      ]);
+
+      const eligibility = eligibilityResponse?.data ?? null;
+      setFeedbackEligibility(eligibility);
+
+      if (sessionResponse?.data) {
+        const updatedSession = mapSessionToVm(sessionResponse.data, new Map());
         setSessions((prev) => applySessionUpdate(prev, updatedSession, filter));
         setCalendarSessions((prev) =>
           applySessionUpdate(prev, updatedSession, filter),
@@ -625,17 +632,15 @@ export default function StudySessionPage() {
         setTodaySessions((prev) =>
           applySessionUpdate(prev, updatedSession, filter),
         );
-        setSelectedSession(updatedSession);
-      }
-    } catch {
-    }
 
-    try {
-      const eligibilityResponse = await getFeedbackEligibility(
-        sessionId,
-        currentUserId,
-      );
-      setFeedbackEligibility(eligibilityResponse.data ?? null);
+        if (eligibility?.sessionEnded) {
+          setSelectedSession(null);
+        } else {
+          setSelectedSession(updatedSession);
+        }
+      } else if (eligibility?.sessionEnded) {
+        setSelectedSession(null);
+      }
     } catch {
     } finally {
       setJoinedSession(null);

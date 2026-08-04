@@ -7,6 +7,8 @@ steps:
       - 'API_BASE_URL=${_API_BASE_URL}'
       - '--build-arg'
       - 'SOCKET_URL=${_SOCKET_URL}'
+      - '--build-arg'
+      - 'REACT_APP_ZEGO_APP_ID=${_REACT_APP_ZEGO_APP_ID}'
       - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:${_TAG}'
       - '.'
@@ -51,6 +53,7 @@ substitutions:
   _TAG: latest
   _API_BASE_URL: https://api-gateway-36417266010.asia-southeast1.run.app
   _SOCKET_URL: wss://api-gateway-36417266010.asia-southeast1.run.app/ws
+  _REACT_APP_ZEGO_APP_ID: '1620816700'
 
 options:
   logging: CLOUD_LOGGING_ONLY
