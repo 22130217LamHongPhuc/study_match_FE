@@ -128,7 +128,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
   // Filter friends list
   const filteredFriends = friends.filter((friend) =>
-    friend.full_name.toLowerCase().includes(friendSearchQuery.toLowerCase())
+    (friend.full_name || "").toLowerCase().includes(friendSearchQuery.toLowerCase())
   );
 
   // Toggle friend invitation
@@ -552,17 +552,17 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                             {friend.avatar_url ? (
                               <img
                                 src={friend.avatar_url}
-                                alt={friend.full_name}
+                                alt={friend.full_name || ""}
                                 className="h-8 w-8 rounded-full object-cover shrink-0"
                               />
                             ) : (
                               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-xs">
-                                {friend.full_name.substring(0, 2).toUpperCase()}
+                                {(friend.full_name || "Friend").substring(0, 2).toUpperCase()}
                               </div>
                             )}
                             <div className="min-w-0">
                               <p className="text-sm font-semibold text-gray-800 truncate">
-                                {friend.full_name}
+                                {friend.full_name || "Bạn học"}
                               </p>
                               <p className="text-[10px] text-gray-400 truncate">
                                 Bạn học của tôi

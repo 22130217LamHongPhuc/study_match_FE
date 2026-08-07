@@ -632,11 +632,52 @@ export default function SearchPage() {
 
   const handleViewProfile = useCallback((userId: number) => navigate(`/profile/${userId}`), [navigate]);
 
+  const handleJoinGroupDirectly = useCallback(
+    async (group: CommunityGroup) => {
+      if (!currentUserId) {
+        toast.error("Vui lòng đăng nhập lại.");
+        return;
+      }
+      const groupId = group.id;
+      if (joiningGroupId === groupId) return;
+
+      setJoiningGroupId(groupId);
+      try {
+        const response = await requestJoinGroup(groupId, currentUserId, "");
+        if (!response.success) {
+          toast.error(response.message || "Tham gia nhóm thất bại.");
+          return;
+        }
+
+        toast.success("Tham gia nhóm cộng đồng thành công!");
+
+        setGroups((prev) =>
+          prev.map((g) =>
+            g.id === groupId
+              ? { ...g, isMember: true, memberCount: (g.memberCount || 0) + 1 }
+              : g,
+          ),
+        );
+        window.dispatchEvent(new Event("group_list_updated"));
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Đã có lỗi xảy ra.");
+      } finally {
+        setJoiningGroupId(null);
+      }
+    },
+    [currentUserId, joiningGroupId],
+  );
+
   const handleOpenJoinModal = useCallback(
     (groupId: number) => {
-      setSelectedJoinGroup(groups.find((group) => group.id === groupId) || null);
+      const group = groups.find((group) => group.id === groupId) || null;
+      if (group && group.visibility === "COMMUNITY") {
+        handleJoinGroupDirectly(group);
+      } else {
+        setSelectedJoinGroup(group);
+      }
     },
-    [groups],
+    [groups, handleJoinGroupDirectly],
   );
 
   const handleSubmitJoinRequest = useCallback(
@@ -668,9 +709,22 @@ export default function SearchPage() {
           return;
         }
 
+        const isAccepted = response.data?.status === "ACCEPTED";
+        if (isAccepted) {
+          toast.success("Tham gia nhóm cộng đồng thành công!");
+          window.dispatchEvent(new Event("group_list_updated"));
+        } else {
+          toast.success("Đã gửi yêu cầu tham gia nhóm!");
+          window.dispatchEvent(new Event("group_invitations_updated"));
+        }
+
         setGroups((prev) =>
           prev.map((group) =>
-            group.id === groupId ? { ...group, isJoinRequestPending: true } : group,
+            group.id === groupId
+              ? isAccepted
+                ? { ...group, isMember: true, memberCount: (group.memberCount || 0) + 1 }
+                : { ...group, isJoinRequestPending: true }
+              : group,
           ),
         );
         setSelectedJoinGroup(null);

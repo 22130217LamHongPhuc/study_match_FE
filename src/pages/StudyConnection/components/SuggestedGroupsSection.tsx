@@ -47,6 +47,7 @@ function mapBrowseGroupToCommunityGroup(item: BrowseGroupResponse): CommunityGro
     memberCount: item.memberCount ?? undefined,
     status: normalizedStatus,
     type: (item.visibility as CommunityGroupType) ?? "COMMUNITY",
+    visibility: (item.visibility as any) || "COMMUNITY",
     createdAt: item.createdAt,
     isMember: item.member || false,
     avatarUrl: item.avatarUrl,
@@ -98,15 +99,63 @@ export default function SuggestedGroupsSection() {
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
   const [selectedJoinGroup, setSelectedJoinGroup] = useState<CommunityGroup | null>(null);
 
+  const handleJoinGroupDirectly = useCallback(
+    async (group: CommunityGroup) => {
+      if (!currentUserId) {
+        toast.error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+        return;
+      }
+      const groupId = group.id;
+      if (joiningGroupId === groupId) return;
+
+      setJoiningGroupId(groupId);
+      try {
+        const response = await requestJoinGroup(groupId, currentUserId, "");
+        if (!response.success) {
+          toast.error(response.message || "Tham gia nhóm thất bại.");
+          return;
+        }
+
+        toast.success("Tham gia nhóm cộng đồng thành công!");
+
+        setRecommendedGroups((prev) =>
+          prev.map((g) =>
+            g.id === groupId
+              ? { ...g, isMember: true, memberCount: (g.memberCount || 0) + 1 }
+              : g,
+          ),
+        );
+
+        setSelectedOtherGroups((prev) =>
+          prev.map((g) =>
+            g.id === groupId
+              ? { ...g, isMember: true, memberCount: (g.memberCount || 0) + 1 }
+              : g,
+          ),
+        );
+        window.dispatchEvent(new Event("group_list_updated"));
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Đã có lỗi xảy ra.");
+      } finally {
+        setJoiningGroupId(null);
+      }
+    },
+    [currentUserId, joiningGroupId],
+  );
+
   const handleOpenJoinModal = useCallback(
     (groupId: number) => {
       const group =
         recommendedGroups.find((item) => item.id === groupId) ||
         selectedOtherGroups.find((item) => item.id === groupId) ||
         null;
-      setSelectedJoinGroup(group);
+      if (group && group.visibility === "COMMUNITY") {
+        handleJoinGroupDirectly(group);
+      } else {
+        setSelectedJoinGroup(group);
+      }
     },
-    [recommendedGroups, selectedOtherGroups],
+    [recommendedGroups, selectedOtherGroups, handleJoinGroupDirectly],
   );
 
   const handleSubmitJoinRequest = useCallback(
@@ -146,10 +195,21 @@ export default function SuggestedGroupsSection() {
           return;
         }
 
+        const isAccepted = response.data?.status === "ACCEPTED";
+        if (isAccepted) {
+          toast.success("Tham gia nhóm cộng đồng thành công!");
+          window.dispatchEvent(new Event("group_list_updated"));
+        } else {
+          toast.success("Đã gửi yêu cầu tham gia nhóm!");
+          window.dispatchEvent(new Event("group_invitations_updated"));
+        }
+
         setRecommendedGroups((prev) =>
           prev.map((g) =>
             g.id === groupId
-              ? { ...g, isJoinRequestPending: true }
+              ? isAccepted
+                ? { ...g, isMember: true, memberCount: (g.memberCount || 0) + 1 }
+                : { ...g, isJoinRequestPending: true }
               : g,
           ),
         );
@@ -157,7 +217,9 @@ export default function SuggestedGroupsSection() {
         setSelectedOtherGroups((prev) =>
           prev.map((g) =>
             g.id === groupId
-              ? { ...g, isJoinRequestPending: true }
+              ? isAccepted
+                ? { ...g, isMember: true, memberCount: (g.memberCount || 0) + 1 }
+                : { ...g, isJoinRequestPending: true }
               : g,
           ),
         );

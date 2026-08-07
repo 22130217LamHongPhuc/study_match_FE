@@ -51,8 +51,7 @@ import {
   acceptGroupInvitation,
   rejectGroupInvitation,
   GroupInvitationResponse,
-  getGroupsByUserId,
-  getGroupInvitations
+  getReceivedPendingGroupJoinRequests
 } from "../../services/GroupService";
 
 function formatDateTime(value: string) {
@@ -189,39 +188,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     const currentUserId = Number(localStorage.getItem("userId"));
     if (!currentUserId) return;
     try {
-      const groupsRes = await getGroupsByUserId(currentUserId);
-      if (groupsRes.success && Array.isArray(groupsRes.data)) {
-        const groups = groupsRes.data;
-        const results = await Promise.allSettled(
-          groups.map((group) => getGroupInvitations(group.id)),
-        );
-        const nextRequests = results
-          .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
-          .flatMap((result) => result.value.data ?? [])
-          .filter(
-            (invitation) =>
-              invitation.status === "PENDING" &&
-              invitation.inviterUserId === invitation.inviteeUserId,
-          );
-
-        const requestsToPopulate = nextRequests.filter(r => !r.inviterName || !r.inviterAvatar);
-        if (requestsToPopulate.length > 0) {
-          const inviterIds = Array.from(new Set(requestsToPopulate.map(r => r.inviterUserId)));
-          try {
-            const profiles = await loadFriendProfilesService(inviterIds);
-            nextRequests.forEach(req => {
-              const p = profiles.find(profile => profile.userId === req.inviterUserId);
-              if (p) {
-                req.inviterName = p.fullName || req.inviterName;
-                req.inviterAvatar = p.avatarUrl || req.inviterAvatar;
-              }
-            });
-          } catch (profileErr) {
-            console.error("Failed to load request profiles in header:", profileErr);
-          }
-        }
-
-        setGroupJoinRequests(nextRequests);
+      const response = await getReceivedPendingGroupJoinRequests();
+      if (response.success && Array.isArray(response.data)) {
+        setGroupJoinRequests(response.data);
       } else {
         setGroupJoinRequests([]);
       }

@@ -122,7 +122,7 @@ export function CreateSessionModal({
   const filteredFriends = useMemo(() => {
     if (!friendSearchQuery.trim()) return friends;
     return friends.filter((f) =>
-      f.full_name.toLowerCase().includes(friendSearchQuery.toLowerCase()),
+      (f.full_name || "").toLowerCase().includes(friendSearchQuery.toLowerCase()),
     );
   }, [friends, friendSearchQuery]);
 
@@ -792,11 +792,11 @@ export function CreateSessionModal({
                         />
                       ) : (
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-xs shrink-0">
-                          {selectedFriend.full_name.substring(0, 2).toUpperCase()}
+                          {(selectedFriend.full_name || "Friend").substring(0, 2).toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0">
-                        <div className="font-semibold text-gray-800 truncate">{selectedFriend.full_name}</div>
+                        <div className="font-semibold text-gray-800 truncate">{selectedFriend.full_name || "Bạn học"}</div>
 
                       </div>
                     </div>
@@ -833,7 +833,7 @@ export function CreateSessionModal({
                             type="button"
                             onClick={() => {
                               setSelectedFriendId(friend.user_id);
-                              setTargetName(friend.full_name);
+                              setTargetName(friend.full_name || "Bạn học");
                               setIsFriendDropdownOpen(false);
                               setFriendSearchQuery("");
                             }}
@@ -848,11 +848,11 @@ export function CreateSessionModal({
                               />
                             ) : (
                               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold">
-                                {friend.full_name.substring(0, 2).toUpperCase()}
+                                {(friend.full_name || "Friend").substring(0, 2).toUpperCase()}
                               </div>
                             )}
                             <div className="min-w-0 flex-1">
-                              <div className="truncate text-gray-800 font-semibold">{friend.full_name}</div>
+                              <div className="truncate text-gray-800 font-semibold">{friend.full_name || "Bạn học"}</div>
                             </div>
                           </button>
                         ))}

@@ -105,7 +105,7 @@ export default function GroupPreviewSidebar({
     }
 
     return friends.filter((friend) =>
-      friend.full_name.toLowerCase().includes(keyword),
+      (friend.full_name || "").toLowerCase().includes(keyword),
     );
   }, [friends, searchTerm]);
 
@@ -191,7 +191,7 @@ export default function GroupPreviewSidebar({
                     key={m.user_id}
                     className="rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
                   >
-                    {m.full_name}
+                    {m.full_name || "Bạn học"}
                   </span>
                 ))}
               </div>
@@ -287,7 +287,7 @@ function MemberCard({
 
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-slate-900">
-            {member.full_name}
+            {member.full_name || "Bạn học"}
           </p>
           <p className="truncate text-xs text-slate-500">
             {member.avatar_url ? "" : "Chưa có ảnh đại diện"}

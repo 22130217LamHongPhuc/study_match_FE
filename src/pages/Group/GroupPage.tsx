@@ -17,6 +17,7 @@ import {
   sendGroupInvitation,
   StudyGroupDetailResponse,
   getSentPendingGroupJoinRequests,
+  getReceivedPendingGroupJoinRequests,
   updateStudyGroup,
   deleteStudyGroup,
   getAllSubjectsByCurriculum,
@@ -369,21 +370,9 @@ export default function GroupPage() {
         setCounts((prev) => ({ ...prev, "sent-requests": sentRes.data.length }));
       }
 
-      const groupsRes = await getGroupsByUserId(currentUserId);
-      if (groupsRes.success && Array.isArray(groupsRes.data)) {
-        const groups = groupsRes.data;
-        const results = await Promise.allSettled(
-          groups.map((group) => getGroupInvitations(group.id)),
-        );
-        const nextRequests = results
-          .filter((result): result is PromiseFulfilledResult<any> => result.status === "fulfilled")
-          .flatMap((result) => result.value.data ?? [])
-          .filter(
-            (invitation) =>
-              invitation.status === "PENDING" &&
-              invitation.inviterUserId === invitation.inviteeUserId,
-          );
-        setCounts((prev) => ({ ...prev, "join-requests": nextRequests.length }));
+      const receivedRes = await getReceivedPendingGroupJoinRequests();
+      if (receivedRes.success && Array.isArray(receivedRes.data)) {
+        setCounts((prev) => ({ ...prev, "join-requests": receivedRes.data.length }));
       }
     } catch (e) {
       console.error("Error fetching group request counts:", e);

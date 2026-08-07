@@ -11,6 +11,7 @@ import {
   getGroupInvitations,
   getGroupsByUserId,
   getSentPendingGroupJoinRequests,
+  getReceivedPendingGroupJoinRequests,
   GroupInvitationResponse,
   rejectGroupInvitation,
   StudyGroupDetailResponse,
@@ -333,25 +334,12 @@ export function JoinRequestsPanel({ onCountChange }: { onCountChange: (count: nu
     setError(null);
 
     try {
-      const groupsResponse = await getGroupsByUserId(currentUserId);
-      if (!groupsResponse.success) {
-        throw new Error(groupsResponse.message || "Không thể tải danh sách nhóm.");
+      const response = await getReceivedPendingGroupJoinRequests();
+      if (!response.success) {
+        throw new Error(response.message || "Không thể tải danh sách yêu cầu tham gia.");
       }
 
-      const groups = groupsResponse.data ?? [];
-      const results = await Promise.allSettled(
-        groups.map((group) => getGroupInvitations(group.id)),
-      );
-
-      const nextRequests = results
-        .filter((result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof getGroupInvitations>>> => result.status === "fulfilled")
-        .flatMap((result) => result.value.data ?? [])
-        .filter(
-          (invitation) =>
-            invitation.status === "PENDING" &&
-            invitation.inviterUserId === invitation.inviteeUserId,
-        );
-
+      const nextRequests = response.data ?? [];
       setRequests(nextRequests);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Đã có lỗi xảy ra.";
@@ -608,6 +596,13 @@ function MyGroupsPanel({ onCountChange }: { onCountChange: (count: number) => vo
 
   useEffect(() => {
     fetchGroups();
+    const handleUpdated = () => {
+      fetchGroups();
+    };
+    window.addEventListener("group_list_updated", handleUpdated);
+    return () => {
+      window.removeEventListener("group_list_updated", handleUpdated);
+    };
   }, [fetchGroups]);
 
   const groupsCount = groups.length;
@@ -721,7 +716,12 @@ export default function StudyGroupsSection() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  if (tab.id === "my-groups") {
+                    window.dispatchEvent(new Event("group_list_updated"));
+                  }
+                }}
                 className={`flex items-center rounded-full border px-4 py-1.5 text-sm font-semibold transition-all ${isActive
                   ? "border-blue-200 bg-blue-50 text-blue-600 shadow-sm"
                   : "border-transparent bg-transparent text-gray-500 hover:text-blue-600"

@@ -651,6 +651,17 @@ export async function getSentPendingGroupJoinRequests(): Promise<APIResponseData
   return response;
 }
 
+export async function getReceivedPendingGroupJoinRequests(): Promise<APIResponseData<GroupInvitationResponse[]>> {
+  const response = await apiFetch<GroupInvitationResponse[]>(
+    `/api/groups/invitations/received-pending`,
+    {
+      method: "GET",
+    },
+    API_BASE_URL_GROUP,
+  );
+  return response;
+}
+
 export async function leaveGroup(
   groupId: number,
 ): Promise<APIResponseData<unknown>> {

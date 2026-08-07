@@ -2483,7 +2483,7 @@ export default function ConversationPage() {
                 px: 2,
                 py: 0.75,
                 bgcolor: "#f0f7ff",
-                overflow: "hidden",
+                overflow: "visible",
               }}
             >
               <InputBase
